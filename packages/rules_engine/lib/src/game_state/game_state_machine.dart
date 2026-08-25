@@ -34,6 +34,12 @@ class GameStateMachine {
     required GameAction action,
     required RoleRegistry roleRegistry,
   }) {
+    if (state.cascade != null && action is! HunterShoot && action is! CaptainNameSuccessor) {
+      throw InvalidActionError(
+        'A death cascade is pending a decision (${state.cascade.runtimeType}); '
+        'only HunterShoot or CaptainNameSuccessor can be applied until it resolves',
+      );
+    }
     switch (action) {
       case VoleurSwap():
         return _applyVoleurSwap(state, action, roleRegistry);
@@ -53,6 +59,10 @@ class GameStateMachine {
         return _applyFinalizeNight(state, roleRegistry);
       case DayVoteElimination():
         return _applyDayVoteElimination(state, action, roleRegistry);
+      case HunterShoot():
+        return _applyHunterShoot(state, action, roleRegistry);
+      case CaptainNameSuccessor():
+        return _applyCaptainNameSuccessor(state, action, roleRegistry);
     }
   }
 
@@ -156,10 +166,6 @@ class GameStateMachine {
     if (state.phase != GamePhase.night) {
       throw InvalidActionError('Can only finalize the night during the night phase');
     }
-    if (state.cascade != null) {
-      throw InvalidActionError('A death cascade is still pending a decision');
-    }
-
     var currentState = state;
     final events = <GameEvent>[];
     final queue = <CascadeTask>[];
@@ -204,9 +210,6 @@ class GameStateMachine {
     if (state.phase != GamePhase.day) {
       throw InvalidActionError('Day vote elimination can only happen during the day');
     }
-    if (state.cascade != null) {
-      throw InvalidActionError('A death cascade is still pending a decision');
-    }
     _requireAlive(state.playerById(action.targetPlayerId), 'day vote target');
 
     final killed = state.killPlayer(action.targetPlayerId);
@@ -234,13 +237,86 @@ class GameStateMachine {
     if (state.phase != GamePhase.day) {
       throw InvalidActionError('Can only start the next night from the day phase');
     }
-    if (state.cascade != null) {
-      throw InvalidActionError('A death cascade is still pending a decision');
-    }
     return ActionResult(
       state: state.copyWith(nightIndex: state.nightIndex + 1, phase: GamePhase.night),
       events: const [],
     );
+  }
+
+  ActionResult _applyHunterShoot(
+    GameState state,
+    HunterShoot action,
+    RoleRegistry roleRegistry,
+  ) {
+    final cascade = state.cascade;
+    if (cascade == null) {
+      throw InvalidActionError('No pending Hunter shot to resolve');
+    }
+    if (cascade.decision case PendingHunterShot(:final deadHunterId)) {
+      _requireAlive(state.playerById(action.targetPlayerId), 'hunter shot target');
+
+      final killed = state.killPlayer(action.targetPlayerId).copyWith(cascade: null);
+      final events = <GameEvent>[
+        PlayerDied(
+          playerId: action.targetPlayerId,
+          cause: HunterShotKill(shooterPlayerId: deadHunterId),
+        ),
+        HunterShotFired(hunterPlayerId: deadHunterId, targetPlayerId: action.targetPlayerId),
+      ];
+
+      final resumedQueue = [
+        ...cascade.remainingQueue,
+        ...deathCascadeTasks(action.targetPlayerId),
+      ];
+      final drained = drainCascade(state: killed, queue: resumedQueue, roleRegistry: roleRegistry);
+      events.addAll(drained.events);
+
+      return ActionResult(
+        state: drained.state.copyWith(
+          cascade: drained.pendingDecision == null
+              ? null
+              : CascadeState(decision: drained.pendingDecision!, remainingQueue: drained.remainingQueue),
+        ),
+        events: events,
+      );
+    }
+    throw InvalidActionError('No pending Hunter shot to resolve');
+  }
+
+  ActionResult _applyCaptainNameSuccessor(
+    GameState state,
+    CaptainNameSuccessor action,
+    RoleRegistry roleRegistry,
+  ) {
+    final cascade = state.cascade;
+    if (cascade == null) {
+      throw InvalidActionError('No pending Captain succession to resolve');
+    }
+    if (cascade.decision case PendingCaptainSuccession(:final deadCaptainId)) {
+      _requireAlive(state.playerById(action.successorPlayerId), 'captain successor');
+
+      final events = <GameEvent>[
+        CaptainSuccession(fromPlayerId: deadCaptainId, toPlayerId: action.successorPlayerId),
+      ];
+
+      final newState = state.copyWith(captainPlayerId: action.successorPlayerId, cascade: null);
+      final drained = drainCascade(
+        state: newState,
+        queue: cascade.remainingQueue,
+        roleRegistry: roleRegistry,
+      );
+      events.addAll(drained.events);
+
+      return ActionResult(
+        state: drained.state.copyWith(
+          cascade: drained.pendingDecision == null
+              ? null
+              : CascadeState(decision: drained.pendingDecision!, remainingQueue: drained.remainingQueue),
+        ),
+        events: events,
+      );
+    }
+    throw InvalidActionError('No pending Captain succession to resolve');
   }
 
   void _requireAlive(Player player, String label) {

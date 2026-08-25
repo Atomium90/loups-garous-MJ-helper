@@ -56,3 +56,17 @@ class ElectCaptain implements GameAction {
 class StartNextNight implements GameAction {
   const StartNextNight();
 }
+
+/// Resolves a pending PendingHunterShot decision.
+class HunterShoot implements GameAction {
+  final String targetPlayerId;
+
+  const HunterShoot({required this.targetPlayerId});
+}
+
+/// Resolves a pending PendingCaptainSuccession decision.
+class CaptainNameSuccessor implements GameAction {
+  final String successorPlayerId;
+
+  const CaptainNameSuccessor({required this.successorPlayerId});
+}

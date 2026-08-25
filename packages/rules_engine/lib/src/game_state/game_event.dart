@@ -29,6 +29,20 @@ class CaptainSuccessionSkipped implements GameEvent {
   const CaptainSuccessionSkipped({required this.deadCaptainId});
 }
 
+class HunterShotFired implements GameEvent {
+  final String hunterPlayerId;
+  final String targetPlayerId;
+
+  const HunterShotFired({required this.hunterPlayerId, required this.targetPlayerId});
+}
+
+class CaptainSuccession implements GameEvent {
+  final String fromPlayerId;
+  final String toPlayerId;
+
+  const CaptainSuccession({required this.fromPlayerId, required this.toPlayerId});
+}
+
 class VoleurSwapped implements GameEvent {
   final String voleurPlayerId;
   final String newRoleId;
