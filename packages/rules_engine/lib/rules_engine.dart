@@ -1,4 +1,4 @@
-/// Pure Dart rules engine for Loup-Garou de Thiercelieux.
+/// Pure Dart rules engine for Les Loups-Garous de Thiercelieux.
 ///
 /// No Flutter dependency: this library must stay testable with plain
 /// `dart test`, independently of the UI.
@@ -10,5 +10,6 @@ export 'src/models/role.dart';
 export 'src/models/team.dart';
 export 'src/models/wake_condition.dart';
 
-// More exports are added here as role_registry and night_script are
-// implemented.
+export 'src/role_registry/role_registry.dart';
+
+// More exports are added here as night_script is implemented.
