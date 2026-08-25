@@ -1,6 +1,33 @@
+import 'death_cause.dart';
+
 /// Something that happened as a result of a GameAction, for a future
 /// journal/UI layer to display.
 sealed class GameEvent {}
+
+class PlayerDied implements GameEvent {
+  final String playerId;
+  final DeathCause cause;
+
+  const PlayerDied({required this.playerId, required this.cause});
+}
+
+class NightFinalized implements GameEvent {
+  final int nightIndex;
+
+  const NightFinalized({required this.nightIndex});
+}
+
+class HunterShotSkipped implements GameEvent {
+  final String hunterPlayerId;
+
+  const HunterShotSkipped({required this.hunterPlayerId});
+}
+
+class CaptainSuccessionSkipped implements GameEvent {
+  final String deadCaptainId;
+
+  const CaptainSuccessionSkipped({required this.deadCaptainId});
+}
 
 class VoleurSwapped implements GameEvent {
   final String voleurPlayerId;

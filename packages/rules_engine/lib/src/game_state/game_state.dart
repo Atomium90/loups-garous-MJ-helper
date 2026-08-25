@@ -1,5 +1,6 @@
 import 'package:collection/collection.dart';
 
+import 'pending_decision.dart';
 import 'player.dart';
 
 enum GamePhase { night, day }
@@ -53,6 +54,10 @@ class GameState {
   /// Set by WitchDeathPotion, cleared by FinalizeNight.
   final String? pendingWitchDeathTargetId;
 
+  /// Non-null exactly while a death cascade is paused on a Hunter/Captain
+  /// choice only the MJ can make.
+  final CascadeState? cascade;
+
   const GameState({
     required this.players,
     required this.nightIndex,
@@ -62,6 +67,7 @@ class GameState {
     this.captainPlayerId,
     this.pendingWolfVictimId,
     this.pendingWitchDeathTargetId,
+    this.cascade,
   });
 
   factory GameState.initial({required List<Player> players}) =>
@@ -72,6 +78,18 @@ class GameState {
 
   List<Player> get alivePlayers => players.where((p) => p.alive).toList(growable: false);
 
+  /// Marks [playerId] as dead. Does not resolve any cascade effects; that's
+  /// the death cascade's job (see death_cascade.dart).
+  GameState killPlayer(String playerId) {
+    playerById(playerId); // validates existence
+    return copyWith(
+      players: [
+        for (final p in players)
+          if (p.id == playerId) p.copyWith(alive: false) else p,
+      ],
+    );
+  }
+
   GameState copyWith({
     List<Player>? players,
     int? nightIndex,
@@ -81,6 +99,7 @@ class GameState {
     Object? captainPlayerId = _unset,
     Object? pendingWolfVictimId = _unset,
     Object? pendingWitchDeathTargetId = _unset,
+    Object? cascade = _unset,
   }) => GameState(
     players: players ?? this.players,
     nightIndex: nightIndex ?? this.nightIndex,
@@ -96,5 +115,6 @@ class GameState {
     pendingWitchDeathTargetId: identical(pendingWitchDeathTargetId, _unset)
         ? this.pendingWitchDeathTargetId
         : pendingWitchDeathTargetId as String?,
+    cascade: identical(cascade, _unset) ? this.cascade : cascade as CascadeState?,
   );
 }

@@ -34,6 +34,19 @@ class WitchDeathPotion implements GameAction {
   const WitchDeathPotion({required this.targetPlayerId});
 }
 
+/// Closes the Sorcière's window: finalizes the pending wolf/witch targets
+/// as real deaths (with dedupe if they're the same player), resolves the
+/// death cascade, and advances the phase to day.
+class FinalizeNight implements GameAction {
+  const FinalizeNight();
+}
+
+class DayVoteElimination implements GameAction {
+  final String targetPlayerId;
+
+  const DayVoteElimination({required this.targetPlayerId});
+}
+
 class ElectCaptain implements GameAction {
   final String playerId;
 

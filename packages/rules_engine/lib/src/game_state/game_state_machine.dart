@@ -1,7 +1,10 @@
 import '../role_registry/role_registry.dart';
+import 'death_cascade.dart';
+import 'death_cause.dart';
 import 'game_action.dart';
 import 'game_event.dart';
 import 'game_state.dart';
+import 'pending_decision.dart';
 import 'player.dart';
 
 class ActionResult {
@@ -46,6 +49,10 @@ class GameStateMachine {
         return _applyElectCaptain(state, action);
       case StartNextNight():
         return _applyStartNextNight(state);
+      case FinalizeNight():
+        return _applyFinalizeNight(state, roleRegistry);
+      case DayVoteElimination():
+        return _applyDayVoteElimination(state, action, roleRegistry);
     }
   }
 
@@ -145,9 +152,90 @@ class GameStateMachine {
     );
   }
 
+  ActionResult _applyFinalizeNight(GameState state, RoleRegistry roleRegistry) {
+    if (state.phase != GamePhase.night) {
+      throw InvalidActionError('Can only finalize the night during the night phase');
+    }
+    if (state.cascade != null) {
+      throw InvalidActionError('A death cascade is still pending a decision');
+    }
+
+    var currentState = state;
+    final events = <GameEvent>[];
+    final queue = <CascadeTask>[];
+
+    final pendingKills = <(String, DeathCause)>[
+      if (state.pendingWolfVictimId != null) (state.pendingWolfVictimId!, const WolvesKill()),
+      if (state.pendingWitchDeathTargetId != null)
+        (state.pendingWitchDeathTargetId!, const WitchDeathPotionKill()),
+    ];
+    for (final (playerId, cause) in pendingKills) {
+      if (!currentState.playerById(playerId).alive) {
+        continue; // dedupes an identical wolf/witch target: already killed above
+      }
+      currentState = currentState.killPlayer(playerId);
+      events.add(PlayerDied(playerId: playerId, cause: cause));
+      queue.addAll(deathCascadeTasks(playerId));
+    }
+
+    final drained = drainCascade(state: currentState, queue: queue, roleRegistry: roleRegistry);
+    events
+      ..addAll(drained.events)
+      ..add(NightFinalized(nightIndex: state.nightIndex));
+
+    return ActionResult(
+      state: drained.state.copyWith(
+        phase: GamePhase.day,
+        pendingWolfVictimId: null,
+        pendingWitchDeathTargetId: null,
+        cascade: drained.pendingDecision == null
+            ? null
+            : CascadeState(decision: drained.pendingDecision!, remainingQueue: drained.remainingQueue),
+      ),
+      events: events,
+    );
+  }
+
+  ActionResult _applyDayVoteElimination(
+    GameState state,
+    DayVoteElimination action,
+    RoleRegistry roleRegistry,
+  ) {
+    if (state.phase != GamePhase.day) {
+      throw InvalidActionError('Day vote elimination can only happen during the day');
+    }
+    if (state.cascade != null) {
+      throw InvalidActionError('A death cascade is still pending a decision');
+    }
+    _requireAlive(state.playerById(action.targetPlayerId), 'day vote target');
+
+    final killed = state.killPlayer(action.targetPlayerId);
+    final events = <GameEvent>[
+      PlayerDied(playerId: action.targetPlayerId, cause: const DayVoteKill()),
+    ];
+    final drained = drainCascade(
+      state: killed,
+      queue: deathCascadeTasks(action.targetPlayerId),
+      roleRegistry: roleRegistry,
+    );
+    events.addAll(drained.events);
+
+    return ActionResult(
+      state: drained.state.copyWith(
+        cascade: drained.pendingDecision == null
+            ? null
+            : CascadeState(decision: drained.pendingDecision!, remainingQueue: drained.remainingQueue),
+      ),
+      events: events,
+    );
+  }
+
   ActionResult _applyStartNextNight(GameState state) {
     if (state.phase != GamePhase.day) {
       throw InvalidActionError('Can only start the next night from the day phase');
+    }
+    if (state.cascade != null) {
+      throw InvalidActionError('A death cascade is still pending a decision');
     }
     return ActionResult(
       state: state.copyWith(nightIndex: state.nightIndex + 1, phase: GamePhase.night),
