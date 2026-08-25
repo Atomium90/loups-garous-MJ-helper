@@ -16,5 +16,8 @@ export 'src/role_registry/role_registry.dart';
 export 'src/night_script/night_script_builder.dart';
 export 'src/night_script/night_script_step.dart';
 
+export 'src/game_state/game_action.dart';
+export 'src/game_state/game_event.dart';
 export 'src/game_state/game_state.dart';
+export 'src/game_state/game_state_machine.dart';
 export 'src/game_state/player.dart';
