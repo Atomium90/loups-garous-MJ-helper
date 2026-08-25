@@ -9,33 +9,46 @@ phone).
 
 ## Current status
 
-Very early development. The rules engine (pure Dart, `packages/rules_engine`) currently has:
+Early development. The rules engine (pure Dart, `packages/rules_engine`) is complete for the base
+game:
 
 - `RoleRegistry`: catalog of the 8 base-game dealt roles, with their official night-call order
   (Capitaine is an elected status, not a dealt role, so it's not in this catalog)
 - `NightScriptBuilder`: computes the exact order of roles to call on a given night, from the
   active composition and who's still alive
+- `GameStateMachine`: resolves every role action from explicit MJ-reported facts, including death
+  cascades (lovers, the Hunter's shot, Captain succession)
 
-Nothing on the UI or persistence side yet.
+The Flutter app (`lib/`) has its data and state foundation for the first screens (game list,
+composition):
+
+- `lib/data/`: Drift schema (`Games` table) and `GameRepository`
+- `lib/state/`: Riverpod providers, including draft-then-commit composition editing
+
+No UI screens yet.
 
 ## Architecture
 
 ```
-lib/                    Flutter app (UI, state, data layer) — not started yet
-packages/rules_engine/  rules engine, pure Dart, zero Flutter dependency
+lib/
+  data/                  Drift schema + repositories
+  state/                 Riverpod providers/controllers
+  (UI not started yet)
+packages/rules_engine/   rules engine, pure Dart, zero Flutter dependency
 ```
 
 The rules engine is deliberately isolated in its own package so it stays testable independently
 of the UI (`dart test`, no Flutter test harness).
 
-Planned stack for the rest of the app: Riverpod (state), go_router (navigation), Drift (typed
-SQLite), freezed / json_serializable (models).
+Stack: Riverpod (state), Drift (typed SQLite), freezed (immutable models). go_router (navigation)
+and json_serializable aren't wired in yet.
 
 ## Development
 
 ```bash
 # Flutter app
 flutter pub get
+dart run build_runner build   # generates Drift/Riverpod/freezed code, not committed to git
 flutter test
 
 # Rules engine (standalone pure-Dart package)
