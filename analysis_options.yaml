@@ -9,3 +9,5 @@ analyzer:
     - windows/**
     - macos/**
     - linux/**
+    - lib/**/*.g.dart
+    - lib/**/*.freezed.dart

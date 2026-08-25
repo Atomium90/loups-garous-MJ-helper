@@ -46,3 +46,7 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Generated code (build_runner: drift, freezed, riverpod_generator)
+**/*.g.dart
+**/*.freezed.dart
