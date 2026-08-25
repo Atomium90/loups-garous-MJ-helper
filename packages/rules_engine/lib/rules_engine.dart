@@ -12,4 +12,5 @@ export 'src/models/wake_condition.dart';
 
 export 'src/role_registry/role_registry.dart';
 
-// More exports are added here as night_script is implemented.
+export 'src/night_script/night_script_builder.dart';
+export 'src/night_script/night_script_step.dart';
