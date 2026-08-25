@@ -1,0 +1,1 @@
+enum Team { village, werewolves }

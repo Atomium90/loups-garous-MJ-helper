@@ -4,5 +4,11 @@
 /// `dart test`, independently of the UI.
 library;
 
-// Exports are added here as each piece (models, role registry, night
-// script builder, game state machine, composition advisor) is implemented.
+export 'src/models/action_type.dart';
+export 'src/models/order_constraint.dart';
+export 'src/models/role.dart';
+export 'src/models/team.dart';
+export 'src/models/wake_condition.dart';
+
+// More exports are added here as role_registry and night_script are
+// implemented.
