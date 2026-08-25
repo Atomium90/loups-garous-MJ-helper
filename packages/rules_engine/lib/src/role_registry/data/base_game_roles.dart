@@ -5,8 +5,10 @@ import '../../models/role.dart';
 import '../../models/team.dart';
 import '../../models/wake_condition.dart';
 
-/// The 9 roles of the base "Les Loups-Garous de Thiercelieux" box, in their
-/// official night-call order.
+/// The 8 dealt roles of the base "Les Loups-Garous de Thiercelieux" box, in
+/// their official night-call order. Capitaine is deliberately not here: it's
+/// an elected status any player can hold on top of their real role (see
+/// GameState.captainPlayerId), not a role card dealt at setup.
 const baseGameRoles = <Role>[
   Role(
     id: 'voleur',
@@ -91,15 +93,5 @@ const baseGameRoles = <Role>[
     ruleText:
         'Aucune action de nuit : à sa mort (jour ou nuit), il élimine '
         'immédiatement un joueur de son choix.',
-  ),
-  Role(
-    id: 'capitaine',
-    name: 'Capitaine',
-    team: Team.village,
-    hasNightCall: false,
-    onDeath: DeathEffect.captainSuccession,
-    ruleText:
-        'Aucune action de nuit : élu de jour, sa voix compte double en cas '
-        'd\'égalité au vote. À sa mort, il désigne son successeur.',
   ),
 ];

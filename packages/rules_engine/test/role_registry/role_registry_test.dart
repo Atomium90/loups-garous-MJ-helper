@@ -9,19 +9,18 @@ const _expectedIds = {
   'chasseur',
   'petite_fille',
   'cupidon',
-  'capitaine',
   'voleur',
 };
 
-const _expectedNoNightCallIds = {'villageois', 'petite_fille', 'chasseur', 'capitaine'};
+const _expectedNoNightCallIds = {'villageois', 'petite_fille', 'chasseur'};
 const _expectedNightCallIds = {'voleur', 'cupidon', 'voyante', 'loup_garou', 'sorciere'};
 
 void main() {
   final registry = RoleRegistry.base;
 
   group('RoleRegistry.base data', () {
-    test('has exactly 9 roles', () {
-      expect(registry.roles, hasLength(9));
+    test('has exactly 8 dealt roles (capitaine is an elected status, not a role)', () {
+      expect(registry.roles, hasLength(8));
     });
 
     test('has no duplicate ids', () {
@@ -29,7 +28,7 @@ void main() {
       expect(ids.toSet(), hasLength(ids.length));
     });
 
-    test('ids match exactly the 9 expected base game roles', () {
+    test('ids match exactly the 8 expected base game roles', () {
       expect(registry.roles.map((r) => r.id).toSet(), equals(_expectedIds));
     });
 
@@ -84,11 +83,10 @@ void main() {
       expect(registry.byId('cupidon').ruleText, contains('amoureux'));
     });
 
-    test('only chasseur and capitaine have a non-none onDeath effect', () {
+    test('only chasseur has a non-none onDeath effect', () {
       for (final role in registry.roles) {
         final expected = switch (role.id) {
           'chasseur' => DeathEffect.hunterShot,
-          'capitaine' => DeathEffect.captainSuccession,
           _ => DeathEffect.none,
         };
         expect(role.onDeath, expected, reason: role.id);

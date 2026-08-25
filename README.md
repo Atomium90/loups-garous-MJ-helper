@@ -11,7 +11,8 @@ phone).
 
 Very early development. The rules engine (pure Dart, `packages/rules_engine`) currently has:
 
-- `RoleRegistry`: catalog of the 9 base-game roles, with their official night-call order
+- `RoleRegistry`: catalog of the 8 base-game dealt roles, with their official night-call order
+  (Capitaine is an elected status, not a dealt role, so it's not in this catalog)
 - `NightScriptBuilder`: computes the exact order of roles to call on a given night, from the
   active composition and who's still alive
 
