@@ -1,8 +1,8 @@
-/// Support for doing something awesome.
+/// Pure Dart rules engine for Loup-Garou de Thiercelieux.
 ///
-/// More dartdocs go here.
+/// No Flutter dependency: this library must stay testable with plain
+/// `dart test`, independently of the UI.
 library;
 
-export 'src/rules_engine_base.dart';
-
-// TODO: Export any libraries intended for clients of this package.
+// Exports are added here as each piece (models, role registry, night
+// script builder, game state machine, composition advisor) is implemented.
