@@ -83,6 +83,17 @@ void main() {
     test('cupidon mentions the lovers recognition step', () {
       expect(registry.byId('cupidon').ruleText, contains('amoureux'));
     });
+
+    test('only chasseur and capitaine have a non-none onDeath effect', () {
+      for (final role in registry.roles) {
+        final expected = switch (role.id) {
+          'chasseur' => DeathEffect.hunterShot,
+          'capitaine' => DeathEffect.captainSuccession,
+          _ => DeathEffect.none,
+        };
+        expect(role.onDeath, expected, reason: role.id);
+      }
+    });
   });
 
   group('RoleRegistry lookups', () {

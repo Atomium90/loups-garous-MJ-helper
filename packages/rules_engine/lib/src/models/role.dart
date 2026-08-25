@@ -1,4 +1,5 @@
 import 'action_type.dart';
+import 'death_effect.dart';
 import 'order_constraint.dart';
 import 'team.dart';
 import 'wake_condition.dart';
@@ -23,6 +24,9 @@ class Role {
   final List<OrderConstraint> orderConstraints;
   final ActionType actionType;
 
+  /// Effect resolved by the death cascade when a player with this role dies.
+  final DeathEffect onDeath;
+
   /// Short, action-focused instruction shown to the MJ. Not narrative rule
   /// text: the app is an assistant, not a replacement for the MJ knowing
   /// the game.
@@ -38,6 +42,7 @@ class Role {
     this.wakeCondition,
     this.orderConstraints = const [],
     this.actionType = ActionType.none,
+    this.onDeath = DeathEffect.none,
     required this.ruleText,
     this.mjTips,
   });

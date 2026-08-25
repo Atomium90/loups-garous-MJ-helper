@@ -1,4 +1,5 @@
 import '../../models/action_type.dart';
+import '../../models/death_effect.dart';
 import '../../models/order_constraint.dart';
 import '../../models/role.dart';
 import '../../models/team.dart';
@@ -86,6 +87,7 @@ const baseGameRoles = <Role>[
     name: 'Chasseur',
     team: Team.village,
     hasNightCall: false,
+    onDeath: DeathEffect.hunterShot,
     ruleText:
         'Aucune action de nuit : à sa mort (jour ou nuit), il élimine '
         'immédiatement un joueur de son choix.',
@@ -95,8 +97,9 @@ const baseGameRoles = <Role>[
     name: 'Capitaine',
     team: Team.village,
     hasNightCall: false,
+    onDeath: DeathEffect.captainSuccession,
     ruleText:
         'Aucune action de nuit : élu de jour, sa voix compte double en cas '
-        'd\'égalité au vote.',
+        'd\'égalité au vote. À sa mort, il désigne son successeur.',
   ),
 ];
