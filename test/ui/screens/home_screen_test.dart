@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:loup_garou_mj/data/database/app_database.dart';
 import 'package:loup_garou_mj/data/models/game_status.dart';
 import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
+import 'package:loup_garou_mj/ui/screens/composition/composition_screen.dart';
 import 'package:loup_garou_mj/ui/screens/home/home_screen.dart';
 
 import '../../support/fake_game_repository.dart';
@@ -103,11 +104,12 @@ void main() {
     },
   );
 
-  testWidgets('tapping Nouvelle partie creates a game via the repository', (tester) async {
+  testWidgets('tapping Nouvelle partie creates a game and navigates to Composition', (
+    tester,
+  ) async {
     final repository = FakeGameRepository();
-    await pumpScreen(
+    await pumpAppRouter(
       tester,
-      const HomeScreen(),
       overrides: [gameRepositoryProvider.overrideWithValue(repository)],
     );
     await tester.pump();
@@ -118,5 +120,6 @@ void main() {
 
     expect(repository.allGames, hasLength(1));
     expect(repository.allGames.single.status, GameStatus.setup);
+    expect(find.byType(CompositionScreen), findsOneWidget);
   });
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../data/database/app_database.dart';
 import '../../../data/models/game_status.dart';
@@ -47,9 +48,11 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-Future<void> _startNewGame(WidgetRef ref) async {
-  await ref.read(gameRepositoryProvider).createGame();
-  // TODO(composition-route): navigate to Composition once that route/screen exists.
+Future<void> _startNewGame(BuildContext context, WidgetRef ref) async {
+  final gameId = await ref.read(gameRepositoryProvider).createGame();
+  if (context.mounted) {
+    context.goNamed('composition', pathParameters: {'id': '$gameId'});
+  }
 }
 
 class _Header extends ConsumerWidget {
@@ -84,7 +87,7 @@ class _Header extends ConsumerWidget {
               if (showNewGameButton)
                 AppIconButton(
                   icon: AppIcons.newGame,
-                  onTap: () => _startNewGame(ref),
+                  onTap: () => _startNewGame(context, ref),
                 ),
             ],
           ),
@@ -151,7 +154,7 @@ class _EmptyState extends ConsumerWidget {
           child: AppButton(
             label: 'Nouvelle partie',
             leadingIcon: AppIcons.newGame,
-            onPressed: () => _startNewGame(ref),
+            onPressed: () => _startNewGame(context, ref),
           ),
         ),
       ],
@@ -199,7 +202,7 @@ class _GamesList extends ConsumerWidget {
           child: AppButton(
             label: 'Nouvelle partie',
             leadingIcon: AppIcons.newGame,
-            onPressed: () => _startNewGame(ref),
+            onPressed: () => _startNewGame(context, ref),
           ),
         ),
       ],
