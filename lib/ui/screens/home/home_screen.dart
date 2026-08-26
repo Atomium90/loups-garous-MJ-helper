@@ -49,10 +49,15 @@ class HomeScreen extends ConsumerWidget {
 }
 
 Future<void> _startNewGame(BuildContext context, WidgetRef ref) async {
+  // Capture the router itself, not `context`, before the `await`: creating the game makes
+  // gameListProvider emit immediately (often before this Future even resolves), which rebuilds
+  // HomeScreen from its empty state into its games-list state - unmounting whichever of the two
+  // (_EmptyState or _GamesList) held the tapped button. A `context.mounted` guard would then
+  // correctly, but unhelpfully, skip navigation entirely. GoRouter itself lives above that
+  // swap (tied to MaterialApp.router), so grabbing it first sidesteps the race.
+  final router = GoRouter.of(context);
   final gameId = await ref.read(gameRepositoryProvider).createGame();
-  if (context.mounted) {
-    context.goNamed('composition', pathParameters: {'id': '$gameId'});
-  }
+  router.goNamed('composition', pathParameters: {'id': '$gameId'});
 }
 
 class _Header extends ConsumerWidget {

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drift/drift.dart';
 import 'package:loup_garou_mj/data/database/app_database.dart';
 import 'package:loup_garou_mj/data/models/game_status.dart';
@@ -19,16 +21,25 @@ class FakeGameRepository implements GameRepository {
   final Map<int, Game> _games = {};
   int _nextId = 1;
 
+  // Broadcasts *that something changed*, not the data itself - each watchGames() subscriber
+  // re-reads and re-sorts `_games` on every event, matching the interface's own documented
+  // contract ("emits an initial snapshot then a new one on every write"). A plain
+  // `Stream.value(...)` (this class's original implementation) only emits once at construction
+  // and never again, which silently hid a real bug this session: HomeScreen's "Nouvelle partie"
+  // button lived inside the widget subtree that gets unmounted the moment the games list
+  // updates, and no test caught it until a real device exposed the race.
+  final _changes = StreamController<void>.broadcast();
+
   /// Test-only convenience: every row currently held, insertion order (unsorted).
   List<Game> get allGames => _games.values.toList(growable: false);
 
+  List<Game> _sortedGames() =>
+      _games.values.toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
   @override
-  Stream<List<Game>> watchGames() {
-    // Mirrors DriftGameRepository.watchGames()'s `OrderingTerm.desc(createdAt)`, so tests that
-    // rely on "most recent first" (e.g. Accueil's En cours ordering) see real production
-    // behaviour, not just insertion order.
-    final sorted = _games.values.toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    return Stream.value(sorted);
+  Stream<List<Game>> watchGames() async* {
+    yield _sortedGames();
+    yield* _changes.stream.map((_) => _sortedGames());
   }
 
   @override
@@ -44,6 +55,7 @@ class FakeGameRepository implements GameRepository {
       playerCount: initialPlayerCount,
       status: GameStatus.setup,
     );
+    _changes.add(null);
     return id;
   }
 
@@ -61,6 +73,7 @@ class FakeGameRepository implements GameRepository {
       status: GameStatus.inProgress,
       updatedAt: DateTime.now(),
     );
+    _changes.add(null);
   }
 
   @override
@@ -68,6 +81,7 @@ class FakeGameRepository implements GameRepository {
     final game = _games[gameId];
     if (game != null && game.status == GameStatus.setup) {
       _games.remove(gameId);
+      _changes.add(null);
     }
   }
 }
