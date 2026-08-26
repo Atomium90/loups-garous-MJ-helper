@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -8,58 +7,11 @@ import 'package:loup_garou_mj/data/database/app_database.dart';
 import 'package:loup_garou_mj/data/models/game_status.dart';
 import 'package:loup_garou_mj/data/repositories/drift_game_repository.dart';
 import 'package:loup_garou_mj/data/repositories/game_not_found_exception.dart';
-import 'package:loup_garou_mj/data/repositories/game_repository.dart';
 import 'package:loup_garou_mj/state/composition/composition_editor_notifier.dart';
 import 'package:loup_garou_mj/state/providers/game_provider.dart';
 import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
 
-class FakeGameRepository implements GameRepository {
-  final Map<int, Game> _games = {};
-  int _nextId = 1;
-
-  @override
-  Stream<List<Game>> watchGames() => Stream.value(_games.values.toList());
-
-  @override
-  Future<Game?> getGame(int id) async => _games[id];
-
-  @override
-  Future<int> createGame({int initialPlayerCount = 8}) async {
-    final id = _nextId++;
-    _games[id] = Game(
-      id: id,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-      playerCount: initialPlayerCount,
-      status: GameStatus.setup,
-    );
-    return id;
-  }
-
-  @override
-  Future<void> saveComposition({
-    required int gameId,
-    required int playerCount,
-    required Map<String, int> roleCounts,
-  }) async {
-    final game = _games[gameId];
-    if (game == null) throw GameNotFoundException(gameId);
-    _games[gameId] = game.copyWith(
-      playerCount: playerCount,
-      compositionJson: Value(roleCounts),
-      status: GameStatus.inProgress,
-      updatedAt: DateTime.now(),
-    );
-  }
-
-  @override
-  Future<void> discardDraft(int gameId) async {
-    final game = _games[gameId];
-    if (game != null && game.status == GameStatus.setup) {
-      _games.remove(gameId);
-    }
-  }
-}
+import '../../support/fake_game_repository.dart';
 
 void main() {
   group('CompositionEditor with a fake repository', () {
