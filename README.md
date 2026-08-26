@@ -19,13 +19,13 @@ game:
 - `GameStateMachine`: resolves every role action from explicit MJ-reported facts, including death
   cascades (lovers, the Hunter's shot, Captain succession)
 
-The Flutter app (`lib/`) has its data and state foundation for the first screens (game list,
-composition):
+The Flutter app (`lib/`) has its data/state foundation and its first two screens:
 
 - `lib/data/`: Drift schema (`Games` table) and `GameRepository`
 - `lib/state/`: Riverpod providers, including draft-then-commit composition editing
-
-No UI screens yet.
+- `lib/ui/`: design-token system (`theme/`, mapped from the design handoff's colour/typography/
+  spacing tables), a small reusable component layer (`widgets/`), `go_router` navigation
+  (`router/`), and the screens (`screens/`)
 
 ## Architecture
 
@@ -33,15 +33,19 @@ No UI screens yet.
 lib/
   data/                  Drift schema + repositories
   state/                 Riverpod providers/controllers
-  (UI not started yet)
+  ui/
+    theme/                design tokens (colors, typography, spacing/radii/sizes, icons)
+    widgets/               reusable components (buttons, chips, steppers, cards...)
+    router/                 go_router navigation
+    screens/                 one folder per screen
 packages/rules_engine/   rules engine, pure Dart, zero Flutter dependency
 ```
 
 The rules engine is deliberately isolated in its own package so it stays testable independently
 of the UI (`dart test`, no Flutter test harness).
 
-Stack: Riverpod (state), Drift (typed SQLite), freezed (immutable models). go_router (navigation)
-and json_serializable aren't wired in yet.
+Stack: Riverpod (state), Drift (typed SQLite), freezed (immutable models), go_router
+(navigation), tabler_icons_plus (icons). json_serializable isn't wired in yet.
 
 ## Development
 
