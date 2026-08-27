@@ -164,7 +164,10 @@ void main() {
       await tester.pumpAndSettle();
 
       final saved = repository.allGames.single;
-      expect(saved.status, GameStatus.inProgress);
+      // Committing the composition doesn't start the game: naming (A1) and the deal (A2) are
+      // still setup, and a blank roster gets seeded, sized to the player count.
+      expect(saved.status, GameStatus.setup);
+      expect(repository.rosterOf(saved.id), hasLength(8));
       // FakeGameRepository.createGame()'s default playerCount is 8; 1 wolf assigned leaves 7
       // remaining, silently topped up as villageois - matches CompositionEditor.commit()'s
       // documented behaviour.

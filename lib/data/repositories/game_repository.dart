@@ -11,14 +11,31 @@ abstract class GameRepository {
   Future<int> createGame({int initialPlayerCount = 8});
 
   /// The single write for "Lancer la partie": persists playerCount and
-  /// roleCounts together, sets status to GameStatus.inProgress.
+  /// roleCounts, and - in the same transaction - seeds [playerCount] blank
+  /// Players rows (seatIndex 0..N-1, empty name) if the game has no roster
+  /// yet. The game stays in GameStatus.setup: naming (A1) and the deal (A2)
+  /// are still setup; only startGame flips it to inProgress.
   Future<void> saveComposition({
     required int gameId,
     required int playerCount,
     required Map<String, int> roleCounts,
   });
 
+  /// Reactive roster for one game, ordered by seatIndex.
+  Stream<List<PlayerRow>> watchRoster(int gameId);
+
+  /// One-shot roster for one game, ordered by seatIndex.
+  Future<List<PlayerRow>> getRoster(int gameId);
+
+  /// Writes [names] (in seatIndex order) onto the existing roster rows. The
+  /// list length must equal the roster size, or an [ArgumentError] is thrown.
+  Future<void> savePlayerNames({required int gameId, required List<String> names});
+
+  /// "Commencer la nuit 1": moves the game from setup to inProgress. Kept
+  /// generic so Phase 4 can extend it to also seed the night phase/step.
+  Future<void> startGame(int gameId);
+
   /// Deletes a game, but only if it's still GameStatus.setup (abandoned
-  /// draft cleanup, not a general-purpose delete).
+  /// draft cleanup, not a general-purpose delete). Its roster rows cascade.
   Future<void> discardDraft(int gameId);
 }

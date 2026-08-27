@@ -146,7 +146,10 @@ void main() {
       final game = await fakeRepository.getGame(id);
       expect(game!.playerCount, 5);
       expect(game.compositionJson, {'loup_garou': 2, 'villageois': 3});
-      expect(game.status, GameStatus.inProgress);
+      // Naming (A1) and the deal (A2) are still setup; only startGame flips it.
+      expect(game.status, GameStatus.setup);
+      // ...and the blank roster is seeded, sized to playerCount.
+      expect(fakeRepository.rosterOf(id), hasLength(5));
     });
   });
 
@@ -174,7 +177,7 @@ void main() {
       // ref.invalidate(gameProvider(gameId)), this would return the stale
       // pre-commit snapshot instead of re-fetching.
       final afterGame = await container.read(gameProvider(id).future);
-      expect(afterGame!.status, GameStatus.inProgress);
+      expect(afterGame!.compositionJson, {'loup_garou': 2, 'villageois': 4});
 
       // Not also re-reading gameListProvider here: it wraps Drift's own
       // reactive watchGames() stream (already covered end to end by

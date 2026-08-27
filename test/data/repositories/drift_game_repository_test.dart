@@ -61,7 +61,7 @@ void main() {
   });
 
   group('saveComposition', () {
-    test('round-trips playerCount, compositionJson and status', () async {
+    test('round-trips playerCount and compositionJson, leaves status at setup', () async {
       final id = await repository.createGame();
       await repository.saveComposition(
         gameId: id,
@@ -72,7 +72,34 @@ void main() {
       final game = await repository.getGame(id);
       expect(game!.playerCount, 9);
       expect(game.compositionJson, {'loup_garou': 2, 'voyante': 1, 'villageois': 6});
-      expect(game.status, GameStatus.inProgress);
+      // Naming (A1) and the deal (A2) are still setup; only startGame flips it.
+      expect(game.status, GameStatus.setup);
+    });
+
+    test('seeds a blank roster sized to playerCount', () async {
+      final id = await repository.createGame();
+      await repository.saveComposition(gameId: id, playerCount: 6, roleCounts: const {});
+
+      final roster = await repository.getRoster(id);
+      expect(roster, hasLength(6));
+      expect(roster.map((p) => p.seatIndex), [0, 1, 2, 3, 4, 5]);
+      expect(roster.every((p) => p.name.isEmpty), isTrue);
+      expect(roster.every((p) => p.alive), isTrue);
+    });
+
+    test('called twice does not re-seed or duplicate the roster', () async {
+      final id = await repository.createGame();
+      await repository.saveComposition(gameId: id, playerCount: 6, roleCounts: const {});
+      await repository.savePlayerNames(
+        gameId: id,
+        names: const ['Ana', 'Bo', 'Cy', 'Di', 'Ed', 'Fi'],
+      );
+
+      await repository.saveComposition(gameId: id, playerCount: 6, roleCounts: const {});
+
+      final roster = await repository.getRoster(id);
+      expect(roster, hasLength(6));
+      expect(roster.map((p) => p.name), ['Ana', 'Bo', 'Cy', 'Di', 'Ed', 'Fi']);
     });
 
     test('sets updatedAt to roughly now', () async {
@@ -95,6 +122,58 @@ void main() {
     });
   });
 
+  group('savePlayerNames', () {
+    test('writes names onto the roster in seat order', () async {
+      final id = await repository.createGame();
+      await repository.saveComposition(gameId: id, playerCount: 3, roleCounts: const {});
+
+      await repository.savePlayerNames(gameId: id, names: const ['Camille', 'Julien', 'Noa']);
+
+      final roster = await repository.getRoster(id);
+      expect(roster.map((p) => p.name), ['Camille', 'Julien', 'Noa']);
+    });
+
+    test('throws ArgumentError when the name count does not match the roster', () async {
+      final id = await repository.createGame();
+      await repository.saveComposition(gameId: id, playerCount: 3, roleCounts: const {});
+
+      expect(
+        () => repository.savePlayerNames(gameId: id, names: const ['Camille', 'Julien']),
+        throwsArgumentError,
+      );
+    });
+  });
+
+  group('startGame', () {
+    test('moves the game from setup to inProgress', () async {
+      final id = await repository.createGame();
+      await repository.saveComposition(gameId: id, playerCount: 8, roleCounts: const {});
+      expect((await repository.getGame(id))!.status, GameStatus.setup);
+
+      await repository.startGame(id);
+      expect((await repository.getGame(id))!.status, GameStatus.inProgress);
+    });
+
+    test('throws GameNotFoundException for an unknown id', () {
+      expect(() => repository.startGame(999), throwsA(isA<GameNotFoundException>()));
+    });
+  });
+
+  group('watchRoster', () {
+    test('emits the seeded roster then re-emits after savePlayerNames', () async {
+      final id = await repository.createGame();
+      await repository.saveComposition(gameId: id, playerCount: 2, roleCounts: const {});
+
+      final queue = StreamQueue(repository.watchRoster(id));
+      expect((await queue.next).map((p) => p.name), ['', '']);
+
+      await repository.savePlayerNames(gameId: id, names: const ['Lina', 'Théo']);
+      expect((await queue.next).map((p) => p.name), ['Lina', 'Théo']);
+
+      await queue.cancel();
+    });
+  });
+
   group('discardDraft', () {
     test('deletes a game still in GameStatus.setup', () async {
       final id = await repository.createGame();
@@ -102,9 +181,21 @@ void main() {
       expect(await repository.getGame(id), isNull);
     });
 
-    test('does not delete a game that has already been saved', () async {
+    test('a composed-but-not-started game is still a setup draft: deleted, roster cascades', () async {
+      final id = await repository.createGame();
+      await repository.saveComposition(gameId: id, playerCount: 4, roleCounts: const {});
+
+      await repository.discardDraft(id);
+
+      expect(await repository.getGame(id), isNull);
+      final orphanRows = await (db.select(db.players)..where((p) => p.gameId.equals(id))).get();
+      expect(orphanRows, isEmpty);
+    });
+
+    test('does not delete a game that has been started', () async {
       final id = await repository.createGame();
       await repository.saveComposition(gameId: id, playerCount: 8, roleCounts: const {});
+      await repository.startGame(id);
       await repository.discardDraft(id);
       expect(await repository.getGame(id), isNotNull);
     });
@@ -134,7 +225,7 @@ void main() {
 
       await repository.saveComposition(gameId: id, playerCount: 8, roleCounts: const {});
       final afterSave = await queue.next;
-      expect(afterSave.single.status, GameStatus.inProgress);
+      expect(afterSave.single.compositionJson, isNotNull);
 
       await queue.cancel();
     });
