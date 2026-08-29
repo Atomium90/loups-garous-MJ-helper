@@ -291,7 +291,7 @@ class _EnCoursCard extends StatelessWidget {
                     color: colors.textPrimary,
                   ),
                 ),
-                // No phase/step is tracked yet (Phase 4), so the mockup's precise resume line
+                // No phase/step is tracked yet, so the mockup's precise resume line
                 // ("Nuit 3 · la Sorcière") can't be derived - a flat fallback in text/secondary
                 // (not accent/text, reserved for real precise status) instead.
                 Text(

@@ -25,8 +25,8 @@ class Players extends Table {
   /// Empty until the MJ types it on A1.
   TextColumn get name => text().withDefault(const Constant(''))();
 
-  /// Assigned during night 1 (or manual assignment) - Phase 4. Unwritten this
-  /// far, declared now so adding it doesn't need a schema migration later.
+  /// Assigned once the game is under way (night 1, or manual assignment). Not
+  /// written yet - declared now so adding it later needs no schema migration.
   TextColumn get roleId => text().nullable()();
 
   BoolColumn get alive => boolean().withDefault(const Constant(true))();

@@ -19,10 +19,12 @@ game:
 - `GameStateMachine`: resolves every role action from explicit MJ-reported facts, including death
   cascades (lovers, the Hunter's shot, Captain succession)
 
-The Flutter app (`lib/`) has its data/state foundation and its first two screens:
+The Flutter app (`lib/`) covers the full game-setup flow (Accueil → Composition → Les joueurs →
+Avant la nuit 1):
 
-- `lib/data/`: Drift schema (`Games` table) and `GameRepository`
-- `lib/state/`: Riverpod providers, including draft-then-commit composition editing
+- `lib/data/`: Drift schema (`Games` + `Players` tables) and `GameRepository`
+- `lib/state/`: Riverpod providers, including draft-then-commit editing of both the composition
+  and the player roster
 - `lib/ui/`: design-token system (`theme/`, mapped from the design handoff's colour/typography/
   spacing tables), a small reusable component layer (`widgets/`), `go_router` navigation
   (`router/`), and the screens (`screens/`)

@@ -32,7 +32,7 @@ abstract class GameRepository {
   Future<void> savePlayerNames({required int gameId, required List<String> names});
 
   /// "Commencer la nuit 1": moves the game from setup to inProgress. Kept
-  /// generic so Phase 4 can extend it to also seed the night phase/step.
+  /// generic so it can later also seed the night phase/step.
   Future<void> startGame(int gameId);
 
   /// Deletes a game, but only if it's still GameStatus.setup (abandoned

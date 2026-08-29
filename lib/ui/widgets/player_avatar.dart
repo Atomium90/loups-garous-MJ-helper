@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 
-/// The player avatar used across the app - A2's roster chips now, then every Phase 4 selection
-/// grid, roster list and recap. No photos, no colour-hashing (design handoff, "Assets"): the
-/// first two letters of the name, uppercased, in a circle.
+/// The player avatar used across the app - A2's roster chips now, and the in-game selection
+/// grids, roster lists and recap screens later. No photos, no colour-hashing (design handoff,
+/// "Assets"): the first two letters of the name, uppercased, in a circle.
 ///
 /// - unselected: [fillColor] (default `bg/inset`) + a hairline outline
 /// - [selected]: 2px `accent/border` ring, `accent/bg` fill, `accent/text` initials at 500
