@@ -1,9 +1,11 @@
 import 'package:async/async.dart';
+import 'package:drift/drift.dart' show OrderingTerm;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:loup_garou_mj/data/database/app_database.dart';
 import 'package:loup_garou_mj/data/database/converters/role_counts_converter.dart';
 import 'package:loup_garou_mj/data/models/game_status.dart';
+import 'package:loup_garou_mj/data/models/night_log_entry.dart';
 import 'package:loup_garou_mj/data/repositories/drift_game_repository.dart';
 import 'package:loup_garou_mj/data/repositories/game_not_found_exception.dart';
 
@@ -171,6 +173,97 @@ void main() {
       expect((await queue.next).map((p) => p.name), ['Lina', 'Théo']);
 
       await queue.cancel();
+    });
+  });
+
+  group('assignRoles', () {
+    test('writes a role onto the given roster rows only', () async {
+      final id = await repository.createGame();
+      await repository.saveComposition(gameId: id, playerCount: 4, roleCounts: const {});
+      final roster = await repository.getRoster(id);
+
+      await repository.assignRoles(
+        playerRowIds: [roster[1].id, roster[3].id],
+        roleId: 'loup_garou',
+      );
+
+      final after = await repository.getRoster(id);
+      expect(after.map((p) => p.roleId), [null, 'loup_garou', null, 'loup_garou']);
+    });
+  });
+
+  group('saveSession', () {
+    test('round-trips the snapshot blob onto Game.sessionJson', () async {
+      final id = await repository.createGame();
+      await repository.saveSession(gameId: id, sessionJson: '{"engine":1}');
+      expect((await repository.getGame(id))!.sessionJson, '{"engine":1}');
+    });
+
+    test('throws GameNotFoundException for an unknown id', () {
+      expect(
+        () => repository.saveSession(gameId: 999, sessionJson: '{}'),
+        throwsA(isA<GameNotFoundException>()),
+      );
+    });
+  });
+
+  group('nightLog', () {
+    test('appendNightLog assigns increasing per-game seq across calls', () async {
+      final id = await repository.createGame();
+      await repository.appendNightLog(
+        gameId: id,
+        entries: const [
+          NightLogEntry(phaseLabel: 'NUIT 1', iconName: 'wolves', line: 'Les Loups désignent Théo'),
+        ],
+      );
+      await repository.appendNightLog(
+        gameId: id,
+        entries: const [
+          NightLogEntry(phaseLabel: 'NUIT 1', iconName: 'flask', line: 'La Sorcière empoisonne Noa'),
+          NightLogEntry(phaseLabel: 'JOUR 1', iconName: 'sun', line: 'Le jour se lève'),
+        ],
+      );
+
+      final rows = await (db.select(db.nightLog)
+            ..where((e) => e.gameId.equals(id))
+            ..orderBy([(e) => OrderingTerm.asc(e.seq)]))
+          .get();
+      expect(rows.map((r) => r.seq), [1, 2, 3]);
+      expect(rows.map((r) => r.line), [
+        'Les Loups désignent Théo',
+        'La Sorcière empoisonne Noa',
+        'Le jour se lève',
+      ]);
+    });
+
+    test('watchNightLog streams newest-first and re-emits on append', () async {
+      final id = await repository.createGame();
+      final queue = StreamQueue(repository.watchNightLog(id));
+      expect(await queue.next, isEmpty);
+
+      await repository.appendNightLog(
+        gameId: id,
+        entries: const [
+          NightLogEntry(phaseLabel: 'NUIT 1', iconName: 'wolves', line: 'un'),
+          NightLogEntry(phaseLabel: 'NUIT 1', iconName: 'flask', line: 'deux'),
+        ],
+      );
+      expect((await queue.next).map((r) => r.line), ['deux', 'un']);
+
+      await queue.cancel();
+    });
+
+    test('deleting a game cascades its night-log rows', () async {
+      final id = await repository.createGame();
+      await repository.appendNightLog(
+        gameId: id,
+        entries: const [NightLogEntry(phaseLabel: 'NUIT 1', iconName: 'wolves', line: 'x')],
+      );
+
+      await repository.discardDraft(id);
+
+      final orphans = await (db.select(db.nightLog)..where((e) => e.gameId.equals(id))).get();
+      expect(orphans, isEmpty);
     });
   });
 

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:drift/drift.dart';
 import 'package:loup_garou_mj/data/database/app_database.dart';
 import 'package:loup_garou_mj/data/models/game_status.dart';
+import 'package:loup_garou_mj/data/models/night_log_entry.dart';
 import 'package:loup_garou_mj/data/repositories/game_not_found_exception.dart';
 import 'package:loup_garou_mj/data/repositories/game_repository.dart';
 
@@ -23,8 +24,12 @@ class FakeGameRepository implements GameRepository {
   /// gameId -> roster rows, seatIndex order. Mirrors the Players table.
   final Map<int, List<PlayerRow>> _rosters = {};
 
+  /// gameId -> journal rows, insertion order (ascending seq).
+  final Map<int, List<NightLogRow>> _nightLogs = {};
+
   int _nextId = 1;
   int _nextPlayerId = 1;
+  int _nextNightLogId = 1;
 
   // Broadcasts *that something changed*, not the data itself - each watchGames() subscriber
   // re-reads and re-sorts `_games` on every event, matching the interface's own documented
@@ -40,6 +45,9 @@ class FakeGameRepository implements GameRepository {
 
   /// Test-only convenience: the roster held for [gameId], seatIndex order.
   List<PlayerRow> rosterOf(int gameId) => List.unmodifiable(_rosters[gameId] ?? const []);
+
+  /// Test-only convenience: the journal held for [gameId], ascending seq.
+  List<NightLogRow> nightLogOf(int gameId) => List.unmodifiable(_nightLogs[gameId] ?? const []);
 
   List<Game> _sortedGames() =>
       _games.values.toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -122,6 +130,19 @@ class FakeGameRepository implements GameRepository {
   }
 
   @override
+  Future<void> assignRoles({required List<int> playerRowIds, required String roleId}) async {
+    if (playerRowIds.isEmpty) return;
+    final ids = playerRowIds.toSet();
+    for (final entry in _rosters.entries) {
+      _rosters[entry.key] = [
+        for (final p in entry.value)
+          if (ids.contains(p.id)) p.copyWith(roleId: Value(roleId)) else p,
+      ];
+    }
+    _changes.add(null);
+  }
+
+  @override
   Future<void> startGame(int gameId) async {
     final game = _games[gameId];
     if (game == null) throw GameNotFoundException(gameId);
@@ -133,11 +154,52 @@ class FakeGameRepository implements GameRepository {
   }
 
   @override
+  Future<void> saveSession({required int gameId, required String sessionJson}) async {
+    final game = _games[gameId];
+    if (game == null) throw GameNotFoundException(gameId);
+    _games[gameId] = game.copyWith(
+      sessionJson: Value(sessionJson),
+      updatedAt: DateTime.now(),
+    );
+    _changes.add(null);
+  }
+
+  @override
+  Future<void> appendNightLog({required int gameId, required List<NightLogEntry> entries}) async {
+    if (entries.isEmpty) return;
+    final existing = _nightLogs[gameId] ?? [];
+    var seq = (existing.isEmpty ? 0 : existing.last.seq) + 1;
+    _nightLogs[gameId] = [
+      ...existing,
+      for (final entry in entries)
+        NightLogRow(
+          id: _nextNightLogId++,
+          gameId: gameId,
+          seq: seq++,
+          phaseLabel: entry.phaseLabel,
+          iconName: entry.iconName,
+          line: entry.line,
+          createdAt: DateTime.now(),
+        ),
+    ];
+    _changes.add(null);
+  }
+
+  @override
+  Stream<List<NightLogRow>> watchNightLog(int gameId) async* {
+    List<NightLogRow> snapshot() =>
+        [...(_nightLogs[gameId] ?? const <NightLogRow>[])].reversed.toList();
+    yield snapshot();
+    yield* _changes.stream.map((_) => snapshot());
+  }
+
+  @override
   Future<void> discardDraft(int gameId) async {
     final game = _games[gameId];
     if (game != null && game.status == GameStatus.setup) {
       _games.remove(gameId);
       _rosters.remove(gameId);
+      _nightLogs.remove(gameId);
       _changes.add(null);
     }
   }

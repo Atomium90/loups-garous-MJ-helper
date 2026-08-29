@@ -23,4 +23,10 @@ class Games extends Table {
   TextColumn get compositionJson => text().nullable().map(const RoleCountsConverter())();
 
   IntColumn get status => intEnum<GameStatus>().withDefault(Constant(GameStatus.setup.index))();
+
+  /// The live game-state snapshot, set once the night starts and rewritten
+  /// after every MJ action: `{"engine": <GameState JSON>, "cursor": {...}}`.
+  /// Null through setup/composition/naming. This is the source of truth for a
+  /// running game (the roster's role/alive columns are only meaningful pre-start).
+  TextColumn get sessionJson => text().nullable()();
 }

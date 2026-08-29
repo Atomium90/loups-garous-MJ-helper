@@ -4,18 +4,19 @@ import 'package:drift_flutter/drift_flutter.dart';
 import '../models/game_status.dart';
 import 'converters/role_counts_converter.dart';
 import 'tables/games_table.dart';
+import 'tables/night_log_table.dart';
 import 'tables/players_table.dart';
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [Games, Players])
+@DriftDatabase(tables: [Games, Players, NightLog])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(driftDatabase(name: 'loup_garou_mj'));
 
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -24,9 +25,13 @@ class AppDatabase extends _$AppDatabase {
       if (from < 2) {
         await m.createTable(players);
       }
+      if (from < 3) {
+        await m.addColumn(games, games.sessionJson);
+        await m.createTable(nightLog);
+      }
     },
     // drift doesn't enable foreign-key enforcement by default; without this the
-    // Players.gameId `onDelete: cascade` silently doesn't fire.
+    // `onDelete: cascade` on Players.gameId / NightLog.gameId silently doesn't fire.
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
     },

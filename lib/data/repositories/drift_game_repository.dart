@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../database/app_database.dart';
 import '../models/game_status.dart';
+import '../models/night_log_entry.dart';
 import 'game_not_found_exception.dart';
 import 'game_repository.dart';
 
@@ -97,6 +98,14 @@ class DriftGameRepository implements GameRepository {
   }
 
   @override
+  Future<void> assignRoles({required List<int> playerRowIds, required String roleId}) {
+    if (playerRowIds.isEmpty) return Future.value();
+    return (_db.update(_db.players)..where((p) => p.id.isIn(playerRowIds))).write(
+      PlayersCompanion(roleId: Value(roleId)),
+    );
+  }
+
+  @override
   Future<void> startGame(int gameId) async {
     final rowsAffected =
         await (_db.update(_db.games)..where((g) => g.id.equals(gameId))).write(
@@ -108,6 +117,56 @@ class DriftGameRepository implements GameRepository {
     if (rowsAffected == 0) {
       throw GameNotFoundException(gameId);
     }
+  }
+
+  @override
+  Future<void> saveSession({required int gameId, required String sessionJson}) async {
+    final rowsAffected =
+        await (_db.update(_db.games)..where((g) => g.id.equals(gameId))).write(
+          GamesCompanion(
+            sessionJson: Value(sessionJson),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+    if (rowsAffected == 0) {
+      throw GameNotFoundException(gameId);
+    }
+  }
+
+  @override
+  Future<void> appendNightLog({required int gameId, required List<NightLogEntry> entries}) {
+    if (entries.isEmpty) return Future.value();
+    return _db.transaction(() async {
+      final maxSeq =
+          await (_db.selectOnly(_db.nightLog)
+                ..addColumns([_db.nightLog.seq.max()])
+                ..where(_db.nightLog.gameId.equals(gameId)))
+              .map((row) => row.read(_db.nightLog.seq.max()))
+              .getSingleOrNull();
+      var seq = (maxSeq ?? 0) + 1;
+      await _db.batch((batch) {
+        for (final entry in entries) {
+          batch.insert(
+            _db.nightLog,
+            NightLogCompanion.insert(
+              gameId: gameId,
+              seq: seq++,
+              phaseLabel: entry.phaseLabel,
+              iconName: entry.iconName,
+              line: entry.line,
+            ),
+          );
+        }
+      });
+    });
+  }
+
+  @override
+  Stream<List<NightLogRow>> watchNightLog(int gameId) {
+    final query = _db.select(_db.nightLog)
+      ..where((e) => e.gameId.equals(gameId))
+      ..orderBy([(e) => OrderingTerm.desc(e.seq)]);
+    return query.watch();
   }
 
   @override
