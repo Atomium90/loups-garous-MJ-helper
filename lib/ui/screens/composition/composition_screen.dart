@@ -318,8 +318,12 @@ class _Footer extends StatelessWidget {
             label: 'Lancer la partie',
             onPressed: draft.isValid
                 ? () async {
+                    // Capture the router before the await: commit() invalidates
+                    // gameListProvider/gameProvider, which can rebuild this subtree
+                    // (see flutter_ui_gotchas #1).
+                    final router = GoRouter.of(context);
                     await notifier.commit();
-                    if (context.mounted) context.go('/');
+                    router.go('/games/$gameId/players');
                   }
                 : null,
           ),

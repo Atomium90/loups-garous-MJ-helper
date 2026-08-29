@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 // list - it's only exposed via this secondary barrel.
 import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:loup_garou_mj/ui/router/app_router.dart';
 import 'package:loup_garou_mj/ui/theme/app_theme.dart';
 
@@ -31,20 +32,24 @@ Future<void> pumpScreen(WidgetTester tester, Widget child, {List<Override> overr
 /// For a test that exercises real in-app navigation (e.g. a button that pushes another screen):
 /// the actual [appRouterProvider] (production route table, not a re-declared copy), so a
 /// navigation assertion (`find.byType(SomeScreen)`) reflects the app's real routing, not a
-/// stand-in. Always starts at home (`/`) - drive further navigation (e.g. to Composition) by
-/// simulating the same taps a real MJ would make, rather than deep-linking.
-Future<void> pumpAppRouter(WidgetTester tester, {List<Override> overrides = const []}) {
-  return tester.pumpWidget(
-    ProviderScope(
-      overrides: overrides,
-      child: Consumer(
-        builder: (context, ref, _) {
-          return MaterialApp.router(
-            routerConfig: ref.watch(appRouterProvider),
-            theme: AppTheme.light(),
-          );
-        },
-      ),
+/// stand-in. Defaults to home (`/`); pass [initialLocation] to start deeper (the deal/night
+/// screens sit several taps past home). Returns the router for `.push`/`.go` assertions.
+Future<GoRouter> pumpAppRouter(
+  WidgetTester tester, {
+  List<Override> overrides = const [],
+  String initialLocation = '/',
+}) async {
+  final container = ProviderContainer(overrides: overrides);
+  addTearDown(container.dispose);
+  final router = container.read(appRouterProvider);
+  if (initialLocation != '/') {
+    router.go(initialLocation);
+  }
+  await tester.pumpWidget(
+    UncontrolledProviderScope(
+      container: container,
+      child: MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
     ),
   );
+  return router;
 }

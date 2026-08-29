@@ -14,6 +14,7 @@ import '../theme/app_typography.dart';
 class AppTextField extends StatefulWidget {
   const AppTextField({
     required this.controller,
+    this.focusNode,
     this.hintText,
     this.textInputAction,
     this.onChanged,
@@ -23,6 +24,10 @@ class AppTextField extends StatefulWidget {
   });
 
   final TextEditingController controller;
+
+  /// Optional external node (e.g. a row that colours its index label by focus).
+  /// When omitted, the field owns and disposes its own.
+  final FocusNode? focusNode;
   final String? hintText;
   final TextInputAction? textInputAction;
   final ValueChanged<String>? onChanged;
@@ -34,7 +39,8 @@ class AppTextField extends StatefulWidget {
 }
 
 class _AppTextFieldState extends State<AppTextField> {
-  final _focusNode = FocusNode();
+  FocusNode? _ownedNode;
+  FocusNode get _focusNode => widget.focusNode ?? (_ownedNode ??= FocusNode());
 
   @override
   void initState() {
@@ -47,7 +53,7 @@ class _AppTextFieldState extends State<AppTextField> {
   @override
   void dispose() {
     _focusNode.removeListener(_onFocusChange);
-    _focusNode.dispose();
+    _ownedNode?.dispose();
     super.dispose();
   }
 

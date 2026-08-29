@@ -4,6 +4,7 @@ import 'package:loup_garou_mj/data/models/game_status.dart';
 import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
 import 'package:loup_garou_mj/ui/screens/composition/composition_screen.dart';
 import 'package:loup_garou_mj/ui/screens/home/home_screen.dart';
+import 'package:loup_garou_mj/ui/screens/players/players_screen.dart';
 import 'package:loup_garou_mj/ui/theme/app_icons.dart';
 import 'package:loup_garou_mj/ui/widgets/app_button.dart';
 import 'package:loup_garou_mj/ui/widgets/app_stepper.dart';
@@ -146,7 +147,7 @@ void main() {
   );
 
   testWidgets(
-    'Lancer la partie commits the composition (with the villageois top-up) and returns home',
+    'Lancer la partie commits the composition (with the villageois top-up) and opens A1',
     (tester) async {
       final repository = FakeGameRepository();
       await pumpAppRouter(
@@ -172,7 +173,9 @@ void main() {
       // remaining, silently topped up as villageois - matches CompositionEditor.commit()'s
       // documented behaviour.
       expect(saved.compositionJson, {'loup_garou': 1, 'villageois': 7});
-      expect(find.byType(HomeScreen), findsOneWidget);
+      // ...and it moves on to A1 "Les joueurs", not back home.
+      expect(find.byType(PlayersScreen), findsOneWidget);
+      expect(find.text('Les joueurs'), findsOneWidget);
     },
   );
 
