@@ -25,9 +25,18 @@ abstract final class AppIcons {
   /// it, a filled sun/moon phase icon would fabricate a status we don't actually know.
   static const resumeOther = TablerIcons.playerPlay;
 
-  /// E2's back chevron.
+  /// E2's back chevron. Also A1/A2's.
   static const back = TablerIcons.chevronLeft;
 
   /// E2's "Compo complète" check.
   static const compositionComplete = TablerIcons.check;
+
+  /// A2's "Distribuez les cartes" callout.
+  static const deal = TablerIcons.cards;
+
+  /// A2's "Commencer la nuit 1" button.
+  static const nightStart = TablerIcons.moonStars;
+
+  /// A1's disabled "Carnet d'habitués" row (the coming-soon address book).
+  static const regulars = TablerIcons.bookmarks;
 }
