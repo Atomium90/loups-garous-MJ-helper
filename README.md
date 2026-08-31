@@ -18,28 +18,39 @@ game:
   active composition and who's still alive
 - `GameStateMachine`: resolves every role action from explicit MJ-reported facts, including death
   cascades (lovers, the Hunter's shot, Captain succession)
+- `GameStateJson`: encode/decode a `GameState` to plain maps, for the app's snapshot persistence
 
-The Flutter app (`lib/`) covers the full game-setup flow (Accueil → Composition → Les joueurs →
-Avant la nuit 1):
+The Flutter app (`lib/`) runs the game from setup through the first night: Accueil → Composition
+→ Les joueurs → Avant la nuit 1 → the in-game Script/Village/Journal shell, where the MJ
+identifies each role as it wakes, runs the Seer / Wolves / Witch, resolves the night, and lands
+on the day-1 recap.
 
-- `lib/data/`: Drift schema (`Games` + `Players` tables) and `GameRepository`
-- `lib/state/`: Riverpod providers, including draft-then-commit editing of both the composition
-  and the player roster
+- `lib/data/`: Drift schema (`Games`, `Players`, `NightLog`) and `GameRepository`. A running
+  game's live state is a JSON snapshot of the engine's `GameState` on the `Games` row, rewritten
+  after every action, so a force-quit resumes on the exact step.
+- `lib/state/`: Riverpod providers. `GameSession` is the orchestrator — it loads or seeds a
+  game's `GameState`, applies MJ-reported facts through the pure `GameStateMachine`, and
+  persists. Plus draft-then-commit editing of the composition and the roster.
 - `lib/ui/`: design-token system (`theme/`, mapped from the design handoff's colour/typography/
-  spacing tables), a small reusable component layer (`widgets/`), `go_router` navigation
-  (`router/`), and the screens (`screens/`)
+  spacing tables), a reusable component layer (`widgets/`), `go_router` navigation (`router/`),
+  and the screens (`screens/`).
+
+Not built yet: the Cupidon / Voleur / Seer actions (their identification steps work, the action
+is a "pass"), the day loop (captain, vote), death-chain resolution, and the full Village view.
 
 ## Architecture
 
 ```
 lib/
   data/                  Drift schema + repositories
-  state/                 Riverpod providers/controllers
+  state/
+    session/               GameSession orchestrator, cursor, journal-line rendering
+    ...                    other Riverpod providers/controllers
   ui/
     theme/                design tokens (colors, typography, spacing/radii/sizes, icons)
-    widgets/               reusable components (buttons, chips, steppers, cards...)
+    widgets/               reusable components (buttons, chips, avatars, grids...)
     router/                 go_router navigation
-    screens/                 one folder per screen
+    screens/                 one folder per screen (in_game/ holds the tab shell + Script)
 packages/rules_engine/   rules engine, pure Dart, zero Flutter dependency
 ```
 
