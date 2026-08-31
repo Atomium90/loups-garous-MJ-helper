@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:loup_garou_mj/data/models/game_status.dart';
 import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
 import 'package:loup_garou_mj/ui/screens/before_night/before_night_screen.dart';
-import 'package:loup_garou_mj/ui/screens/home/home_screen.dart';
+import 'package:loup_garou_mj/ui/screens/in_game/script_tab.dart';
 
 import '../../support/fake_game_repository.dart';
 import '../../support/pump_app.dart';
@@ -43,12 +43,12 @@ void main() {
     expect(find.text('2 Loups-Garous · Voyante · 3 Villageois'), findsOneWidget);
   });
 
-  testWidgets('Commencer la nuit 1 starts the game and returns home', (tester) async {
+  testWidgets('Commencer la nuit 1 starts the game and opens the Script tab', (tester) async {
     final repository = FakeGameRepository();
     final id = await _readyToDeal(
       repository,
-      composition: const {'loup_garou': 1, 'villageois': 1},
-      names: const ['Lina', 'Théo'],
+      composition: const {'loup_garou': 1, 'voyante': 1, 'villageois': 1},
+      names: const ['Lina', 'Théo', 'Awa'],
     );
 
     await pumpAppRouter(
@@ -63,6 +63,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect((await repository.getGame(id))!.status, GameStatus.inProgress);
-    expect(find.byType(HomeScreen), findsOneWidget);
+    expect(find.byType(ScriptTab), findsOneWidget);
+    expect(find.text('Nuit 1'), findsOneWidget);
   });
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 
 /// Semantic icon names, mapped to `tabler_icons_plus`'s `TablerIcons.*` constants (see
@@ -39,4 +40,42 @@ abstract final class AppIcons {
 
   /// A1's disabled "Carnet d'habitués" row (the coming-soon address book).
   static const regulars = TablerIcons.bookmarks;
+
+  // --- in-game tab bar ---
+
+  /// Script tab, night phase.
+  static const night = TablerIcons.moonStars;
+
+  /// Script tab, day phase.
+  static const day = TablerIcons.sun;
+
+  /// Village tab.
+  static const village = TablerIcons.users;
+
+  /// Journal tab.
+  static const journal = TablerIcons.listDetails;
+
+  /// The script card's `?` help button (opens the aide-mémoire).
+  static const help = TablerIcons.help;
+
+  // --- night script / journal ---
+
+  static const wolves = TablerIcons.moodWrrr;
+  static const seer = TablerIcons.eye;
+  static const witch = TablerIcons.flask;
+  static const cupid = TablerIcons.heart;
+  static const thief = TablerIcons.cards;
+  static const skull = TablerIcons.skull;
+  static const hunter = TablerIcons.crosshair;
+
+  /// Maps a [NightLogRow.iconName] semantic key to its icon.
+  static IconData? nightLog(String key) => switch (key) {
+    'wolves' => wolves,
+    'flask' => witch,
+    'cupid' => cupid,
+    'skull' => skull,
+    'hunter' => hunter,
+    'sun' => day,
+    _ => null,
+  };
 }

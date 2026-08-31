@@ -68,7 +68,8 @@ class _Body extends ConsumerWidget {
   Future<void> _onStart(BuildContext context, WidgetRef ref) async {
     final router = GoRouter.of(context);
     await ref.read(gameRepositoryProvider).startGame(gameId);
-    router.go('/');
+    // Into the running-game shell; GameSession seeds the night-1 snapshot lazily on first read.
+    router.go('/games/$gameId/game');
   }
 
   @override

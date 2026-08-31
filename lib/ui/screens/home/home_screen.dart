@@ -6,6 +6,7 @@ import '../../../data/database/app_database.dart';
 import '../../../data/models/game_status.dart';
 import '../../../state/providers/game_list_provider.dart';
 import '../../../state/providers/game_repository_provider.dart';
+import '../../../state/session/session_summary_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
@@ -242,21 +243,21 @@ class _EnCoursSection extends StatelessWidget {
   }
 }
 
-class _EnCoursCard extends StatelessWidget {
+class _EnCoursCard extends ConsumerWidget {
   const _EnCoursCard({required this.game, required this.isMostRecent});
 
   final Game game;
   final bool isMostRecent;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final typography = context.typography;
     final daysElapsed = DateTime.now().difference(game.createdAt).inDays;
+    final summary = ref.watch(sessionSummaryProvider(game.id)).value;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
       decoration: BoxDecoration(
         color: isMostRecent ? colors.accentBg : Colors.transparent,
         borderRadius: BorderRadius.circular(AppRadii.button),
@@ -264,50 +265,57 @@ class _EnCoursCard extends StatelessWidget {
           color: isMostRecent ? colors.accentBorder : colors.borderControl,
         ),
       ),
-      child: Row(
-        spacing: 12,
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: isMostRecent ? colors.bgScreen : colors.bgInset,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              isMostRecent ? AppIcons.resumeActive : AppIcons.resumeOther,
-              size: 16,
-              color: isMostRecent ? colors.accentText : colors.textTertiary,
-            ),
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppRadii.button),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppRadii.button),
+          onTap: () => context.go('/games/${game.id}/game'),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
+            child: Row(
+              spacing: 12,
               children: [
-                Text(
-                  game.name ??
-                      'Partie du ${frenchDayMonthLabel(game.createdAt)}',
-                  style: typography.rowLabel.copyWith(
-                    color: colors.textPrimary,
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: isMostRecent ? colors.bgScreen : colors.bgInset,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    isMostRecent ? AppIcons.resumeActive : AppIcons.resumeOther,
+                    size: 16,
+                    color: isMostRecent ? colors.accentText : colors.textTertiary,
                   ),
                 ),
-                // No phase/step is tracked yet, so the mockup's precise resume line
-                // ("Nuit 3 · la Sorcière") can't be derived - a flat fallback in text/secondary
-                // (not accent/text, reserved for real precise status) instead.
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        game.name ?? 'Partie du ${frenchDayMonthLabel(game.createdAt)}',
+                        style: typography.rowLabel.copyWith(color: colors.textPrimary),
+                      ),
+                      Text(
+                        summary?.line ?? 'Partie en cours',
+                        style: typography.meta.copyWith(
+                          color: summary != null ? colors.accentText : colors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 Text(
-                  'Partie en cours',
-                  style: typography.meta.copyWith(color: colors.textSecondary),
+                  '$daysElapsed j.',
+                  style: typography.micro.copyWith(
+                    color: isMostRecent ? colors.textSecondary : colors.textTertiary,
+                  ),
                 ),
               ],
             ),
           ),
-          Text(
-            '$daysElapsed j.',
-            style: typography.micro.copyWith(
-              color: isMostRecent ? colors.textSecondary : colors.textTertiary,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
