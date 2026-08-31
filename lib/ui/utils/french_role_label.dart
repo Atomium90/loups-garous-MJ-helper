@@ -15,9 +15,12 @@ const _irregularPlurals = {
 String frenchRoleLabel(String roleId, int count, RoleRegistry registry) {
   final role = registry.byId(roleId);
   if (count <= 1) return role.name;
-  final plural = _irregularPlurals[roleId] ?? '${role.name}s';
-  return '$count $plural';
+  return '$count ${frenchRolePlural(roleId, registry)}';
 }
+
+/// The bare plural: "Loups-Garous", "Voyantes", "Villageois".
+String frenchRolePlural(String roleId, RoleRegistry registry) =>
+    _irregularPlurals[roleId] ?? '${registry.byId(roleId).name}s';
 
 /// The "Dans la pioche" line on A2 (and the recap sheet later):
 /// "2 Loups-Garous · Voyante · Sorcière · Cupidon · Chasseur · 2 Villageois".

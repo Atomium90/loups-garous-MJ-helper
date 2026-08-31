@@ -3,10 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rules_engine/rules_engine.dart';
 
 import '../../../state/session/game_session.dart';
+import '../../../state/session/session_cursor.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
+import '../../widgets/app_button.dart';
+import 'widgets/identify_step.dart';
 
 /// The Script tab: the current step of the loop. Night -> the wake script;
 /// day -> the recap. (The per-step bodies land in the next commits.)
@@ -44,8 +47,14 @@ class _NightBody extends ConsumerWidget {
   final int gameId;
   final GameSessionState session;
 
+  List<String> _holderNames(String roleId) => [
+    for (final p in session.engine.players)
+      if (p.roleId == roleId) p.name,
+  ];
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final notifier = ref.read(gameSessionProvider(gameId).notifier);
     final step = session.currentStep;
 
     return Column(
@@ -60,17 +69,72 @@ class _NightBody extends ConsumerWidget {
         if (step != null)
           Padding(
             padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 0),
-            child: _ScriptCard(role: step.role),
+            child: _ScriptCard(
+              role: step.role,
+              holderNames: session.cursor.subStep == NightSubStep.act
+                  ? _holderNames(step.role.id)
+                  : const [],
+            ),
           ),
-        const Spacer(),
+        Expanded(child: _body(context, notifier, step)),
+      ],
+    );
+  }
+
+  Widget _body(BuildContext context, GameSession notifier, NightScriptStep? step) {
+    if (step == null) {
+      return _FinalizePrompt(onResolve: () => notifier.applyAction(const FinalizeNight()));
+    }
+    if (session.cursor.subStep == NightSubStep.identify) {
+      return IdentifyStep(
+        role: step.role,
+        count: session.composition[step.role.id] ?? 1,
+        candidates: [
+          for (final p in session.engine.alivePlayers)
+            (rowId: int.parse(p.id), name: p.name),
+        ],
+        onConfirm: (rowIds) => notifier.identifyRole(step.role.id, rowIds),
+        onDefer: notifier.skipStep,
+      );
+    }
+    // act sub-step - per-role widgets land in the next commit
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.screen),
+      child: Text(
+        'Action « ${step.role.name} » — bientôt',
+        style: context.typography.body.copyWith(color: context.colors.textTertiary),
+      ),
+    );
+  }
+}
+
+class _FinalizePrompt extends StatelessWidget {
+  const _FinalizePrompt({required this.onResolve});
+
+  final VoidCallback onResolve;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
         Padding(
-          padding: const EdgeInsets.all(AppSpacing.screen),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 10),
           child: Text(
-            step == null
-                ? 'Toutes les étapes sont passées. (Résolution — bientôt)'
-                : 'Étape « ${step.role.name} » — bientôt',
-            style: context.typography.body.copyWith(color: context.colors.textTertiary),
+            'Tous les rôles ont joué.',
+            style: context.typography.body.copyWith(color: colors.textSecondary),
           ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screen,
+            0,
+            AppSpacing.screen,
+            AppSpacing.screen,
+          ),
+          child: AppButton(label: 'Résoudre la nuit', onPressed: onResolve),
         ),
       ],
     );
@@ -162,9 +226,12 @@ class _Dot extends StatelessWidget {
 }
 
 class _ScriptCard extends StatelessWidget {
-  const _ScriptCard({required this.role});
+  const _ScriptCard({required this.role, this.holderNames = const []});
 
   final Role role;
+
+  /// The identified holder name(s), shown under the role name once known.
+  final List<String> holderNames;
 
   @override
   Widget build(BuildContext context) {
@@ -189,9 +256,22 @@ class _ScriptCard extends StatelessWidget {
                 child: Icon(_roleIcon(role.id), size: 17, color: colors.accentText),
               ),
               Expanded(
-                child: Text(
-                  role.name,
-                  style: typography.rowLabel.copyWith(fontSize: 16, color: colors.textPrimary),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      role.name,
+                      style: typography.rowLabel.copyWith(
+                        fontSize: 16,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                    if (holderNames.isNotEmpty)
+                      Text(
+                        holderNames.join(', '),
+                        style: typography.counter.copyWith(color: colors.textTertiary),
+                      ),
+                  ],
                 ),
               ),
             ],
