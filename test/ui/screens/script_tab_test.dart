@@ -61,8 +61,9 @@ void main() {
     await tester.tap(find.text('Enregistrer'));
     await tester.pumpAndSettle();
 
-    // advanced to the Voyante's act sub-step; the card names the switched-to holder
-    expect(find.text('Action « Voyante » — bientôt'), findsOneWidget);
+    // advanced to the Voyante's act sub-step (its minimal "Continuer")
+    expect(find.text('Continuer'), findsOneWidget);
+    expect(find.text('Qui est Voyante ?'), findsNothing);
     final roster = await repo.getRoster(id);
     expect(roster.firstWhere((r) => r.name == 'Cy').roleId, 'voyante');
     expect(roster.firstWhere((r) => r.name == 'Bo').roleId, isNull);

@@ -9,7 +9,11 @@ import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../widgets/app_button.dart';
+import '../../widgets/player_avatar.dart';
 import 'widgets/identify_step.dart';
+import 'widgets/simple_act.dart';
+import 'widgets/target_pick.dart';
+import 'widgets/witch_act.dart';
 
 /// The Script tab: the current step of the loop. Night -> the wake script;
 /// day -> the recap. (The per-step bodies land in the next commits.)
@@ -97,14 +101,41 @@ class _NightBody extends ConsumerWidget {
         onDefer: notifier.skipStep,
       );
     }
-    // act sub-step - per-role widgets land in the next commit
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.screen),
-      child: Text(
-        'Action « ${step.role.name} » — bientôt',
-        style: context.typography.body.copyWith(color: context.colors.textTertiary),
-      ),
-    );
+    return _actBody(notifier, step.role);
+  }
+
+  Widget _actBody(GameSession notifier, Role role) {
+    final alive = session.engine.alivePlayers;
+    Candidate cand(Player p) => (id: p.id, name: p.name);
+
+    switch (role.id) {
+      case 'voyante':
+        return SimpleAct(primaryLabel: 'Continuer', onPrimary: notifier.skipStep);
+
+      case 'loup_garou':
+        return TargetPick(
+          question: 'Qui les Loups dévorent-ils ?',
+          candidates: [for (final p in alive) if (p.roleId != 'loup_garou') cand(p)],
+          confirmLabel: (name) => 'Les Loups désignent $name',
+          onConfirm: (id) => notifier.applyAction(WolvesTarget(targetPlayerId: id)),
+          secondaryLabel: 'Passer ce rôle',
+          onSecondary: notifier.skipStep,
+        );
+
+      case 'sorciere':
+        final victimId = session.engine.pendingWolfVictimId;
+        return WitchAct(
+          witch: session.engine.witch,
+          wolfVictim: victimId == null ? null : cand(session.engine.playerById(victimId)),
+          candidates: [for (final p in alive) cand(p)],
+          onSave: () => notifier.applyAction(const WitchLifePotion()),
+          onPoison: (id) => notifier.applyAction(WitchDeathPotion(targetPlayerId: id)),
+          onDone: notifier.skipStep,
+        );
+
+      default: // cupidon, voleur - action not built yet
+        return SimpleAct(primaryLabel: 'Passer ce rôle', onPrimary: notifier.skipStep);
+    }
   }
 }
 
@@ -296,6 +327,15 @@ IconData _roleIcon(String roleId) => switch (roleId) {
   _ => AppIcons.village,
 };
 
+String _deathCauseLabel(DeathCause cause) => switch (cause) {
+  WolvesKill() => 'Victime des Loups',
+  WitchDeathPotionKill() => 'Potion de mort de la Sorcière',
+  DayVoteKill() => 'Vote du village',
+  HunterShotKill() => 'Tir du Chasseur',
+  LoversCascadeKill() => 'Mort de chagrin',
+};
+
+/// J1 - what the MJ reads aloud when the village wakes.
 class _DayRecapBody extends StatelessWidget {
   const _DayRecapBody({required this.session});
 
@@ -303,13 +343,126 @@ class _DayRecapBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.screen),
-        child: Text(
-          'Jour ${session.engine.nightIndex} — récap bientôt',
-          style: context.typography.body.copyWith(color: context.colors.textTertiary),
+    final colors = context.colors;
+    final typography = context.typography;
+    final engine = session.engine;
+    final deaths = session.lastResolution;
+
+    final aliveByTeam = <Team, int>{};
+    for (final p in engine.alivePlayers) {
+      final team = RoleRegistry.base.byIdOrNull(p.roleId)?.team ?? Team.village;
+      aliveByTeam[team] = (aliveByTeam[team] ?? 0) + 1;
+    }
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 22, AppSpacing.screen, AppSpacing.screen),
+      children: [
+        Row(
+          spacing: 8,
+          children: [
+            Icon(AppIcons.day, size: 16, color: colors.warnText),
+            Text(
+              'Jour ${engine.nightIndex} se lève',
+              style: typography.body.copyWith(color: colors.textSecondary),
+            ),
+          ],
         ),
+        const SizedBox(height: 14),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: colors.bgInset,
+            borderRadius: BorderRadius.circular(AppRadii.card),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                deaths.isEmpty ? 'Personne n\'est mort cette nuit' : 'Cette nuit, le village a perdu',
+                style: typography.meta.copyWith(color: colors.textTertiary),
+              ),
+              for (final death in deaths) ...[
+                const SizedBox(height: 12),
+                Row(
+                  spacing: 12,
+                  children: [
+                    PlayerAvatar(
+                      name: engine.playerById(death.playerId).name,
+                      size: AppSizes.avatarDayRecap,
+                      fillColor: colors.bgScreen,
+                    ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            engine.playerById(death.playerId).name,
+                            style: typography.rowLabel.copyWith(fontSize: 16, color: colors.textPrimary),
+                          ),
+                          Text(
+                            _deathCauseLabel(death.cause),
+                            style: typography.meta.copyWith(color: colors.textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          spacing: 8,
+          children: [
+            Expanded(child: _StatCell(label: 'Village', value: aliveByTeam[Team.village] ?? 0)),
+            Expanded(child: _StatCell(label: 'Loups', value: aliveByTeam[Team.werewolves] ?? 0)),
+          ],
+        ),
+        const SizedBox(height: 16),
+        // The day loop isn't built yet - inert, names the requirement (like A2's button was).
+        const AppButton(label: 'Élire le Capitaine — bientôt', onPressed: null),
+      ],
+    );
+  }
+}
+
+class _StatCell extends StatelessWidget {
+  const _StatCell({required this.label, required this.value});
+
+  final String label;
+  final int value;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final typography = context.typography;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+      decoration: BoxDecoration(
+        color: colors.bgInset,
+        borderRadius: BorderRadius.circular(AppRadii.button),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: typography.counter.copyWith(color: colors.textSecondary)),
+          Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: '$value ',
+                  style: typography.rowLabel.copyWith(fontSize: 20, color: colors.textPrimary),
+                ),
+                TextSpan(
+                  text: 'vivants',
+                  style: typography.counter.copyWith(color: colors.textTertiary),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

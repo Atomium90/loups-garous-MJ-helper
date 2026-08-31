@@ -73,15 +73,25 @@ class AppButton extends StatelessWidget {
         child: InkWell(
           onTap: onPressed,
           borderRadius: BorderRadius.circular(AppRadii.button),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (leadingIcon != null) ...[
-                Icon(leadingIcon, size: 16, color: labelColor),
-                const SizedBox(width: 6),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (leadingIcon != null) ...[
+                  Icon(leadingIcon, size: 16, color: labelColor),
+                  const SizedBox(width: 6),
+                ],
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: typography.rowLabel.copyWith(color: labelColor),
+                  ),
+                ),
               ],
-              Text(label, style: typography.rowLabel.copyWith(color: labelColor)),
-            ],
+            ),
           ),
         ),
       ),

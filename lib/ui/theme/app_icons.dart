@@ -68,6 +68,9 @@ abstract final class AppIcons {
   static const skull = TablerIcons.skull;
   static const hunter = TablerIcons.crosshair;
 
+  /// The Witch's "Elle sauve X" button.
+  static const witchSave = TablerIcons.heartPlus;
+
   /// Maps a [NightLogRow.iconName] semantic key to its icon.
   static IconData? nightLog(String key) => switch (key) {
     'wolves' => wolves,

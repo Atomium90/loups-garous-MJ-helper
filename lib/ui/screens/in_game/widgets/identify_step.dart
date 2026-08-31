@@ -6,7 +6,7 @@ import '../../../theme/app_dimensions.dart';
 import '../../../theme/app_typography.dart';
 import '../../../utils/french_role_label.dart';
 import '../../../widgets/app_button.dart';
-import '../../../widgets/player_avatar.dart';
+import '../../../widgets/avatar_pick_cell.dart';
 
 /// The "learn who holds this role" step, reused by every night-calling role.
 /// A 4-column avatar grid; exactly [count] must be picked before "Enregistrer".
@@ -69,12 +69,14 @@ class _IdentifyStepState extends State<IdentifyStep> {
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 18, AppSpacing.screen, 10),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                question,
-                style: typography.rowLabel.copyWith(color: colors.textPrimary),
+              Expanded(
+                child: Text(
+                  question,
+                  style: typography.rowLabel.copyWith(color: colors.textPrimary),
+                ),
               ),
+              const SizedBox(width: 8),
               Text(
                 '${_selected.length} sur ${widget.count}',
                 style: typography.counter.copyWith(color: colors.accentText),
@@ -88,10 +90,10 @@ class _IdentifyStepState extends State<IdentifyStep> {
             crossAxisCount: AppSizes.gridColumnsDefault,
             mainAxisSpacing: AppSpacing.gridGapRow,
             crossAxisSpacing: AppSpacing.gridGapColumn,
-            childAspectRatio: 0.78,
+            childAspectRatio: 1.0,
             children: [
               for (final c in widget.candidates)
-                _Candidate(
+                AvatarPickCell(
                   name: c.name,
                   selected: _selected.contains(c.rowId),
                   onTap: () => _toggle(c.rowId),
@@ -127,36 +129,3 @@ class _IdentifyStepState extends State<IdentifyStep> {
   }
 }
 
-class _Candidate extends StatelessWidget {
-  const _Candidate({required this.name, required this.selected, required this.onTap});
-
-  final String name;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          PlayerAvatar(name: name, size: AppSizes.avatarSelectionGrid, selected: selected),
-          const SizedBox(height: 4),
-          Text(
-            name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: selected ? FontWeight.w500 : FontWeight.w400,
-              color: selected ? colors.accentText : colors.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
