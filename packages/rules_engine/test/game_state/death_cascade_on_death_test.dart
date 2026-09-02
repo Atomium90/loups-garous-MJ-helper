@@ -46,6 +46,43 @@ void main() {
       );
     });
 
+    test('a null target ("il ne tire pas") clears the cascade and kills no one', () {
+      final afterDeath = machine.apply(
+        state: GameState.initial(
+          players: _players({'h': 'chasseur', 't': 'villageois'}),
+        ).copyWith(phase: GamePhase.day),
+        action: const DayVoteElimination(targetPlayerId: 'h'),
+        roleRegistry: roleRegistry,
+      );
+      final result = machine.apply(
+        state: afterDeath.state,
+        action: const HunterShoot(),
+        roleRegistry: roleRegistry,
+      );
+      expect(result.state.playerById('t').alive, isTrue);
+      expect(result.state.cascade, isNull);
+      expect(result.events.whereType<HunterShotSkipped>(), hasLength(1));
+      expect(result.events.whereType<PlayerDied>(), isEmpty);
+    });
+
+    test('declining the shot still resolves a queued captain succession behind it', () {
+      // 'h' is the Chasseur and the captain: his death pauses on the shot, with
+      // ResolveCaptainStatus still queued behind it.
+      final afterDeath = machine.apply(
+        state: GameState.initial(
+          players: _players({'h': 'chasseur', 'x': 'villageois'}),
+        ).copyWith(phase: GamePhase.day, captainPlayerId: 'h'),
+        action: const DayVoteElimination(targetPlayerId: 'h'),
+        roleRegistry: roleRegistry,
+      );
+      final result = machine.apply(
+        state: afterDeath.state,
+        action: const HunterShoot(),
+        roleRegistry: roleRegistry,
+      );
+      expect(result.state.cascade?.decision, isA<PendingCaptainSuccession>());
+    });
+
     test('rejects a dead target', () {
       final afterDeath = machine.apply(
         state: GameState.initial(

@@ -109,6 +109,7 @@ String _describeEvent(GameEvent event) => switch (event) {
     '$playerAId et $playerBId tombent amoureux',
   VoleurSwapped(:final voleurPlayerId, :final newRoleId) =>
     '$voleurPlayerId devient $newRoleId',
+  RoleRevealed(:final playerId, :final roleId) => 'on découvre que $playerId est $roleId',
   CaptainElected(:final playerId) => '$playerId est élu capitaine',
   CaptainSuccession(:final fromPlayerId, :final toPlayerId) =>
     '$toPlayerId succède à $fromPlayerId comme capitaine',

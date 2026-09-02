@@ -1,3 +1,4 @@
+import '../models/death_effect.dart';
 import '../role_registry/role_registry.dart';
 import 'death_cascade.dart';
 import 'death_cause.dart';
@@ -59,6 +60,8 @@ class GameStateMachine {
         return _applyFinalizeNight(state, roleRegistry);
       case DayVoteElimination():
         return _applyDayVoteElimination(state, action, roleRegistry);
+      case RevealRole():
+        return _applyRevealRole(state, action, roleRegistry);
       case HunterShoot():
         return _applyHunterShoot(state, action, roleRegistry);
       case CaptainNameSuccessor():
@@ -233,6 +236,50 @@ class GameStateMachine {
     );
   }
 
+  ActionResult _applyRevealRole(
+    GameState state,
+    RevealRole action,
+    RoleRegistry roleRegistry,
+  ) {
+    final player = state.playerById(action.playerId);
+    final role = roleRegistry.byId(action.roleId); // throws if the role id is unknown
+
+    final revealed = state.copyWith(
+      players: [
+        for (final p in state.players)
+          if (p.id == player.id) p.copyWith(roleId: action.roleId) else p,
+      ],
+    );
+    final events = <GameEvent>[RoleRevealed(playerId: player.id, roleId: action.roleId)];
+
+    // A living player just gets the write. A dead one may now trigger their
+    // on-death effect: the cascade that ran when they died saw the placeholder
+    // role and skipped it. Their captain status and lovers link were
+    // role-independent and are already resolved, so only ResolveOnDeathEffect
+    // is replayed here.
+    if (!player.alive && role.onDeath != DeathEffect.none) {
+      final drained = drainCascade(
+        state: revealed,
+        queue: [ResolveOnDeathEffect(player.id)],
+        roleRegistry: roleRegistry,
+      );
+      events.addAll(drained.events);
+      return ActionResult(
+        state: drained.state.copyWith(
+          cascade: drained.pendingDecision == null
+              ? null
+              : CascadeState(
+                  decision: drained.pendingDecision!,
+                  remainingQueue: drained.remainingQueue,
+                ),
+        ),
+        events: events,
+      );
+    }
+
+    return ActionResult(state: revealed, events: events);
+  }
+
   ActionResult _applyStartNextNight(GameState state) {
     if (state.phase != GamePhase.day) {
       throw InvalidActionError('Can only start the next night from the day phase');
@@ -253,27 +300,33 @@ class GameStateMachine {
       throw InvalidActionError('No pending Hunter shot to resolve');
     }
     if (cascade.decision case PendingHunterShot(:final deadHunterId)) {
-      _requireAlive(state.playerById(action.targetPlayerId), 'hunter shot target');
+      final target = action.targetPlayerId;
+      final events = <GameEvent>[];
+      final GameState afterShot;
+      final List<CascadeTask> resumedQueue;
 
-      final killed = state
-          .killPlayer(
-            action.targetPlayerId,
-            cause: HunterShotKill(shooterPlayerId: deadHunterId),
-          )
-          .copyWith(cascade: null);
-      final events = <GameEvent>[
-        PlayerDied(
-          playerId: action.targetPlayerId,
-          cause: HunterShotKill(shooterPlayerId: deadHunterId),
-        ),
-        HunterShotFired(hunterPlayerId: deadHunterId, targetPlayerId: action.targetPlayerId),
-      ];
+      if (target == null) {
+        // "Il ne tire pas": no kill, just resume whatever was queued behind
+        // the paused decision (the hunter's own captain status / lovers link).
+        events.add(HunterShotSkipped(hunterPlayerId: deadHunterId));
+        afterShot = state.copyWith(cascade: null);
+        resumedQueue = cascade.remainingQueue;
+      } else {
+        _requireAlive(state.playerById(target), 'hunter shot target');
+        afterShot = state
+            .killPlayer(target, cause: HunterShotKill(shooterPlayerId: deadHunterId))
+            .copyWith(cascade: null);
+        events
+          ..add(PlayerDied(playerId: target, cause: HunterShotKill(shooterPlayerId: deadHunterId)))
+          ..add(HunterShotFired(hunterPlayerId: deadHunterId, targetPlayerId: target));
+        resumedQueue = [...cascade.remainingQueue, ...deathCascadeTasks(target)];
+      }
 
-      final resumedQueue = [
-        ...cascade.remainingQueue,
-        ...deathCascadeTasks(action.targetPlayerId),
-      ];
-      final drained = drainCascade(state: killed, queue: resumedQueue, roleRegistry: roleRegistry);
+      final drained = drainCascade(
+        state: afterShot,
+        queue: resumedQueue,
+        roleRegistry: roleRegistry,
+      );
       events.addAll(drained.events);
 
       return ActionResult(

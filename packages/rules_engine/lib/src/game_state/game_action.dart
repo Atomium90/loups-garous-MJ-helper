@@ -47,6 +47,18 @@ class DayVoteElimination implements GameAction {
   const DayVoteElimination({required this.targetPlayerId});
 }
 
+/// Records a role the app could not learn on its own - almost always a dead
+/// player whose card was never identified. Writes the [roleId], and if that
+/// player is dead re-runs their on-death effect (the death cascade already
+/// resolved their captain status and lovers link with role-independent data,
+/// but skipped the Chasseur's shot because the role wasn't known yet).
+class RevealRole implements GameAction {
+  final String playerId;
+  final String roleId;
+
+  const RevealRole({required this.playerId, required this.roleId});
+}
+
 class ElectCaptain implements GameAction {
   final String playerId;
 
@@ -57,11 +69,12 @@ class StartNextNight implements GameAction {
   const StartNextNight();
 }
 
-/// Resolves a pending PendingHunterShot decision.
+/// Resolves a pending PendingHunterShot decision. A null [targetPlayerId] means
+/// the Chasseur chooses not to shoot ("Il ne tire pas").
 class HunterShoot implements GameAction {
-  final String targetPlayerId;
+  final String? targetPlayerId;
 
-  const HunterShoot({required this.targetPlayerId});
+  const HunterShoot({this.targetPlayerId});
 }
 
 /// Resolves a pending PendingCaptainSuccession decision.

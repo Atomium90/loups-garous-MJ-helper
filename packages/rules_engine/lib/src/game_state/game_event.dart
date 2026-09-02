@@ -50,6 +50,13 @@ class VoleurSwapped implements GameEvent {
   const VoleurSwapped({required this.voleurPlayerId, required this.newRoleId});
 }
 
+class RoleRevealed implements GameEvent {
+  final String playerId;
+  final String roleId;
+
+  const RoleRevealed({required this.playerId, required this.roleId});
+}
+
 class LoversPaired implements GameEvent {
   final String playerAId;
   final String playerBId;

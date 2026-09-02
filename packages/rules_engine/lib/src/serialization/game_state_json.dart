@@ -1,23 +1,15 @@
 import '../game_state/death_cause.dart';
 import '../game_state/game_state.dart';
+import '../game_state/pending_decision.dart';
 import '../game_state/player.dart';
 
 /// JSON <-> [GameState] for the app's persistence layer. Plain maps only (no
 /// `dart:convert` needed here) - the caller does the `jsonEncode`/`jsonDecode`.
 ///
-/// [CascadeState] is intentionally not handled yet: a paused death cascade only
-/// exists mid-resolution of a Hunter shot / captain succession, which the app
-/// does not drive over a persist boundary yet. [encode] throws if it ever sees
-/// one, rather than silently dropping it.
+/// Covers every field, including a paused [CascadeState] (a Hunter shot or
+/// captain succession the MJ can walk away from mid-resolution).
 abstract final class GameStateJson {
   static Map<String, dynamic> encode(GameState state) {
-    if (state.cascade != null) {
-      throw UnimplementedError(
-        'GameStateJson cannot yet serialize a paused death cascade '
-        '(${state.cascade.runtimeType}). It is only reachable once the death '
-        'chain UI drives HunterShoot / CaptainNameSuccessor across a save.',
-      );
-    }
     return {
       'players': [
         for (final p in state.players)
@@ -42,6 +34,7 @@ abstract final class GameStateJson {
       'captainPlayerId': ?state.captainPlayerId,
       'pendingWolfVictimId': ?state.pendingWolfVictimId,
       'pendingWitchDeathTargetId': ?state.pendingWitchDeathTargetId,
+      'cascade': ?_encodeCascade(state.cascade),
     };
   }
 
@@ -76,8 +69,60 @@ abstract final class GameStateJson {
       captainPlayerId: json['captainPlayerId'] as String?,
       pendingWolfVictimId: json['pendingWolfVictimId'] as String?,
       pendingWitchDeathTargetId: json['pendingWitchDeathTargetId'] as String?,
+      cascade: _decodeCascade(json['cascade'] as Map<String, dynamic>?),
     );
   }
+
+  static Map<String, dynamic>? _encodeCascade(CascadeState? cascade) {
+    if (cascade == null) return null;
+    return {
+      'decision': switch (cascade.decision) {
+        PendingHunterShot(:final deadHunterId) => {
+          'type': 'hunterShot',
+          'deadHunterId': deadHunterId,
+        },
+        PendingCaptainSuccession(:final deadCaptainId) => {
+          'type': 'captainSuccession',
+          'deadCaptainId': deadCaptainId,
+        },
+      },
+      'remainingQueue': [
+        for (final task in cascade.remainingQueue)
+          {'type': _taskType(task), 'playerId': task.playerId},
+      ],
+    };
+  }
+
+  static CascadeState? _decodeCascade(Map<String, dynamic>? json) {
+    if (json == null) return null;
+    final decision = json['decision'] as Map<String, dynamic>;
+    return CascadeState(
+      decision: switch (decision['type']) {
+        'hunterShot' => PendingHunterShot(deadHunterId: decision['deadHunterId'] as String),
+        'captainSuccession' => PendingCaptainSuccession(
+          deadCaptainId: decision['deadCaptainId'] as String,
+        ),
+        final other => throw ArgumentError('unknown pending decision type: $other'),
+      },
+      remainingQueue: [
+        for (final t in (json['remainingQueue'] as List).cast<Map<String, dynamic>>())
+          _taskFrom(t['type'] as String, t['playerId'] as String),
+      ],
+    );
+  }
+
+  static String _taskType(CascadeTask task) => switch (task) {
+    ResolveOnDeathEffect() => 'onDeath',
+    ResolveCaptainStatus() => 'captainStatus',
+    ResolveLoversCascade() => 'loversCascade',
+  };
+
+  static CascadeTask _taskFrom(String type, String playerId) => switch (type) {
+    'onDeath' => ResolveOnDeathEffect(playerId),
+    'captainStatus' => ResolveCaptainStatus(playerId),
+    'loversCascade' => ResolveLoversCascade(playerId),
+    final other => throw ArgumentError('unknown cascade task type: $other'),
+  };
 
   /// A [DeathCause] as a `{"type": ...}` map, or null for a living player.
   static Map<String, dynamic>? _encodeCause(DeathCause? cause) => switch (cause) {

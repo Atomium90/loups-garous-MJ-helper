@@ -271,6 +271,76 @@ void main() {
     });
   });
 
+  group('RevealRole', () {
+    // A dead player who carried the 'villageois' placeholder, then the MJ turns
+    // the card: it was the Chasseur.
+    ActionResult voteOutThenReveal(String roleId, {Map<String, String>? players}) {
+      var state = GameState.initial(
+        players: _players(
+          players ?? {'h': 'villageois', 'a': 'villageois', 'b': 'voyante'},
+        ),
+      ).copyWith(phase: GamePhase.day);
+      state = machine
+          .apply(
+            state: state,
+            action: const DayVoteElimination(targetPlayerId: 'h'),
+            roleRegistry: roleRegistry,
+          )
+          .state;
+      return machine.apply(
+        state: state,
+        action: RevealRole(playerId: 'h', roleId: roleId),
+        roleRegistry: roleRegistry,
+      );
+    }
+
+    test('writes the roleId and emits RoleRevealed', () {
+      final result = voteOutThenReveal('villageois');
+      expect(result.state.playerById('h').roleId, 'villageois');
+      expect(result.events.whereType<RoleRevealed>().single.roleId, 'villageois');
+    });
+
+    test('revealing a dead player as the Chasseur re-runs the on-death effect', () {
+      final result = voteOutThenReveal('chasseur');
+      expect(result.state.cascade?.decision, isA<PendingHunterShot>());
+      expect((result.state.cascade!.decision as PendingHunterShot).deadHunterId, 'h');
+    });
+
+    test('a revealed Chasseur with no living candidates auto-skips the shot', () {
+      final result = voteOutThenReveal('chasseur', players: {'h': 'villageois'});
+      expect(result.state.cascade, isNull);
+      expect(result.events.whereType<HunterShotSkipped>(), hasLength(1));
+    });
+
+    test('revealing a dead plain villager raises no cascade', () {
+      final result = voteOutThenReveal('villageois');
+      expect(result.state.cascade, isNull);
+    });
+
+    test('revealing a living player just writes the role, no cascade', () {
+      final state = GameState.initial(players: _players({'a': 'villageois', 'b': 'voyante'}));
+      final result = machine.apply(
+        state: state,
+        action: const RevealRole(playerId: 'a', roleId: 'chasseur'),
+        roleRegistry: roleRegistry,
+      );
+      expect(result.state.playerById('a').roleId, 'chasseur');
+      expect(result.state.cascade, isNull);
+    });
+
+    test('rejects an unknown roleId', () {
+      final state = GameState.initial(players: _players({'a': 'villageois'}));
+      expect(
+        () => machine.apply(
+          state: state,
+          action: const RevealRole(playerId: 'a', roleId: 'nonexistent'),
+          roleRegistry: roleRegistry,
+        ),
+        throwsA(isA<RoleNotFoundException>()),
+      );
+    });
+  });
+
   group('StartNextNight', () {
     test('increments the night index and switches back to night', () {
       final state = GameState.initial(

@@ -84,14 +84,42 @@ void main() {
     expect(roundTrip(state).phase, GamePhase.day);
   });
 
-  test('encode throws on a paused cascade', () {
+  test('round-trips a paused Hunter-shot cascade with a non-empty remaining queue', () {
     final state = GameState.initial(players: _players({'a': 'chasseur', 'b': 'villageois'}))
         .copyWith(
+          phase: GamePhase.day,
           cascade: const CascadeState(
             decision: PendingHunterShot(deadHunterId: 'a'),
+            remainingQueue: [ResolveCaptainStatus('a'), ResolveLoversCascade('a')],
+          ),
+        );
+    final restored = roundTrip(state);
+    expect(restored.cascade?.decision, isA<PendingHunterShot>());
+    expect((restored.cascade!.decision as PendingHunterShot).deadHunterId, 'a');
+    expect(
+      restored.cascade!.remainingQueue.map((t) => (t.runtimeType, t.playerId)),
+      [(ResolveCaptainStatus, 'a'), (ResolveLoversCascade, 'a')],
+    );
+  });
+
+  test('round-trips a paused Captain-succession cascade', () {
+    final state = GameState.initial(players: _players({'a': 'voyante', 'b': 'villageois'}))
+        .copyWith(
+          phase: GamePhase.day,
+          captainPlayerId: 'a',
+          cascade: const CascadeState(
+            decision: PendingCaptainSuccession(deadCaptainId: 'a'),
             remainingQueue: [],
           ),
         );
-    expect(() => GameStateJson.encode(state), throwsA(isA<UnimplementedError>()));
+    final restored = roundTrip(state);
+    expect(restored.cascade?.decision, isA<PendingCaptainSuccession>());
+    expect((restored.cascade!.decision as PendingCaptainSuccession).deadCaptainId, 'a');
+    expect(restored.cascade!.remainingQueue, isEmpty);
+  });
+
+  test('a state with no cascade round-trips to a null cascade', () {
+    final state = GameState.initial(players: _players({'a': 'villageois'}));
+    expect(roundTrip(state).cascade, isNull);
   });
 }
