@@ -46,6 +46,16 @@ class GameSessionState {
   bool get readyToResolve =>
       engine.phase == GamePhase.night && cursor.stepIndex >= tonight.steps.length;
 
+  /// Whether the current step still needs its holder(s) recorded. False once
+  /// the full count for the role is known (or the cursor has already moved to
+  /// the action) - later nights then jump straight to the action.
+  bool get currentStepNeedsIdentify {
+    final step = currentStep;
+    if (step == null || cursor.subStep == NightSubStep.act) return false;
+    final known = engine.players.where((p) => p.roleId == step.role.id).length;
+    return known < (composition[step.role.id] ?? 1);
+  }
+
   /// The deaths the J1 recap reads aloud: everyone who died in the night just
   /// resolved. Engine-derived (each `Player` carries its cause and timing), so
   /// it survives a force-quit onto the recap.
@@ -55,21 +65,28 @@ class GameSessionState {
       )
       .toList(growable: false);
 
-  /// Dead players whose card was never recorded (roster `roleId` still null) -
-  /// each gets the reveal panel before the day can proceed.
+  /// Dead players whose card was never recorded (roster `roleId` still null and
+  /// not explicitly skipped) - each gets the reveal panel before the day can
+  /// proceed.
   List<Player> get unrevealedDead {
     final unknown = {
       for (final r in roster)
         if (r.roleId == null) '${r.id}',
     };
     return engine.players
-        .where((p) => !p.alive && unknown.contains(p.id))
+        .where(
+          (p) => !p.alive && unknown.contains(p.id) && !day.revealSkipped.contains(p.id),
+        )
         .toList(growable: false);
   }
 
   DayInterrupt? get dayInterrupt {
-    if (unrevealedDead.isNotEmpty) return DayInterrupt.reveal;
+    // A pending cascade comes first: the engine refuses every other action
+    // until it resolves. Revealing a dead player's card is what *raises* one
+    // (a hidden Chasseur), so once it's set, its panel wins over the next
+    // player still waiting to be revealed.
     if (engine.cascade != null) return DayInterrupt.chain;
+    if (unrevealedDead.isNotEmpty) return DayInterrupt.reveal;
     if (day.loversAck.isNotEmpty) return DayInterrupt.loversAck;
     return null;
   }
@@ -242,10 +259,19 @@ class GameSession extends _$GameSession {
 
   // --- day: the interrupts (reveal / chain / grief) ---
 
-  /// Post-mortem card reveal (the reveal panel).
+  /// Post-mortem card reveal (the reveal panel). Refused while a cascade is
+  /// pending - the chain panel comes first, and the engine would reject it.
   Future<void> revealRole(int rowId, String roleId) async {
+    if (state.value?.engine.cascade != null) return;
     await ref.read(gameRepositoryProvider).assignRoles(playerRowIds: [rowId], roleId: roleId);
     await applyAction(RevealRole(playerId: '$rowId', roleId: roleId));
+  }
+
+  /// "Je ne note pas" on the reveal panel: leave the card unknown but stop
+  /// prompting for it.
+  Future<void> skipReveal(String engineId) {
+    if (state.value?.engine.cascade != null) return Future.value();
+    return _updateDay((d) => d.copyWith(revealSkipped: [...d.revealSkipped, engineId]));
   }
 
   Future<void> hunterShoot(String? engineId) =>

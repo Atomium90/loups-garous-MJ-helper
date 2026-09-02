@@ -71,6 +71,18 @@ abstract final class AppIcons {
   /// The Witch's "Elle sauve X" button.
   static const witchSave = TablerIcons.heartPlus;
 
+  // --- day loop ---
+
+  /// The Capitaine (an elected status): J2, the succession panel, the vote
+  /// grid's crown badge, the Village roster.
+  static const captain = TablerIcons.crown;
+
+  /// J3, the village vote.
+  static const vote = TablerIcons.gavel;
+
+  /// A tie vote ("Égalité").
+  static const scale = TablerIcons.scale;
+
   /// Maps a [NightLogRow.iconName] semantic key to its icon.
   static IconData? nightLog(String key) => switch (key) {
     'wolves' => wolves,
@@ -78,6 +90,9 @@ abstract final class AppIcons {
     'cupid' => cupid,
     'skull' => skull,
     'hunter' => hunter,
+    'crown' => captain,
+    'vote' => vote,
+    'scale' => scale,
     'sun' => day,
     _ => null,
   };

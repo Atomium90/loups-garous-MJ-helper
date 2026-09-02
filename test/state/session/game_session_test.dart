@@ -188,8 +188,10 @@ void main() {
     expect(s.engine.phase, GamePhase.night);
     expect(s.cursor, SessionCursor.nightStart);
     expect(s.day.stage, DayStage.recap);
-    // only Cy (a Loup) survives among the night-callers
+    // only Cy (a Loup) survives among the night-callers, and the Loups are
+    // already known - no re-identification on night 2
     expect(s.tonight.steps.map((st) => st.role.id), ['loup_garou']);
+    expect(s.currentStepNeedsIdentify, isFalse);
 
     final log = (await repo.watchNightLog(game.gameId).first).map((e) => e.line).toList();
     expect(log, containsAll(<String>[
@@ -200,6 +202,52 @@ void main() {
       'Cy est Capitaine',
       'Le village élimine Ed',
     ]));
+  });
+
+  test('with two un-revealed deaths, revealing a Chasseur shows the chain before the next reveal', () async {
+    const comp = {
+      'loup_garou': 2,
+      'voyante': 1,
+      'sorciere': 1,
+      'villageois': 1,
+      'chasseur': 1,
+    };
+    final game = await _startedGame(repo, composition: comp);
+    final ids = game.seatRowIds; // Ana Bo Cy Di Ed Fi
+    final n = await notifierFor(game.gameId);
+
+    await n.identifyRole('voyante', [ids[0]]);
+    await n.skipStep();
+    await n.identifyRole('loup_garou', [ids[1], ids[2]]);
+    await n.applyAction(WolvesTarget(targetPlayerId: '${ids[5]}')); // eat Fi
+    await n.identifyRole('sorciere', [ids[3]]);
+    await n.applyAction(WitchDeathPotion(targetPlayerId: '${ids[4]}')); // poison Ed
+    await n.skipStep();
+    await n.applyAction(const FinalizeNight());
+
+    var s = stateOf(game.gameId);
+    expect(s.unrevealedDead.map((p) => p.id).toSet(), {'${ids[4]}', '${ids[5]}'});
+    expect(s.dayInterrupt, DayInterrupt.reveal);
+
+    // reveal the first as the Chasseur -> a cascade is now pending
+    final firstDead = int.parse(s.unrevealedDead.first.id);
+    await n.revealRole(firstDead, 'chasseur');
+    s = stateOf(game.gameId);
+    expect(s.engine.cascade?.decision, isA<PendingHunterShot>());
+    // the chain wins over the still-un-revealed second death
+    expect(s.dayInterrupt, DayInterrupt.chain);
+    expect(s.unrevealedDead, isNotEmpty);
+
+    // revealing the second one is refused while the cascade stands
+    final secondDead = int.parse(s.unrevealedDead.first.id);
+    await n.revealRole(secondDead, 'villageois');
+    expect(stateOf(game.gameId).engine.cascade?.decision, isA<PendingHunterShot>());
+
+    // resolve the shot -> back to revealing the second death
+    await n.hunterShoot('${ids[0]}');
+    s = stateOf(game.gameId);
+    expect(s.engine.cascade, isNull);
+    expect(s.dayInterrupt, DayInterrupt.reveal);
   });
 
   test('a fresh container restores a paused Hunter-shot cascade', () async {

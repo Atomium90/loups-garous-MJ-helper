@@ -5,13 +5,15 @@ import '../../../theme/app_dimensions.dart';
 import '../../../theme/app_typography.dart';
 import '../../../widgets/app_button.dart';
 import '../../../widgets/avatar_pick_cell.dart';
+import '../../../widgets/player_avatar.dart';
 
 /// A candidate for a night action: the engine player id, and the display name.
 typedef Candidate = ({String id, String name});
 
 /// "Pick one player, then confirm" - the Wolves' victim, the Witch's poison
-/// target, etc. The primary button *names the act* ("Les Loups désignent X")
-/// rather than saying "Confirmer", per the design.
+/// target, the captain election, the village vote, the Hunter's shot. The
+/// primary button *names the act* ("Les Loups désignent X", "Lina est
+/// Capitaine") rather than saying "Confirmer", per the design.
 class TargetPick extends StatefulWidget {
   const TargetPick({
     required this.question,
@@ -19,6 +21,11 @@ class TargetPick extends StatefulWidget {
     required this.confirmLabel,
     required this.onConfirm,
     this.pendingLabel = 'Choisissez un joueur',
+    this.confirmIcon,
+    this.selectedStyle = AvatarSelectedStyle.accent,
+    this.avatarSize = AppSizes.avatarSelectionGrid,
+    this.crossAxisCount = AppSizes.gridColumnsDefault,
+    this.badgeFor,
     this.secondaryLabel,
     this.onSecondary,
     super.key,
@@ -35,6 +42,19 @@ class TargetPick extends StatefulWidget {
   /// Primary label while nothing is picked (inert).
   final String pendingLabel;
 
+  /// Optional leading icon on the confirm button (a crown for the captain).
+  final IconData? confirmIcon;
+
+  /// Blue by default; amber for the captain election / succession.
+  final AvatarSelectedStyle selectedStyle;
+
+  final double avatarSize;
+  final int crossAxisCount;
+
+  /// A small overlay for a candidate's avatar - the current captain's crown in
+  /// the vote grid.
+  final Widget? Function(Candidate candidate)? badgeFor;
+
   final String? secondaryLabel;
   final VoidCallback? onSecondary;
 
@@ -47,10 +67,7 @@ class _TargetPickState extends State<TargetPick> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    final selected = widget.candidates
-        .where((c) => c.id == _selectedId)
-        .firstOrNull;
+    final selected = widget.candidates.where((c) => c.id == _selectedId).firstOrNull;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -59,13 +76,13 @@ class _TargetPickState extends State<TargetPick> {
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 18, AppSpacing.screen, 10),
           child: Text(
             widget.question,
-            style: context.typography.rowLabel.copyWith(color: colors.textPrimary),
+            style: context.typography.rowLabel.copyWith(color: context.colors.textPrimary),
           ),
         ),
         Expanded(
           child: GridView.count(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screen),
-            crossAxisCount: AppSizes.gridColumnsDefault,
+            crossAxisCount: widget.crossAxisCount,
             mainAxisSpacing: AppSpacing.gridGapRow,
             crossAxisSpacing: AppSpacing.gridGapColumn,
             childAspectRatio: 1.0,
@@ -74,6 +91,9 @@ class _TargetPickState extends State<TargetPick> {
                 AvatarPickCell(
                   name: c.name,
                   selected: c.id == _selectedId,
+                  avatarSize: widget.avatarSize,
+                  selectedStyle: widget.selectedStyle,
+                  badge: widget.badgeFor?.call(c),
                   onTap: () => setState(() => _selectedId = c.id),
                 ),
             ],
@@ -94,6 +114,7 @@ class _TargetPickState extends State<TargetPick> {
                 label: selected == null
                     ? widget.pendingLabel
                     : widget.confirmLabel(selected.name),
+                leadingIcon: selected == null ? null : widget.confirmIcon,
                 onPressed: selected == null ? null : () => widget.onConfirm(selected.id),
               ),
               if (widget.secondaryLabel != null)

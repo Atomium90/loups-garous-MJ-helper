@@ -57,6 +57,15 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// After resolving the night, an un-identified victim raises the reveal panel.
+  /// These night-focused tests don't care about the card, so just dismiss each.
+  Future<void> clearReveals(WidgetTester tester) async {
+    while (find.text('Je ne note pas').evaluate().isNotEmpty) {
+      await tester.tap(find.text('Je ne note pas'));
+      await tester.pumpAndSettle();
+    }
+  }
+
   testWidgets('play night 1 to the day recap: wolves eat Di, Witch does nothing', (tester) async {
     final id = await _startedGame(repo);
     await pump(tester, id);
@@ -85,6 +94,7 @@ void main() {
     expect(find.text('Résoudre la nuit'), findsOneWidget);
     await tester.tap(find.text('Résoudre la nuit'));
     await tester.pumpAndSettle();
+    await clearReveals(tester);
 
     // Day recap
     expect(find.text('Jour 1 se lève'), findsOneWidget);
@@ -162,6 +172,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Résoudre la nuit'));
     await tester.pumpAndSettle();
+    await clearReveals(tester);
 
     // Di (wolves) and Fi (poison) both dead
     expect(find.text('Di'), findsWidgets);

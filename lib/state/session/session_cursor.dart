@@ -61,10 +61,15 @@ class DaySnapshot {
   /// this only gates the announcement.
   final List<String> loversAck;
 
+  /// Engine ids of dead players the MJ chose not to reveal a card for ("Je ne
+  /// note pas"), so the reveal panel stops re-prompting them.
+  final List<String> revealSkipped;
+
   const DaySnapshot({
     this.stage = DayStage.recap,
     this.savedFromWolvesName,
     this.loversAck = const [],
+    this.revealSkipped = const [],
   });
 
   static const fresh = DaySnapshot();
@@ -73,21 +78,25 @@ class DaySnapshot {
     DayStage? stage,
     String? savedFromWolvesName,
     List<String>? loversAck,
+    List<String>? revealSkipped,
   }) => DaySnapshot(
     stage: stage ?? this.stage,
     savedFromWolvesName: savedFromWolvesName ?? this.savedFromWolvesName,
     loversAck: loversAck ?? this.loversAck,
+    revealSkipped: revealSkipped ?? this.revealSkipped,
   );
 
   Map<String, dynamic> toJson() => {
     'stage': stage.name,
     if (savedFromWolvesName != null) 'savedFromWolvesName': savedFromWolvesName,
     if (loversAck.isNotEmpty) 'loversAck': loversAck,
+    if (revealSkipped.isNotEmpty) 'revealSkipped': revealSkipped,
   };
 
   factory DaySnapshot.fromJson(Map<String, dynamic> json) => DaySnapshot(
     stage: DayStage.values.byName(json['stage'] as String? ?? 'recap'),
     savedFromWolvesName: json['savedFromWolvesName'] as String?,
     loversAck: (json['loversAck'] as List?)?.cast<String>() ?? const [],
+    revealSkipped: (json['revealSkipped'] as List?)?.cast<String>() ?? const [],
   );
 }

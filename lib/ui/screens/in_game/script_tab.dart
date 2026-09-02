@@ -8,6 +8,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
+import '../../utils/french_role_label.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/player_avatar.dart';
 import 'widgets/identify_step.dart';
@@ -40,7 +41,7 @@ class ScriptTab extends ConsumerWidget {
       ),
       data: (session) => session.engine.phase == GamePhase.night
           ? _NightBody(gameId: gameId, session: session)
-          : _DayRecapBody(session: session),
+          : _DayBody(gameId: gameId, session: session),
     );
   }
 }
@@ -75,9 +76,9 @@ class _NightBody extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 0),
             child: _ScriptCard(
               role: step.role,
-              holderNames: session.cursor.subStep == NightSubStep.act
-                  ? _holderNames(step.role.id)
-                  : const [],
+              holderNames: session.currentStepNeedsIdentify
+                  ? const []
+                  : _holderNames(step.role.id),
             ),
           ),
         Expanded(child: _body(context, notifier, step)),
@@ -89,15 +90,23 @@ class _NightBody extends ConsumerWidget {
     if (step == null) {
       return _FinalizePrompt(onResolve: () => notifier.applyAction(const FinalizeNight()));
     }
-    if (session.cursor.subStep == NightSubStep.identify) {
+    if (session.currentStepNeedsIdentify) {
+      final roleId = step.role.id;
+      // A player already holding a role can't hold another - and a role whose
+      // count is partly known only needs its remaining holders.
+      final alreadyKnown = session.engine.players.where((p) => p.roleId == roleId).length;
+      final taken = {
+        for (final r in session.roster)
+          if (r.roleId != null) r.id,
+      };
       return IdentifyStep(
         role: step.role,
-        count: session.composition[step.role.id] ?? 1,
+        count: (session.composition[roleId] ?? 1) - alreadyKnown,
         candidates: [
           for (final p in session.engine.alivePlayers)
-            (rowId: int.parse(p.id), name: p.name),
+            if (!taken.contains(int.parse(p.id))) (rowId: int.parse(p.id), name: p.name),
         ],
-        onConfirm: (rowIds) => notifier.identifyRole(step.role.id, rowIds),
+        onConfirm: (rowIds) => notifier.identifyRole(roleId, rowIds),
         onDefer: notifier.skipStep,
       );
     }
@@ -324,6 +333,8 @@ IconData _roleIcon(String roleId) => switch (roleId) {
   'sorciere' => AppIcons.witch,
   'cupidon' => AppIcons.cupid,
   'voleur' => AppIcons.thief,
+  'chasseur' => AppIcons.hunter,
+  'capitaine' => AppIcons.captain,
   _ => AppIcons.village,
 };
 
@@ -335,11 +346,52 @@ String _deathCauseLabel(DeathCause cause) => switch (cause) {
   LoversCascadeKill() => 'Mort de chagrin',
 };
 
+/// The day side of the Script tab. An interrupt (a card to reveal, a chain
+/// effect, a lover's grief death) takes over the body until it's cleared;
+/// otherwise the current [DayStage] shows.
+class _DayBody extends ConsumerWidget {
+  const _DayBody({required this.gameId, required this.session});
+
+  final int gameId;
+  final GameSessionState session;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final n = ref.read(gameSessionProvider(gameId).notifier);
+
+    switch (session.dayInterrupt) {
+      case DayInterrupt.reveal:
+        return _RevealPanel(session: session, notifier: n);
+      case DayInterrupt.chain:
+        return _ChainPanel(session: session, notifier: n);
+      case DayInterrupt.loversAck:
+        return _LoversAckPanel(session: session, notifier: n);
+      case null:
+        break;
+    }
+
+    return switch (session.day.stage) {
+      DayStage.recap => _DayRecapBody(session: session, onAdvance: n.advanceFromRecap),
+      DayStage.captain => _CaptainElectionBody(session: session, notifier: n),
+      DayStage.vote => _VoteBody(session: session, notifier: n),
+      DayStage.done => _NextNightPrompt(
+        nextNight: session.engine.nightIndex + 1,
+        onStart: n.startNextNight,
+      ),
+    };
+  }
+}
+
+List<Candidate> _alive(GameState engine) => [
+  for (final p in engine.alivePlayers) (id: p.id, name: p.name),
+];
+
 /// J1 - what the MJ reads aloud when the village wakes.
 class _DayRecapBody extends StatelessWidget {
-  const _DayRecapBody({required this.session});
+  const _DayRecapBody({required this.session, required this.onAdvance});
 
   final GameSessionState session;
+  final VoidCallback onAdvance;
 
   @override
   Widget build(BuildContext context) {
@@ -347,6 +399,7 @@ class _DayRecapBody extends StatelessWidget {
     final typography = context.typography;
     final engine = session.engine;
     final deaths = session.recapDeaths;
+    final saved = session.day.savedFromWolvesName;
 
     final aliveByTeam = <Team, int>{};
     for (final p in engine.alivePlayers) {
@@ -354,8 +407,17 @@ class _DayRecapBody extends StatelessWidget {
       aliveByTeam[team] = (aliveByTeam[team] ?? 0) + 1;
     }
 
+    final ctaLabel = engine.nightIndex == 1 && engine.captainPlayerId == null
+        ? 'Élire le Capitaine'
+        : 'Ouvrir le vote du village';
+
     return ListView(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 22, AppSpacing.screen, AppSpacing.screen),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.screen,
+        22,
+        AppSpacing.screen,
+        AppSpacing.screen,
+      ),
       children: [
         Row(
           spacing: 8,
@@ -378,7 +440,9 @@ class _DayRecapBody extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                deaths.isEmpty ? 'Personne n\'est mort cette nuit' : 'Cette nuit, le village a perdu',
+                deaths.isEmpty
+                    ? "Personne n'est mort cette nuit"
+                    : 'Cette nuit, le village a perdu',
                 style: typography.meta.copyWith(color: colors.textTertiary),
               ),
               for (final death in deaths) ...[
@@ -397,7 +461,10 @@ class _DayRecapBody extends StatelessWidget {
                         children: [
                           Text(
                             death.name,
-                            style: typography.rowLabel.copyWith(fontSize: 16, color: colors.textPrimary),
+                            style: typography.rowLabel.copyWith(
+                              fontSize: 16,
+                              color: colors.textPrimary,
+                            ),
                           ),
                           Text(
                             _deathCauseLabel(death.causeOfDeath!),
@@ -407,6 +474,15 @@ class _DayRecapBody extends StatelessWidget {
                       ),
                     ),
                   ],
+                ),
+              ],
+              if (saved != null) ...[
+                const SizedBox(height: 12),
+                Divider(color: colors.borderHairline, height: 1),
+                const SizedBox(height: 12),
+                Text(
+                  '$saved a été attaqué par les Loups, puis sauvé. Ne l\'annoncez pas.',
+                  style: typography.meta.copyWith(color: colors.textSecondary, height: 1.5),
                 ),
               ],
             ],
@@ -421,9 +497,669 @@ class _DayRecapBody extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-        // The day loop isn't built yet - inert, names the requirement (like A2's button was).
-        const AppButton(label: 'Élire le Capitaine — bientôt', onPressed: null),
+        AppButton(label: ctaLabel, onPressed: onAdvance),
       ],
+    );
+  }
+}
+
+/// J2 - electing the Capitaine (day 1, and again on every captain death via the
+/// chain panel). All living players, unfiltered by role, amber selection.
+class _CaptainElectionBody extends StatelessWidget {
+  const _CaptainElectionBody({required this.session, required this.notifier});
+
+  final GameSessionState session;
+  final GameSession notifier;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _DayEyebrow(label: 'Jour ${session.engine.nightIndex}'),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 12),
+          child: const _RoleBanner(
+            icon: AppIcons.captain,
+            title: 'Le Capitaine',
+            body: 'Le village élit son Capitaine. N\'importe quel joueur, quel que soit '
+                'son rôle. Sa voix compte double au vote. Cet écran revient si le '
+                'Capitaine meurt : il désigne alors son successeur.',
+          ),
+        ),
+        Expanded(
+          child: TargetPick(
+            question: 'Qui est élu ?',
+            candidates: _alive(session.engine),
+            selectedStyle: AvatarSelectedStyle.captain,
+            confirmIcon: AppIcons.captain,
+            pendingLabel: 'Choisissez un joueur',
+            confirmLabel: (name) => '$name est Capitaine',
+            onConfirm: (id) => notifier.electCaptain(id),
+            secondaryLabel: 'Pas de Capitaine cette partie',
+            onSecondary: () => notifier.electCaptain(null),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// J3 - the village vote. 44px avatars (the largest in the app); the current
+/// captain's avatar carries a crown badge.
+class _VoteBody extends StatelessWidget {
+  const _VoteBody({required this.session, required this.notifier});
+
+  final GameSessionState session;
+  final GameSession notifier;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final captainId = session.engine.captainPlayerId;
+    final captainName = captainId == null ? null : session.engine.playerById(captainId).name;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _DayEyebrow(label: 'Jour ${session.engine.nightIndex} · vote'),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 12),
+          child: _RoleBanner(
+            icon: AppIcons.vote,
+            title: 'Le vote',
+            body: captainName == null
+                ? 'Le village débat, puis désigne.'
+                : 'Le village débat, puis désigne. La voix de $captainName compte double.',
+          ),
+        ),
+        Expanded(
+          child: TargetPick(
+            question: 'Qui est éliminé ?',
+            candidates: _alive(session.engine),
+            avatarSize: AppSizes.avatarVoteGrid,
+            crossAxisCount: AppSizes.gridColumnsSmallPool,
+            confirmLabel: (name) => 'Le village élimine $name',
+            onConfirm: (id) => notifier.eliminateByVote(id),
+            badgeFor: (c) => c.id == captainId
+                ? Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(color: colors.bgScreen, shape: BoxShape.circle),
+                    child: Icon(AppIcons.captain, size: 11, color: colors.warnText),
+                  )
+                : null,
+            secondaryLabel: 'Égalité, personne n\'est éliminé',
+            onSecondary: () => notifier.eliminateByVote(null),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _NextNightPrompt extends StatelessWidget {
+  const _NextNightPrompt({required this.nextNight, required this.onStart});
+
+  final int nextNight;
+  final VoidCallback onStart;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 10),
+          child: Text(
+            'Le jour est terminé.',
+            style: context.typography.body.copyWith(color: context.colors.textSecondary),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screen,
+            0,
+            AppSpacing.screen,
+            AppSpacing.screen,
+          ),
+          child: AppButton(
+            label: 'Commencer la nuit $nextNight',
+            leadingIcon: AppIcons.night,
+            onPressed: onStart,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// --- interrupt panels (sheet-styled bodies, not real modals) ---
+
+/// The reveal sheet: a dead player whose card was never recorded.
+class _RevealPanel extends StatefulWidget {
+  const _RevealPanel({required this.session, required this.notifier});
+
+  final GameSessionState session;
+  final GameSession notifier;
+
+  @override
+  State<_RevealPanel> createState() => _RevealPanelState();
+}
+
+class _RevealPanelState extends State<_RevealPanel> {
+  String? _roleId;
+
+  List<({String roleId, int remaining})> get _unassigned {
+    final assigned = <String, int>{};
+    for (final r in widget.session.roster) {
+      final id = r.roleId;
+      if (id != null) assigned[id] = (assigned[id] ?? 0) + 1;
+    }
+    return [
+      for (final e in widget.session.composition.entries)
+        if (e.value - (assigned[e.key] ?? 0) > 0)
+          (roleId: e.key, remaining: e.value - (assigned[e.key] ?? 0)),
+    ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final typography = context.typography;
+    final dead = widget.session.unrevealedDead.first;
+    final options = _unassigned;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _SheetHandle(),
+        _DeadHeader(name: dead.name, subtitle: 'Éliminé nuit ${dead.diedOnNight}'),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 16, AppSpacing.screen, 0),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: colors.bgInset,
+              borderRadius: BorderRadius.circular(AppRadii.cardSmall),
+            ),
+            child: Text(
+              "Retournez sa carte devant la table. Son rôle n'a pas encore été noté.",
+              style: typography.meta.copyWith(color: colors.textSecondary, height: 1.5),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 18, AppSpacing.screen, 8),
+          child: Text(
+            'Quelle était sa carte ?',
+            style: typography.meta.copyWith(color: colors.textTertiary),
+          ),
+        ),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screen),
+            children: [
+              for (final o in options)
+                _RoleOption(
+                  roleId: o.roleId,
+                  remaining: o.remaining,
+                  selected: o.roleId == _roleId,
+                  onTap: () => setState(() => _roleId = o.roleId),
+                ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screen,
+            12,
+            AppSpacing.screen,
+            AppSpacing.screen,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: 8,
+            children: [
+              AppButton(
+                label: _roleId == null
+                    ? 'Choisissez une carte'
+                    : '${dead.name} était ${roleWithArticle(_roleId!, RoleRegistry.base)}',
+                onPressed: _roleId == null
+                    ? null
+                    : () => widget.notifier.revealRole(int.parse(dead.id), _roleId!),
+              ),
+              AppButton(
+                label: 'Je ne note pas',
+                variant: AppButtonVariant.secondary,
+                onPressed: () => widget.notifier.skipReveal(dead.id),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _RoleOption extends StatelessWidget {
+  const _RoleOption({
+    required this.roleId,
+    required this.remaining,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String roleId;
+  final int remaining;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final typography = context.typography;
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          color: selected ? colors.accentBg : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppRadii.button),
+          border: Border.all(
+            color: selected ? colors.accentBorder : colors.borderControl,
+          ),
+        ),
+        child: Row(
+          spacing: 12,
+          children: [
+            Icon(
+              _roleIcon(roleId),
+              size: 18,
+              color: selected ? colors.accentText : colors.textSecondary,
+            ),
+            Expanded(
+              child: Text(
+                RoleRegistry.base.byId(roleId).name,
+                style: typography.rowLabel.copyWith(
+                  color: selected ? colors.accentText : colors.textPrimary,
+                ),
+              ),
+            ),
+            if (remaining > 1)
+              Text(
+                '$remaining restants',
+                style: typography.counter.copyWith(color: colors.textTertiary),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// J4 - a death that triggers something: the Hunter's shot or the captain's
+/// succession. The app names the consequence and hands over the picker.
+class _ChainPanel extends StatelessWidget {
+  const _ChainPanel({required this.session, required this.notifier});
+
+  final GameSessionState session;
+  final GameSession notifier;
+
+  @override
+  Widget build(BuildContext context) {
+    final decision = session.engine.cascade!.decision;
+    return switch (decision) {
+      PendingHunterShot(:final deadHunterId) => _HunterShotPanel(
+        session: session,
+        notifier: notifier,
+        deadHunterId: deadHunterId,
+      ),
+      PendingCaptainSuccession(:final deadCaptainId) => _SuccessionPanel(
+        session: session,
+        notifier: notifier,
+        deadCaptainId: deadCaptainId,
+      ),
+    };
+  }
+}
+
+class _HunterShotPanel extends StatelessWidget {
+  const _HunterShotPanel({
+    required this.session,
+    required this.notifier,
+    required this.deadHunterId,
+  });
+
+  final GameSessionState session;
+  final GameSession notifier;
+  final String deadHunterId;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final typography = context.typography;
+    final hunter = session.engine.playerById(deadHunterId);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _SheetHandle(),
+        _DeadHeader(name: hunter.name, subtitle: 'Éliminé nuit ${hunter.diedOnNight}'),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 16, AppSpacing.screen, 0),
+          child: _RevealedCard(roleId: hunter.roleId),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 12, AppSpacing.screen, 0),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: colors.warnBg,
+              borderRadius: BorderRadius.circular(AppRadii.button),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 10,
+              children: [
+                Icon(AppIcons.hunter, size: 17, color: colors.warnText),
+                Expanded(
+                  child: Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: 'Le Chasseur tire. ',
+                          style: typography.meta.copyWith(
+                            color: colors.warnText,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        TextSpan(
+                          text: 'Il emporte un joueur avec lui, tout de suite.',
+                          style: typography.meta.copyWith(color: colors.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Expanded(
+          child: TargetPick(
+            question: 'Sa cible',
+            candidates: _alive(session.engine),
+            crossAxisCount: AppSizes.gridColumnsSmallPool,
+            confirmLabel: (name) => '$name est éliminé',
+            onConfirm: (id) => notifier.hunterShoot(id),
+            secondaryLabel: 'Il ne tire pas',
+            onSecondary: () => notifier.hunterShoot(null),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SuccessionPanel extends StatelessWidget {
+  const _SuccessionPanel({
+    required this.session,
+    required this.notifier,
+    required this.deadCaptainId,
+  });
+
+  final GameSessionState session;
+  final GameSession notifier;
+  final String deadCaptainId;
+
+  @override
+  Widget build(BuildContext context) {
+    final dead = session.engine.playerById(deadCaptainId);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _SheetHandle(),
+        _DeadHeader(name: dead.name, subtitle: 'Le Capitaine est mort'),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 16, AppSpacing.screen, 12),
+          child: const _RoleBanner(
+            icon: AppIcons.captain,
+            title: 'La succession',
+            body: 'Avant de partir, le Capitaine désigne son successeur. '
+                'Sa voix comptera double à son tour.',
+          ),
+        ),
+        Expanded(
+          child: TargetPick(
+            question: 'Qui lui succède ?',
+            candidates: _alive(session.engine),
+            selectedStyle: AvatarSelectedStyle.captain,
+            confirmIcon: AppIcons.captain,
+            confirmLabel: (name) => '$name devient Capitaine',
+            onConfirm: (id) => notifier.nameCaptainSuccessor(id),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LoversAckPanel extends StatelessWidget {
+  const _LoversAckPanel({required this.session, required this.notifier});
+
+  final GameSessionState session;
+  final GameSession notifier;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final typography = context.typography;
+    final lover = session.engine.playerById(session.day.loversAck.first);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _SheetHandle(),
+        _DeadHeader(name: lover.name, subtitle: 'Meurt de chagrin'),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 16, AppSpacing.screen, 0),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: colors.warnBg,
+              borderRadius: BorderRadius.circular(AppRadii.button),
+            ),
+            child: Text(
+              "L'autre amoureux ne survit pas à sa disparition. Annoncez-le au village.",
+              style: typography.meta.copyWith(color: colors.textSecondary, height: 1.5),
+            ),
+          ),
+        ),
+        const Spacer(),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screen,
+            0,
+            AppSpacing.screen,
+            AppSpacing.screen,
+          ),
+          child: AppButton(label: 'Compris', onPressed: notifier.acknowledgeLoversDeaths),
+        ),
+      ],
+    );
+  }
+}
+
+class _SheetHandle extends StatelessWidget {
+  const _SheetHandle();
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: Container(
+      margin: const EdgeInsets.only(top: 12, bottom: 4),
+      width: 36,
+      height: 4,
+      decoration: BoxDecoration(
+        color: context.colors.borderHairline,
+        borderRadius: BorderRadius.circular(AppRadii.pill),
+      ),
+    ),
+  );
+}
+
+class _DeadHeader extends StatelessWidget {
+  const _DeadHeader({required this.name, required this.subtitle});
+
+  final String name;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final typography = context.typography;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 18, AppSpacing.screen, 0),
+      child: Column(
+        children: [
+          PlayerAvatar(name: name, size: AppSizes.avatarDeathSheet, fillColor: colors.bgInset),
+          const SizedBox(height: 10),
+          Text(
+            name,
+            style: typography.rowLabel.copyWith(fontSize: 19, color: colors.textPrimary),
+          ),
+          Text(subtitle, style: typography.meta.copyWith(color: colors.textSecondary)),
+        ],
+      ),
+    );
+  }
+}
+
+class _RevealedCard extends StatelessWidget {
+  const _RevealedCard({required this.roleId});
+
+  final String roleId;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final typography = context.typography;
+    final role = RoleRegistry.base.byId(roleId);
+    final wolves = role.team == Team.werewolves;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: colors.bgInset,
+        borderRadius: BorderRadius.circular(AppRadii.cardSmall),
+      ),
+      child: Row(
+        spacing: 12,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(color: colors.bgScreen, shape: BoxShape.circle),
+            child: Icon(_roleIcon(roleId), size: 18, color: colors.textPrimary),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Sa carte', style: typography.counter.copyWith(color: colors.textTertiary)),
+                Text(
+                  role.name,
+                  style: typography.rowLabel.copyWith(color: colors.textPrimary),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+            decoration: BoxDecoration(
+              color: wolves ? colors.accentBg : colors.bgScreen,
+              borderRadius: BorderRadius.circular(AppRadii.pill),
+            ),
+            child: Text(
+              wolves ? 'Loups' : 'Village',
+              style: typography.counter.copyWith(
+                color: wolves ? colors.accentText : colors.textSecondary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RoleBanner extends StatelessWidget {
+  const _RoleBanner({required this.icon, required this.title, required this.body});
+
+  final IconData icon;
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final typography = context.typography;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.bgInset,
+        borderRadius: BorderRadius.circular(AppRadii.card),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            spacing: 10,
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(color: colors.warnBg, shape: BoxShape.circle),
+                child: Icon(icon, size: 17, color: colors.warnText),
+              ),
+              Text(
+                title,
+                style: typography.rowLabel.copyWith(fontSize: 16, color: colors.textPrimary),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            body,
+            style: typography.body.copyWith(color: colors.textSecondary, height: 1.6),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DayEyebrow extends StatelessWidget {
+  const _DayEyebrow({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 22, AppSpacing.screen, 12),
+      child: Row(
+        spacing: 8,
+        children: [
+          Icon(AppIcons.day, size: 15, color: colors.warnText),
+          Text(
+            label,
+            style: context.typography.body.copyWith(color: colors.textSecondary),
+          ),
+        ],
+      ),
     );
   }
 }

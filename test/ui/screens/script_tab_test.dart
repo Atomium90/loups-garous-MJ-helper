@@ -69,6 +69,32 @@ void main() {
     expect(roster.firstWhere((r) => r.name == 'Bo').roleId, isNull);
   });
 
+  testWidgets('an identified player is no longer offered on the next role\'s grid', (
+    tester,
+  ) async {
+    final id = await _startedGame(repo, const {'loup_garou': 2, 'voyante': 1, 'villageois': 1});
+
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(repo)],
+      initialLocation: '/games/$id/game',
+    );
+    await tester.pumpAndSettle();
+
+    // identify Bo as the Voyante, then continue to the Loups' identify step
+    await tester.tap(find.text('Bo'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Enregistrer'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Continuer'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Qui sont les Loups-Garous ?'), findsOneWidget);
+    // Bo is taken - only the 3 remaining players are offered
+    expect(find.byType(PlayerAvatar), findsNWidgets(3));
+    expect(find.text('Bo'), findsNothing);
+  });
+
   testWidgets('"Je noterai plus tard" skips the step without recording a role', (tester) async {
     final id = await _startedGame(repo, const {'loup_garou': 2, 'voyante': 1, 'villageois': 1});
 
