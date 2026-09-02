@@ -11,7 +11,9 @@ import '../../theme/app_typography.dart';
 import '../../utils/french_death_cause.dart';
 import '../../utils/french_role_label.dart';
 import '../../widgets/app_button.dart';
+import '../../widgets/avatar_pick_cell.dart';
 import '../../widgets/player_avatar.dart';
+import 'widgets/aide_memoire_sheet.dart';
 import 'widgets/identify_step.dart';
 import 'widgets/simple_act.dart';
 import 'widgets/target_pick.dart';
@@ -71,6 +73,7 @@ class _NightBody extends ConsumerWidget {
           stepCount: session.tonight.steps.length,
           currentStep: session.cursor.stepIndex,
           showDots: session.engine.nightIndex == 1,
+          onHelp: () => showAideMemoireSheet(context, session.composition),
         ),
         if (step != null)
           Padding(
@@ -122,6 +125,13 @@ class _NightBody extends ConsumerWidget {
       case 'voyante':
         return SimpleAct(primaryLabel: 'Continuer', onPrimary: notifier.skipStep);
 
+      case 'cupidon':
+        return _LoversPick(
+          candidates: [for (final p in alive) cand(p)],
+          onConfirm: (a, b) => notifier.pairLovers(a, b),
+          onSkip: notifier.skipStep,
+        );
+
       case 'loup_garou':
         return TargetPick(
           question: 'Qui les Loups dévorent-ils ?',
@@ -143,9 +153,115 @@ class _NightBody extends ConsumerWidget {
           onDone: notifier.skipStep,
         );
 
-      default: // cupidon, voleur - action not built yet
+      default: // voleur - its card swap isn't modelled yet
         return SimpleAct(primaryLabel: 'Passer ce rôle', onPrimary: notifier.skipStep);
     }
+  }
+}
+
+/// Cupidon's turn: pick exactly two players to fall in love. Night 1 only. The
+/// button names both, per the design.
+class _LoversPick extends StatefulWidget {
+  const _LoversPick({
+    required this.candidates,
+    required this.onConfirm,
+    required this.onSkip,
+  });
+
+  final List<Candidate> candidates;
+  final void Function(String a, String b) onConfirm;
+  final VoidCallback onSkip;
+
+  @override
+  State<_LoversPick> createState() => _LoversPickState();
+}
+
+class _LoversPickState extends State<_LoversPick> {
+  final _selected = <String>[];
+
+  void _toggle(String id) {
+    setState(() {
+      if (_selected.remove(id)) return;
+      if (_selected.length < 2) _selected.add(id);
+      // at capacity: refuse the extra (deselect one to change it)
+    });
+  }
+
+  String _name(String id) => widget.candidates.firstWhere((c) => c.id == id).name;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final typography = context.typography;
+    final complete = _selected.length == 2;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 18, AppSpacing.screen, 10),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Qui sont les amoureux ?',
+                  style: typography.rowLabel.copyWith(color: colors.textPrimary),
+                ),
+              ),
+              Text(
+                '${_selected.length} sur 2',
+                style: typography.counter.copyWith(color: colors.accentText),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: GridView.count(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screen),
+            crossAxisCount: AppSizes.gridColumnsDefault,
+            mainAxisSpacing: AppSpacing.gridGapRow,
+            crossAxisSpacing: AppSpacing.gridGapColumn,
+            childAspectRatio: 1.0,
+            children: [
+              for (final c in widget.candidates)
+                AvatarPickCell(
+                  name: c.name,
+                  selected: _selected.contains(c.id),
+                  onTap: () => _toggle(c.id),
+                ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screen,
+            12,
+            AppSpacing.screen,
+            AppSpacing.screen,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: 8,
+            children: [
+              AppButton(
+                label: complete
+                    ? 'Cupidon unit ${_name(_selected[0])} et ${_name(_selected[1])}'
+                    : 'Choisissez deux joueurs',
+                leadingIcon: complete ? AppIcons.cupid : null,
+                onPressed: complete
+                    ? () => widget.onConfirm(_selected[0], _selected[1])
+                    : null,
+              ),
+              AppButton(
+                label: 'Passer ce rôle',
+                variant: AppButtonVariant.secondary,
+                onPressed: widget.onSkip,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -188,12 +304,17 @@ class _NightHeader extends StatelessWidget {
     required this.stepCount,
     required this.currentStep,
     required this.showDots,
+    this.onHelp,
   });
 
   final int nightIndex;
   final int stepCount;
   final int currentStep;
+
+  /// Night 1 shows step-progress dots. Later nights show a `?` that opens the
+  /// aide-mémoire ([onHelp]) instead.
   final bool showDots;
+  final VoidCallback? onHelp;
 
   @override
   Widget build(BuildContext context) {
@@ -226,6 +347,20 @@ class _NightHeader extends StatelessWidget {
                         : _DotState.future,
                   ),
               ],
+            )
+          else if (onHelp != null)
+            GestureDetector(
+              onTap: onHelp,
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                width: AppSizes.iconButtonDense,
+                height: AppSizes.iconButtonDense,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: colors.borderHairline),
+                ),
+                child: Icon(AppIcons.help, size: 15, color: colors.textSecondary),
+              ),
             ),
         ],
       ),

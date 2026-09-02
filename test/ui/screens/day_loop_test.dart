@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:loup_garou_mj/data/database/app_database.dart';
 import 'package:loup_garou_mj/data/repositories/drift_game_repository.dart';
 import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
+import 'package:loup_garou_mj/ui/theme/app_icons.dart';
 
 import '../../support/pump_app.dart';
 
@@ -102,6 +103,53 @@ void main() {
     await tap(tester, 'Journal');
     expect(find.text('Bo est Capitaine'), findsOneWidget);
     expect(find.text('Le village élimine Cy'), findsOneWidget);
+  });
+
+  testWidgets('Cupidon pairs two players', (tester) async {
+    final id = await _startedGame(repo, const {
+      'loup_garou': 2,
+      'cupidon': 1,
+      'voyante': 1,
+      'sorciere': 1,
+      'villageois': 1,
+    });
+    await pump(tester, id);
+
+    // wake order: Cupidon, Voyante, Loups, Sorcière
+    await identify(tester, ['Ana']); // Cupidon
+    expect(find.text('Qui sont les amoureux ?'), findsOneWidget);
+    await tester.tap(find.text('Bo'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cy'));
+    await tester.pumpAndSettle();
+    await tap(tester, 'Cupidon unit Bo et Cy');
+
+    // advanced to the Voyante
+    expect(find.text('Qui est Voyante ?'), findsOneWidget);
+
+    await tap(tester, 'Journal');
+    expect(find.text('Cupidon unit Bo et Cy'), findsOneWidget);
+  });
+
+  testWidgets('the aide-memoire opens from the night header on later nights', (tester) async {
+    final id = await _startedGame(repo, const {
+      'loup_garou': 2,
+      'voyante': 1,
+      'sorciere': 1,
+      'villageois': 2,
+    });
+    await pump(tester, id);
+    await playNight1(tester, victim: 'Ana');
+    await tap(tester, 'Élire le Capitaine');
+    await tap(tester, 'Pas de Capitaine cette partie');
+    await tap(tester, 'Égalité, personne n\'est éliminé');
+    await tap(tester, 'Commencer la nuit 2');
+
+    expect(find.text('Nuit 2'), findsOneWidget);
+    await tester.tap(find.byIcon(AppIcons.help));
+    await tester.pumpAndSettle();
+    expect(find.text('Ordre de réveil'), findsOneWidget);
+    expect(find.text('Sorcière'), findsWidgets);
   });
 
   testWidgets('an un-identified victim -> reveal panel -> Chasseur chain', (tester) async {
