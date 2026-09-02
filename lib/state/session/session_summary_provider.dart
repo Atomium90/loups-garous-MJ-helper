@@ -32,7 +32,15 @@ final sessionSummaryProvider =
   final engine = GameStateJson.decode(decoded['engine'] as Map<String, dynamic>);
 
   if (engine.phase == GamePhase.day) {
-    return SessionSummary(phaseLabel: 'Jour ${engine.nightIndex}', stepLabel: 'récap');
+    final stepLabel = engine.cascade != null
+        ? 'effet en chaîne'
+        : switch (decoded['day']?['stage'] as String?) {
+            'captain' => 'élection du Capitaine',
+            'vote' => 'vote du village',
+            'done' => 'fin du jour',
+            _ => 'récap',
+          };
+    return SessionSummary(phaseLabel: 'Jour ${engine.nightIndex}', stepLabel: stepLabel);
   }
 
   final cursor = SessionCursor.fromJson(decoded['cursor'] as Map<String, dynamic>);

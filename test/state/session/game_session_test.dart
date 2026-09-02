@@ -87,8 +87,8 @@ void main() {
     final s = stateOf(game.gameId);
     expect(s.engine.phase, GamePhase.day);
     expect(s.engine.playerById('${ids[3]}').alive, isFalse);
-    expect(s.lastResolution, hasLength(1));
-    expect(s.lastResolution.single.cause, isA<WolvesKill>());
+    expect(s.recapDeaths.map((p) => p.id), ['${ids[3]}']);
+    expect(s.recapDeaths.single.causeOfDeath, isA<WolvesKill>());
 
     // roster roles persisted; Di / Fi stay unknown
     final roster = await repo.getRoster(game.gameId);
@@ -126,6 +126,134 @@ void main() {
     expect(s.engine.pendingWolfVictimId, '${ids[3]}');
     expect(s.cursor.stepIndex, 2); // back on the Sorcière step
     expect(s.cursor.subStep, NightSubStep.identify);
+  });
+
+  test('full day cycle: reveal a Chasseur, resolve the chain, elect, vote, next night', () async {
+    const comp = {'loup_garou': 2, 'voyante': 1, 'sorciere': 1, 'cupidon': 1, 'chasseur': 1};
+    final game = await _startedGame(repo, composition: comp);
+    final ids = game.seatRowIds; // Ana Bo Cy Di Ed Fi
+    String eid(int i) => '${ids[i]}';
+    final n = await notifierFor(game.gameId);
+
+    // wake order for this composition: Cupidon, Voyante, Loups, Sorcière
+    await n.identifyRole('cupidon', [ids[0]]); // Cupidon = Ana
+    await n.pairLovers(eid(1), eid(5)); // lovers: Bo & Fi
+    await n.identifyRole('voyante', [ids[1]]); // Voyante = Bo
+    await n.skipStep(); // Voyante: "Continuer"
+    await n.identifyRole('loup_garou', [ids[2], ids[3]]); // Loups = Cy, Di
+    await n.applyAction(WolvesTarget(targetPlayerId: eid(5))); // eat Fi
+    await n.identifyRole('sorciere', [ids[4]]); // Sorcière = Ed
+    await n.skipStep(); // Sorcière does nothing
+
+    await n.applyAction(const FinalizeNight());
+    var s = stateOf(game.gameId);
+    expect(s.engine.phase, GamePhase.day);
+    expect(s.engine.playerById(eid(5)).alive, isFalse); // Fi, wolves
+    expect(s.engine.playerById(eid(1)).alive, isFalse); // Bo, grief
+    expect(s.day.loversAck, [eid(1)]);
+    expect(s.dayInterrupt, DayInterrupt.reveal); // Fi's card was never noted
+    expect(s.unrevealedDead.map((p) => p.id), [eid(5)]);
+
+    await n.revealRole(ids[5], 'chasseur');
+    s = stateOf(game.gameId);
+    expect(s.engine.cascade?.decision, isA<PendingHunterShot>());
+    expect(s.dayInterrupt, DayInterrupt.chain);
+
+    await n.hunterShoot(eid(3)); // the Chasseur takes Di
+    s = stateOf(game.gameId);
+    expect(s.engine.playerById(eid(3)).alive, isFalse);
+    expect(s.engine.cascade, isNull);
+    expect(s.dayInterrupt, DayInterrupt.loversAck); // Bo still to acknowledge
+
+    await n.acknowledgeLoversDeaths();
+    s = stateOf(game.gameId);
+    expect(s.dayInterrupt, isNull);
+    expect(s.day.stage, DayStage.recap);
+
+    await n.advanceFromRecap();
+    expect(stateOf(game.gameId).day.stage, DayStage.captain);
+    await n.electCaptain(eid(2)); // Cy is captain
+    s = stateOf(game.gameId);
+    expect(s.engine.captainPlayerId, eid(2));
+    expect(s.day.stage, DayStage.vote);
+
+    await n.eliminateByVote(eid(4)); // vote out Ed
+    s = stateOf(game.gameId);
+    expect(s.engine.playerById(eid(4)).alive, isFalse);
+    expect(s.day.stage, DayStage.done);
+
+    await n.startNextNight();
+    s = stateOf(game.gameId);
+    expect(s.engine.nightIndex, 2);
+    expect(s.engine.phase, GamePhase.night);
+    expect(s.cursor, SessionCursor.nightStart);
+    expect(s.day.stage, DayStage.recap);
+    // only Cy (a Loup) survives among the night-callers
+    expect(s.tonight.steps.map((st) => st.role.id), ['loup_garou']);
+
+    final log = (await repo.watchNightLog(game.gameId).first).map((e) => e.line).toList();
+    expect(log, containsAll(<String>[
+      'Cupidon unit Bo et Fi',
+      'Les Loups désignent Fi',
+      'Bo meurt de chagrin',
+      'Le Chasseur emporte Di',
+      'Cy est Capitaine',
+      'Le village élimine Ed',
+    ]));
+  });
+
+  test('a fresh container restores a paused Hunter-shot cascade', () async {
+    const comp = {'loup_garou': 2, 'voyante': 1, 'sorciere': 1, 'villageois': 1, 'chasseur': 1};
+    final game = await _startedGame(repo, composition: comp);
+    final ids = game.seatRowIds;
+    final n = await notifierFor(game.gameId);
+
+    await n.identifyRole('voyante', [ids[0]]);
+    await n.skipStep();
+    await n.identifyRole('loup_garou', [ids[1], ids[2]]);
+    await n.applyAction(WolvesTarget(targetPlayerId: '${ids[5]}')); // eat Fi
+    await n.identifyRole('sorciere', [ids[3]]);
+    await n.skipStep();
+    await n.applyAction(const FinalizeNight());
+    await n.revealRole(ids[5], 'chasseur');
+    expect(stateOf(game.gameId).engine.cascade?.decision, isA<PendingHunterShot>());
+
+    final resumed = ProviderContainer(
+      overrides: [gameRepositoryProvider.overrideWithValue(repo)],
+    );
+    addTearDown(resumed.dispose);
+    final s = await resumed.read(gameSessionProvider(game.gameId).future);
+    expect(s.engine.cascade?.decision, isA<PendingHunterShot>());
+    expect((s.engine.cascade!.decision as PendingHunterShot).deadHunterId, '${ids[5]}');
+    expect(s.dayInterrupt, DayInterrupt.chain);
+  });
+
+  test('a tie vote eliminates no one, and a role deferred on night 1 is still called night 2', () async {
+    final game = await _startedGame(repo, composition: composition);
+    final ids = game.seatRowIds;
+    final n = await notifierFor(game.gameId);
+
+    // wake order: Voyante, Loups, Sorcière - defer the Voyante entirely
+    await n.skipStep(); // "Je noterai plus tard"
+    await n.identifyRole('loup_garou', [ids[0], ids[1]]);
+    await n.applyAction(WolvesTarget(targetPlayerId: '${ids[4]}'));
+    await n.identifyRole('sorciere', [ids[2]]);
+    await n.skipStep();
+    await n.applyAction(const FinalizeNight());
+
+    await n.advanceFromRecap(); // -> captain (day 1)
+    await n.electCaptain(null); // "Pas de Capitaine"
+    expect(stateOf(game.gameId).day.stage, DayStage.vote);
+    await n.eliminateByVote(null); // tie
+    expect(stateOf(game.gameId).day.stage, DayStage.done);
+
+    await n.startNextNight();
+    final s = stateOf(game.gameId);
+    expect(s.engine.nightIndex, 2);
+    expect(s.tonight.steps.map((st) => st.role.id), contains('voyante'));
+
+    final log = (await repo.watchNightLog(game.gameId).first).map((e) => e.line);
+    expect(log, contains("Égalité, personne n'est éliminé"));
   });
 
   test('startGame does not itself seed the session (build does, lazily)', () async {

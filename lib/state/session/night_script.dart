@@ -26,10 +26,27 @@ NightScript buildNightScript({
     );
   }
 
-  final aliveRoleIds = engine.alivePlayers.map((p) => p.roleId).toSet();
+  // Night 2+: from the composition, keeping a night-calling role unless every
+  // one of its holders is known dead. An un-identified holder (fewer players
+  // confirmed in the role than the composition calls for) might still be alive,
+  // so the role stays in the script and its identify step re-appears. Only
+  // `villageois` is ever the un-identified placeholder, and it has no night
+  // call, so `players.where(roleId == id)` is the set of *confirmed* holders
+  // for any night-calling role.
+  final callable = <Role>[];
+  for (final entry in composition.entries) {
+    if (entry.value <= 0) continue;
+    final role = registry.byId(entry.key);
+    if (!role.hasNightCall) continue;
+    final known = engine.players.where((p) => p.roleId == role.id).toList();
+    final anyAlive = known.any((p) => p.alive);
+    if (anyAlive || known.length < entry.value) {
+      callable.add(role);
+    }
+  }
   return _builder.build(
-    compositionRoles: [for (final id in aliveRoleIds) registry.byId(id)],
-    aliveRoleIds: aliveRoleIds,
+    compositionRoles: callable,
+    aliveRoleIds: {for (final r in callable) r.id},
     nightIndex: engine.nightIndex,
   );
 }

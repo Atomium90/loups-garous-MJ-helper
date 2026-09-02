@@ -346,7 +346,7 @@ class _DayRecapBody extends StatelessWidget {
     final colors = context.colors;
     final typography = context.typography;
     final engine = session.engine;
-    final deaths = session.lastResolution;
+    final deaths = session.recapDeaths;
 
     final aliveByTeam = <Team, int>{};
     for (final p in engine.alivePlayers) {
@@ -387,7 +387,7 @@ class _DayRecapBody extends StatelessWidget {
                   spacing: 12,
                   children: [
                     PlayerAvatar(
-                      name: engine.playerById(death.playerId).name,
+                      name: death.name,
                       size: AppSizes.avatarDayRecap,
                       fillColor: colors.bgScreen,
                     ),
@@ -396,11 +396,11 @@ class _DayRecapBody extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            engine.playerById(death.playerId).name,
+                            death.name,
                             style: typography.rowLabel.copyWith(fontSize: 16, color: colors.textPrimary),
                           ),
                           Text(
-                            _deathCauseLabel(death.cause),
+                            _deathCauseLabel(death.causeOfDeath!),
                             style: typography.meta.copyWith(color: colors.textSecondary),
                           ),
                         ],
