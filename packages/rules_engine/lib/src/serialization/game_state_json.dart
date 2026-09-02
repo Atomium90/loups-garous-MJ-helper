@@ -1,3 +1,4 @@
+import '../game_state/death_cause.dart';
 import '../game_state/game_state.dart';
 import '../game_state/player.dart';
 
@@ -20,7 +21,15 @@ abstract final class GameStateJson {
     return {
       'players': [
         for (final p in state.players)
-          {'id': p.id, 'name': p.name, 'roleId': p.roleId, 'alive': p.alive},
+          {
+            'id': p.id,
+            'name': p.name,
+            'roleId': p.roleId,
+            'alive': p.alive,
+            'causeOfDeath': ?_encodeCause(p.causeOfDeath),
+            'diedOnNight': ?p.diedOnNight,
+            'diedOnPhase': ?p.diedOnPhase?.name,
+          },
       ],
       'nightIndex': state.nightIndex,
       'phase': state.phase.name,
@@ -47,6 +56,12 @@ abstract final class GameStateJson {
             name: p['name'] as String,
             roleId: p['roleId'] as String,
             alive: p['alive'] as bool,
+            causeOfDeath: _decodeCause(p['causeOfDeath'] as Map<String, dynamic>?),
+            diedOnNight: p['diedOnNight'] as int?,
+            diedOnPhase: switch (p['diedOnPhase'] as String?) {
+              null => null,
+              final name => GamePhase.values.byName(name),
+            },
           ),
       ],
       nightIndex: json['nightIndex'] as int,
@@ -63,4 +78,30 @@ abstract final class GameStateJson {
       pendingWitchDeathTargetId: json['pendingWitchDeathTargetId'] as String?,
     );
   }
+
+  /// A [DeathCause] as a `{"type": ...}` map, or null for a living player.
+  static Map<String, dynamic>? _encodeCause(DeathCause? cause) => switch (cause) {
+    null => null,
+    WolvesKill() => {'type': 'wolves'},
+    WitchDeathPotionKill() => {'type': 'witchPotion'},
+    DayVoteKill() => {'type': 'dayVote'},
+    HunterShotKill(:final shooterPlayerId) => {
+      'type': 'hunterShot',
+      'shooterPlayerId': shooterPlayerId,
+    },
+    LoversCascadeKill(:final causingPlayerId) => {
+      'type': 'loversCascade',
+      'causingPlayerId': causingPlayerId,
+    },
+  };
+
+  static DeathCause? _decodeCause(Map<String, dynamic>? json) => switch (json?['type']) {
+    null => null,
+    'wolves' => const WolvesKill(),
+    'witchPotion' => const WitchDeathPotionKill(),
+    'dayVote' => const DayVoteKill(),
+    'hunterShot' => HunterShotKill(shooterPlayerId: json!['shooterPlayerId'] as String),
+    'loversCascade' => LoversCascadeKill(causingPlayerId: json!['causingPlayerId'] as String),
+    final other => throw ArgumentError('unknown death cause type: $other'),
+  };
 }

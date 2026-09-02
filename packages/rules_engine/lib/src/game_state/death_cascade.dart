@@ -92,13 +92,9 @@ CascadeResult drainCascade({
       case ResolveLoversCascade():
         final partnerId = currentState.lovers?.partnerOf(player.id);
         if (partnerId != null && currentState.playerById(partnerId).alive) {
-          currentState = currentState.killPlayer(partnerId);
-          events.add(
-            PlayerDied(
-              playerId: partnerId,
-              cause: LoversCascadeKill(causingPlayerId: player.id),
-            ),
-          );
+          final cause = LoversCascadeKill(causingPlayerId: player.id);
+          currentState = currentState.killPlayer(partnerId, cause: cause);
+          events.add(PlayerDied(playerId: partnerId, cause: cause));
           q.addAll(deathCascadeTasks(partnerId));
         }
     }

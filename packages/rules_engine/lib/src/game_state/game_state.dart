@@ -1,9 +1,11 @@
 import 'package:collection/collection.dart';
 
+import 'death_cause.dart';
+import 'game_phase.dart';
 import 'pending_decision.dart';
 import 'player.dart';
 
-enum GamePhase { night, day }
+export 'game_phase.dart';
 
 class WitchState {
   final bool lifePotionUsed;
@@ -78,14 +80,23 @@ class GameState {
 
   List<Player> get alivePlayers => players.where((p) => p.alive).toList(growable: false);
 
-  /// Marks [playerId] as dead. Does not resolve any cascade effects; that's
+  /// Marks [playerId] as dead and stamps how and when (the current
+  /// [nightIndex] and [phase]). Does not resolve any cascade effects; that's
   /// the death cascade's job (see death_cascade.dart).
-  GameState killPlayer(String playerId) {
+  GameState killPlayer(String playerId, {required DeathCause cause}) {
     playerById(playerId); // validates existence
     return copyWith(
       players: [
         for (final p in players)
-          if (p.id == playerId) p.copyWith(alive: false) else p,
+          if (p.id == playerId)
+            p.copyWith(
+              alive: false,
+              causeOfDeath: cause,
+              diedOnNight: nightIndex,
+              diedOnPhase: phase,
+            )
+          else
+            p,
       ],
     );
   }

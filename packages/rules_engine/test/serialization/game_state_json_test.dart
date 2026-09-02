@@ -21,8 +21,10 @@ void _expectSameState(GameState a, GameState b) {
   expect(b.witch.deathPotionUsed, a.witch.deathPotionUsed);
   expect(b.lovers?.playerAId, a.lovers?.playerAId);
   expect(b.lovers?.playerBId, a.lovers?.playerBId);
-  expect(b.players.map((p) => (p.id, p.name, p.roleId, p.alive)),
-      a.players.map((p) => (p.id, p.name, p.roleId, p.alive)));
+  expect(b.players.map((p) => (p.id, p.name, p.roleId, p.alive, p.diedOnNight, p.diedOnPhase)),
+      a.players.map((p) => (p.id, p.name, p.roleId, p.alive, p.diedOnNight, p.diedOnPhase)));
+  expect(b.players.map((p) => p.causeOfDeath.runtimeType),
+      a.players.map((p) => p.causeOfDeath.runtimeType));
 }
 
 void main() {
@@ -48,6 +50,31 @@ void main() {
       captainPlayerId: 'b',
     );
     _expectSameState(state, roundTrip(state));
+  });
+
+  test('round-trips a death: cause, night and phase survive', () {
+    const machine = GameStateMachine();
+    var state = GameState.initial(
+      players: _players({'a': 'loup_garou', 'b': 'villageois', 'c': 'sorciere'}),
+    ).copyWith(nightIndex: 2);
+    state = machine
+        .apply(
+          state: state,
+          action: const WolvesTarget(targetPlayerId: 'b'),
+          roleRegistry: RoleRegistry.base,
+        )
+        .state;
+    state = machine
+        .apply(state: state, action: const FinalizeNight(), roleRegistry: RoleRegistry.base)
+        .state;
+
+    final restored = roundTrip(state);
+    final b = restored.playerById('b');
+    expect(b.alive, isFalse);
+    expect(b.causeOfDeath, isA<WolvesKill>());
+    expect(b.diedOnNight, 2);
+    expect(b.diedOnPhase, GamePhase.night);
+    _expectSameState(state, restored);
   });
 
   test('round-trips a day-phase state', () {

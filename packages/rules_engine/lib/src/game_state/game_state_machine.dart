@@ -179,7 +179,7 @@ class GameStateMachine {
       if (!currentState.playerById(playerId).alive) {
         continue; // dedupes an identical wolf/witch target: already killed above
       }
-      currentState = currentState.killPlayer(playerId);
+      currentState = currentState.killPlayer(playerId, cause: cause);
       events.add(PlayerDied(playerId: playerId, cause: cause));
       queue.addAll(deathCascadeTasks(playerId));
     }
@@ -212,7 +212,7 @@ class GameStateMachine {
     }
     _requireAlive(state.playerById(action.targetPlayerId), 'day vote target');
 
-    final killed = state.killPlayer(action.targetPlayerId);
+    final killed = state.killPlayer(action.targetPlayerId, cause: const DayVoteKill());
     final events = <GameEvent>[
       PlayerDied(playerId: action.targetPlayerId, cause: const DayVoteKill()),
     ];
@@ -255,7 +255,12 @@ class GameStateMachine {
     if (cascade.decision case PendingHunterShot(:final deadHunterId)) {
       _requireAlive(state.playerById(action.targetPlayerId), 'hunter shot target');
 
-      final killed = state.killPlayer(action.targetPlayerId).copyWith(cascade: null);
+      final killed = state
+          .killPlayer(
+            action.targetPlayerId,
+            cause: HunterShotKill(shooterPlayerId: deadHunterId),
+          )
+          .copyWith(cascade: null);
       final events = <GameEvent>[
         PlayerDied(
           playerId: action.targetPlayerId,

@@ -19,6 +19,7 @@ export 'src/night_script/night_script_step.dart';
 export 'src/game_state/death_cause.dart';
 export 'src/game_state/game_action.dart';
 export 'src/game_state/game_event.dart';
+export 'src/game_state/game_phase.dart';
 export 'src/game_state/game_state.dart';
 export 'src/game_state/game_state_machine.dart';
 export 'src/game_state/pending_decision.dart';

@@ -45,6 +45,32 @@ void main() {
     });
   });
 
+  group('GameState.killPlayer', () {
+    test('marks the player dead and stamps cause, night and phase', () {
+      final state = GameState(
+        players: _players(['a', 'b']),
+        nightIndex: 3,
+        phase: GamePhase.day,
+      );
+      final killed = state.killPlayer('a', cause: const DayVoteKill());
+      final a = killed.playerById('a');
+      expect(a.alive, isFalse);
+      expect(a.causeOfDeath, isA<DayVoteKill>());
+      expect(a.diedOnNight, 3);
+      expect(a.diedOnPhase, GamePhase.day);
+    });
+
+    test('leaves the other players untouched and still alive', () {
+      final state = GameState.initial(players: _players(['a', 'b']));
+      final killed = state.killPlayer('a', cause: const WolvesKill());
+      final b = killed.playerById('b');
+      expect(b.alive, isTrue);
+      expect(b.causeOfDeath, isNull);
+      expect(b.diedOnNight, isNull);
+      expect(b.diedOnPhase, isNull);
+    });
+  });
+
   group('GameState.copyWith', () {
     test('preserves untouched fields', () {
       final state = GameState.initial(players: _players(['a', 'b']));
