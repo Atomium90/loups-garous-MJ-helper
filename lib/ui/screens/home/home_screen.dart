@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../data/database/app_database.dart';
 import '../../../data/models/game_status.dart';
+import '../../../data/models/game_winner.dart';
 import '../../../state/providers/game_list_provider.dart';
 import '../../../state/providers/game_repository_provider.dart';
 import '../../../state/session/session_summary_provider.dart';
@@ -12,7 +13,9 @@ import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../utils/french_date_format.dart';
+import '../../utils/french_winner_label.dart';
 import '../../widgets/app_button.dart';
+import 'past_game_sheet.dart';
 import '../../widgets/app_icon_button.dart';
 import '../../widgets/section_label.dart';
 
@@ -377,18 +380,38 @@ class _HistoriqueRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 9),
-      decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: context.colors.borderHairline)),
-      ),
-      // No leading phase icon and no trailing winning-side label: `Games` has no `winner`
-      // field yet, and the design's own philosophy (the past-game recap's survivors-only rule)
-      // is that missing data is an editorial omission, not a guess.
-      child: Text(
-        game.name ?? 'Partie du ${frenchDayMonthLabel(game.createdAt)}',
-        style: context.typography.body.copyWith(
-          color: context.colors.textPrimary,
+    final colors = context.colors;
+    final typography = context.typography;
+    final winner = game.winner;
+    final cancelled = winner == GameWinner.none;
+
+    return InkWell(
+      onTap: () => showPastGameSheet(context, game),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 9),
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: colors.borderHairline)),
+        ),
+        child: Row(
+          spacing: 10,
+          children: [
+            Icon(
+              cancelled ? AppIcons.cancelled : AppIcons.night,
+              size: 14,
+              color: colors.textTertiary,
+            ),
+            Expanded(
+              child: Text(
+                game.name ?? 'Partie du ${frenchDayMonthLabel(game.createdAt)}',
+                style: typography.body.copyWith(color: colors.textPrimary),
+              ),
+            ),
+            if (winner != null)
+              Text(
+                frenchWinnerShort(winner),
+                style: typography.counter.copyWith(color: colors.textSecondary),
+              ),
+          ],
         ),
       ),
     );

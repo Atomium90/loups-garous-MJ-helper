@@ -11,6 +11,15 @@ String frenchWinnerLabel(GameWinner winner) => switch (winner) {
   GameWinner.none => 'Personne',
 };
 
+/// Terse form for a right-aligned history row: "Village", "Loups", "Amoureux",
+/// "Annulée".
+String frenchWinnerShort(GameWinner winner) => switch (winner) {
+  GameWinner.village => 'Village',
+  GameWinner.wolves => 'Loups',
+  GameWinner.lovers => 'Amoureux',
+  GameWinner.none => 'Annulée',
+};
+
 IconData frenchWinnerIcon(GameWinner winner) => switch (winner) {
   GameWinner.village => AppIcons.home,
   GameWinner.wolves => AppIcons.wolves,

@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:loup_garou_mj/data/database/app_database.dart';
 import 'package:loup_garou_mj/data/models/game_status.dart';
+import 'package:loup_garou_mj/data/models/game_winner.dart';
 import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
 import 'package:loup_garou_mj/ui/screens/composition/composition_screen.dart';
 import 'package:loup_garou_mj/ui/screens/home/home_screen.dart';
@@ -54,7 +55,7 @@ void main() {
 
   testWidgets(
     'mixed in-progress + completed games renders both sections, historique grouped by '
-    'month, no winner label',
+    'month, with the winning side',
     (tester) async {
       final repository = FakeGameRepository(
         initialGames: [
@@ -73,6 +74,8 @@ void main() {
             updatedAt: DateTime(2026, 8, 14),
             playerCount: 9,
             status: GameStatus.completed,
+            winner: GameWinner.wolves,
+            endedAt: DateTime(2026, 8, 14),
           ),
           Game(
             id: 3,
@@ -81,6 +84,8 @@ void main() {
             updatedAt: DateTime(2026, 7, 26),
             playerCount: 8,
             status: GameStatus.completed,
+            winner: GameWinner.none,
+            endedAt: DateTime(2026, 7, 26),
           ),
         ],
       );
@@ -96,11 +101,8 @@ void main() {
       expect(find.text('Août 2026'), findsOneWidget);
       expect(find.text('Juillet 2026'), findsOneWidget);
       expect(find.text('Partie du 14 août'), findsOneWidget);
-      expect(find.text('Partie du 26 juillet'), findsOneWidget);
-      // No `winner` field exists yet: the historique row must never show a fabricated
-      // outcome label (see home_screen.dart's _HistoriqueRow doc comment).
-      expect(find.text('Loups'), findsNothing);
-      expect(find.text('Village'), findsNothing);
+      expect(find.text('Loups'), findsOneWidget); // winning side
+      expect(find.text('Annulée'), findsOneWidget); // GameWinner.none
     },
   );
 
