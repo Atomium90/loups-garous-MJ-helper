@@ -73,18 +73,18 @@ void main() {
     await pump(tester, id);
     await playNight1(tester, victim: 'Ana'); // Ana is the identified Voyante -> no reveal
 
-    // J1 recap
+    // the day recap
     expect(find.text('Jour 1 se lève'), findsOneWidget);
     expect(find.text('Victime des Loups'), findsOneWidget);
     await tap(tester, 'Élire le Capitaine');
 
-    // J2
+    // the captain election
     expect(find.text('Qui est élu ?'), findsOneWidget);
     await tester.tap(find.text('Bo'));
     await tester.pumpAndSettle();
     await tap(tester, 'Bo est Capitaine');
 
-    // J3 - the captain's double vote is named
+    // the vote - the captain's double vote is named
     expect(find.text('Qui est éliminé ?'), findsOneWidget);
     expect(find.textContaining('voix de Bo compte double'), findsOneWidget);
     await tester.tap(find.text('Cy'));

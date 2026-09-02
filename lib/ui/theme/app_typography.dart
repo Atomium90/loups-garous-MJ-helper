@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-/// The design handoff's type scale (`claude/design_handoff_loup_garou_mj/README.md`,
-/// "Design tokens > Typography"), as a [ThemeExtension]. Only the roles actually used by a
-/// screen built so far are defined here - extend as later screens need new roles (avatar
-/// initials, sheet title, stat number, tab label, etc. aren't here yet).
+/// The design handoff's type scale ("Design tokens > Typography"), as a
+/// [ThemeExtension]. Only the roles actually used by a screen built so far are
+/// defined here - extend as later screens need new roles (avatar initials, sheet
+/// title, stat number, tab label, etc. aren't here yet).
 ///
 /// Styles carry size/weight/height/letterSpacing only, deliberately never a [Color]: colour
 /// comes from [AppColors] at the call site (e.g. `typography.body.copyWith(color:
@@ -46,7 +46,7 @@ class AppTypography extends ThemeExtension<AppTypography> {
   /// Smallest meta text: day-count badge, month label - 10/400.
   final TextStyle micro;
 
-  /// The number inside a stepper control (E2's player-count row) - 15/500.
+  /// The number inside a stepper control (the composition screen's player-count row) - 15/500.
   final TextStyle stepperValue;
 
   // System UI sans per the README ("-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto").

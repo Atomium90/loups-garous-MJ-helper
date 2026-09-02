@@ -1,12 +1,12 @@
-/// The design handoff's spacing/radii/sizes tables (`claude/design_handoff_loup_garou_mj/
-/// README.md`, "Design tokens > Spacing, radii, sizes"), transcribed as plain constants.
+/// The design handoff's spacing/radii/sizes tables ("Design tokens > Spacing,
+/// radii, sizes"), transcribed as plain constants.
 ///
 /// Unlike [AppColors]/[AppTypography] these don't vary by brightness, so they're not
-/// [ThemeExtension]s - just `import` and use directly. Transcribed in full even where this
-/// session's screens don't use every value yet: it's pure data entry with no judgement calls,
+/// [ThemeExtension]s - just `import` and use directly. Transcribed in full even where the
+/// screens don't use every value yet: it's pure data entry with no judgement calls,
 /// so there's nothing to lose by encoding the whole table once instead of extending it
 /// piecemeal per screen. The one deliberate omission is the 28px "device frame" radius: the
-/// README explicitly calls the mockups' fixed frames a phone stand-in for the board, not
+/// handoff explicitly calls the mockups' fixed frames a phone stand-in for the board, not
 /// something the real (full-screen) app has a use for.
 library;
 

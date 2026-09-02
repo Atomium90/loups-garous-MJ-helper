@@ -9,7 +9,7 @@ import '../../support/fake_game_repository.dart';
 import '../../support/pump_app.dart';
 
 void main() {
-  testWidgets('empty game list renders E0 empty-state copy', (tester) async {
+  testWidgets('empty game list renders the empty-state copy', (tester) async {
     final repository = FakeGameRepository();
     await pumpScreen(
       tester,

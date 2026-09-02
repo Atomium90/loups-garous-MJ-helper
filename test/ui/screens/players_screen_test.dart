@@ -81,7 +81,7 @@ void main() {
     expect(_continueButton(tester).onPressed, isNull);
   });
 
-  testWidgets('Continuer persists trimmed names and pushes A2', (tester) async {
+  testWidgets('Continuer persists trimmed names and pushes the pre-night screen', (tester) async {
     final repository = FakeGameRepository();
     final id = await _gameWithBlankRoster(repository, 2);
 

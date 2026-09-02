@@ -1,9 +1,9 @@
 import 'package:flutter/widgets.dart';
 import 'package:tabler_icons_plus/tabler_icons_plus.dart';
 
-/// Semantic icon names, mapped to `tabler_icons_plus`'s `TablerIcons.*` constants (see
-/// `claude/design_handoff_loup_garou_mj/README.md`, "Design tokens > Icons" for the full
-/// intended set - only the icons the screens built so far actually use are mapped here).
+/// Semantic icon names, mapped to `tabler_icons_plus`'s `TablerIcons.*` constants
+/// (the design handoff's "Design tokens > Icons" lists the full intended set -
+/// only the icons the screens built so far actually use are mapped here).
 ///
 /// Call sites read `AppIcons.settings`, not `TablerIcons.settings`, for the same reason
 /// [AppColors]/[AppSpacing] are centralised: `tabler_icons_plus` auto-syncs from upstream
@@ -16,7 +16,7 @@ abstract final class AppIcons {
   /// "Nouvelle partie" button and header icon button.
   static const newGame = TablerIcons.plus;
 
-  /// E0's empty-state circle.
+  /// Accueil's empty-state circle.
   static const emptyState = TablerIcons.moonStars;
 
   /// The most recent "en cours" game's card.
@@ -26,19 +26,19 @@ abstract final class AppIcons {
   /// it, a filled sun/moon phase icon would fabricate a status we don't actually know.
   static const resumeOther = TablerIcons.playerPlay;
 
-  /// E2's back chevron. Also A1/A2's.
+  /// The back chevron on the setup screens.
   static const back = TablerIcons.chevronLeft;
 
-  /// E2's "Compo complète" check.
+  /// The composition screen's "Compo complète" check.
   static const compositionComplete = TablerIcons.check;
 
-  /// A2's "Distribuez les cartes" callout.
+  /// The "Distribuez les cartes" callout before night 1.
   static const deal = TablerIcons.cards;
 
-  /// A2's "Commencer la nuit 1" button.
+  /// The "Commencer la nuit 1" button.
   static const nightStart = TablerIcons.moonStars;
 
-  /// A1's disabled "Carnet d'habitués" row (the coming-soon address book).
+  /// The disabled "Carnet d'habitués" row (the coming-soon address book).
   static const regulars = TablerIcons.bookmarks;
 
   // --- in-game tab bar ---

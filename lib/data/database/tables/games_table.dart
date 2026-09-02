@@ -31,7 +31,7 @@ class Games extends Table {
   /// running game (the roster's role/alive columns are only meaningful pre-start).
   TextColumn get sessionJson => text().nullable()();
 
-  /// The outcome the MJ declared on the F screen. Null while the game is still
+  /// The outcome the MJ declared on the end-of-game screen. Null while the game is still
   /// running; [GameWinner.none] means it was called off.
   IntColumn get winner => intEnum<GameWinner>().nullable()();
 

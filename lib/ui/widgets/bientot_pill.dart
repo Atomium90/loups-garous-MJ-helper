@@ -4,7 +4,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_dimensions.dart';
 import '../theme/app_typography.dart';
 
-/// The "bientôt" (coming soon) badge on deliberately-unfinished rows - A1's "Carnet
+/// The "bientôt" (coming soon) badge on deliberately-unfinished rows - the "Carnet
 /// d'habitués", later Réglages and Mes boîtes. `warn/bg` fill, `warn/text` label, 11pt, pill.
 class BientotPill extends StatelessWidget {
   const BientotPill({super.key});

@@ -147,7 +147,7 @@ void main() {
   );
 
   testWidgets(
-    'Lancer la partie commits the composition (with the villageois top-up) and opens A1',
+    'Lancer la partie commits the composition (with the villageois top-up) and opens the players screen',
     (tester) async {
       final repository = FakeGameRepository();
       await pumpAppRouter(
@@ -165,7 +165,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final saved = repository.allGames.single;
-      // Committing the composition doesn't start the game: naming (A1) and the deal (A2) are
+      // Committing the composition doesn't start the game: naming and the deal are
       // still setup, and a blank roster gets seeded, sized to the player count.
       expect(saved.status, GameStatus.setup);
       expect(repository.rosterOf(saved.id), hasLength(8));
@@ -173,7 +173,7 @@ void main() {
       // remaining, silently topped up as villageois - matches CompositionEditor.commit()'s
       // documented behaviour.
       expect(saved.compositionJson, {'loup_garou': 1, 'villageois': 7});
-      // ...and it moves on to A1 "Les joueurs", not back home.
+      // ...and it moves on to "Les joueurs", not back home.
       expect(find.byType(PlayersScreen), findsOneWidget);
       expect(find.text('Les joueurs'), findsOneWidget);
     },

@@ -52,12 +52,12 @@ enum DayStage { recap, captain, vote, done }
 class DaySnapshot {
   final DayStage stage;
 
-  /// The wolves' victim the Witch saved tonight - shown on the J1 recap
+  /// The wolves' victim the Witch saved tonight - shown on the day recap
   /// ("attaqué puis sauvé"). Set when the life potion is used.
   final String? savedFromWolvesName;
 
   /// Ids of players the lovers cascade killed that the MJ has not yet
-  /// acknowledged (the J4 grief panel). The engine already applied the death;
+  /// acknowledged (the grief panel). The engine already applied the death;
   /// this only gates the announcement.
   final List<String> loversAck;
 

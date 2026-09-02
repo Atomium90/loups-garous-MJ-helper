@@ -379,7 +379,7 @@ List<Candidate> _alive(GameState engine) => [
   for (final p in engine.alivePlayers) (id: p.id, name: p.name),
 ];
 
-/// J1 - what the MJ reads aloud when the village wakes.
+/// The day recap - what the MJ reads aloud when the village wakes.
 class _DayRecapBody extends StatelessWidget {
   const _DayRecapBody({required this.session, required this.onAdvance});
 
@@ -496,7 +496,7 @@ class _DayRecapBody extends StatelessWidget {
   }
 }
 
-/// J2 - electing the Capitaine (day 1, and again on every captain death via the
+/// Electing the Capitaine (day 1, and again on every captain death via the
 /// chain panel). All living players, unfiltered by role, amber selection.
 class _CaptainElectionBody extends StatelessWidget {
   const _CaptainElectionBody({required this.session, required this.notifier});
@@ -538,7 +538,7 @@ class _CaptainElectionBody extends StatelessWidget {
   }
 }
 
-/// J3 - the village vote. 44px avatars (the largest in the app); the current
+/// The village vote. 44px avatars (the largest in the app); the current
 /// captain's avatar carries a crown badge.
 class _VoteBody extends StatelessWidget {
   const _VoteBody({required this.session, required this.notifier});
@@ -793,7 +793,7 @@ class _RoleOption extends StatelessWidget {
   }
 }
 
-/// J4 - a death that triggers something: the Hunter's shot or the captain's
+/// A death that triggers something: the Hunter's shot or the captain's
 /// succession. The app names the consequence and hands over the picker.
 class _ChainPanel extends StatelessWidget {
   const _ChainPanel({required this.session, required this.notifier});

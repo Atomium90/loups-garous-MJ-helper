@@ -2,7 +2,7 @@ import 'package:rules_engine/rules_engine.dart';
 
 import '../../data/models/night_log_entry.dart';
 
-/// The journal lines a single MJ action produces, in the JR screen's copy
+/// The journal lines a single MJ action produces, in the Journal's copy
 /// style. Each line is written at the moment its own action is reported, so a
 /// force-quit between two steps never loses or garbles one. Deaths get no line
 /// of their own - the action lines imply them and the recaps summarise them

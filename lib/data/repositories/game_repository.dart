@@ -15,7 +15,7 @@ abstract class GameRepository {
   /// The single write for "Lancer la partie": persists playerCount and
   /// roleCounts, and - in the same transaction - seeds [playerCount] blank
   /// Players rows (seatIndex 0..N-1, empty name) if the game has no roster
-  /// yet. The game stays in GameStatus.setup: naming (A1) and the deal (A2)
+  /// yet. The game stays in GameStatus.setup: naming and the deal
   /// are still setup, only startGame flips it to inProgress.
   Future<void> saveComposition({
     required int gameId,
@@ -33,15 +33,15 @@ abstract class GameRepository {
   /// list length must equal the roster size, or an [ArgumentError] is thrown.
   Future<void> savePlayerNames({required int gameId, required List<String> names});
 
-  /// Writes [roleId] onto the roster rows for [playerRowIds] - what the A1
-  /// identification step records as each role wakes on night 1.
+  /// Writes [roleId] onto the roster rows for [playerRowIds] - what the night
+  /// identification step records as each role wakes.
   Future<void> assignRoles({required List<int> playerRowIds, required String roleId});
 
   /// "Commencer la nuit 1": moves the game from setup to inProgress. Kept
   /// generic so it can later also seed the night phase/step.
   Future<void> startGame(int gameId);
 
-  /// "Terminer la partie" (F screen): the MJ declares [winner]. Moves the game
+  /// "Terminer la partie" (the end-of-game screen): the MJ declares [winner]. Moves the game
   /// to GameStatus.completed and stamps endedAt. The session snapshot is left
   /// intact so the past-game recap can still read it.
   Future<void> endGame({required int gameId, required GameWinner winner});

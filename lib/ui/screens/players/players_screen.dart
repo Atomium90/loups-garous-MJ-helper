@@ -11,7 +11,7 @@ import '../../widgets/app_button.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/bientot_pill.dart';
 
-/// A1 - "Les joueurs". Names the seats created (blank) when the composition was saved. The
+/// "Les joueurs". Names the seats created (blank) when the composition was saved. The
 /// game is still GameStatus.setup here; this only fills in names.
 class PlayersScreen extends ConsumerWidget {
   const PlayersScreen({required this.gameId, super.key});

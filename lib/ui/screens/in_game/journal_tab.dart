@@ -10,7 +10,7 @@ import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../utils/french_date_format.dart';
 
-/// The Journal tab (JR): every logged line, grouped under its uppercase phase
+/// The Journal tab: every logged line, grouped under its uppercase phase
 /// header, most recent first.
 class JournalTab extends ConsumerWidget {
   const JournalTab({required this.gameId, super.key});

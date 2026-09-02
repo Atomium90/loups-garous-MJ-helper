@@ -6,7 +6,7 @@ import 'roster_draft.dart';
 
 part 'roster_editor_notifier.g.dart';
 
-/// Draft-then-commit editing for the A1 "Les joueurs" screen. Mirrors
+/// Draft-then-commit editing for the "Les joueurs" screen. Mirrors
 /// [CompositionEditor]: local [RosterDraft] state, only written on [commit].
 /// Codegen-safe (unlike [rosterProvider]) because [RosterDraft] is an
 /// app-defined type, not a Drift `part`-file type.

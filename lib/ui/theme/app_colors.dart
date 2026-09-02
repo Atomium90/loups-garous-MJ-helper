@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-/// The design handoff's semantic colour tokens (`claude/design_handoff_loup_garou_mj/README.md`,
-/// "Design tokens > Colour"), as a [ThemeExtension] so both the light and dark palettes are
+/// The design handoff's semantic colour tokens ("Design tokens > Colour"), as a
+/// [ThemeExtension] so both the light and dark palettes are
 /// available anywhere via `Theme.of(context).extension<AppColors>()!` (or the [AppColorsX]
 /// shortcut below) without any screen ever hardcoding a hex value.
 class AppColors extends ThemeExtension<AppColors> {

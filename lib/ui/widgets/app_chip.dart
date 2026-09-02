@@ -4,7 +4,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_dimensions.dart';
 import '../theme/app_typography.dart';
 
-/// A role pill (E2's "Village"/"Loups" lists): selected takes `accent/bg` fill +
+/// A role pill (the composition screen's "Village"/"Loups" lists): selected takes `accent/bg` fill +
 /// `accent/border` + `accent/text` label; unselected is a plain hairline outline, no fill.
 class AppChip extends StatelessWidget {
   const AppChip({required this.label, required this.selected, required this.onTap, super.key});

@@ -146,7 +146,7 @@ void main() {
       final game = await fakeRepository.getGame(id);
       expect(game!.playerCount, 5);
       expect(game.compositionJson, {'loup_garou': 2, 'villageois': 3});
-      // Naming (A1) and the deal (A2) are still setup; only startGame flips it.
+      // Naming and the deal are still setup; only startGame flips it.
       expect(game.status, GameStatus.setup);
       // ...and the blank roster is seeded, sized to playerCount.
       expect(fakeRepository.rosterOf(id), hasLength(5));

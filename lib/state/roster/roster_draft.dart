@@ -4,7 +4,7 @@ import '../../data/database/app_database.dart';
 
 part 'roster_draft.freezed.dart';
 
-/// Local draft state for the A1 "Les joueurs" screen: [names] in seat order,
+/// Local draft state for the "Les joueurs" screen: [names] in seat order,
 /// mutated as the MJ types, only persisted when they tap "Continuer".
 /// Mirrors [CompositionDraft]'s draft-then-commit shape.
 @freezed

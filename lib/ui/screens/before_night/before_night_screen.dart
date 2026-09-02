@@ -16,7 +16,7 @@ import '../../utils/french_role_label.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/player_avatar.dart';
 
-/// A2 - "Avant la nuit 1". The blind deal: the MJ shuffles and deals the physical cards,
+/// "Avant la nuit 1". The blind deal: the MJ shuffles and deals the physical cards,
 /// nobody knows who has what. The roster already exists (names, no roles); nothing to enter
 /// here. "Commencer la nuit 1" is what finally moves the game to GameStatus.inProgress.
 class BeforeNightScreen extends ConsumerWidget {

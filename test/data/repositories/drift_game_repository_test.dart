@@ -75,7 +75,7 @@ void main() {
       final game = await repository.getGame(id);
       expect(game!.playerCount, 9);
       expect(game.compositionJson, {'loup_garou': 2, 'voyante': 1, 'villageois': 6});
-      // Naming (A1) and the deal (A2) are still setup; only startGame flips it.
+      // Naming and the deal are still setup; only startGame flips it.
       expect(game.status, GameStatus.setup);
     });
 

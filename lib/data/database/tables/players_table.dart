@@ -4,7 +4,7 @@ import 'games_table.dart';
 
 /// One seat at the table. Rows are created blank (name `''`) the moment a
 /// composition is saved (see [GameRepository.saveComposition]), sized to the
-/// game's player count, then named on the A1 screen.
+/// game's player count, then named on the players screen.
 ///
 /// `@DataClassName('PlayerRow')`, not `'Player'`: `rules_engine` already exports
 /// a `Player` (the in-memory game-state player), and both types can end up
@@ -22,7 +22,7 @@ class Players extends Table {
   /// list, so it's the stable key `savePlayerNames` writes against.
   IntColumn get seatIndex => integer()();
 
-  /// Empty until the MJ types it on A1.
+  /// Empty until the MJ types it on the players screen.
   TextColumn get name => text().withDefault(const Constant(''))();
 
   /// Assigned once the game is under way (night 1, or manual assignment). Not

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 
-/// A `−`/value/`+` control (E2's player-count row, and the per-role counts on roles that can
+/// A `−`/value/`+` control (the composition screen's player-count row, and the per-role counts on roles that can
 /// exceed 1). [onChanged] receives the already-clamped new value; the +/- buttons disable
 /// themselves (dim to `text/tertiary`, no tap) at [min]/[max] rather than calling out of range.
 class AppStepper extends StatelessWidget {

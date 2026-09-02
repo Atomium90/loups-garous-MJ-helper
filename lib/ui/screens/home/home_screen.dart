@@ -16,7 +16,7 @@ import '../../widgets/app_button.dart';
 import '../../widgets/app_icon_button.dart';
 import '../../widgets/section_label.dart';
 
-/// E0 (empty state) and E1 (games list) are the same route ("Accueil"), branching on whether
+/// The empty state and the games list are the same route ("Accueil"), branching on whether
 /// [gameListProvider] is empty - not two separate routes, so the "which screen" decision lives
 /// where the data does.
 class HomeScreen extends ConsumerWidget {
@@ -383,8 +383,8 @@ class _HistoriqueRow extends StatelessWidget {
         border: Border(top: BorderSide(color: context.colors.borderHairline)),
       ),
       // No leading phase icon and no trailing winning-side label: `Games` has no `winner`
-      // field yet, and the design's own philosophy (see E1b's survivors-only rule) is that
-      // missing data is an editorial omission, not a guess.
+      // field yet, and the design's own philosophy (the past-game recap's survivors-only rule)
+      // is that missing data is an editorial omission, not a guess.
       child: Text(
         game.name ?? 'Partie du ${frenchDayMonthLabel(game.createdAt)}',
         style: context.typography.body.copyWith(

@@ -28,7 +28,7 @@ const _feminineRoles = {'voyante', 'sorciere', 'petite_fille'};
 String roleWithArticle(String roleId, RoleRegistry registry) =>
     '${_feminineRoles.contains(roleId) ? 'la' : 'le'} ${registry.byId(roleId).name}';
 
-/// The "Dans la pioche" line on A2 (and the recap sheet later):
+/// The "Dans la pioche" line before night 1 (and the recap sheet later):
 /// "2 Loups-Garous · Voyante · Sorcière · Cupidon · Chasseur · 2 Villageois".
 /// Loups-Garous first, plain Villageois last, everything else in the registry's
 /// declared order in between.

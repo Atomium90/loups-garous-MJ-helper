@@ -56,7 +56,7 @@ class GameSessionState {
     return known < (composition[step.role.id] ?? 1);
   }
 
-  /// The deaths the J1 recap reads aloud: everyone who died in the night just
+  /// The deaths the day recap reads aloud: everyone who died in the night just
   /// resolved. Engine-derived (each `Player` carries its cause and timing), so
   /// it survives a force-quit onto the recap.
   List<Player> get recapDeaths => engine.players
@@ -171,7 +171,7 @@ class GameSession extends _$GameSession {
 
   // --- night: identification ---
 
-  /// Record who holds [roleId] (the N1 identification step) and move on to its
+  /// Record who holds [roleId] (the night identification step) and move on to its
   /// action.
   Future<void> identifyRole(String roleId, List<int> playerRowIds) async {
     final s = state.value;
@@ -214,7 +214,7 @@ class GameSession extends _$GameSession {
 
   // --- day: recap CTA ---
 
-  /// The J1 recap's forward button: day 1 offers the captain election first,
+  /// The day recap's forward button: day 1 offers the captain election first,
   /// day 2+ goes straight to the vote.
   Future<void> advanceFromRecap() async {
     final s = state.value;
@@ -225,7 +225,7 @@ class GameSession extends _$GameSession {
     await _updateDay((d) => d.copyWith(stage: next));
   }
 
-  // --- day: captain election (J2) ---
+  // --- day: captain election ---
 
   Future<void> electCaptain(String? engineId) async {
     if (engineId != null) {
@@ -235,7 +235,7 @@ class GameSession extends _$GameSession {
     }
   }
 
-  // --- day: village vote (J3) ---
+  // --- day: village vote ---
 
   Future<void> eliminateByVote(String? engineId) async {
     if (engineId != null) {

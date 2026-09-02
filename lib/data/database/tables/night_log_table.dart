@@ -2,7 +2,7 @@ import 'package:drift/drift.dart';
 
 import 'games_table.dart';
 
-/// One line of the in-game journal (the JR screen): pre-rendered French text,
+/// One line of the in-game journal: pre-rendered French text,
 /// not structured events. This is a display log, never the source of truth for
 /// game state - that's the `sessionJson` snapshot on [Games].
 @DataClassName('NightLogRow')

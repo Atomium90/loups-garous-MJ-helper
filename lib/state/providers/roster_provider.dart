@@ -8,7 +8,7 @@ import 'game_repository_provider.dart';
 /// (riverpod_generator can't embed a type defined via a `part` file).
 ///
 /// A one-shot `FutureProvider` (over `getRoster`), mirroring [gameProvider],
-/// not a `StreamProvider` over the repository's `watchRoster`: the A1/A2
+/// not a `StreamProvider` over the repository's `watchRoster`: the naming and pre-night
 /// screens only need a fresh snapshot per visit, [RosterEditor] holds the live
 /// draft while editing, and it `ref.invalidate`s this provider on commit. A
 /// live-reactive roster only matters once a game is running (`watchRoster`

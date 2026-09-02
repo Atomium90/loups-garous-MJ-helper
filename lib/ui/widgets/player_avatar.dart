@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
 /// How a [PlayerAvatar]/[AvatarPickCell] paints its selected state. `accent`
-/// (blue) is the default everywhere; `captain` (amber) is the J2 captain
+/// (blue) is the default everywhere; `captain` (amber) is the captain
 /// election and the succession panel - "status, not role", per the design.
 enum AvatarSelectedStyle { accent, captain }
 
-/// The player avatar used across the app - A2's roster chips now, and the in-game selection
+/// The player avatar used across the app - the roster chips now, and the in-game selection
 /// grids, roster lists and recap screens later. No photos, no colour-hashing (design handoff,
 /// "Assets"): the first two letters of the name, uppercased, in a circle.
 ///
@@ -31,7 +31,7 @@ class PlayerAvatar extends StatelessWidget {
   final bool selected;
   final AvatarSelectedStyle selectedStyle;
 
-  /// Overrides the unselected fill - e.g. A2's chips sit on `bg/inset`, so their avatars pass
+  /// Overrides the unselected fill - e.g. the roster chips sit on `bg/inset`, so their avatars pass
   /// `bg/screen` for contrast. Ignored when [selected].
   final Color? fillColor;
 

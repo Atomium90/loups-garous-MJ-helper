@@ -4,7 +4,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_dimensions.dart';
 import '../theme/app_typography.dart';
 
-/// The design handoff's text field (A1's name rows now; Réglages/Mes boîtes search later).
+/// The design handoff's text field (the name rows now; Réglages/Mes boîtes search later).
 /// 38 high, 8 radius. At rest: `bg/inset` fill, hairline outline. Focused: `bg/screen` fill,
 /// 1.5px `accent/border` (the border thickens by 1, so horizontal padding drops by 1 to keep
 /// the text from shifting). Placeholder in `text/tertiary`.
