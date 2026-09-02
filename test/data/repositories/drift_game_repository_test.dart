@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:loup_garou_mj/data/database/app_database.dart';
 import 'package:loup_garou_mj/data/database/converters/role_counts_converter.dart';
 import 'package:loup_garou_mj/data/models/game_status.dart';
+import 'package:loup_garou_mj/data/models/game_winner.dart';
 import 'package:loup_garou_mj/data/models/night_log_entry.dart';
 import 'package:loup_garou_mj/data/repositories/drift_game_repository.dart';
 import 'package:loup_garou_mj/data/repositories/game_not_found_exception.dart';
@@ -158,6 +159,43 @@ void main() {
 
     test('throws GameNotFoundException for an unknown id', () {
       expect(() => repository.startGame(999), throwsA(isA<GameNotFoundException>()));
+    });
+  });
+
+  group('endGame', () {
+    test('marks the game completed with the declared winner and an endedAt', () async {
+      final id = await repository.createGame();
+      await repository.saveComposition(gameId: id, playerCount: 8, roleCounts: const {});
+      await repository.startGame(id);
+
+      await repository.endGame(gameId: id, winner: GameWinner.wolves);
+
+      final game = await repository.getGame(id);
+      expect(game!.status, GameStatus.completed);
+      expect(game.winner, GameWinner.wolves);
+      expect(DateTime.now().difference(game.endedAt!).inSeconds.abs(), lessThan(5));
+    });
+
+    test('leaves the session snapshot intact for the past-game recap', () async {
+      final id = await repository.createGame();
+      await repository.saveSession(gameId: id, sessionJson: '{"engine":1}');
+      await repository.endGame(gameId: id, winner: GameWinner.village);
+      expect((await repository.getGame(id))!.sessionJson, '{"engine":1}');
+    });
+
+    test('a completed game still shows up newest-first in watchGames', () async {
+      final id = await repository.createGame();
+      await repository.endGame(gameId: id, winner: GameWinner.none);
+      final games = await repository.watchGames().first;
+      expect(games.single.id, id);
+      expect(games.single.winner, GameWinner.none);
+    });
+
+    test('throws GameNotFoundException for an unknown id', () {
+      expect(
+        () => repository.endGame(gameId: 999, winner: GameWinner.village),
+        throwsA(isA<GameNotFoundException>()),
+      );
     });
   });
 

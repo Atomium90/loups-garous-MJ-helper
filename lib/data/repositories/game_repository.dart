@@ -1,4 +1,5 @@
 import '../database/app_database.dart';
+import '../models/game_winner.dart';
 import '../models/night_log_entry.dart';
 
 abstract class GameRepository {
@@ -39,6 +40,11 @@ abstract class GameRepository {
   /// "Commencer la nuit 1": moves the game from setup to inProgress. Kept
   /// generic so it can later also seed the night phase/step.
   Future<void> startGame(int gameId);
+
+  /// "Terminer la partie" (F screen): the MJ declares [winner]. Moves the game
+  /// to GameStatus.completed and stamps endedAt. The session snapshot is left
+  /// intact so the past-game recap can still read it.
+  Future<void> endGame({required int gameId, required GameWinner winner});
 
   /// Persists the live game-state snapshot blob onto [Game.sessionJson].
   Future<void> saveSession({required int gameId, required String sessionJson});

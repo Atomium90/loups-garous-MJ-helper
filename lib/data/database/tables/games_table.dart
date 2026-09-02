@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../../models/game_status.dart';
+import '../../models/game_winner.dart';
 import '../converters/role_counts_converter.dart';
 
 @DataClassName('Game')
@@ -29,4 +30,11 @@ class Games extends Table {
   /// Null through setup/composition/naming. This is the source of truth for a
   /// running game (the roster's role/alive columns are only meaningful pre-start).
   TextColumn get sessionJson => text().nullable()();
+
+  /// The outcome the MJ declared on the F screen. Null while the game is still
+  /// running; [GameWinner.none] means it was called off.
+  IntColumn get winner => intEnum<GameWinner>().nullable()();
+
+  /// When [status] moved to completed. Null while running.
+  DateTimeColumn get endedAt => dateTime().nullable()();
 }

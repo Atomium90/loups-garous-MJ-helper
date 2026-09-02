@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
 import '../models/game_status.dart';
+import '../models/game_winner.dart';
 import 'converters/role_counts_converter.dart';
 import 'tables/games_table.dart';
 import 'tables/night_log_table.dart';
@@ -16,7 +17,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -28,6 +29,10 @@ class AppDatabase extends _$AppDatabase {
       if (from < 3) {
         await m.addColumn(games, games.sessionJson);
         await m.createTable(nightLog);
+      }
+      if (from < 4) {
+        await m.addColumn(games, games.winner);
+        await m.addColumn(games, games.endedAt);
       }
     },
     // drift doesn't enable foreign-key enforcement by default; without this the

@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../database/app_database.dart';
 import '../models/game_status.dart';
+import '../models/game_winner.dart';
 import '../models/night_log_entry.dart';
 import 'game_not_found_exception.dart';
 import 'game_repository.dart';
@@ -112,6 +113,23 @@ class DriftGameRepository implements GameRepository {
           GamesCompanion(
             status: const Value(GameStatus.inProgress),
             updatedAt: Value(DateTime.now()),
+          ),
+        );
+    if (rowsAffected == 0) {
+      throw GameNotFoundException(gameId);
+    }
+  }
+
+  @override
+  Future<void> endGame({required int gameId, required GameWinner winner}) async {
+    final now = DateTime.now();
+    final rowsAffected =
+        await (_db.update(_db.games)..where((g) => g.id.equals(gameId))).write(
+          GamesCompanion(
+            status: const Value(GameStatus.completed),
+            winner: Value(winner),
+            endedAt: Value(now),
+            updatedAt: Value(now),
           ),
         );
     if (rowsAffected == 0) {

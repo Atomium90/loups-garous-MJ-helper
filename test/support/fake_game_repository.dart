@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:drift/drift.dart';
 import 'package:loup_garou_mj/data/database/app_database.dart';
 import 'package:loup_garou_mj/data/models/game_status.dart';
+import 'package:loup_garou_mj/data/models/game_winner.dart';
 import 'package:loup_garou_mj/data/models/night_log_entry.dart';
 import 'package:loup_garou_mj/data/repositories/game_not_found_exception.dart';
 import 'package:loup_garou_mj/data/repositories/game_repository.dart';
@@ -160,6 +161,20 @@ class FakeGameRepository implements GameRepository {
     _games[gameId] = game.copyWith(
       sessionJson: Value(sessionJson),
       updatedAt: DateTime.now(),
+    );
+    _changes.add(null);
+  }
+
+  @override
+  Future<void> endGame({required int gameId, required GameWinner winner}) async {
+    final game = _games[gameId];
+    if (game == null) throw GameNotFoundException(gameId);
+    final now = DateTime.now();
+    _games[gameId] = game.copyWith(
+      status: GameStatus.completed,
+      winner: Value(winner),
+      endedAt: Value(now),
+      updatedAt: now,
     );
     _changes.add(null);
   }
