@@ -73,15 +73,38 @@ abstract final class AppIcons {
 
   // --- day loop ---
 
-  /// The Capitaine (an elected status): J2, the succession panel, the vote
-  /// grid's crown badge, the Village roster.
+  /// The Capitaine (an elected status): the captain election, the succession
+  /// panel, the vote grid's crown badge, the Village roster.
   static const captain = TablerIcons.crown;
 
-  /// J3, the village vote.
+  /// The village vote.
   static const vote = TablerIcons.gavel;
 
   /// A tie vote ("Égalité").
   static const scale = TablerIcons.scale;
+
+  /// The Village tab's "Terminer la partie" row.
+  static const endGame = TablerIcons.flag;
+
+  // --- end of game / past-game recap ---
+
+  /// The village as a winning side.
+  static const home = TablerIcons.home;
+
+  /// "Partie annulée" - nobody won.
+  static const cancelled = TablerIcons.circleOff;
+
+  /// The picked winner row's check.
+  static const winnerPicked = TablerIcons.circleCheckFilled;
+
+  /// The unpicked winner row's radio.
+  static const winnerUnpicked = TablerIcons.circle;
+
+  /// The past-game recap's "Rejouer".
+  static const replay = TablerIcons.refresh;
+
+  /// The past-game recap's export (inert for now).
+  static const share = TablerIcons.share;
 
   /// Maps a [NightLogRow.iconName] semantic key to its icon.
   static IconData? nightLog(String key) => switch (key) {

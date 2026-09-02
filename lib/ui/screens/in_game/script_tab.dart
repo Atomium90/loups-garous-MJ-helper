@@ -8,6 +8,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
+import '../../utils/french_death_cause.dart';
 import '../../utils/french_role_label.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/player_avatar.dart';
@@ -338,14 +339,6 @@ IconData _roleIcon(String roleId) => switch (roleId) {
   _ => AppIcons.village,
 };
 
-String _deathCauseLabel(DeathCause cause) => switch (cause) {
-  WolvesKill() => 'Victime des Loups',
-  WitchDeathPotionKill() => 'Potion de mort de la Sorcière',
-  DayVoteKill() => 'Vote du village',
-  HunterShotKill() => 'Tir du Chasseur',
-  LoversCascadeKill() => 'Mort de chagrin',
-};
-
 /// The day side of the Script tab. An interrupt (a card to reveal, a chain
 /// effect, a lover's grief death) takes over the body until it's cleared;
 /// otherwise the current [DayStage] shows.
@@ -467,7 +460,7 @@ class _DayRecapBody extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            _deathCauseLabel(death.causeOfDeath!),
+                            frenchDeathCauseLabel(death.causeOfDeath!),
                             style: typography.meta.copyWith(color: colors.textSecondary),
                           ),
                         ],

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../screens/before_night/before_night_screen.dart';
 import '../screens/composition/composition_screen.dart';
+import '../screens/end_game/end_game_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/in_game/in_game_shell.dart';
 import '../screens/players/players_screen.dart';
@@ -48,6 +49,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/games/:id/before-night',
         name: 'beforeNight',
         builder: (_, state) => BeforeNightScreen(gameId: idOf(state)),
+      ),
+      GoRoute(
+        path: '/games/:id/end',
+        name: 'endGame',
+        builder: (_, state) => EndGameScreen(gameId: idOf(state)),
       ),
     ],
   );
