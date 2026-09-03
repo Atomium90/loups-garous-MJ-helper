@@ -394,6 +394,38 @@ void main() {
     });
   });
 
+  group('the Voyante', () {
+    test('noting an unknown card writes it to the engine and roster, and journals', () async {
+      final game = await _startedGame(repo, composition: composition);
+      final ids = game.seatRowIds; // Ana Bo Cy Di Ed Fi
+      final n = await notifierFor(game.gameId);
+
+      await n.identifyRole('voyante', [ids[0]]); // Voyante = Ana
+      await n.seerInspect(targetRowId: ids[3], notedRoleId: 'loup_garou'); // looks at Di
+
+      final s = stateOf(game.gameId);
+      expect(s.engine.playerById('${ids[3]}').roleId, 'loup_garou');
+      expect((await repo.getRoster(game.gameId))[3].roleId, 'loup_garou');
+      expect(s.currentStep!.role.id, 'loup_garou'); // moved to the Loups' step
+      final log = (await repo.watchNightLog(game.gameId).first).map((e) => e.line);
+      expect(log, contains('La Voyante observe Di'));
+    });
+
+    test('looking without noting only journals and advances', () async {
+      final game = await _startedGame(repo, composition: composition);
+      final ids = game.seatRowIds;
+      final n = await notifierFor(game.gameId);
+
+      await n.identifyRole('voyante', [ids[0]]);
+      await n.seerInspect(targetRowId: ids[3]);
+
+      expect((await repo.getRoster(game.gameId))[3].roleId, isNull);
+      final log = (await repo.watchNightLog(game.gameId).first).map((e) => e.line);
+      expect(log, contains('La Voyante observe Di'));
+      expect(stateOf(game.gameId).currentStep!.role.id, 'loup_garou');
+    });
+  });
+
   test('startGame does not itself seed the session (build does, lazily)', () async {
     final id = await repo.createGame(initialPlayerCount: 6);
     await repo.saveComposition(gameId: id, playerCount: 6, roleCounts: composition);

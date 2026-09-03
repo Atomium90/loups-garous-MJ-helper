@@ -112,6 +112,7 @@ abstract final class AppIcons {
   /// Maps a [NightLogRow.iconName] semantic key to its icon.
   static IconData? nightLog(String key) => switch (key) {
     'wolves' => wolves,
+    'seer' => seer,
     'flask' => witch,
     'cupid' => cupid,
     'thief' => thief,

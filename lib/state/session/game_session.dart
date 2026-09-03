@@ -230,6 +230,51 @@ class GameSession extends _$GameSession {
     _emit(s, cursor: cursor);
   }
 
+  // --- night: Voyante ---
+
+  /// The Voyante's look at one player. A peek changes no game state, so there
+  /// is no engine action: just an optional note of the card ([notedRoleId] -
+  /// a third way the app learns a role, like the reveal sheet but chosen), a
+  /// journal line, and the cursor moves on.
+  Future<void> seerInspect({required int targetRowId, String? notedRoleId}) async {
+    final s = state.value;
+    if (s == null) return;
+
+    var engine = s.engine;
+    var roster = s.roster;
+    if (notedRoleId != null) {
+      await ref.read(gameRepositoryProvider).assignRoles(
+        playerRowIds: [targetRowId],
+        roleId: notedRoleId,
+      );
+      engine = s.engine.copyWith(
+        players: [
+          for (final p in s.engine.players)
+            if (p.id == '$targetRowId') p.copyWith(roleId: notedRoleId) else p,
+        ],
+      );
+      roster = await _loadRoster();
+    }
+
+    await ref.read(gameRepositoryProvider).appendNightLog(
+      gameId: gameId,
+      entries: [
+        NightLogEntry(
+          phaseLabel: _phaseLabel(s.engine),
+          iconName: 'seer',
+          line: 'La Voyante observe ${engine.playerById('$targetRowId').name}',
+        ),
+      ],
+    );
+
+    final cursor = SessionCursor(
+      stepIndex: s.cursor.stepIndex + 1,
+      subStep: NightSubStep.identify,
+    );
+    await _persist(engine, cursor, s.day);
+    _emit(s, engine: engine, cursor: cursor, roster: roster);
+  }
+
   // --- night: Voleur ---
 
   /// The Voleur's turn: swap his card for one of the two reserve cards, or
