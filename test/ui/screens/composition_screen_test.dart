@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:loup_garou_mj/data/database/app_database.dart';
 import 'package:loup_garou_mj/data/models/game_status.dart';
@@ -7,6 +8,7 @@ import 'package:loup_garou_mj/ui/screens/home/home_screen.dart';
 import 'package:loup_garou_mj/ui/screens/players/players_screen.dart';
 import 'package:loup_garou_mj/ui/theme/app_icons.dart';
 import 'package:loup_garou_mj/ui/widgets/app_button.dart';
+import 'package:loup_garou_mj/ui/widgets/app_chip.dart';
 import 'package:loup_garou_mj/ui/widgets/app_stepper.dart';
 
 import '../../support/fake_game_repository.dart';
@@ -178,6 +180,95 @@ void main() {
       expect(find.text('Les joueurs'), findsOneWidget);
     },
   );
+
+  testWidgets('the Voleur reveals the reserve section and gates "Lancer la partie"', (
+    tester,
+  ) async {
+    final repository = FakeGameRepository(initialGames: [_draftGame(id: 1, playerCount: 8)]);
+    await pumpScreen(
+      tester,
+      const CompositionScreen(gameId: 1),
+      overrides: [gameRepositoryProvider.overrideWithValue(repository)],
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Réserve du Voleur'), findsNothing);
+
+    await tester.tap(find.text('Voleur'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Réserve du Voleur'));
+    expect(find.text('Réserve du Voleur'), findsOneWidget);
+    // Reserve incomplete -> launch disabled + hint shown.
+    expect(_launchButton(tester).onPressed, isNull);
+    expect(find.text('Choisissez les 2 cartes de réserve du Voleur'), findsOneWidget);
+
+    // Fill both slots via the picker sheet (two distinct singleton roles).
+    for (final role in ['Cupidon', 'Sorcière']) {
+      await tester.ensureVisible(find.text('Choisir une carte').first);
+      await tester.tap(find.text('Choisir une carte').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(ListTile, role));
+      await tester.pumpAndSettle();
+    }
+
+    expect(_launchButton(tester).onPressed, isNotNull);
+    expect(find.text('Choisissez les 2 cartes de réserve du Voleur'), findsNothing);
+  });
+
+  testWidgets('a role fully claimed by the reserve is disabled with an "en réserve" note', (
+    tester,
+  ) async {
+    final repository = FakeGameRepository(initialGames: [_draftGame(id: 1, playerCount: 8)]);
+    await pumpScreen(
+      tester,
+      const CompositionScreen(gameId: 1),
+      overrides: [gameRepositoryProvider.overrideWithValue(repository)],
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Voleur'));
+    await tester.pump();
+    await tester.ensureVisible(find.text('Choisir une carte').first);
+    await tester.tap(find.text('Choisir une carte').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(ListTile, 'Sorcière'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('en réserve'), findsOneWidget);
+    expect(find.text('1 rôles pour 8 joueurs'), findsOneWidget); // just the Voleur
+
+    // Tapping the disabled Sorcière chip does nothing (count stays at 1).
+    await tester.tap(
+      find.descendant(of: find.byType(AppChip), matching: find.text('Sorcière')),
+    );
+    await tester.pump();
+    expect(find.text('1 rôles pour 8 joueurs'), findsOneWidget);
+  });
+
+  testWidgets('the reserve picker hides the Voleur and cards already spent by the deal', (
+    tester,
+  ) async {
+    final repository = FakeGameRepository(initialGames: [_draftGame(id: 1, playerCount: 8)]);
+    await pumpScreen(
+      tester,
+      const CompositionScreen(gameId: 1),
+      overrides: [gameRepositoryProvider.overrideWithValue(repository)],
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Voleur'));
+    await tester.pump();
+    await tester.tap(find.text('Voyante')); // the only Voyante card is now dealt
+    await tester.pump();
+
+    await tester.ensureVisible(find.text('Choisir une carte').first);
+    await tester.tap(find.text('Choisir une carte').first);
+    await tester.pumpAndSettle();
+
+    expect(find.widgetWithText(ListTile, 'Voleur'), findsNothing);
+    expect(find.widgetWithText(ListTile, 'Voyante'), findsNothing);
+    expect(find.widgetWithText(ListTile, 'Loup-Garou'), findsOneWidget); // 4 in box, 0 dealt
+  });
 
   testWidgets('back chevron discards the draft and returns home', (tester) async {
     final repository = FakeGameRepository();

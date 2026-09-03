@@ -99,6 +99,10 @@ class _CompositionBody extends StatelessWidget {
                   child: Text('Loups', style: typography.meta.copyWith(color: colors.textTertiary)),
                 ),
                 _RoleGroup(roles: wolfRoles, draft: draft, notifier: notifier),
+                if (draft.hasVoleur) ...[
+                  const SizedBox(height: 18),
+                  _ReserveSection(draft: draft, notifier: notifier),
+                ],
               ],
             ),
           ),
@@ -202,6 +206,12 @@ class _RoleGroup extends StatelessWidget {
   final CompositionDraft draft;
   final CompositionEditor notifier;
 
+  int _scalingMax(Role role) {
+    final current = draft.roleCounts[role.id] ?? 0;
+    final boxFree = draft.cardsLeft(role.id, RoleRegistry.base) + current;
+    return boxFree < draft.playerCount ? boxFree : draft.playerCount;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Wrap(
@@ -213,15 +223,39 @@ class _RoleGroup extends StatelessWidget {
               ? _RoleCountChip(
                   label: role.name,
                   count: draft.roleCounts[role.id] ?? 0,
-                  max: draft.playerCount,
+                  // Capped by the table size and by the box cards still free
+                  // (4 wolves / 13 villagers, minus any set aside as reserve).
+                  max: _scalingMax(role),
                   onChanged: (count) => notifier.setRoleCount(role.id, count),
                 )
-              : AppChip(
-                  label: role.name,
-                  selected: draft.roleCounts.containsKey(role.id),
-                  onTap: () => notifier.toggleRole(role.id),
-                ),
+              : _SingletonRoleChip(role: role, draft: draft, notifier: notifier),
       ],
+    );
+  }
+}
+
+/// A tap-to-toggle chip for the singleton roles. Disabled (dimmed, "en
+/// réserve") when the role isn't in the deal and its only box card is already
+/// set aside as the Voleur's reserve - the MJ frees it by clearing that
+/// reserve slot below.
+class _SingletonRoleChip extends StatelessWidget {
+  const _SingletonRoleChip({required this.role, required this.draft, required this.notifier});
+
+  final Role role;
+  final CompositionDraft draft;
+  final CompositionEditor notifier;
+
+  @override
+  Widget build(BuildContext context) {
+    final inDeal = draft.roleCounts.containsKey(role.id);
+    final claimedByReserve =
+        !inDeal && draft.cardsLeft(role.id, RoleRegistry.base) <= 0;
+    return AppChip(
+      label: role.name,
+      selected: inDeal,
+      enabled: !claimedByReserve,
+      note: claimedByReserve ? 'en réserve' : null,
+      onTap: () => notifier.toggleRole(role.id),
     );
   }
 }
@@ -271,6 +305,166 @@ class _RoleCountChip extends StatelessWidget {
   }
 }
 
+/// The Voleur's two undealt cards. Shown only when the Voleur is in the
+/// composition; the MJ picks two roles (any base role) that get set aside on
+/// the table and offered to the Voleur when he wakes.
+class _ReserveSection extends StatelessWidget {
+  const _ReserveSection({required this.draft, required this.notifier});
+
+  final CompositionDraft draft;
+  final CompositionEditor notifier;
+
+  Future<void> _pick(BuildContext context, int slot) async {
+    final roleId = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: context.colors.bgScreen,
+      builder: (_) => _RolePickerSheet(
+        roles: draft.availableReserveRoles(slot, RoleRegistry.base),
+      ),
+    );
+    if (roleId != null) notifier.setReserveRole(slot, roleId);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final typography = context.typography;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Réserve du Voleur',
+          style: typography.meta.copyWith(color: colors.textTertiary),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Deux cartes en plus des joueurs, posées au centre. Le Voleur pourra en '
+          'prendre une à la place de la sienne.',
+          style: typography.counter.copyWith(color: colors.textSecondary, height: 1.5),
+        ),
+        const SizedBox(height: 10),
+        for (var slot = 0; slot < 2; slot++)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: _ReserveSlot(
+              index: slot,
+              roleId: slot < draft.reserveRoleIds.length ? draft.reserveRoleIds[slot] : null,
+              onTap: () => _pick(context, slot),
+              onClear: slot < draft.reserveRoleIds.length
+                  ? () => notifier.clearReserveRole(slot)
+                  : null,
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _ReserveSlot extends StatelessWidget {
+  const _ReserveSlot({
+    required this.index,
+    required this.roleId,
+    required this.onTap,
+    required this.onClear,
+  });
+
+  final int index;
+  final String? roleId;
+  final VoidCallback onTap;
+  final VoidCallback? onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final typography = context.typography;
+    final filled = roleId != null;
+    return Material(
+      color: filled ? colors.accentBg : Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.button),
+        side: BorderSide(color: filled ? colors.accentBorder : colors.borderControl),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadii.button),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+          child: Row(
+            children: [
+              Text(
+                'Carte ${index + 1}',
+                style: typography.counter.copyWith(color: colors.textTertiary),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  filled ? RoleRegistry.base.byId(roleId!).name : 'Choisir une carte',
+                  style: typography.rowLabel.copyWith(
+                    color: filled ? colors.accentText : colors.textSecondary,
+                  ),
+                ),
+              ),
+              if (onClear != null)
+                GestureDetector(
+                  onTap: onClear,
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 6),
+                    child: Icon(AppIcons.removeReserve, size: 16, color: colors.accentText),
+                  ),
+                )
+              else
+                Icon(AppIcons.newGame, size: 15, color: colors.textTertiary),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RolePickerSheet extends StatelessWidget {
+  const _RolePickerSheet({required this.roles});
+
+  final List<Role> roles;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final typography = context.typography;
+    return SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 16, AppSpacing.screen, 8),
+            child: Text(
+              'Quelle carte ?',
+              style: typography.rowLabel.copyWith(color: colors.textPrimary),
+            ),
+          ),
+          Flexible(
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                for (final role in roles)
+                  ListTile(
+                    title: Text(
+                      role.name,
+                      style: typography.body.copyWith(color: colors.textPrimary),
+                    ),
+                    onTap: () => Navigator.of(context).pop(role.id),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _Footer extends StatelessWidget {
   const _Footer({required this.gameId, required this.draft, required this.notifier});
 
@@ -300,7 +494,7 @@ class _Footer extends StatelessWidget {
                 '${draft.assignedCount} rôles pour ${draft.playerCount} joueurs',
                 style: typography.counter.copyWith(color: colors.textTertiary),
               ),
-              if (draft.remaining == 0)
+              if (draft.remaining == 0 && draft.reserveComplete)
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   spacing: 4,
@@ -314,6 +508,11 @@ class _Footer extends StatelessWidget {
                 ),
             ],
           ),
+          if (draft.hasVoleur && !draft.reserveComplete)
+            Text(
+              'Choisissez les 2 cartes de réserve du Voleur',
+              style: typography.counter.copyWith(color: colors.warnText),
+            ),
           AppButton(
             label: 'Lancer la partie',
             onPressed: draft.isValid

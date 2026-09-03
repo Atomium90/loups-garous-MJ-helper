@@ -32,6 +32,9 @@ abstract final class AppIcons {
   /// The composition screen's "Compo complète" check.
   static const compositionComplete = TablerIcons.check;
 
+  /// Clear a filled slot back to empty (the Voleur reserve cards).
+  static const removeReserve = TablerIcons.x;
+
   /// The "Distribuez les cartes" callout before night 1.
   static const deal = TablerIcons.cards;
 
