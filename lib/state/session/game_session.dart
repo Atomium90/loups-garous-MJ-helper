@@ -104,7 +104,7 @@ class GameSessionState {
 /// real "not known yet" signal.
 @riverpod
 class GameSession extends _$GameSession {
-  static const _placeholderRole = 'villageois';
+  static const _placeholderRole = kPlaceholderRoleId;
   static const _machine = GameStateMachine();
   final _registry = RoleRegistry.base;
 
