@@ -14,9 +14,15 @@ import 'package:rules_engine/rules_engine.dart';
 Future<({int gameId, List<int> seatRowIds})> _startedGame(
   DriftGameRepository repo, {
   required Map<String, int> composition,
+  List<String> reserveRoleIds = const [],
 }) async {
   final id = await repo.createGame(initialPlayerCount: 6);
-  await repo.saveComposition(gameId: id, playerCount: 6, roleCounts: composition);
+  await repo.saveComposition(
+    gameId: id,
+    playerCount: 6,
+    roleCounts: composition,
+    reserveRoleIds: reserveRoleIds,
+  );
   await repo.savePlayerNames(
     gameId: id,
     names: const ['Ana', 'Bo', 'Cy', 'Di', 'Ed', 'Fi'],
@@ -302,6 +308,90 @@ void main() {
 
     final log = (await repo.watchNightLog(game.gameId).first).map((e) => e.line);
     expect(log, contains("Égalité, personne n'est éliminé"));
+  });
+
+  group('the Voleur', () {
+    const comp = {'voleur': 1, 'loup_garou': 2, 'sorciere': 1, 'villageois': 2};
+
+    test('swapping for a reserve card sets the role on the engine and the roster', () async {
+      final game = await _startedGame(
+        repo,
+        composition: comp,
+        reserveRoleIds: const ['voyante', 'chasseur'],
+      );
+      final ids = game.seatRowIds; // Ana Bo Cy Di Ed Fi
+      final n = await notifierFor(game.gameId);
+
+      // wake order: Voleur, Loups, Sorcière (no Voyante in the deal)
+      await n.identifyRole('voleur', [ids[0]]); // Voleur = Ana
+      await n.voleurSwap(voleurEngineId: '${ids[0]}', stolenRoleId: 'voyante');
+
+      final s = stateOf(game.gameId);
+      expect(s.engine.playerById('${ids[0]}').roleId, 'voyante');
+      expect((await repo.getRoster(game.gameId))[0].roleId, 'voyante');
+      // the stolen Voyante is now called this very night, right after the Voleur
+      expect(s.tonight.steps.map((st) => st.role.id), ['voleur', 'voyante', 'loup_garou', 'sorciere']);
+      expect(s.cursor.stepIndex, 1); // sitting on the freshly-inserted Voyante step
+
+      final log = (await repo.watchNightLog(game.gameId).first).map((e) => e.line);
+      expect(log, contains('Le Voleur échange sa carte contre Voyante'));
+    });
+
+    test('keeping his card advances the step and journals it, roster untouched', () async {
+      final game = await _startedGame(
+        repo,
+        composition: comp,
+        reserveRoleIds: const ['voyante', 'chasseur'],
+      );
+      final ids = game.seatRowIds;
+      final n = await notifierFor(game.gameId);
+
+      await n.identifyRole('voleur', [ids[0]]);
+      await n.voleurSwap(voleurEngineId: '${ids[0]}', stolenRoleId: null);
+
+      final s = stateOf(game.gameId);
+      expect(s.engine.playerById('${ids[0]}').roleId, 'voleur');
+      expect(s.cursor.stepIndex, 1);
+      final log = (await repo.watchNightLog(game.gameId).first).map((e) => e.line);
+      expect(log, contains('Le Voleur garde sa carte'));
+    });
+
+    test('stealing a Loup makes the Voleur a locked extra, dealt count unchanged', () async {
+      final game = await _startedGame(
+        repo,
+        composition: comp, // loup_garou: 2
+        reserveRoleIds: const ['loup_garou', 'chasseur'],
+      );
+      final ids = game.seatRowIds;
+      final n = await notifierFor(game.gameId);
+
+      await n.identifyRole('voleur', [ids[0]]); // Voleur = Ana
+      await n.voleurSwap(voleurEngineId: '${ids[0]}', stolenRoleId: 'loup_garou');
+
+      final s = stateOf(game.gameId);
+      expect(s.currentStep!.role.id, 'loup_garou');
+      expect(s.currentStepNeedsIdentify, isTrue);
+      // the 2 dealt wolves are still all to identify; Ana is the +1
+      expect(s.dealtHoldersKnown('loup_garou'), 0);
+      expect(s.voleurSwapInsFor('loup_garou').map((p) => p.id), ['${ids[0]}']);
+    });
+
+    test('a stolenRoleId outside the reserve is refused', () async {
+      final game = await _startedGame(
+        repo,
+        composition: comp,
+        reserveRoleIds: const ['voyante', 'chasseur'],
+      );
+      final ids = game.seatRowIds;
+      final n = await notifierFor(game.gameId);
+
+      await n.identifyRole('voleur', [ids[0]]);
+      await n.voleurSwap(voleurEngineId: '${ids[0]}', stolenRoleId: 'sorciere');
+
+      final s = stateOf(game.gameId);
+      expect(s.engine.playerById('${ids[0]}').roleId, 'voleur'); // unchanged
+      expect(s.cursor.stepIndex, 0); // still on the Voleur step
+    });
   });
 
   test('startGame does not itself seed the session (build does, lazily)', () async {

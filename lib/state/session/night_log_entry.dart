@@ -33,6 +33,16 @@ List<NightLogEntry> nightLogEntriesFor(GameAction action, GameState before) {
     case CupidonPair(:final playerAId, :final playerBId):
       return [entry('cupid', 'Cupidon unit ${name(playerAId)} et ${name(playerBId)}')];
 
+    case VoleurSwap(:final stolenRoleId):
+      return [
+        stolenRoleId == null
+            ? entry('thief', 'Le Voleur garde sa carte')
+            : entry(
+                'thief',
+                'Le Voleur échange sa carte contre ${RoleRegistry.base.byId(stolenRoleId).name}',
+              ),
+      ];
+
     case ElectCaptain(:final playerId):
       return [entry('crown', '${name(playerId)} est Capitaine')];
 

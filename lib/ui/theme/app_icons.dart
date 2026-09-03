@@ -114,6 +114,7 @@ abstract final class AppIcons {
     'wolves' => wolves,
     'flask' => witch,
     'cupid' => cupid,
+    'thief' => thief,
     'skull' => skull,
     'hunter' => hunter,
     'crown' => captain,

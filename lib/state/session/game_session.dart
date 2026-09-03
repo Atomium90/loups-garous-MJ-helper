@@ -27,6 +27,10 @@ class GameSessionState {
   final DaySnapshot day;
   final NightScript tonight;
   final Map<String, int> composition;
+
+  /// The Voleur's two undealt reserve cards (empty when the composition has no
+  /// Voleur). His act offers these as the swap choices.
+  final List<String> reserveRoleIds;
   final List<PlayerRow> roster;
 
   const GameSessionState({
@@ -35,6 +39,7 @@ class GameSessionState {
     required this.day,
     required this.tonight,
     required this.composition,
+    required this.reserveRoleIds,
     required this.roster,
   });
 
@@ -52,9 +57,25 @@ class GameSessionState {
   bool get currentStepNeedsIdentify {
     final step = currentStep;
     if (step == null || cursor.subStep == NightSubStep.act) return false;
-    final known = engine.players.where((p) => p.roleId == step.role.id).length;
-    return known < (composition[step.role.id] ?? 1);
+    return dealtHoldersKnown(step.role.id) < (composition[step.role.id] ?? 1);
   }
+
+  /// Players confirmed as one of a role's *dealt* cards. On night 1 an
+  /// already-alive holder of a night-calling role can only be the Voleur who
+  /// swapped into it - a bonus card on top of the deal, so he isn't counted.
+  int dealtHoldersKnown(String roleId) {
+    final holders = engine.players.where((p) => p.roleId == roleId).toList();
+    final voleurSwapIns = engine.nightIndex == 1
+        ? holders.where((p) => p.alive).length
+        : 0;
+    return holders.length - voleurSwapIns;
+  }
+
+  /// The Voleur, once he has swapped into [roleId] (night 1 only) - shown as a
+  /// locked cell on that role's identify grid so the MJ sees the extra holder.
+  List<Player> voleurSwapInsFor(String roleId) => engine.nightIndex == 1
+      ? engine.alivePlayers.where((p) => p.roleId == roleId).toList(growable: false)
+      : const [];
 
   /// The deaths the day recap reads aloud: everyone who died in the night just
   /// resolved. Engine-derived (each `Player` carries its cause and timing), so
@@ -114,6 +135,7 @@ class GameSession extends _$GameSession {
     final game = await repo.getGame(gameId);
     if (game == null) throw GameNotFoundException(gameId);
     final composition = game.compositionJson ?? const <String, int>{};
+    final reserveRoleIds = game.reserveRolesJson ?? const <String>[];
     final roster = await repo.getRoster(gameId);
 
     final GameState engine;
@@ -146,6 +168,7 @@ class GameSession extends _$GameSession {
       day: day,
       tonight: tonight,
       composition: composition,
+      reserveRoleIds: reserveRoleIds,
       roster: roster,
     );
   }
@@ -205,6 +228,28 @@ class GameSession extends _$GameSession {
     );
     await _persist(s.engine, cursor, s.day);
     _emit(s, cursor: cursor);
+  }
+
+  // --- night: Voleur ---
+
+  /// The Voleur's turn: swap his card for one of the two reserve cards, or
+  /// ([stolenRoleId] null) keep his own. A stolen role is written onto the
+  /// roster too, so it counts as known. Refuses a [stolenRoleId] that isn't
+  /// one of the reserve cards - the engine stays composition-agnostic, so the
+  /// guard lives here.
+  Future<void> voleurSwap({required String voleurEngineId, String? stolenRoleId}) async {
+    final s = state.value;
+    if (s == null) return;
+    if (stolenRoleId != null && !s.reserveRoleIds.contains(stolenRoleId)) return;
+    if (stolenRoleId != null) {
+      await ref.read(gameRepositoryProvider).assignRoles(
+        playerRowIds: [int.parse(voleurEngineId)],
+        roleId: stolenRoleId,
+      );
+    }
+    await applyAction(
+      VoleurSwap(voleurPlayerId: voleurEngineId, stolenRoleId: stolenRoleId),
+    );
   }
 
   // --- night: Cupidon ---
@@ -324,7 +369,10 @@ class GameSession extends _$GameSession {
 
     final cursor = _cursorAfter(action, s.cursor);
     final day = _dayAfter(action, result, s);
-    final roster = action is RevealRole ? await _loadRoster() : s.roster;
+    // RevealRole and a Voleur swap both write a role onto the roster first.
+    final roster = action is RevealRole || action is VoleurSwap
+        ? await _loadRoster()
+        : s.roster;
 
     await _persist(result.state, cursor, day);
     _emit(s, engine: result.state, cursor: cursor, day: day, roster: roster);
@@ -386,6 +434,7 @@ class GameSession extends _$GameSession {
         day: day ?? prev.day,
         tonight: buildNightScript(engine: nextEngine, composition: prev.composition),
         composition: prev.composition,
+        reserveRoleIds: prev.reserveRoleIds,
         roster: roster ?? prev.roster,
       ),
     );
