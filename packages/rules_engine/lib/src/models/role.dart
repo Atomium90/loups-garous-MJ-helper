@@ -14,6 +14,12 @@ class Role {
   /// Null for base game roles.
   final String? extensionId;
 
+  /// How many physical cards of this role its box ships with - the ceiling on
+  /// how many can be in play plus set aside (the Voleur's reserve). Defaults
+  /// to 1 for the singleton roles; the box data overrides it for the ones
+  /// that ship in multiples (4 Loups-Garous, 13 Villageois in the base box).
+  final int copies;
+
   /// Whether this role is ever emitted as a night-script step by
   /// NightScriptBuilder. False for roles that are passive, day-phase only,
   /// or purely event-triggered (e.g. on death).
@@ -38,6 +44,7 @@ class Role {
     required this.name,
     required this.team,
     this.extensionId,
+    this.copies = 1,
     required this.hasNightCall,
     this.wakeCondition,
     this.orderConstraints = const [],

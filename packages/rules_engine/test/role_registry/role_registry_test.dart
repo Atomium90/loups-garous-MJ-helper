@@ -83,6 +83,18 @@ void main() {
       expect(registry.byId('cupidon').ruleText, contains('amoureux'));
     });
 
+    test('every role ships with at least one card, base box multiples spelled out', () {
+      for (final role in registry.roles) {
+        expect(role.copies, greaterThanOrEqualTo(1), reason: role.id);
+      }
+      expect(registry.byId('loup_garou').copies, 4);
+      expect(registry.byId('villageois').copies, 13);
+      // The rest are singletons.
+      for (final id in _expectedIds.difference({'loup_garou', 'villageois'})) {
+        expect(registry.byId(id).copies, 1, reason: id);
+      }
+    });
+
     test('only chasseur has a non-none onDeath effect', () {
       for (final role in registry.roles) {
         final expected = switch (role.id) {

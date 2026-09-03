@@ -14,6 +14,7 @@ const baseGameRoles = <Role>[
     id: 'voleur',
     name: 'Voleur',
     team: null, // unresolved until he steals a card
+    copies: 1,
     hasNightCall: true,
     wakeCondition: WakeCondition.firstNightOnly,
     actionType: ActionType.selectOne,
@@ -25,6 +26,7 @@ const baseGameRoles = <Role>[
     id: 'cupidon',
     name: 'Cupidon',
     team: Team.village,
+    copies: 1,
     hasNightCall: true,
     wakeCondition: WakeCondition.firstNightOnly,
     orderConstraints: [OrderConstraint.after('voleur')],
@@ -39,6 +41,7 @@ const baseGameRoles = <Role>[
     id: 'voyante',
     name: 'Voyante',
     team: Team.village,
+    copies: 1,
     hasNightCall: true,
     wakeCondition: WakeCondition.everyNight,
     orderConstraints: [OrderConstraint.after('cupidon')],
@@ -49,6 +52,7 @@ const baseGameRoles = <Role>[
     id: 'loup_garou',
     name: 'Loup-Garou',
     team: Team.werewolves,
+    copies: 4,
     hasNightCall: true,
     wakeCondition: WakeCondition.everyNight,
     orderConstraints: [OrderConstraint.after('voyante')],
@@ -59,6 +63,7 @@ const baseGameRoles = <Role>[
     id: 'sorciere',
     name: 'Sorcière',
     team: Team.village,
+    copies: 1,
     hasNightCall: true,
     wakeCondition: WakeCondition.everyNight,
     orderConstraints: [OrderConstraint.after('loup_garou')],
@@ -72,6 +77,7 @@ const baseGameRoles = <Role>[
     id: 'villageois',
     name: 'Villageois',
     team: Team.village,
+    copies: 13,
     hasNightCall: false,
     ruleText: 'Aucune action de nuit.',
   ),
@@ -79,6 +85,7 @@ const baseGameRoles = <Role>[
     id: 'petite_fille',
     name: 'Petite Fille',
     team: Team.village,
+    copies: 1,
     hasNightCall: false,
     ruleText:
         'Aucun appel : elle peut risquer un œil pendant l\'appel des '
@@ -88,6 +95,7 @@ const baseGameRoles = <Role>[
     id: 'chasseur',
     name: 'Chasseur',
     team: Team.village,
+    copies: 1,
     hasNightCall: false,
     onDeath: DeathEffect.hunterShot,
     ruleText:
