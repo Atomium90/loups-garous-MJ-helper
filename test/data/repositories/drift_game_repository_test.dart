@@ -123,6 +123,35 @@ void main() {
         throwsA(isA<GameNotFoundException>()),
       );
     });
+
+    test('round-trips the Voleur reserve role ids', () async {
+      final id = await repository.createGame();
+      await repository.saveComposition(
+        gameId: id,
+        playerCount: 8,
+        roleCounts: const {'voleur': 1, 'loup_garou': 2, 'villageois': 5},
+        reserveRoleIds: const ['chasseur', 'villageois'],
+      );
+
+      expect((await repository.getGame(id))!.reserveRolesJson, ['chasseur', 'villageois']);
+    });
+
+    test('stores null reserve when none is given, and clears it on re-save', () async {
+      final id = await repository.createGame();
+      await repository.saveComposition(
+        gameId: id,
+        playerCount: 8,
+        roleCounts: const {'voleur': 1, 'villageois': 7},
+        reserveRoleIds: const ['chasseur', 'cupidon'],
+      );
+      await repository.saveComposition(
+        gameId: id,
+        playerCount: 8,
+        roleCounts: const {'villageois': 8},
+      );
+
+      expect((await repository.getGame(id))!.reserveRolesJson, isNull);
+    });
   });
 
   group('savePlayerNames', () {

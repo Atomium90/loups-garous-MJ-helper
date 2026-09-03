@@ -81,12 +81,14 @@ class FakeGameRepository implements GameRepository {
     required int gameId,
     required int playerCount,
     required Map<String, int> roleCounts,
+    List<String> reserveRoleIds = const [],
   }) async {
     final game = _games[gameId];
     if (game == null) throw GameNotFoundException(gameId);
     _games[gameId] = game.copyWith(
       playerCount: playerCount,
       compositionJson: Value(roleCounts),
+      reserveRolesJson: Value(reserveRoleIds.isEmpty ? null : reserveRoleIds),
       updatedAt: DateTime.now(),
     );
     // Seed a blank roster once, mirroring DriftGameRepository's transaction.

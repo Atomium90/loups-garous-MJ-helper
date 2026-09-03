@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import '../../models/game_status.dart';
 import '../../models/game_winner.dart';
 import '../converters/role_counts_converter.dart';
+import '../converters/string_list_converter.dart';
 
 @DataClassName('Game')
 class Games extends Table {
@@ -37,4 +38,12 @@ class Games extends Table {
 
   /// When [status] moved to completed. Null while running.
   DateTimeColumn get endedAt => dateTime().nullable()();
+
+  /// The Voleur's two undealt reserve cards, chosen by the MJ at composition
+  /// time (two role ids on top of [playerCount]). Null when the composition has
+  /// no Voleur; otherwise exactly two ids. Shown on "Avant la nuit 1" so the MJ
+  /// sets the same two physical cards aside, and offered as the swap choices
+  /// when the Voleur wakes.
+  TextColumn get reserveRolesJson =>
+      text().nullable().map(const StringListConverter())();
 }

@@ -17,10 +17,15 @@ abstract class GameRepository {
   /// Players rows (seatIndex 0..N-1, empty name) if the game has no roster
   /// yet. The game stays in GameStatus.setup: naming and the deal
   /// are still setup, only startGame flips it to inProgress.
+  ///
+  /// [reserveRoleIds] are the Voleur's two undealt cards (empty when the
+  /// composition has no Voleur). Stored on top of [roleCounts], which still
+  /// sums to [playerCount].
   Future<void> saveComposition({
     required int gameId,
     required int playerCount,
     required Map<String, int> roleCounts,
+    List<String> reserveRoleIds = const [],
   });
 
   /// Reactive roster for one game, ordered by seatIndex.

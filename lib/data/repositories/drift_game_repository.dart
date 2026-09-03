@@ -35,6 +35,7 @@ class DriftGameRepository implements GameRepository {
     required int gameId,
     required int playerCount,
     required Map<String, int> roleCounts,
+    List<String> reserveRoleIds = const [],
   }) {
     return _db.transaction(() async {
       final rowsAffected =
@@ -42,6 +43,7 @@ class DriftGameRepository implements GameRepository {
             GamesCompanion(
               playerCount: Value(playerCount),
               compositionJson: Value(roleCounts),
+              reserveRolesJson: Value(reserveRoleIds.isEmpty ? null : reserveRoleIds),
               updatedAt: Value(DateTime.now()),
             ),
           );
