@@ -97,19 +97,26 @@ class _NightBody extends ConsumerWidget {
     if (session.currentStepNeedsIdentify) {
       final roleId = step.role.id;
       // A player already holding a role can't hold another - and a role whose
-      // count is partly known only needs its remaining holders.
-      final alreadyKnown = session.engine.players.where((p) => p.roleId == roleId).length;
+      // count is partly known only needs its remaining dealt holders.
+      final deadKnown = session.engine.players
+          .where((p) => p.roleId == roleId && !p.alive)
+          .length;
+      final locked = session.voleurSwapInsFor(roleId);
       final taken = {
         for (final r in session.roster)
           if (r.roleId != null) r.id,
       };
       return IdentifyStep(
         role: step.role,
-        count: (session.composition[roleId] ?? 1) - alreadyKnown,
+        count: (session.composition[roleId] ?? 1) - deadKnown,
         candidates: [
           for (final p in session.engine.alivePlayers)
             if (!taken.contains(int.parse(p.id))) (rowId: int.parse(p.id), name: p.name),
         ],
+        locked: [for (final p in locked) (rowId: int.parse(p.id), name: p.name)],
+        lockedNote: locked.isEmpty
+            ? null
+            : 'Le Voleur a volé une carte de ${step.role.name} : il compte en plus.',
         onConfirm: (rowIds) => notifier.identifyRole(roleId, rowIds),
         onDefer: notifier.skipStep,
       );
@@ -153,9 +160,154 @@ class _NightBody extends ConsumerWidget {
           onDone: notifier.skipStep,
         );
 
-      default: // voleur - its card swap isn't modelled yet
+      case 'voleur':
+        final voleur = session.engine.players.where((p) => p.roleId == 'voleur').firstOrNull;
+        if (voleur == null || session.reserveRoleIds.isEmpty) {
+          return SimpleAct(primaryLabel: 'Passer ce rôle', onPrimary: notifier.skipStep);
+        }
+        return _VoleurAct(
+          reserveRoleIds: session.reserveRoleIds,
+          onConfirm: (stolenRoleId) => notifier.voleurSwap(
+            voleurEngineId: voleur.id,
+            stolenRoleId: stolenRoleId,
+          ),
+        );
+
+      default:
         return SimpleAct(primaryLabel: 'Passer ce rôle', onPrimary: notifier.skipStep);
     }
+  }
+}
+
+/// The Voleur's turn: swap his card for one of the two reserve cards, or keep
+/// his own. The two reserve cards double as the reminder of what's on the
+/// table - no separate collapsible needed. A stolen night role gets a nudge.
+class _VoleurAct extends StatefulWidget {
+  const _VoleurAct({required this.reserveRoleIds, required this.onConfirm});
+
+  final List<String> reserveRoleIds;
+
+  /// null = he keeps his card.
+  final void Function(String? stolenRoleId) onConfirm;
+
+  @override
+  State<_VoleurAct> createState() => _VoleurActState();
+}
+
+class _VoleurActState extends State<_VoleurAct> {
+  /// '' once "keep" is chosen, a role id once a reserve card is, null while
+  /// nothing is picked.
+  String? _choice;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final typography = context.typography;
+    final picked = _choice != null;
+    final keeps = _choice == '';
+    final stolen = keeps ? null : _choice;
+    final stolenRole = stolen == null ? null : RoleRegistry.base.byId(stolen);
+    final stealsNightRole = stolenRole?.hasNightCall ?? false;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 18, AppSpacing.screen, 8),
+          child: Text(
+            'Les deux cartes de la pioche',
+            style: typography.rowLabel.copyWith(color: colors.textPrimary),
+          ),
+        ),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screen),
+            children: [
+              for (final id in widget.reserveRoleIds)
+                _RoleOption(
+                  roleId: id,
+                  remaining: 1,
+                  selected: _choice == id,
+                  onTap: () => setState(() => _choice = id),
+                ),
+              _KeepCardOption(
+                selected: keeps,
+                onTap: () => setState(() => _choice = ''),
+              ),
+            ],
+          ),
+        ),
+        if (stealsNightRole)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 8),
+            child: Text(
+              'Le Voleur devient ${roleWithArticle(stolen!, RoleRegistry.base)} : '
+              "réveillez-le à son tour cette nuit s'il n'est pas déjà passé.",
+              style: typography.meta.copyWith(color: colors.warnText, height: 1.5),
+            ),
+          ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screen,
+            4,
+            AppSpacing.screen,
+            AppSpacing.screen,
+          ),
+          child: AppButton(
+            label: !picked
+                ? 'Choisissez une carte'
+                : keeps
+                ? 'Le Voleur garde sa carte'
+                : 'Le Voleur prend ${roleWithArticle(stolen!, RoleRegistry.base)}',
+            onPressed: !picked ? null : () => widget.onConfirm(stolen),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _KeepCardOption extends StatelessWidget {
+  const _KeepCardOption({required this.selected, required this.onTap});
+
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final typography = context.typography;
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          color: selected ? colors.accentBg : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppRadii.button),
+          border: Border.all(color: selected ? colors.accentBorder : colors.borderControl),
+        ),
+        child: Row(
+          spacing: 12,
+          children: [
+            Icon(
+              AppIcons.thief,
+              size: 18,
+              color: selected ? colors.accentText : colors.textSecondary,
+            ),
+            Expanded(
+              child: Text(
+                'Il garde sa carte',
+                style: typography.rowLabel.copyWith(
+                  color: selected ? colors.accentText : colors.textPrimary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

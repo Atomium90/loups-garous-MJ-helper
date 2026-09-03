@@ -13,6 +13,7 @@ class AvatarPickCell extends StatelessWidget {
     required this.name,
     required this.selected,
     required this.onTap,
+    this.enabled = true,
     this.avatarSize = AppSizes.avatarSelectionGrid,
     this.selectedStyle = AvatarSelectedStyle.accent,
     this.badge,
@@ -22,6 +23,10 @@ class AvatarPickCell extends StatelessWidget {
   final String name;
   final bool selected;
   final VoidCallback onTap;
+
+  /// False for a fixed cell - already decided, not up for the current pick
+  /// (the Voleur, locked into a role he stole). Dimmed and non-tappable.
+  final bool enabled;
 
   /// Diameter of the avatar. The vote grid uses the largest (44).
   final double avatarSize;
@@ -37,37 +42,40 @@ class AvatarPickCell extends StatelessWidget {
     final colors = context.colors;
     final amber = selectedStyle == AvatarSelectedStyle.captain;
     return GestureDetector(
-      onTap: onTap,
+      onTap: enabled ? onTap : null,
       behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              PlayerAvatar(
-                name: name,
-                size: avatarSize,
-                selected: selected,
-                selectedStyle: selectedStyle,
-              ),
-              if (badge != null) Positioned(top: -3, right: -3, child: badge!),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: selected ? FontWeight.w500 : FontWeight.w400,
-              color: selected
-                  ? (amber ? colors.warnText : colors.accentText)
-                  : colors.textSecondary,
+      child: Opacity(
+        opacity: enabled ? 1 : 0.55,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                PlayerAvatar(
+                  name: name,
+                  size: avatarSize,
+                  selected: selected,
+                  selectedStyle: selectedStyle,
+                ),
+                if (badge != null) Positioned(top: -3, right: -3, child: badge!),
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: selected ? FontWeight.w500 : FontWeight.w400,
+                color: selected
+                    ? (amber ? colors.warnText : colors.accentText)
+                    : colors.textSecondary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -17,10 +17,14 @@ class IdentifyStep extends StatefulWidget {
     required this.candidates,
     required this.onConfirm,
     required this.onDefer,
+    this.locked = const [],
+    this.lockedNote,
     super.key,
   });
 
   final Role role;
+
+  /// How many holders still need picking - not counting [locked].
   final int count;
 
   /// (rowId, name) for every player who could hold the role - all living
@@ -28,6 +32,14 @@ class IdentifyStep extends StatefulWidget {
   final List<({int rowId, String name})> candidates;
   final ValueChanged<List<int>> onConfirm;
   final VoidCallback onDefer;
+
+  /// Players who already hold this role and can't be unpicked - the Voleur who
+  /// stole it. Shown selected and dimmed, ahead of the pickable grid, and not
+  /// returned by [onConfirm] (they're recorded already).
+  final List<({int rowId, String name})> locked;
+
+  /// A one-liner shown above the grid explaining the locked cells.
+  final String? lockedNote;
 
   @override
   State<IdentifyStep> createState() => _IdentifyStepState();
@@ -84,6 +96,14 @@ class _IdentifyStepState extends State<IdentifyStep> {
             ],
           ),
         ),
+        if (widget.lockedNote != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 10),
+            child: Text(
+              widget.lockedNote!,
+              style: typography.meta.copyWith(color: colors.textSecondary, height: 1.5),
+            ),
+          ),
         Expanded(
           child: GridView.count(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screen),
@@ -92,6 +112,13 @@ class _IdentifyStepState extends State<IdentifyStep> {
             crossAxisSpacing: AppSpacing.gridGapColumn,
             childAspectRatio: 1.0,
             children: [
+              for (final c in widget.locked)
+                AvatarPickCell(
+                  name: c.name,
+                  selected: true,
+                  enabled: false,
+                  onTap: () {},
+                ),
               for (final c in widget.candidates)
                 AvatarPickCell(
                   name: c.name,

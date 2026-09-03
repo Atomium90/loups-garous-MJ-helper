@@ -7,12 +7,22 @@ import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
 
 import '../../support/pump_app.dart';
 
-Future<int> _startedGame(DriftGameRepository repo) async {
+Future<int> _startedGame(
+  DriftGameRepository repo, {
+  Map<String, int> composition = const {
+    'loup_garou': 2,
+    'voyante': 1,
+    'sorciere': 1,
+    'villageois': 2,
+  },
+  List<String> reserveRoleIds = const [],
+}) async {
   final id = await repo.createGame(initialPlayerCount: 6);
   await repo.saveComposition(
     gameId: id,
     playerCount: 6,
-    roleCounts: const {'loup_garou': 2, 'voyante': 1, 'sorciere': 1, 'villageois': 2},
+    roleCounts: composition,
+    reserveRoleIds: reserveRoleIds,
   );
   await repo.savePlayerNames(gameId: id, names: const ['Ana', 'Bo', 'Cy', 'Di', 'Ed', 'Fi']);
   await repo.startGame(id);
@@ -141,6 +151,72 @@ void main() {
     await tester.tap(find.text('Journal'));
     await tester.pumpAndSettle();
     expect(find.text('La Sorcière sauve Di'), findsOneWidget);
+  });
+
+  testWidgets('the Voleur swaps his card for a reserve card', (tester) async {
+    final id = await _startedGame(
+      repo,
+      composition: const {'voleur': 1, 'loup_garou': 2, 'sorciere': 1, 'villageois': 2},
+      reserveRoleIds: const ['voyante', 'chasseur'],
+    );
+    await pump(tester, id);
+
+    // Voleur = Ana
+    await identify(tester, ['Ana']);
+
+    expect(find.text('Les deux cartes de la pioche'), findsOneWidget);
+    expect(find.text('Il garde sa carte'), findsOneWidget);
+
+    await tester.tap(find.text('Voyante'));
+    await tester.pumpAndSettle();
+    // stealing a night role warns the MJ
+    expect(find.textContaining('Le Voleur devient la Voyante'), findsOneWidget);
+
+    await tester.tap(find.text('Le Voleur prend la Voyante'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Journal'));
+    await tester.pumpAndSettle();
+    expect(find.text('Le Voleur échange sa carte contre Voyante'), findsOneWidget);
+  });
+
+  testWidgets('a Voleur who steals a Loup is a locked extra on the wolves grid', (tester) async {
+    final id = await _startedGame(
+      repo,
+      composition: const {'voleur': 1, 'loup_garou': 2, 'sorciere': 1, 'villageois': 2},
+      reserveRoleIds: const ['loup_garou', 'chasseur'],
+    );
+    await pump(tester, id);
+
+    await identify(tester, ['Ana']); // Voleur = Ana
+    await tester.tap(find.text('Loup-Garou'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Le Voleur prend le Loup-Garou'));
+    await tester.pumpAndSettle();
+
+    // straight onto the wolves' identify step
+    expect(find.text('Qui sont les Loups-Garous ?'), findsOneWidget);
+    expect(find.textContaining('Le Voleur a volé une carte de Loup-Garou'), findsOneWidget);
+    // still asks for the 2 dealt wolves (Ana is the locked +1)
+    expect(find.text('0 sur 2'), findsOneWidget);
+    // Ana shows on the grid but tapping her does nothing
+    expect(find.text('Ana'), findsOneWidget);
+    await tester.tap(find.text('Ana'));
+    await tester.pump();
+    expect(find.text('0 sur 2'), findsOneWidget);
+
+    await tester.tap(find.text('Bo'));
+    await tester.tap(find.text('Cy'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Enregistrer'));
+    await tester.pumpAndSettle();
+
+    // wolves recorded: Ana (stolen) + Bo + Cy
+    final roster = await repo.getRoster(id);
+    expect(
+      roster.where((r) => r.roleId == 'loup_garou').map((r) => r.name).toSet(),
+      {'Ana', 'Bo', 'Cy'},
+    );
   });
 
   testWidgets('the Witch can poison someone (sub-picker returns to the potion view)', (
