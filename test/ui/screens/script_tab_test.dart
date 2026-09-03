@@ -61,8 +61,8 @@ void main() {
     await tester.tap(find.text('Enregistrer'));
     await tester.pumpAndSettle();
 
-    // advanced to the Voyante's act sub-step (its minimal "Continuer")
-    expect(find.text('Continuer'), findsOneWidget);
+    // advanced to the Voyante's act sub-step (she picks who to look at)
+    expect(find.text('Qui la Voyante observe-t-elle ?'), findsOneWidget);
     expect(find.text('Qui est Voyante ?'), findsNothing);
     final roster = await repo.getRoster(id);
     expect(roster.firstWhere((r) => r.name == 'Cy').roleId, 'voyante');
@@ -81,12 +81,12 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // identify Bo as the Voyante, then continue to the Loups' identify step
+    // identify Bo as the Voyante, then skip her look to reach the Loups' step
     await tester.tap(find.text('Bo'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Enregistrer'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Continuer'));
+    await tester.tap(find.text('Passer ce rôle'));
     await tester.pumpAndSettle();
 
     expect(find.text('Qui sont les Loups-Garous ?'), findsOneWidget);

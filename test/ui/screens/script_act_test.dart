@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:loup_garou_mj/data/database/app_database.dart';
 import 'package:loup_garou_mj/data/repositories/drift_game_repository.dart';
 import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
+import 'package:loup_garou_mj/ui/widgets/player_avatar.dart';
 
 import '../../support/pump_app.dart';
 
@@ -82,7 +83,7 @@ void main() {
 
     // Voyante
     await identify(tester, ['Ana']);
-    await tester.tap(find.text('Continuer'));
+    await tester.tap(find.text('Passer ce rôle')); // skip the Voyante's look
     await tester.pumpAndSettle();
 
     // Loups
@@ -125,7 +126,7 @@ void main() {
     await pump(tester, id);
 
     await identify(tester, ['Ana']);
-    await tester.tap(find.text('Continuer'));
+    await tester.tap(find.text('Passer ce rôle')); // skip the Voyante's look
     await tester.pumpAndSettle();
 
     await identify(tester, ['Bo', 'Cy']);
@@ -151,6 +152,73 @@ void main() {
     await tester.tap(find.text('Journal'));
     await tester.pumpAndSettle();
     expect(find.text('La Sorcière sauve Di'), findsOneWidget);
+  });
+
+  testWidgets('the Voyante looks at an unknown player and the MJ notes the card', (
+    tester,
+  ) async {
+    final id = await _startedGame(repo);
+    await pump(tester, id);
+
+    await identify(tester, ['Ana']); // Voyante = Ana
+
+    expect(find.text('Qui la Voyante observe-t-elle ?'), findsOneWidget);
+    await tapName(tester, 'Bo');
+    await tester.tap(find.text('La Voyante observe Bo'));
+    await tester.pumpAndSettle();
+
+    // Bo's card isn't on record -> the MJ notes it
+    expect(find.text('La carte de Bo'), findsOneWidget);
+    await tester.tap(find.text('Loup-Garou'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Bo est le Loup-Garou'));
+    await tester.pumpAndSettle();
+
+    // inline reveal
+    expect(find.text('La Voyante voit'), findsOneWidget);
+    expect(find.text('Bo est le Loup-Garou'), findsOneWidget);
+    await tester.tap(find.text('Continuer'));
+    await tester.pumpAndSettle();
+
+    // advanced to the Loups, Bo's card recorded, journal line written
+    expect(find.text('Qui sont les Loups-Garous ?'), findsOneWidget);
+    expect((await repo.getRoster(id)).firstWhere((r) => r.name == 'Bo').roleId, 'loup_garou');
+    await tester.tap(find.text('Journal'));
+    await tester.pumpAndSettle();
+    expect(find.text('La Voyante observe Bo'), findsOneWidget);
+  });
+
+  testWidgets('the Voyante can\'t look at herself, and a known card shows straight away', (
+    tester,
+  ) async {
+    final id = await _startedGame(
+      repo,
+      composition: const {'voleur': 1, 'voyante': 1, 'loup_garou': 2, 'villageois': 2},
+      reserveRoleIds: const ['chasseur', 'sorciere'],
+    );
+    await pump(tester, id);
+
+    await identify(tester, ['Ana']); // Voleur = Ana
+    await tester.tap(find.text('Il garde sa carte'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Le Voleur garde sa carte'));
+    await tester.pumpAndSettle();
+
+    await identify(tester, ['Bo']); // Voyante = Bo
+    expect(find.text('Qui la Voyante observe-t-elle ?'), findsOneWidget);
+    // 6 players minus Bo herself = 5 cells on her grid
+    expect(find.byType(PlayerAvatar), findsNWidgets(5));
+
+    // Ana's card is on record (she kept the Voleur) -> straight to the reveal
+    await tapName(tester, 'Ana');
+    await tester.tap(find.text('La Voyante observe Ana'));
+    await tester.pumpAndSettle();
+    expect(find.text('La carte de Ana'), findsNothing);
+    expect(find.text('La Voyante voit'), findsOneWidget);
+    expect(find.text('Ana est le Voleur'), findsOneWidget);
+    await tester.tap(find.text('Continuer'));
+    await tester.pumpAndSettle();
+    expect(find.text('Qui sont les Loups-Garous ?'), findsOneWidget);
   });
 
   testWidgets('the Voleur swaps his card for a reserve card', (tester) async {
@@ -226,7 +294,7 @@ void main() {
     await pump(tester, id);
 
     await identify(tester, ['Ana']);
-    await tester.tap(find.text('Continuer'));
+    await tester.tap(find.text('Passer ce rôle')); // skip the Voyante's look
     await tester.pumpAndSettle();
     await identify(tester, ['Bo', 'Cy']);
     await tapName(tester, 'Di');

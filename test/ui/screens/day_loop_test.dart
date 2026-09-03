@@ -54,7 +54,7 @@ void main() {
   /// Sorcière does nothing, then resolve.
   Future<void> playNight1(WidgetTester tester, {required String victim}) async {
     await identify(tester, ['Ana']);
-    await tap(tester, 'Continuer');
+    await tap(tester, 'Passer ce rôle'); // skip the Voyante's look
     await identify(tester, ['Bo', 'Cy']);
     await tester.tap(find.text(victim));
     await tester.pumpAndSettle();

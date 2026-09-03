@@ -130,7 +130,23 @@ class _NightBody extends ConsumerWidget {
 
     switch (role.id) {
       case 'voyante':
-        return SimpleAct(primaryLabel: 'Continuer', onPrimary: notifier.skipStep);
+        final rosterRole = {for (final r in session.roster) r.id: r.roleId};
+        return _SeerAct(
+          // The card says "un autre joueur" - she can't look at herself.
+          targets: [
+            for (final p in alive)
+              if (p.roleId != 'voyante')
+                (
+                  rowId: int.parse(p.id),
+                  name: p.name,
+                  knownRoleId: rosterRole[int.parse(p.id)],
+                ),
+          ],
+          noteOptions: unassignedRoles(session),
+          onInspect: (rowId, notedRoleId) =>
+              notifier.seerInspect(targetRowId: rowId, notedRoleId: notedRoleId),
+          onSkip: notifier.skipStep,
+        );
 
       case 'cupidon':
         return _LoversPick(
@@ -307,6 +323,231 @@ class _KeepCardOption extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+typedef _SeerTarget = ({int rowId, String name, String? knownRoleId});
+
+/// The Voyante's turn: pick a player, then see their card. If the card is
+/// already on record it shows straight away; otherwise the MJ notes it (a
+/// third way the app learns a role). The reveal is an inline `accent/bg`
+/// panel, then "Continuer" advances - the peek changes no game state.
+class _SeerAct extends StatefulWidget {
+  const _SeerAct({
+    required this.targets,
+    required this.noteOptions,
+    required this.onInspect,
+    required this.onSkip,
+  });
+
+  final List<_SeerTarget> targets;
+  final List<({String roleId, int remaining})> noteOptions;
+
+  /// (targetRowId, notedRoleId) - notedRoleId is null when the card was
+  /// already known.
+  final void Function(int targetRowId, String? notedRoleId) onInspect;
+  final VoidCallback onSkip;
+
+  @override
+  State<_SeerAct> createState() => _SeerActState();
+}
+
+enum _SeerPhase { pickTarget, noteCard, result }
+
+class _SeerActState extends State<_SeerAct> {
+  _SeerPhase _phase = _SeerPhase.pickTarget;
+  _SeerTarget? _target;
+  String? _noted;
+
+  String? get _cardRoleId => _target?.knownRoleId ?? _noted;
+
+  void _onTargetPicked(String rowIdStr) {
+    final t = widget.targets.firstWhere((c) => c.rowId == int.parse(rowIdStr));
+    setState(() {
+      _target = t;
+      _phase = t.knownRoleId != null ? _SeerPhase.result : _SeerPhase.noteCard;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return switch (_phase) {
+      _SeerPhase.pickTarget => TargetPick(
+        question: 'Qui la Voyante observe-t-elle ?',
+        candidates: [for (final t in widget.targets) (id: '${t.rowId}', name: t.name)],
+        confirmLabel: (name) => 'La Voyante observe $name',
+        onConfirm: _onTargetPicked,
+        secondaryLabel: 'Passer ce rôle',
+        onSecondary: widget.onSkip,
+      ),
+      _SeerPhase.noteCard => _SeerNote(
+        name: _target!.name,
+        options: widget.noteOptions,
+        onConfirm: (roleId) => setState(() {
+          _noted = roleId;
+          _phase = _SeerPhase.result;
+        }),
+      ),
+      _SeerPhase.result => _SeerResult(
+        name: _target!.name,
+        roleId: _cardRoleId!,
+        onContinue: () => widget.onInspect(_target!.rowId, _noted),
+      ),
+    };
+  }
+}
+
+class _SeerNote extends StatefulWidget {
+  const _SeerNote({required this.name, required this.options, required this.onConfirm});
+
+  final String name;
+  final List<({String roleId, int remaining})> options;
+  final ValueChanged<String> onConfirm;
+
+  @override
+  State<_SeerNote> createState() => _SeerNoteState();
+}
+
+class _SeerNoteState extends State<_SeerNote> {
+  String? _roleId;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final typography = context.typography;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 18, AppSpacing.screen, 4),
+          child: Text(
+            'Sa carte n\'est pas encore notée. Montrez-la à la Voyante, puis notez-la.',
+            style: typography.meta.copyWith(color: colors.textSecondary, height: 1.5),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 12, AppSpacing.screen, 8),
+          child: Text(
+            'La carte de ${widget.name}',
+            style: typography.meta.copyWith(color: colors.textTertiary),
+          ),
+        ),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screen),
+            children: [
+              for (final o in widget.options)
+                _RoleOption(
+                  roleId: o.roleId,
+                  remaining: o.remaining,
+                  selected: o.roleId == _roleId,
+                  onTap: () => setState(() => _roleId = o.roleId),
+                ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screen,
+            12,
+            AppSpacing.screen,
+            AppSpacing.screen,
+          ),
+          child: AppButton(
+            label: _roleId == null
+                ? 'Choisissez une carte'
+                : '${widget.name} est ${roleWithArticle(_roleId!, RoleRegistry.base)}',
+            onPressed: _roleId == null ? null : () => widget.onConfirm(_roleId!),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SeerResult extends StatelessWidget {
+  const _SeerResult({required this.name, required this.roleId, required this.onContinue});
+
+  final String name;
+  final String roleId;
+  final VoidCallback onContinue;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final typography = context.typography;
+    final role = RoleRegistry.base.byId(roleId);
+    final wolves = role.team == Team.werewolves;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 18, AppSpacing.screen, 0),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: colors.accentBg,
+              borderRadius: BorderRadius.circular(AppRadii.card),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'La Voyante voit',
+                  style: typography.counter.copyWith(color: colors.accentText),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  spacing: 12,
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: colors.bgScreen,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(_roleIcon(roleId), size: 18, color: colors.accentText),
+                    ),
+                    Expanded(
+                      child: Text(
+                        '$name est ${roleWithArticle(roleId, RoleRegistry.base)}',
+                        style: typography.rowLabel.copyWith(
+                          fontSize: 16,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: colors.bgScreen,
+                        borderRadius: BorderRadius.circular(AppRadii.pill),
+                      ),
+                      child: Text(
+                        wolves ? 'Loups' : 'Village',
+                        style: typography.counter.copyWith(color: colors.textSecondary),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        const Spacer(),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screen,
+            0,
+            AppSpacing.screen,
+            AppSpacing.screen,
+          ),
+          child: AppButton(label: 'Continuer', onPressed: onContinue),
+        ),
+      ],
     );
   }
 }
@@ -666,6 +907,22 @@ List<Candidate> _alive(GameState engine) => [
   for (final p in engine.alivePlayers) (id: p.id, name: p.name),
 ];
 
+/// The roles the composition still has spare copies of, given what the roster
+/// already pins down. The candidate cards for a post-mortem reveal and for the
+/// Voyante noting an as-yet-unknown player.
+List<({String roleId, int remaining})> unassignedRoles(GameSessionState session) {
+  final assigned = <String, int>{};
+  for (final r in session.roster) {
+    final id = r.roleId;
+    if (id != null) assigned[id] = (assigned[id] ?? 0) + 1;
+  }
+  return [
+    for (final e in session.composition.entries)
+      if (e.value - (assigned[e.key] ?? 0) > 0)
+        (roleId: e.key, remaining: e.value - (assigned[e.key] ?? 0)),
+  ];
+}
+
 /// The day recap - what the MJ reads aloud when the village wakes.
 class _DayRecapBody extends StatelessWidget {
   const _DayRecapBody({required this.session, required this.onAdvance});
@@ -930,25 +1187,12 @@ class _RevealPanel extends StatefulWidget {
 class _RevealPanelState extends State<_RevealPanel> {
   String? _roleId;
 
-  List<({String roleId, int remaining})> get _unassigned {
-    final assigned = <String, int>{};
-    for (final r in widget.session.roster) {
-      final id = r.roleId;
-      if (id != null) assigned[id] = (assigned[id] ?? 0) + 1;
-    }
-    return [
-      for (final e in widget.session.composition.entries)
-        if (e.value - (assigned[e.key] ?? 0) > 0)
-          (roleId: e.key, remaining: e.value - (assigned[e.key] ?? 0)),
-    ];
-  }
-
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final typography = context.typography;
     final dead = widget.session.unrevealedDead.first;
-    final options = _unassigned;
+    final options = unassignedRoles(widget.session);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
