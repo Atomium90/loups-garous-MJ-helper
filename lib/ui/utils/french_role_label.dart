@@ -51,3 +51,8 @@ String frenchDeckLine(Map<String, int> composition, RoleRegistry registry) {
 
   return entries.map((e) => frenchRoleLabel(e.key, e.value, registry)).join(' · ');
 }
+
+/// The Voleur's two reserve cards, spelled out with articles so the MJ sets
+/// the matching physical cards aside: "le Chasseur · un Villageois".
+String frenchReserveLine(List<String> reserveRoleIds, RoleRegistry registry) =>
+    reserveRoleIds.map((id) => roleWithArticle(id, registry)).join(' · ');

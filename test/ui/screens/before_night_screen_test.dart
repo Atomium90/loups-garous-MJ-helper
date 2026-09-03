@@ -12,9 +12,15 @@ Future<int> _readyToDeal(
   FakeGameRepository repo, {
   required Map<String, int> composition,
   required List<String> names,
+  List<String> reserveRoleIds = const [],
 }) async {
   final id = await repo.createGame(initialPlayerCount: names.length);
-  await repo.saveComposition(gameId: id, playerCount: names.length, roleCounts: composition);
+  await repo.saveComposition(
+    gameId: id,
+    playerCount: names.length,
+    roleCounts: composition,
+    reserveRoleIds: reserveRoleIds,
+  );
   await repo.savePlayerNames(gameId: id, names: names);
   return id;
 }
@@ -41,6 +47,32 @@ void main() {
     expect(find.text('Awa'), findsOneWidget);
     expect(find.text('Distribuez les 6 cartes'), findsOneWidget);
     expect(find.text('2 Loups-Garous · Voyante · 3 Villageois'), findsOneWidget);
+    expect(find.text('Réserve du Voleur'), findsNothing);
+  });
+
+  testWidgets('spells out the Voleur reserve cards when the composition has one', (
+    tester,
+  ) async {
+    final repository = FakeGameRepository();
+    final id = await _readyToDeal(
+      repository,
+      composition: const {'voleur': 1, 'loup_garou': 2, 'villageois': 3},
+      names: const ['Camille', 'Julien', 'Noa', 'Lina', 'Théo', 'Awa'],
+      reserveRoleIds: const ['chasseur', 'cupidon'],
+    );
+
+    await pumpScreen(
+      tester,
+      BeforeNightScreen(gameId: id),
+      overrides: [gameRepositoryProvider.overrideWithValue(repository)],
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Réserve du Voleur'), findsOneWidget);
+    expect(
+      find.textContaining('le Chasseur · le Cupidon'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('Commencer la nuit 1 starts the game and opens the Script tab', (tester) async {

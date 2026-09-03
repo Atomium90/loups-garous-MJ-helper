@@ -38,4 +38,17 @@ void main() {
       expect(line, '2 Loups-Garous · 6 Villageois');
     });
   });
+
+  group('frenchReserveLine', () {
+    test('spells each reserve card with its article, in the given order', () {
+      expect(
+        frenchReserveLine(const ['chasseur', 'voyante'], registry),
+        'le Chasseur · la Voyante',
+      );
+    });
+
+    test('is empty for no reserve', () {
+      expect(frenchReserveLine(const [], registry), '');
+    });
+  });
 }

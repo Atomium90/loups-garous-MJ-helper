@@ -76,6 +76,7 @@ class _Body extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final composition = game.compositionJson ?? const <String, int>{};
     final deckLine = frenchDeckLine(composition, RoleRegistry.base);
+    final reserve = game.reserveRolesJson ?? const <String>[];
 
     return Column(
       children: [
@@ -95,7 +96,7 @@ class _Body extends ConsumerWidget {
                 _RosterGrid(roster: roster),
                 const SizedBox(height: 16),
                 Text(
-                  'Dans la pioche',
+                  'La donne',
                   style: context.typography.meta.copyWith(color: context.colors.textTertiary),
                 ),
                 const SizedBox(height: 6),
@@ -106,6 +107,10 @@ class _Body extends ConsumerWidget {
                     height: 1.7,
                   ),
                 ),
+                if (reserve.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  _ReserveCallout(line: frenchReserveLine(reserve, RoleRegistry.base)),
+                ],
               ],
             ),
           ),
@@ -200,6 +205,53 @@ class _DealCallout extends StatelessWidget {
                 Text(
                   "Mélangez et distribuez à l'aveugle. L'app note les rôles au fil de la "
                   'nuit 1, quand chacun se réveille.',
+                  style: typography.meta.copyWith(color: colors.textSecondary, height: 1.55),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The Voleur's two reserve cards. The MJ must set aside exactly these on the
+/// table, or the physical game and the app diverge.
+class _ReserveCallout extends StatelessWidget {
+  const _ReserveCallout({required this.line});
+
+  final String line;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final typography = context.typography;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.bgInset,
+        borderRadius: BorderRadius.circular(AppRadii.button),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(AppIcons.thief, size: 18, color: colors.textSecondary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Réserve du Voleur',
+                  style: typography.body.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: colors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  'Posez ces 2 cartes au centre, face cachée : $line.',
                   style: typography.meta.copyWith(color: colors.textSecondary, height: 1.55),
                 ),
               ],
