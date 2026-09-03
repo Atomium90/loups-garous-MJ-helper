@@ -43,4 +43,27 @@ void main() {
     await tester.tap(find.byType(AppChip));
     expect(tapCount, 1);
   });
+
+  testWidgets('a disabled chip dims its label, shows the note, and swallows taps', (
+    tester,
+  ) async {
+    var tapCount = 0;
+    await pumpApp(
+      tester,
+      AppChip(
+        label: 'Voyante',
+        selected: false,
+        enabled: false,
+        note: 'en réserve',
+        onTap: () => tapCount++,
+      ),
+    );
+
+    expect(find.text('en réserve'), findsOneWidget);
+    final text = tester.widget<Text>(find.text('Voyante'));
+    expect(text.style?.color, AppColors.light.textTertiary);
+
+    await tester.tap(find.byType(AppChip));
+    expect(tapCount, 0);
+  });
 }
