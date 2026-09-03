@@ -32,7 +32,7 @@ class CompositionEditor extends _$CompositionEditor {
     } else {
       counts[roleId] = 1;
     }
-    state = AsyncData(draft.copyWith(roleCounts: counts));
+    state = AsyncData(_withCounts(draft, counts));
   }
 
   void setRoleCount(String roleId, int count) {
@@ -44,13 +44,43 @@ class CompositionEditor extends _$CompositionEditor {
     } else {
       counts[roleId] = count;
     }
-    state = AsyncData(draft.copyWith(roleCounts: counts));
+    state = AsyncData(_withCounts(draft, counts));
   }
 
   void clearRoles() {
     final draft = state.value;
     if (draft == null) return;
-    state = AsyncData(draft.copyWith(roleCounts: const {}));
+    state = AsyncData(draft.copyWith(roleCounts: const {}, reserveRoleIds: const []));
+  }
+
+  /// Sets the reserve card in [slot] (0 or 1) to [roleId]. Only meaningful
+  /// while the Voleur is in the composition.
+  void setReserveRole(int slot, String roleId) {
+    final draft = state.value;
+    if (draft == null || slot < 0 || slot > 1) return;
+    final reserve = List<String>.filled(2, '', growable: false).toList();
+    for (var i = 0; i < draft.reserveRoleIds.length && i < 2; i++) {
+      reserve[i] = draft.reserveRoleIds[i];
+    }
+    reserve[slot] = roleId;
+    state = AsyncData(
+      draft.copyWith(reserveRoleIds: [for (final r in reserve) if (r.isNotEmpty) r]),
+    );
+  }
+
+  /// Drops the reserve card in [slot], if set.
+  void clearReserveRole(int slot) {
+    final draft = state.value;
+    if (draft == null || slot < 0 || slot >= draft.reserveRoleIds.length) return;
+    final reserve = List<String>.from(draft.reserveRoleIds)..removeAt(slot);
+    state = AsyncData(draft.copyWith(reserveRoleIds: reserve));
+  }
+
+  /// Applies new role counts, clearing the reserve when the Voleur is no
+  /// longer in play (a stale reserve would otherwise block "Lancer la partie").
+  CompositionDraft _withCounts(CompositionDraft draft, Map<String, int> counts) {
+    final next = draft.copyWith(roleCounts: counts);
+    return next.hasVoleur ? next : next.copyWith(reserveRoleIds: const []);
   }
 
   Future<void> commit() async {
@@ -66,6 +96,7 @@ class CompositionEditor extends _$CompositionEditor {
       gameId: draft.gameId,
       playerCount: draft.playerCount,
       roleCounts: counts,
+      reserveRoleIds: draft.hasVoleur ? draft.reserveRoleIds : const [],
     );
     ref.invalidate(gameListProvider);
     ref.invalidate(gameProvider(gameId));

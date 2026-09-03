@@ -10,6 +10,7 @@ import 'package:loup_garou_mj/data/repositories/game_not_found_exception.dart';
 import 'package:loup_garou_mj/state/composition/composition_editor_notifier.dart';
 import 'package:loup_garou_mj/state/providers/game_provider.dart';
 import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
+import 'package:rules_engine/rules_engine.dart';
 
 import '../../support/fake_game_repository.dart';
 
@@ -115,6 +116,82 @@ void main() {
       draft = container.read(compositionEditorProvider(id)).value!;
       expect(draft.remaining, -1);
       expect(draft.isValid, isFalse);
+    });
+
+    test('the Voleur needs exactly two reserve cards to be valid', () async {
+      final id = await fakeRepository.createGame(initialPlayerCount: 6);
+      final notifier = await notifierFor(id);
+      notifier.setRoleCount('loup_garou', 1);
+      notifier.toggleRole('voleur');
+
+      var draft = container.read(compositionEditorProvider(id)).value!;
+      expect(draft.hasVoleur, isTrue);
+      expect(draft.isValid, isFalse); // reserve empty
+
+      notifier.setReserveRole(0, 'chasseur');
+      notifier.setReserveRole(1, 'cupidon');
+      draft = container.read(compositionEditorProvider(id)).value!;
+      expect(draft.reserveRoleIds, ['chasseur', 'cupidon']);
+      expect(draft.isValid, isTrue);
+    });
+
+    test('availableReserveRoles honours box copies and excludes the Voleur', () async {
+      final id = await fakeRepository.createGame(initialPlayerCount: 8);
+      final notifier = await notifierFor(id);
+      notifier.toggleRole('voleur');
+      notifier.setRoleCount('loup_garou', 4); // all 4 wolf cards dealt
+      notifier.toggleRole('voyante'); // the only Voyante dealt
+
+      final draft = container.read(compositionEditorProvider(id)).value!;
+      final ids = draft
+          .availableReserveRoles(0, RoleRegistry.base)
+          .map((r) => r.id)
+          .toSet();
+      expect(ids, isNot(contains('voleur')));
+      expect(ids, isNot(contains('loup_garou')));
+      expect(ids, isNot(contains('voyante')));
+      expect(ids, containsAll(['cupidon', 'sorciere', 'villageois', 'chasseur']));
+
+      // A card the slot itself already holds stays offered for that slot.
+      notifier.setReserveRole(0, 'chasseur');
+      final draft2 = container.read(compositionEditorProvider(id)).value!;
+      expect(
+        draft2.availableReserveRoles(0, RoleRegistry.base).map((r) => r.id),
+        contains('chasseur'),
+      );
+      // ...but not for the other slot.
+      expect(
+        draft2.availableReserveRoles(1, RoleRegistry.base).map((r) => r.id),
+        isNot(contains('chasseur')),
+      );
+    });
+
+    test('dropping the Voleur clears a stale reserve', () async {
+      final id = await fakeRepository.createGame(initialPlayerCount: 6);
+      final notifier = await notifierFor(id);
+      notifier.toggleRole('voleur');
+      notifier.setReserveRole(0, 'chasseur');
+      notifier.setReserveRole(1, 'cupidon');
+
+      notifier.toggleRole('voleur'); // remove
+      final draft = container.read(compositionEditorProvider(id)).value!;
+      expect(draft.hasVoleur, isFalse);
+      expect(draft.reserveRoleIds, isEmpty);
+      expect(draft.isValid, isTrue);
+    });
+
+    test('commit passes the reserve through only while the Voleur is in play', () async {
+      final id = await fakeRepository.createGame(initialPlayerCount: 6);
+      final notifier = await notifierFor(id);
+      notifier.setRoleCount('loup_garou', 1);
+      notifier.toggleRole('voleur');
+      notifier.setReserveRole(0, 'chasseur');
+      notifier.setReserveRole(1, 'villageois');
+
+      await notifier.commit();
+
+      final game = await fakeRepository.getGame(id);
+      expect(game!.reserveRolesJson, ['chasseur', 'villageois']);
     });
 
     test('clearRoles empties the selection', () async {
