@@ -11,9 +11,10 @@ phone).
 
 Early development. The full day/night loop is in — a game runs from setup through repeated
 cycles to a declared winner and its recap, resuming exactly where it left off after a
-force-quit. Two role actions are still stubbed: the **Seer's card reveal** and the **Voleur's
-swap** (their steps advance without an engine action — the Voleur also needs the composition to
-model the two undealt cards).
+force-quit. All 8 base-game roles are now fully assisted, the Seer and the Voleur included:
+the Seer picks a player and the MJ notes the card if it isn't on record yet; the Voleur's two
+reserve cards are chosen at composition time (spelled out before night 1) and offered as his
+swap, with the stolen role folded into that night's script and the following ones.
 
 The rules engine (pure Dart, `packages/rules_engine`) is complete for the base game:
 
