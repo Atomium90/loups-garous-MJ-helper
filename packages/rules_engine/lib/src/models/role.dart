@@ -20,6 +20,13 @@ class Role {
   /// that ship in multiples (4 Loups-Garous, 13 Villageois in the base box).
   final int copies;
 
+  /// Palier de suggestion pour CompositionAdvisor : les rôles d'un même palier sont
+  /// interchangeables (tirage aléatoire s'ils sont plus nombreux que les places restantes).
+  /// Palier 1 = le plus "essentiel", inclus en premier. Null = jamais suggéré automatiquement
+  /// (le MJ l'ajoute lui-même) - le cas du Voleur (exige de choisir 2 cartes de réserve) et des
+  /// deux rôles à copies multiples (loup_garou, villageois), gérés séparément par l'advisor.
+  final int? suggestionTier;
+
   /// Whether this role is ever emitted as a night-script step by
   /// NightScriptBuilder. False for roles that are passive, day-phase only,
   /// or purely event-triggered (e.g. on death).
@@ -45,6 +52,7 @@ class Role {
     required this.team,
     this.extensionId,
     this.copies = 1,
+    this.suggestionTier,
     required this.hasNightCall,
     this.wakeCondition,
     this.orderConstraints = const [],

@@ -27,6 +27,7 @@ const baseGameRoles = <Role>[
     name: 'Cupidon',
     team: Team.village,
     copies: 1,
+    suggestionTier: 2,
     hasNightCall: true,
     wakeCondition: WakeCondition.firstNightOnly,
     orderConstraints: [OrderConstraint.after('voleur')],
@@ -42,6 +43,7 @@ const baseGameRoles = <Role>[
     name: 'Voyante',
     team: Team.village,
     copies: 1,
+    suggestionTier: 1,
     hasNightCall: true,
     wakeCondition: WakeCondition.everyNight,
     orderConstraints: [OrderConstraint.after('cupidon')],
@@ -64,6 +66,7 @@ const baseGameRoles = <Role>[
     name: 'Sorcière',
     team: Team.village,
     copies: 1,
+    suggestionTier: 1,
     hasNightCall: true,
     wakeCondition: WakeCondition.everyNight,
     orderConstraints: [OrderConstraint.after('loup_garou')],
@@ -86,6 +89,7 @@ const baseGameRoles = <Role>[
     name: 'Petite Fille',
     team: Team.village,
     copies: 1,
+    suggestionTier: 3,
     hasNightCall: false,
     ruleText:
         'Aucun appel : elle peut risquer un œil pendant l\'appel des '
@@ -96,6 +100,7 @@ const baseGameRoles = <Role>[
     name: 'Chasseur',
     team: Team.village,
     copies: 1,
+    suggestionTier: 2,
     hasNightCall: false,
     onDeath: DeathEffect.hunterShot,
     ruleText:
