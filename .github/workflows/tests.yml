@@ -1,0 +1,37 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - run: flutter pub get
+
+      # Drift/Riverpod/freezed codegen isn't committed (see .gitignore) - regenerate it before
+      # analyzing/testing, or nothing in lib/ compiles on a fresh checkout.
+      - run: dart run build_runner build --delete-conflicting-outputs
+
+      - run: flutter analyze
+      - run: flutter test
+
+      - run: dart pub get
+        working-directory: packages/rules_engine
+      - run: dart analyze
+        working-directory: packages/rules_engine
+      - run: dart test
+        working-directory: packages/rules_engine
