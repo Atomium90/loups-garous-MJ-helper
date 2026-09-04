@@ -424,6 +424,43 @@ void main() {
       expect(log, contains('La Voyante observe Di'));
       expect(stateOf(game.gameId).currentStep!.role.id, 'loup_garou');
     });
+
+    test('a Loup she noted counts against the dealt total, not as a Voleur bonus', () async {
+      final game = await _startedGame(repo, composition: composition); // loup_garou: 2
+      final ids = game.seatRowIds;
+      final n = await notifierFor(game.gameId);
+
+      await n.identifyRole('voyante', [ids[0]]);
+      await n.seerInspect(targetRowId: ids[3], notedRoleId: 'loup_garou'); // Di is a wolf
+
+      final s = stateOf(game.gameId);
+      // Di is one of the 2 dealt wolves, so only 1 is still to identify
+      expect(s.dealtHoldersKnown('loup_garou'), 1);
+      expect(s.voleurSwapInsFor('loup_garou'), isEmpty); // she's not the Voleur
+      expect(s.currentStepNeedsIdentify, isTrue); // one wolf still unknown
+    });
+  });
+
+  test('the Voleur swap-in survives a force-quit', () async {
+    const comp = {'voleur': 1, 'loup_garou': 2, 'sorciere': 1, 'villageois': 2};
+    final game = await _startedGame(
+      repo,
+      composition: comp,
+      reserveRoleIds: const ['loup_garou', 'chasseur'],
+    );
+    final ids = game.seatRowIds;
+    final n = await notifierFor(game.gameId);
+    await n.identifyRole('voleur', [ids[0]]);
+    await n.voleurSwap(voleurEngineId: '${ids[0]}', stolenRoleId: 'loup_garou');
+
+    final resumed = ProviderContainer(
+      overrides: [gameRepositoryProvider.overrideWithValue(repo)],
+    );
+    addTearDown(resumed.dispose);
+    final s = await resumed.read(gameSessionProvider(game.gameId).future);
+
+    expect(s.voleurSwapIn, (playerId: '${ids[0]}', roleId: 'loup_garou'));
+    expect(s.dealtHoldersKnown('loup_garou'), 0); // still just the bonus card
   });
 
   test('startGame does not itself seed the session (build does, lazily)', () async {

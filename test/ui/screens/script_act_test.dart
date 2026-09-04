@@ -180,8 +180,10 @@ void main() {
     await tester.tap(find.text('Continuer'));
     await tester.pumpAndSettle();
 
-    // advanced to the Loups, Bo's card recorded, journal line written
-    expect(find.text('Qui sont les Loups-Garous ?'), findsOneWidget);
+    // advanced to the Loups' step - Bo is a known wolf now, so it shows him
+    // locked and only asks for the one remaining dealt wolf
+    expect(find.text('Déjà connu grâce à la Voyante.'), findsOneWidget);
+    expect(find.text('0 sur 1'), findsOneWidget);
     expect((await repo.getRoster(id)).firstWhere((r) => r.name == 'Bo').roleId, 'loup_garou');
     await tester.tap(find.text('Journal'));
     await tester.pumpAndSettle();

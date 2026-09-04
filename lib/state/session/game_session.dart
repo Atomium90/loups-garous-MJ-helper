@@ -33,6 +33,12 @@ class GameSessionState {
   final List<String> reserveRoleIds;
   final List<PlayerRow> roster;
 
+  /// Set once the Voleur has taken a reserve card: which player he is and
+  /// which role he stole. He holds a *bonus* card, not one of the dealt ones,
+  /// so identify-step counting has to tell him apart from a real dealt holder
+  /// the Voyante just noted.
+  final ({String playerId, String roleId})? voleurSwapIn;
+
   const GameSessionState({
     required this.engine,
     required this.cursor,
@@ -41,6 +47,7 @@ class GameSessionState {
     required this.composition,
     required this.reserveRoleIds,
     required this.roster,
+    this.voleurSwapIn,
   });
 
   /// The step the cursor points at, or null once every step is done (the
@@ -60,22 +67,21 @@ class GameSessionState {
     return dealtHoldersKnown(step.role.id) < (composition[step.role.id] ?? 1);
   }
 
-  /// Players confirmed as one of a role's *dealt* cards. On night 1 an
-  /// already-alive holder of a night-calling role can only be the Voleur who
-  /// swapped into it - a bonus card on top of the deal, so he isn't counted.
+  /// How many confirmed holders of [roleId] are one of its *dealt* cards - the
+  /// Voleur's stolen card is a bonus, so it doesn't count against the deal.
   int dealtHoldersKnown(String roleId) {
-    final holders = engine.players.where((p) => p.roleId == roleId).toList();
-    final voleurSwapIns = engine.nightIndex == 1
-        ? holders.where((p) => p.alive).length
-        : 0;
-    return holders.length - voleurSwapIns;
+    final holders = engine.players.where((p) => p.roleId == roleId).length;
+    return holders - (voleurSwapIn?.roleId == roleId ? 1 : 0);
   }
 
-  /// The Voleur, once he has swapped into [roleId] (night 1 only) - shown as a
-  /// locked cell on that role's identify grid so the MJ sees the extra holder.
-  List<Player> voleurSwapInsFor(String roleId) => engine.nightIndex == 1
-      ? engine.alivePlayers.where((p) => p.roleId == roleId).toList(growable: false)
-      : const [];
+  /// The Voleur, once he has swapped into [roleId] - shown as a locked cell on
+  /// that role's identify grid so the MJ sees the extra holder.
+  List<Player> voleurSwapInsFor(String roleId) {
+    final swap = voleurSwapIn;
+    if (swap == null || swap.roleId != roleId) return const [];
+    final voleur = engine.playerById(swap.playerId);
+    return voleur.alive ? [voleur] : const [];
+  }
 
   /// The deaths the day recap reads aloud: everyone who died in the night just
   /// resolved. Engine-derived (each `Player` carries its cause and timing), so
@@ -129,6 +135,10 @@ class GameSession extends _$GameSession {
   static const _machine = GameStateMachine();
   final _registry = RoleRegistry.base;
 
+  /// Persisted in the session blob: which player the Voleur is and the reserve
+  /// card he took. Null until he swaps (or if he keeps his own card).
+  ({String playerId, String roleId})? _voleurSwapIn;
+
   @override
   Future<GameSessionState> build(int gameId) async {
     final repo = ref.read(gameRepositoryProvider);
@@ -159,6 +169,13 @@ class GameSession extends _$GameSession {
       day = decoded['day'] == null
           ? DaySnapshot.fresh
           : DaySnapshot.fromJson(decoded['day'] as Map<String, dynamic>);
+      final voleur = decoded['voleurSwapIn'] as Map<String, dynamic>?;
+      if (voleur != null) {
+        _voleurSwapIn = (
+          playerId: voleur['playerId'] as String,
+          roleId: voleur['roleId'] as String,
+        );
+      }
     }
 
     final tonight = buildNightScript(engine: engine, composition: composition);
@@ -170,6 +187,7 @@ class GameSession extends _$GameSession {
       composition: composition,
       reserveRoleIds: reserveRoleIds,
       roster: roster,
+      voleurSwapIn: _voleurSwapIn,
     );
   }
 
@@ -178,6 +196,8 @@ class GameSession extends _$GameSession {
       'engine': GameStateJson.encode(engine),
       'cursor': cursor.toJson(),
       'day': day.toJson(),
+      if (_voleurSwapIn case final v?)
+        'voleurSwapIn': {'playerId': v.playerId, 'roleId': v.roleId},
     });
     return ref.read(gameRepositoryProvider).saveSession(gameId: gameId, sessionJson: blob);
   }
@@ -291,6 +311,10 @@ class GameSession extends _$GameSession {
         playerRowIds: [int.parse(voleurEngineId)],
         roleId: stolenRoleId,
       );
+      // Remembered so identify-step counting can tell this bonus card apart
+      // from a dealt holder the Voyante just noted. Set before applyAction so
+      // its _persist writes it.
+      _voleurSwapIn = (playerId: voleurEngineId, roleId: stolenRoleId);
     }
     await applyAction(
       VoleurSwap(voleurPlayerId: voleurEngineId, stolenRoleId: stolenRoleId),
@@ -481,6 +505,7 @@ class GameSession extends _$GameSession {
         composition: prev.composition,
         reserveRoleIds: prev.reserveRoleIds,
         roster: roster ?? prev.roster,
+        voleurSwapIn: _voleurSwapIn,
       ),
     );
   }

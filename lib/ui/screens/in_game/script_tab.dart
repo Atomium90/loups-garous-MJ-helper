@@ -96,19 +96,22 @@ class _NightBody extends ConsumerWidget {
     }
     if (session.currentStepNeedsIdentify) {
       final roleId = step.role.id;
-      // A player already holding a role can't hold another - and a role whose
-      // count is partly known only needs its remaining dealt holders.
-      final deadKnown = session.engine.players
-          .where((p) => p.roleId == roleId && !p.alive)
-          .length;
-      final locked = session.voleurSwapInsFor(roleId);
+      // Holders already on record (the Voyante noted one, the Voleur stole the
+      // card) show pre-selected and locked; the count only asks for the dealt
+      // cards still missing - and never counts the Voleur's bonus card.
+      final locked = [
+        for (final p in session.engine.alivePlayers)
+          if (p.roleId == roleId) p,
+      ];
+      final voleurAmongLocked = session.voleurSwapIn?.roleId == roleId &&
+          locked.any((p) => p.id == session.voleurSwapIn!.playerId);
       final taken = {
         for (final r in session.roster)
           if (r.roleId != null) r.id,
       };
       return IdentifyStep(
         role: step.role,
-        count: (session.composition[roleId] ?? 1) - deadKnown,
+        count: (session.composition[roleId] ?? 1) - session.dealtHoldersKnown(roleId),
         candidates: [
           for (final p in session.engine.alivePlayers)
             if (!taken.contains(int.parse(p.id))) (rowId: int.parse(p.id), name: p.name),
@@ -116,7 +119,9 @@ class _NightBody extends ConsumerWidget {
         locked: [for (final p in locked) (rowId: int.parse(p.id), name: p.name)],
         lockedNote: locked.isEmpty
             ? null
-            : 'Le Voleur a volé une carte de ${step.role.name} : il compte en plus.',
+            : voleurAmongLocked
+            ? 'Le Voleur a volé une carte de ${step.role.name} : il compte en plus.'
+            : 'Déjà connu grâce à la Voyante.',
         onConfirm: (rowIds) => notifier.identifyRole(roleId, rowIds),
         onDefer: notifier.skipStep,
       );
