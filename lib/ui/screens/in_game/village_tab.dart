@@ -77,7 +77,7 @@ class _VillageBody extends StatelessWidget {
     }
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 24, AppSpacing.screen, AppSpacing.screen),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 16, AppSpacing.screen, AppSpacing.screen),
       children: [
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,

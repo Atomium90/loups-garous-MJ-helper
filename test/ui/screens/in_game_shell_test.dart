@@ -8,7 +8,10 @@ import 'package:loup_garou_mj/ui/screens/home/home_screen.dart';
 import 'package:loup_garou_mj/ui/screens/in_game/journal_tab.dart';
 import 'package:loup_garou_mj/ui/screens/in_game/script_tab.dart';
 import 'package:loup_garou_mj/ui/screens/in_game/village_tab.dart';
+import 'package:loup_garou_mj/ui/screens/settings/settings_screen.dart';
+import 'package:loup_garou_mj/ui/theme/app_icons.dart';
 import 'package:rules_engine/rules_engine.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../support/fake_game_repository.dart';
 import '../../support/pump_app.dart';
@@ -41,6 +44,8 @@ Future<int> _runningGame(FakeGameRepository repo) async {
 }
 
 void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   testWidgets('the shell shows the three tabs and switches branches', (tester) async {
     final repo = FakeGameRepository();
     final id = await _runningGame(repo);
@@ -110,5 +115,43 @@ void main() {
     await tester.tap(find.text('Nuit 1 · Voyante'));
     await tester.pumpAndSettle();
     expect(find.byType(ScriptTab), findsOneWidget);
+  });
+
+  testWidgets('the header home button returns to Accueil, game stays running', (tester) async {
+    final repo = FakeGameRepository();
+    final id = await _runningGame(repo);
+
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(repo)],
+      initialLocation: '/games/$id/game',
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(AppIcons.exitGame));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(HomeScreen), findsOneWidget);
+    expect((await repo.getGame(id))!.status.name, 'inProgress');
+  });
+
+  testWidgets('the header gear opens Réglages and back returns to the game', (tester) async {
+    final repo = FakeGameRepository();
+    final id = await _runningGame(repo);
+
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(repo)],
+      initialLocation: '/games/$id/game',
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(AppIcons.settings));
+    await tester.pumpAndSettle();
+    expect(find.byType(SettingsScreen), findsOneWidget);
+
+    await tester.tap(find.byIcon(AppIcons.back));
+    await tester.pumpAndSettle();
+    expect(find.byType(ScriptTab), findsOneWidget); // back in the game, not Accueil
   });
 }

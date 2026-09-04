@@ -13,7 +13,6 @@ import '../../utils/french_role_label.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/avatar_pick_cell.dart';
 import '../../widgets/player_avatar.dart';
-import 'widgets/aide_memoire_sheet.dart';
 import 'widgets/identify_step.dart';
 import 'widgets/simple_act.dart';
 import 'widgets/target_pick.dart';
@@ -73,7 +72,6 @@ class _NightBody extends ConsumerWidget {
           stepCount: session.tonight.steps.length,
           currentStep: session.cursor.stepIndex,
           showDots: session.engine.nightIndex == 1,
-          onHelp: () => showAideMemoireSheet(context, session.composition),
         ),
         if (step != null)
           Padding(
@@ -696,42 +694,29 @@ class _FinalizePrompt extends StatelessWidget {
   }
 }
 
+/// The night phase eyebrow, under the persistent shell header. Night 1 also
+/// carries the step-progress dots on the right.
 class _NightHeader extends StatelessWidget {
   const _NightHeader({
     required this.nightIndex,
     required this.stepCount,
     required this.currentStep,
     required this.showDots,
-    this.onHelp,
   });
 
   final int nightIndex;
   final int stepCount;
   final int currentStep;
-
-  /// Night 1 shows step-progress dots. Later nights show a `?` that opens the
-  /// aide-mémoire ([onHelp]) instead.
   final bool showDots;
-  final VoidCallback? onHelp;
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 22, AppSpacing.screen, 12),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 16, AppSpacing.screen, 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            spacing: 8,
-            children: [
-              Icon(AppIcons.night, size: 15, color: colors.textSecondary),
-              Text(
-                'Nuit $nightIndex',
-                style: context.typography.body.copyWith(color: colors.textSecondary),
-              ),
-            ],
-          ),
+          _PhaseEyebrow(icon: AppIcons.night, label: 'Nuit $nightIndex'),
           if (showDots)
             Row(
               spacing: 5,
@@ -745,23 +730,35 @@ class _NightHeader extends StatelessWidget {
                         : _DotState.future,
                   ),
               ],
-            )
-          else if (onHelp != null)
-            GestureDetector(
-              onTap: onHelp,
-              behavior: HitTestBehavior.opaque,
-              child: Container(
-                width: AppSizes.iconButtonDense,
-                height: AppSizes.iconButtonDense,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: colors.borderHairline),
-                ),
-                child: Icon(AppIcons.help, size: 15, color: colors.textSecondary),
-              ),
             ),
         ],
       ),
+    );
+  }
+}
+
+/// `moon`/`sun` at 14 + an uppercase 0.06em label - the phase line, demoted to
+/// an eyebrow now that the shell header carries the game's identity.
+class _PhaseEyebrow extends StatelessWidget {
+  const _PhaseEyebrow({required this.icon, required this.label, this.iconColor});
+
+  final IconData icon;
+  final String label;
+  final Color? iconColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      spacing: 7,
+      children: [
+        Icon(icon, size: 14, color: iconColor ?? colors.textSecondary),
+        Text(
+          label.toUpperCase(),
+          style: context.typography.sectionLabel.copyWith(color: colors.textTertiary),
+        ),
+      ],
     );
   }
 }
@@ -956,20 +953,15 @@ class _DayRecapBody extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.screen,
-        22,
+        16,
         AppSpacing.screen,
         AppSpacing.screen,
       ),
       children: [
-        Row(
-          spacing: 8,
-          children: [
-            Icon(AppIcons.day, size: 16, color: colors.warnText),
-            Text(
-              'Jour ${engine.nightIndex} se lève',
-              style: typography.body.copyWith(color: colors.textSecondary),
-            ),
-          ],
+        _PhaseEyebrow(
+          icon: AppIcons.day,
+          label: 'Jour ${engine.nightIndex} se lève',
+          iconColor: colors.warnText,
         ),
         const SizedBox(height: 14),
         Container(
@@ -1676,18 +1668,12 @@ class _DayEyebrow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 22, AppSpacing.screen, 12),
-      child: Row(
-        spacing: 8,
-        children: [
-          Icon(AppIcons.day, size: 15, color: colors.warnText),
-          Text(
-            label,
-            style: context.typography.body.copyWith(color: colors.textSecondary),
-          ),
-        ],
+      padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 16, AppSpacing.screen, 10),
+      child: _PhaseEyebrow(
+        icon: AppIcons.day,
+        label: label,
+        iconColor: context.colors.warnText,
       ),
     );
   }

@@ -108,7 +108,7 @@ void main() {
     await clearReveals(tester);
 
     // Day recap
-    expect(find.text('Jour 1 se lève'), findsOneWidget);
+    expect(find.text('JOUR 1 SE LÈVE'), findsOneWidget);
     expect(find.text('Cette nuit, le village a perdu'), findsOneWidget);
     expect(find.text('Victime des Loups'), findsOneWidget);
     expect(find.text('Di'), findsWidgets);

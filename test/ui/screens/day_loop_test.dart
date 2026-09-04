@@ -75,7 +75,7 @@ void main() {
     await playNight1(tester, victim: 'Ana'); // Ana is the identified Voyante -> no reveal
 
     // the day recap
-    expect(find.text('Jour 1 se lève'), findsOneWidget);
+    expect(find.text('JOUR 1 SE LÈVE'), findsOneWidget);
     expect(find.text('Victime des Loups'), findsOneWidget);
     await tap(tester, 'Élire le Capitaine');
 
@@ -95,7 +95,7 @@ void main() {
     // -> next night
     expect(find.text('Commencer la nuit 2'), findsOneWidget);
     await tap(tester, 'Commencer la nuit 2');
-    expect(find.text('Nuit 2'), findsOneWidget);
+    expect(find.text('NUIT 2'), findsOneWidget);
     // the Loups are already known - straight to the action, no re-identification
     expect(find.text('Qui les Loups dévorent-ils ?'), findsOneWidget);
     expect(find.text('Enregistrer'), findsNothing);
@@ -145,7 +145,7 @@ void main() {
     await tap(tester, 'Égalité, personne n\'est éliminé');
     await tap(tester, 'Commencer la nuit 2');
 
-    expect(find.text('Nuit 2'), findsOneWidget);
+    expect(find.text('NUIT 2'), findsOneWidget);
     await tester.tap(find.byIcon(AppIcons.help));
     await tester.pumpAndSettle();
     expect(find.text('Ordre de réveil'), findsOneWidget);

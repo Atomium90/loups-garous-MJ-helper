@@ -96,6 +96,6 @@ void main() {
 
     expect((await repository.getGame(id))!.status, GameStatus.inProgress);
     expect(find.byType(ScriptTab), findsOneWidget);
-    expect(find.text('Nuit 1'), findsOneWidget);
+    expect(find.text('NUIT 1'), findsOneWidget);
   });
 }
