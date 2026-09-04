@@ -29,6 +29,9 @@ abstract final class AppIcons {
   /// The back chevron on the setup screens.
   static const back = TablerIcons.chevronLeft;
 
+  /// The trailing "opens another screen" chevron on nav rows.
+  static const chevronRight = TablerIcons.chevronRight;
+
   /// The composition screen's "Compo complète" check.
   static const compositionComplete = TablerIcons.check;
 
@@ -43,6 +46,26 @@ abstract final class AppIcons {
 
   /// The disabled "Carnet d'habitués" row (the coming-soon address book).
   static const regulars = TablerIcons.bookmarks;
+
+  // --- Réglages ---
+
+  /// Apparence segmented control: follow the OS.
+  static const themeSystem = TablerIcons.deviceMobile;
+
+  /// Apparence segmented control: force light.
+  static const themeLight = TablerIcons.sun;
+
+  /// Apparence segmented control: force dark.
+  static const themeDark = TablerIcons.moon;
+
+  /// "Garder l'écran allumé" row.
+  static const screenOn = TablerIcons.bulb;
+
+  /// "Mes boîtes" row / banner.
+  static const boxes = TablerIcons.cards;
+
+  /// The in-game header's "quitter la partie" (back to Accueil, game stays running).
+  static const exitGame = TablerIcons.home;
 
   // --- in-game tab bar ---
 
