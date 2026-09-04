@@ -20,6 +20,13 @@ abstract class CompositionDraft with _$CompositionDraft {
     /// [roleCounts]; then it must hold exactly two role ids for the draft to
     /// be valid.
     @Default(<String>[]) List<String> reserveRoleIds,
+
+    /// The CompositionAdvisor's current pick for [playerCount] - not persisted (absent from
+    /// [fromGame], filled in by CompositionEditor.build right after). Recomputed only when
+    /// the player count changes or the MJ asks for another suggestion, never by editing
+    /// [roleCounts]/[reserveRoleIds] directly - otherwise ticking a chip would silently
+    /// reroll the suggestion shown on screen.
+    CompositionSuggestion? suggestion,
   }) = _CompositionDraft;
 
   factory CompositionDraft.fromGame(Game game) => CompositionDraft(
@@ -40,6 +47,18 @@ abstract class CompositionDraft with _$CompositionDraft {
   bool get reserveComplete => !hasVoleur || reserveRoleIds.length == 2;
 
   bool get isValid => remaining >= 0 && reserveComplete;
+
+  /// True once the displayed composition exactly matches [suggestion] - the "Suggestion" card
+  /// hides at that point (nothing left to apply). Compared by hand rather than pulling in
+  /// `package:collection` just for a map equality check the app doesn't otherwise need.
+  bool get suggestionApplied {
+    final target = suggestion?.roleCounts;
+    if (target == null || target.length != roleCounts.length) return false;
+    for (final entry in roleCounts.entries) {
+      if (target[entry.key] != entry.value) return false;
+    }
+    return true;
+  }
 
   /// Cards of [roleId] still free against the box's `copies`, given what the
   /// deal and the reserve already claim. [ignoreReserveSlot] excludes one

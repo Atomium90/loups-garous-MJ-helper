@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,12 +8,26 @@ import 'package:loup_garou_mj/data/database/app_database.dart';
 import 'package:loup_garou_mj/data/models/game_status.dart';
 import 'package:loup_garou_mj/data/repositories/drift_game_repository.dart';
 import 'package:loup_garou_mj/data/repositories/game_not_found_exception.dart';
+import 'package:loup_garou_mj/state/composition/composition_advisor_provider.dart';
 import 'package:loup_garou_mj/state/composition/composition_editor_notifier.dart';
 import 'package:loup_garou_mj/state/providers/game_provider.dart';
 import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
 import 'package:rules_engine/rules_engine.dart';
 
 import '../../support/fake_game_repository.dart';
+
+/// A registry shaped like the real base game (a wolf role + a villager filler), plus one
+/// oversized tier - the base box alone never has more candidates than a tier's target slots,
+/// so this is what actually exercises rerollSuggestion's shuffle-and-cut path.
+RoleRegistry _registryWithSurplusTier() => const RoleRegistry([
+  Role(id: 'loup_garou', name: 'Loup', team: Team.werewolves, copies: 4, hasNightCall: true, ruleText: 't'),
+  Role(id: 'villageois', name: 'Villageois', team: Team.village, copies: 20, hasNightCall: false, ruleText: 't'),
+  Role(id: 'a', name: 'A', team: Team.village, suggestionTier: 1, hasNightCall: false, ruleText: 't'),
+  Role(id: 'b', name: 'B', team: Team.village, suggestionTier: 2, hasNightCall: false, ruleText: 't'),
+  Role(id: 'c', name: 'C', team: Team.village, suggestionTier: 2, hasNightCall: false, ruleText: 't'),
+  Role(id: 'd', name: 'D', team: Team.village, suggestionTier: 2, hasNightCall: false, ruleText: 't'),
+  Role(id: 'e', name: 'E', team: Team.village, suggestionTier: 2, hasNightCall: false, ruleText: 't'),
+]);
 
 void main() {
   group('CompositionEditor with a fake repository', () {
@@ -22,7 +37,14 @@ void main() {
     setUp(() {
       fakeRepository = FakeGameRepository();
       container = ProviderContainer(
-        overrides: [gameRepositoryProvider.overrideWithValue(fakeRepository)],
+        overrides: [
+          gameRepositoryProvider.overrideWithValue(fakeRepository),
+          // Seeded so tests reading `suggestion` get a stable pick (moot for the base registry
+          // alone: see composition_advisor_test.dart - it never has a surplus tier to shuffle).
+          compositionAdvisorProvider.overrideWithValue(
+            CompositionAdvisor(RoleRegistry.base, random: Random(1)),
+          ),
+        ],
       );
     });
 
@@ -71,6 +93,54 @@ void main() {
       final notifier = await notifierFor(id);
       notifier.setPlayerCount(-1);
       expect(container.read(compositionEditorProvider(id)).value?.playerCount, 8);
+    });
+
+    test('build seeds a suggestion for the initial player count', () async {
+      final id = await fakeRepository.createGame(initialPlayerCount: 8);
+      final draft = await container.read(compositionEditorProvider(id).future);
+      final expected = CompositionAdvisor(RoleRegistry.base, random: Random(1)).suggest(8);
+      expect(draft.suggestion?.roleCounts, expected.roleCounts);
+    });
+
+    test('setPlayerCount recomputes the suggestion for the new count', () async {
+      final id = await fakeRepository.createGame(initialPlayerCount: 8);
+      final notifier = await notifierFor(id);
+      notifier.setPlayerCount(12);
+      final suggestion = container.read(compositionEditorProvider(id)).value!.suggestion!;
+      expect(suggestion.roleCounts.values.fold(0, (a, b) => a + b), 12);
+    });
+
+    test('toggling a role does not reroll the suggestion', () async {
+      final id = await fakeRepository.createGame(initialPlayerCount: 8);
+      final notifier = await notifierFor(id);
+      final before = container.read(compositionEditorProvider(id)).value!.suggestion;
+      notifier.toggleRole('voyante');
+      final after = container.read(compositionEditorProvider(id)).value!.suggestion;
+      expect(after!.roleCounts, before!.roleCounts);
+    });
+
+    test('applySuggestion copies the suggestion and clears a stale reserve', () async {
+      final id = await fakeRepository.createGame(initialPlayerCount: 8);
+      final notifier = await notifierFor(id);
+      notifier.toggleRole('voleur');
+      notifier.setReserveRole(0, 'chasseur');
+      notifier.setReserveRole(1, 'cupidon');
+
+      notifier.applySuggestion();
+      final draft = container.read(compositionEditorProvider(id)).value!;
+      expect(draft.roleCounts, draft.suggestion!.roleCounts);
+      expect(draft.reserveRoleIds, isEmpty);
+      expect(draft.suggestionApplied, isTrue);
+    });
+
+    test('suggestionApplied turns false again once the draft diverges', () async {
+      final id = await fakeRepository.createGame(initialPlayerCount: 8);
+      final notifier = await notifierFor(id);
+      notifier.applySuggestion();
+      expect(container.read(compositionEditorProvider(id)).value!.suggestionApplied, isTrue);
+
+      notifier.toggleRole('petite_fille');
+      expect(container.read(compositionEditorProvider(id)).value!.suggestionApplied, isFalse);
     });
 
     test('toggleRole adds a role at count 1 when absent', () async {
@@ -263,6 +333,36 @@ void main() {
       // riverpod 3.4.2 timing issue in this test environment (disposing
       // mid-emission surfaces an internal StateError instead of settling
       // cleanly), unrelated to anything commit()/invalidate() does.
+    });
+  });
+
+  group('CompositionEditor.rerollSuggestion', () {
+    test('can vary the pick once the pool has surplus candidates', () async {
+      final fakeRepository = FakeGameRepository();
+      final container = ProviderContainer(
+        overrides: [
+          gameRepositoryProvider.overrideWithValue(fakeRepository),
+          compositionAdvisorProvider.overrideWithValue(
+            CompositionAdvisor(_registryWithSurplusTier(), random: Random(7)),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final id = await fakeRepository.createGame(initialPlayerCount: 8);
+      await container.read(compositionEditorProvider(id).future);
+      final notifier = container.read(compositionEditorProvider(id).notifier);
+
+      final outcomes = <Set<String>>{};
+      for (var i = 0; i < 20; i++) {
+        notifier.rerollSuggestion();
+        final counts = container.read(compositionEditorProvider(id)).value!.suggestion!.roleCounts;
+        outcomes.add({'b', 'c', 'd', 'e'}.where(counts.containsKey).toSet());
+      }
+      // With a 4-candidate tier and only 3 slots (wolves 2, specials target 4, 1 taken by
+      // tier 1's "a"), seeing a single outcome across 20 rerolls would mean the shuffle isn't
+      // doing anything - that's the regression this guards against.
+      expect(outcomes.length, greaterThan(1));
     });
   });
 }

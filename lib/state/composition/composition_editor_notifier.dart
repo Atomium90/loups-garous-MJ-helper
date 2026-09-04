@@ -1,9 +1,11 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:rules_engine/rules_engine.dart';
 
 import '../../data/repositories/game_not_found_exception.dart';
 import '../providers/game_list_provider.dart';
 import '../providers/game_provider.dart';
 import '../providers/game_repository_provider.dart';
+import 'composition_advisor_provider.dart';
 import 'composition_draft.dart';
 
 part 'composition_editor_notifier.g.dart';
@@ -14,14 +16,38 @@ class CompositionEditor extends _$CompositionEditor {
   Future<CompositionDraft> build(int gameId) async {
     final game = await ref.watch(gameProvider(gameId).future);
     if (game == null) throw GameNotFoundException(gameId);
-    return CompositionDraft.fromGame(game);
+    final draft = CompositionDraft.fromGame(game);
+    return draft.copyWith(suggestion: _suggestionFor(draft.playerCount));
   }
 
   void setPlayerCount(int count) {
     final draft = state.value;
     if (draft == null || count < 0) return;
-    state = AsyncData(draft.copyWith(playerCount: count));
+    state = AsyncData(
+      draft.copyWith(playerCount: count, suggestion: _suggestionFor(count)),
+    );
   }
+
+  /// Repicks a suggestion for the same player count, without touching the rest of the draft -
+  /// the "Autre suggestion" button.
+  void rerollSuggestion() {
+    final draft = state.value;
+    if (draft == null) return;
+    state = AsyncData(draft.copyWith(suggestion: _suggestionFor(draft.playerCount)));
+  }
+
+  /// Replaces the draft's roles with the current suggestion in one tap. Goes through
+  /// [_withCounts] like every other role edit, so a stale Voleur reserve still gets cleared -
+  /// moot today since a suggestion never includes the Voleur, but one less special case.
+  void applySuggestion() {
+    final draft = state.value;
+    final suggestion = draft?.suggestion;
+    if (draft == null || suggestion == null) return;
+    state = AsyncData(_withCounts(draft, Map<String, int>.from(suggestion.roleCounts)));
+  }
+
+  CompositionSuggestion _suggestionFor(int playerCount) =>
+      ref.read(compositionAdvisorProvider).suggest(playerCount);
 
   void toggleRole(String roleId) {
     final draft = state.value;
