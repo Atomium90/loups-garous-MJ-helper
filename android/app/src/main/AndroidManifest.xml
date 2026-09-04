@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="loup_garou_mj"
+        android:label="Loup Garou MJ"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

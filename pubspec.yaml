@@ -35,3 +35,26 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/icon/
+    - assets/splash/
+
+# Placeholder art - swap the PNGs in assets/ and re-run:
+#   dart run flutter_launcher_icons
+#   dart run flutter_native_splash:create
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/app_icon.png"
+  adaptive_icon_background: "#1D4ED8"
+  adaptive_icon_foreground: "assets/icon/app_icon_foreground.png"
+  min_sdk_android: 21
+
+flutter_native_splash:
+  color: "#F5F4EF"
+  color_dark: "#1A1A18"
+  image: "assets/splash/splash_logo.png"
+  android_12:
+    image: "assets/splash/splash_logo.png"
+    color: "#F5F4EF"
+    color_dark: "#1A1A18"
