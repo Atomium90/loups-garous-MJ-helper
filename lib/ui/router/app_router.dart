@@ -8,6 +8,8 @@ import '../screens/home/home_screen.dart';
 import '../screens/in_game/game_journal_screen.dart';
 import '../screens/in_game/in_game_shell.dart';
 import '../screens/players/players_screen.dart';
+import '../screens/settings/boxes_screen.dart';
+import '../screens/settings/settings_screen.dart';
 
 /// Riverpod-wrapped (not a bare top-level `final`) so it's override-able in tests, consistent
 /// with the rest of the app routing everything through Riverpod.
@@ -60,6 +62,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/games/:id/journal',
         name: 'journal',
         builder: (_, state) => GameJournalScreen(gameId: idOf(state)),
+      ),
+      // Pushed (never `go`) from Accueil or the in-game header, so `pop`
+      // returns to whichever opened it.
+      GoRoute(
+        path: '/settings',
+        name: 'settings',
+        builder: (_, _) => const SettingsScreen(),
+        routes: [
+          GoRoute(
+            path: 'boxes',
+            name: 'boxes',
+            builder: (_, _) => const BoxesScreen(),
+          ),
+        ],
       ),
     ],
   );

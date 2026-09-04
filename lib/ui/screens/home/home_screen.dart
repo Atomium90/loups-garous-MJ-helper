@@ -90,9 +90,10 @@ class _Header extends ConsumerWidget {
           Row(
             spacing: 8,
             children: [
-              // Réglages isn't built this session - a normal-looking button that doesn't
-              // respond yet, not the inert visual (that's reserved for "needs more input").
-              AppIconButton(icon: AppIcons.settings, onTap: null),
+              AppIconButton(
+                icon: AppIcons.settings,
+                onTap: () => context.push('/settings'),
+              ),
               if (showNewGameButton)
                 AppIconButton(
                   icon: AppIcons.newGame,
