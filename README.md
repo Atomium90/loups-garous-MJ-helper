@@ -43,12 +43,18 @@ finished game can be reopened from Accueil for its recap.
   A finished game keeps its `winner` and its snapshot for the recap.
 - `lib/state/`: Riverpod providers. `GameSession` is the orchestrator — it loads or seeds a
   game's `GameState`, applies MJ-reported facts through the pure `GameStateMachine`, tracks the
-  day stage, and persists. Plus draft-then-commit editing of the composition and the roster.
+  day stage, and persists. Plus draft-then-commit editing of the composition and the roster, and
+  `settings/` — the theme override and two in-game toggles, persisted with `shared_preferences`.
 - `lib/ui/`: design-token system (`theme/`, mapped from the design handoff's colour/typography/
   spacing tables), a reusable component layer (`widgets/`), `go_router` navigation (`router/`),
   and the screens (`screens/`).
 
-Also not built: the regulars address book, Réglages / Mes boîtes, and the extension boxes.
+Réglages (theme, keep-screen-awake, aide-mémoire visibility) is reachable from the Accueil gear
+and from a persistent 46px header inside a game; that header's home button leaves the game
+running and returns to Accueil. Mes boîtes is informational for now — the base box, extensions
+listed as coming soon.
+
+Also not built: the regulars address book and the extension boxes.
 
 ## Architecture
 
@@ -91,3 +97,21 @@ cd packages/rules_engine
 dart pub get
 dart test
 ```
+
+### App icon & splash
+
+`assets/icon/` and `assets/splash/` hold placeholder art. To use real art, replace the PNGs
+(same names, same sizes — see the comments in `pubspec.yaml`), then regenerate the per-platform
+files:
+
+```bash
+dart run flutter_launcher_icons
+dart run flutter_native_splash:create
+```
+
+- `assets/icon/app_icon.png` — 1024×1024, opaque (iOS + Android fallback)
+- `assets/icon/app_icon_foreground.png` — 1024×1024, transparent, mark inside the centre ~66%
+  (Android adaptive foreground; the background is the `#1D4ED8` colour in the config)
+- `assets/splash/splash_logo.png` — centred logo, transparent
+
+The generated files under `android/` and `ios/` are committed.
