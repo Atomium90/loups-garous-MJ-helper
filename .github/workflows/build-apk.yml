@@ -1,0 +1,65 @@
+name: Build APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: build-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - run: flutter pub get
+
+      # Drift/Riverpod/freezed codegen isn't committed (see .gitignore) - regenerate it before
+      # building, or the app doesn't compile on a fresh checkout.
+      - run: dart run build_runner build --delete-conflicting-outputs
+
+      # Signed with the Flutter template's default debug key for now (see
+      # android/app/build.gradle.kts) - installable, not a real store release. A proper
+      # keystore is a separate, later decision (tied to the final applicationId).
+      - run: flutter build apk --release
+
+      - name: Rename APK
+        run: mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/loup-garou-mj.apk
+
+      - name: Get short SHA
+        id: sha
+        run: echo "short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: "Loup Garou MJ — build #${{ github.run_number }}"
+          body: |
+            APK de test (signature debug, pas encore une release store).
+
+            **Commit :** ${{ steps.sha.outputs.short }}
+
+            ### Installation
+            Téléchargez l'APK ci-dessous et installez-le sur un téléphone Android
+            (autoriser « Sources inconnues » si demandé).
+          files: build/app/outputs/flutter-apk/loup-garou-mj.apk
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
