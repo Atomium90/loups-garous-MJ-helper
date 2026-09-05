@@ -10,6 +10,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
+import '../../utils/french_role_label.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/app_chip.dart';
 import '../../widgets/app_stepper.dart';
@@ -88,6 +89,7 @@ class _CompositionBody extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                _SuggestionCard(draft: draft, notifier: notifier),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Text('Village', style: typography.meta.copyWith(color: colors.textTertiary)),
@@ -194,6 +196,94 @@ class _PlayerCountRow extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// The advisor's pick for the current player count. Hidden once nothing's left to apply -
+/// either the draft already matches it, or no suggestion has been computed yet.
+class _SuggestionCard extends StatelessWidget {
+  const _SuggestionCard({required this.draft, required this.notifier});
+
+  final CompositionDraft draft;
+  final CompositionEditor notifier;
+
+  @override
+  Widget build(BuildContext context) {
+    final suggestion = draft.suggestion;
+    if (suggestion == null || draft.suggestionApplied) return const SizedBox.shrink();
+
+    final colors = context.colors;
+    final typography = context.typography;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.accentBg,
+        borderRadius: BorderRadius.circular(AppRadii.button),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(AppIcons.suggestion, size: 18, color: colors.accentText),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Suggestion pour ${draft.playerCount} joueurs',
+                      style: typography.rowLabel.copyWith(color: colors.accentText),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      frenchDeckLine(suggestion.roleCounts, RoleRegistry.base),
+                      style: typography.counter.copyWith(color: colors.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          _SuggestionApplyButton(onTap: notifier.applySuggestion),
+        ],
+      ),
+    );
+  }
+}
+
+/// The small white pill CTA inside the (accent-tinted) suggestion card - `AppButton` doesn't
+/// fit here, it's always full-width.
+class _SuggestionApplyButton extends StatelessWidget {
+  const _SuggestionApplyButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final typography = context.typography;
+    return Material(
+      color: colors.bgScreen,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.button),
+        side: BorderSide(color: colors.borderControl),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadii.button),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          child: Text(
+            'Utiliser cette compo',
+            style: typography.chipLabel.copyWith(color: colors.textPrimary),
+          ),
+        ),
       ),
     );
   }

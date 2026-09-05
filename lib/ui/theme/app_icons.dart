@@ -35,6 +35,9 @@ abstract final class AppIcons {
   /// The composition screen's "Compo complète" check.
   static const compositionComplete = TablerIcons.check;
 
+  /// The composition screen's "Suggestion pour N joueurs" card.
+  static const suggestion = TablerIcons.sparkles;
+
   /// Clear a filled slot back to empty (the Voleur reserve cards).
   static const removeReserve = TablerIcons.x;
 
