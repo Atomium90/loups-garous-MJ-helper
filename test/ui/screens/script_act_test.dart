@@ -289,6 +289,46 @@ void main() {
     );
   });
 
+  testWidgets(
+    'a Voleur who steals a Loup is no longer offered as a Voyante note option',
+    (tester) async {
+      final id = await _startedGame(
+        repo,
+        composition: const {
+          'voleur': 1,
+          'voyante': 1,
+          'loup_garou': 2,
+          'villageois': 2,
+        },
+        reserveRoleIds: const ['loup_garou', 'chasseur'],
+      );
+      await pump(tester, id);
+
+      await identify(tester, ['Ana']); // Voleur = Ana
+      await tester.tap(find.text('Loup-Garou'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Le Voleur prend le Loup-Garou'));
+      await tester.pumpAndSettle();
+
+      await identify(tester, ['Bo']); // Voyante = Bo
+      expect(find.text('Qui la Voyante observe-t-elle ?'), findsOneWidget);
+
+      // Cy's card isn't on record -> the note picker opens.
+      await tapName(tester, 'Cy');
+      await tester.tap(find.text('La Voyante observe Cy'));
+      await tester.pumpAndSettle();
+      expect(find.text('La carte de Cy'), findsOneWidget);
+
+      // The one Voleur card was already spent by Ana's swap into Loup-Garou - it must not
+      // be offered again, even though no roster entry carries roleId 'voleur' any more.
+      expect(find.text('Voleur'), findsNothing);
+      // The still-undealt roles remain offered: 1 more Loup-Garou (Ana took the other) and
+      // both Villageois.
+      expect(find.text('Loup-Garou'), findsOneWidget);
+      expect(find.text('Villageois'), findsOneWidget);
+    },
+  );
+
   testWidgets('the Witch can poison someone (sub-picker returns to the potion view)', (
     tester,
   ) async {

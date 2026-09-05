@@ -918,6 +918,14 @@ List<({String roleId, int remaining})> unassignedRoles(GameSessionState session)
     final id = r.roleId;
     if (id != null) assigned[id] = (assigned[id] ?? 0) + 1;
   }
+  // The Voleur's own card is spent the moment he swaps into a reserve role - his roster entry
+  // then carries the stolen role's id, not 'voleur', so the composition's one 'voleur' slot
+  // would otherwise look perpetually unassigned. Keeping his own card needs no such fix:
+  // voleurSwapIn stays null then, and the roster entry still carries 'voleur', already
+  // counted above.
+  if (session.voleurSwapIn != null) {
+    assigned['voleur'] = (assigned['voleur'] ?? 0) + 1;
+  }
   return [
     for (final e in session.composition.entries)
       if (e.value - (assigned[e.key] ?? 0) > 0)
