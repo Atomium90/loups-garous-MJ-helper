@@ -1,5 +1,8 @@
 # Loup Garou MJ
 
+[![Tests](https://github.com/Atomium90/loups-garous-MJ-helper/actions/workflows/tests.yml/badge.svg)](https://github.com/Atomium90/loups-garous-MJ-helper/actions/workflows/tests.yml)
+[![Build APK](https://github.com/Atomium90/loups-garous-MJ-helper/actions/workflows/build-apk.yml/badge.svg)](https://github.com/Atomium90/loups-garous-MJ-helper/actions/workflows/build-apk.yml)
+
 A companion app for the Game Master (MJ) of **Les Loups-Garous de Thiercelieux** (the French
 werewolf/mafia party game). The physical board game stays central: players and the MJ play face
 to face, the app only helps compose a game, run the night script in the right order, and keep a
@@ -14,7 +17,9 @@ cycles to a declared winner and its recap, resuming exactly where it left off af
 force-quit. All 8 base-game roles are now fully assisted, the Seer and the Voleur included:
 the Seer picks a player and the MJ notes the card if it isn't on record yet; the Voleur's two
 reserve cards are chosen at composition time (spelled out before night 1) and offered as his
-swap, with the stolen role folded into that night's script and the following ones.
+swap, with the stolen role folded into that night's script and the following ones. The
+composition screen also suggests a full composition for the chosen player count, one tap to
+apply it.
 
 The rules engine (pure Dart, `packages/rules_engine`) is complete for the base game:
 
@@ -29,6 +34,9 @@ The rules engine (pure Dart, `packages/rules_engine`) is complete for the base g
   carries how and when they died.
 - `GameStateJson`: encode/decode a `GameState` to plain maps — including a paused death
   cascade — for the app's snapshot persistence
+- `CompositionAdvisor`: suggests a full composition for a player count from role metadata
+  alone (a small wolf-count band table, plus each role's declared "suggestion tier") — no
+  per-player-count table to hand-maintain as roles are added
 
 The Flutter app (`lib/`) drives the loop: Accueil → Composition → Les joueurs → Avant la
 nuit 1 → the in-game Script / Village / Journal shell. The MJ identifies each role as it wakes,
@@ -97,6 +105,19 @@ cd packages/rules_engine
 dart pub get
 dart test
 ```
+
+### CI
+
+Two GitHub Actions workflows, `.github/workflows/`:
+
+- **`tests.yml`** — on every push/PR to `main`: `flutter analyze`, `flutter test`, and
+  `dart test` for `packages/rules_engine`. Both regenerate the Drift/Riverpod/freezed code
+  first (`build_runner`), same as the local `dart run build_runner build` step above — it isn't
+  committed to git.
+- **`build-apk.yml`** — on push to `main` and on manual dispatch (the Actions tab): builds a
+  release APK and publishes it as a GitHub Release tagged `build-N`, ready to download and
+  sideload on a phone. Signed with Flutter's default debug key for now (see the `TODO` in
+  `android/app/build.gradle.kts`) — installable for testing, not a store release.
 
 ### App icon & splash
 
