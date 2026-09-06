@@ -112,6 +112,8 @@ void main() {
     expect(find.text('Cette nuit, le village a perdu'), findsOneWidget);
     expect(find.text('Victime des Loups'), findsOneWidget);
     expect(find.text('Di'), findsWidgets);
+    // Di's card was never noted -> the recap says so rather than staying silent.
+    expect(find.text('Rôle non révélé'), findsOneWidget);
 
     final roster = await repo.getRoster(id);
     expect(roster.firstWhere((r) => r.name == 'Di').roleId, isNull); // never identified

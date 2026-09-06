@@ -989,33 +989,10 @@ class _DayRecapBody extends StatelessWidget {
               ),
               for (final death in deaths) ...[
                 const SizedBox(height: 12),
-                Row(
-                  spacing: 12,
-                  children: [
-                    PlayerAvatar(
-                      name: death.name,
-                      size: AppSizes.avatarDayRecap,
-                      fillColor: colors.bgScreen,
-                    ),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            death.name,
-                            style: typography.rowLabel.copyWith(
-                              fontSize: 16,
-                              color: colors.textPrimary,
-                            ),
-                          ),
-                          Text(
-                            frenchDeathCauseLabel(death.causeOfDeath!),
-                            style: typography.meta.copyWith(color: colors.textSecondary),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                _RecapDeathRow(
+                  name: death.name,
+                  roleId: session.rosterRoleId(death.id),
+                  cause: frenchDeathCauseLabel(death.causeOfDeath!),
                 ),
               ],
               if (saved != null) ...[
@@ -1040,6 +1017,67 @@ class _DayRecapBody extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         AppButton(label: ctaLabel, onPressed: onAdvance),
+      ],
+    );
+  }
+}
+
+/// One death in the day recap: avatar, name, the card that's turned over (the
+/// point the MJ reads to the table), then the cause underneath.
+class _RecapDeathRow extends StatelessWidget {
+  const _RecapDeathRow({required this.name, required this.roleId, required this.cause});
+
+  final String name;
+  final String? roleId;
+  final String cause;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final typography = context.typography;
+    final id = roleId;
+    final role = id == null ? null : RoleRegistry.base.byIdOrNull(id);
+    return Row(
+      spacing: 12,
+      children: [
+        PlayerAvatar(name: name, size: AppSizes.avatarDayRecap, fillColor: colors.bgScreen),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                name,
+                style: typography.rowLabel.copyWith(fontSize: 16, color: colors.textPrimary),
+              ),
+              const SizedBox(height: 2),
+              Row(
+                spacing: 5,
+                children: [
+                  Icon(
+                    role == null ? AppIcons.help : _roleIcon(role.id),
+                    size: 13,
+                    color: colors.textPrimary,
+                  ),
+                  Flexible(
+                    child: Text(
+                      role == null
+                          ? 'Rôle non révélé'
+                          : 'Était ${roleWithArticle(role.id, RoleRegistry.base)}',
+                      style: typography.meta.copyWith(
+                        color: colors.textPrimary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Text(
+                cause,
+                style: typography.counter.copyWith(color: colors.textTertiary),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -1487,14 +1525,25 @@ class _LoversAckPanel extends StatelessWidget {
     final colors = context.colors;
     final typography = context.typography;
     final lover = session.engine.playerById(session.day.loversAck.first);
+    final partnerId = session.engine.lovers?.partnerOf(lover.id);
+    final partnerName = partnerId == null
+        ? null
+        : session.engine.playerById(partnerId).name;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const _SheetHandle(),
-        _DeadHeader(name: lover.name, subtitle: 'Meurt de chagrin'),
+        _DeadHeader(
+          name: lover.name,
+          subtitle: partnerName == null ? 'Meurt de chagrin' : 'Amoureux de $partnerName',
+        ),
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 16, AppSpacing.screen, 0),
+          child: _RevealedCard(roleId: session.rosterRoleId(lover.id)),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 12, AppSpacing.screen, 0),
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -1502,7 +1551,10 @@ class _LoversAckPanel extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppRadii.button),
             ),
             child: Text(
-              "L'autre amoureux ne survit pas à sa disparition. Annoncez-le au village.",
+              partnerName == null
+                  ? "L'autre amoureux ne survit pas à sa disparition. Annoncez-le au village."
+                  : "$partnerName n'est plus, et les amoureux de Cupidon partent ensemble. "
+                        'Annoncez la mort de ${lover.name} au village.',
               style: typography.meta.copyWith(color: colors.textSecondary, height: 1.5),
             ),
           ),

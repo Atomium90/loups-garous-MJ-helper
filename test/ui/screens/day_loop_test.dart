@@ -74,9 +74,10 @@ void main() {
     await pump(tester, id);
     await playNight1(tester, victim: 'Ana'); // Ana is the identified Voyante -> no reveal
 
-    // the day recap
+    // the day recap - Ana was the identified Voyante, so her card is spelled out
     expect(find.text('JOUR 1 SE LÈVE'), findsOneWidget);
     expect(find.text('Victime des Loups'), findsOneWidget);
+    expect(find.text('Était la Voyante'), findsOneWidget);
     await tap(tester, 'Élire le Capitaine');
 
     // the captain election
@@ -129,6 +130,54 @@ void main() {
 
     await tap(tester, 'Journal');
     expect(find.text('Cupidon unit Bo et Cy'), findsOneWidget);
+  });
+
+  testWidgets('a lover who dies of grief: the panel names the couple and the card', (tester) async {
+    final id = await _startedGame(repo, const {
+      'loup_garou': 2,
+      'cupidon': 1,
+      'voyante': 1,
+      'villageois': 2,
+    });
+    await pump(tester, id);
+
+    // wake order: Cupidon, Voyante, Loups
+    await identify(tester, ['Ana']); // Cupidon pairs the two villagers
+    await tester.tap(find.text('Di'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ed'));
+    await tester.pumpAndSettle();
+    await tap(tester, 'Cupidon unit Di et Ed');
+
+    // Voyante = Fi, notes Ed as a Villageois so his card is on record
+    await identify(tester, ['Fi']);
+    await tester.tap(find.text('Ed'));
+    await tester.pumpAndSettle();
+    await tap(tester, 'La Voyante observe Ed');
+    await tap(tester, 'Villageois');
+    await tap(tester, 'Ed est le Villageois');
+    await tap(tester, 'Continuer');
+
+    // Loups eat Di, the other lover
+    await identify(tester, ['Bo', 'Cy']);
+    await tester.tap(find.text('Di'));
+    await tester.pumpAndSettle();
+    await tap(tester, 'Les Loups désignent Di');
+    await tap(tester, 'Résoudre la nuit');
+
+    // Di was never identified -> reveal panel; leave her card unnoted
+    await tap(tester, 'Je ne note pas');
+
+    // the lovers-ack panel for Ed names the partner and turns his card over
+    expect(find.text('Amoureux de Di'), findsOneWidget);
+    expect(find.text('Sa carte'), findsOneWidget);
+    expect(find.textContaining("Di n'est plus"), findsOneWidget);
+    await tap(tester, 'Compris');
+
+    // day recap: Ed's card spelled out, Di's marked unrevealed
+    expect(find.text('JOUR 1 SE LÈVE'), findsOneWidget);
+    expect(find.text('Était le Villageois'), findsOneWidget);
+    expect(find.text('Rôle non révélé'), findsOneWidget);
   });
 
   testWidgets('the aide-memoire opens from the night header on later nights', (tester) async {
