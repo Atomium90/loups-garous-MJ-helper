@@ -83,6 +83,18 @@ class GameSessionState {
     return voleur.alive ? [voleur] : const [];
   }
 
+  /// The confirmed card for [playerId] (an engine id), or null when the MJ
+  /// never recorded it. The roster is the source of truth: the engine keeps a
+  /// `villageois` placeholder for any player not yet identified, so reading
+  /// `engine.playerById(id).roleId` for this would silently show "Villageois".
+  String? rosterRoleId(String playerId) {
+    final id = int.tryParse(playerId);
+    for (final r in roster) {
+      if (r.id == id) return r.roleId;
+    }
+    return null;
+  }
+
   /// The deaths the day recap reads aloud: everyone who died in the night just
   /// resolved. Engine-derived (each `Player` carries its cause and timing), so
   /// it survives a force-quit onto the recap.

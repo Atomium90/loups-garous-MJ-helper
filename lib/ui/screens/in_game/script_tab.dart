@@ -1379,7 +1379,7 @@ class _HunterShotPanel extends StatelessWidget {
         _DeadHeader(name: hunter.name, subtitle: 'Éliminé nuit ${hunter.diedOnNight}'),
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 16, AppSpacing.screen, 0),
-          child: _RevealedCard(roleId: hunter.roleId),
+          child: _RevealedCard(roleId: session.rosterRoleId(deadHunterId)),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 12, AppSpacing.screen, 0),
@@ -1569,14 +1569,16 @@ class _DeadHeader extends StatelessWidget {
 class _RevealedCard extends StatelessWidget {
   const _RevealedCard({required this.roleId});
 
-  final String roleId;
+  /// Null when the MJ never recorded this player's card.
+  final String? roleId;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final typography = context.typography;
-    final role = RoleRegistry.base.byId(roleId);
-    final wolves = role.team == Team.werewolves;
+    final id = roleId;
+    final role = id == null ? null : RoleRegistry.base.byIdOrNull(id);
+    final wolves = role?.team == Team.werewolves;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -1590,7 +1592,11 @@ class _RevealedCard extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(color: colors.bgScreen, shape: BoxShape.circle),
-            child: Icon(_roleIcon(roleId), size: 18, color: colors.textPrimary),
+            child: Icon(
+              role == null ? AppIcons.help : _roleIcon(role.id),
+              size: 18,
+              color: colors.textPrimary,
+            ),
           ),
           Expanded(
             child: Column(
@@ -1598,25 +1604,26 @@ class _RevealedCard extends StatelessWidget {
               children: [
                 Text('Sa carte', style: typography.counter.copyWith(color: colors.textTertiary)),
                 Text(
-                  role.name,
+                  role?.name ?? 'Rôle non révélé',
                   style: typography.rowLabel.copyWith(color: colors.textPrimary),
                 ),
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-            decoration: BoxDecoration(
-              color: wolves ? colors.accentBg : colors.bgScreen,
-              borderRadius: BorderRadius.circular(AppRadii.pill),
-            ),
-            child: Text(
-              wolves ? 'Loups' : 'Village',
-              style: typography.counter.copyWith(
-                color: wolves ? colors.accentText : colors.textSecondary,
+          if (role != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+              decoration: BoxDecoration(
+                color: wolves ? colors.accentBg : colors.bgScreen,
+                borderRadius: BorderRadius.circular(AppRadii.pill),
+              ),
+              child: Text(
+                wolves ? 'Loups' : 'Village',
+                style: typography.counter.copyWith(
+                  color: wolves ? colors.accentText : colors.textSecondary,
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
