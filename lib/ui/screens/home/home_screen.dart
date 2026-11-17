@@ -15,6 +15,7 @@ import '../../theme/app_typography.dart';
 import '../../utils/french_date_format.dart';
 import '../../utils/french_winner_label.dart';
 import '../../widgets/app_button.dart';
+import 'drafts_section.dart';
 import 'past_game_sheet.dart';
 import 'unreadable_game_sheet.dart';
 import '../../widgets/app_icon_button.dart';
@@ -187,6 +188,9 @@ class _GamesList extends ConsumerWidget {
               g.status == GameStatus.paused,
         )
         .toList(growable: false);
+    final brouillons = games
+        .where((g) => g.status == GameStatus.setup)
+        .toList(growable: false);
     final historique = games
         .where((g) => g.status == GameStatus.completed)
         .toList(growable: false);
@@ -199,6 +203,7 @@ class _GamesList extends ConsumerWidget {
             padding: const EdgeInsets.only(bottom: 14),
             children: [
               if (enCours.isNotEmpty) _EnCoursSection(games: enCours),
+              if (brouillons.isNotEmpty) DraftsSection(games: brouillons),
               if (historique.isNotEmpty) _HistoriqueSection(games: historique),
             ],
           ),
