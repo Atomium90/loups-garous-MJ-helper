@@ -6,6 +6,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_typography.dart';
 import '../../widgets/app_button.dart';
+import '../../widgets/app_sheet.dart';
 
 /// Offered when a saved game can't be read back (its data is damaged, or comes from a version
 /// of the app this one doesn't understand). The only useful move is to remove it, so the sheet
@@ -16,13 +17,8 @@ Future<void> showUnreadableGameSheet(
   required int gameId,
   VoidCallback? onDeleted,
 }) {
-  return showModalBottomSheet<void>(
-    context: context,
-    backgroundColor: context.colors.bgScreen,
-    isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadii.sheetTop)),
-    ),
+  return showAppSheet<void>(
+    context,
     builder: (_) => _UnreadableGameSheet(gameId: gameId, onDeleted: onDeleted),
   );
 }
@@ -46,17 +42,7 @@ class _UnreadableGameSheet extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 14),
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: colors.borderHairline,
-                  borderRadius: BorderRadius.circular(AppRadii.pill),
-                ),
-              ),
-            ),
+            const SheetHandle(),
             Text(
               'Partie illisible',
               style: typography.rowLabel.copyWith(fontSize: 17, color: colors.textPrimary),

@@ -17,20 +17,13 @@ import '../../utils/french_date_format.dart';
 import '../../utils/french_role_label.dart';
 import '../../utils/french_winner_label.dart';
 import '../../widgets/app_button.dart';
+import '../../widgets/app_sheet.dart';
 import '../../widgets/player_avatar.dart';
 
 /// Reopening a finished game: the winner, the run's length, and who was still
 /// standing (survivors' roles only - a finished game legitimately has gaps).
 Future<void> showPastGameSheet(BuildContext context, Game game) {
-  return showModalBottomSheet<void>(
-    context: context,
-    backgroundColor: context.colors.bgScreen,
-    isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadii.sheetTop)),
-    ),
-    builder: (_) => _PastGameSheet(game: game),
-  );
+  return showAppSheet<void>(context, builder: (_) => _PastGameSheet(game: game));
 }
 
 class _PastGameSheet extends ConsumerWidget {
@@ -64,17 +57,7 @@ class _PastGameSheet extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 14),
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: colors.borderHairline,
-                  borderRadius: BorderRadius.circular(AppRadii.pill),
-                ),
-              ),
-            ),
+            const SheetHandle(),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
