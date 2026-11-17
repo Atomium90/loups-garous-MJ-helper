@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// The design handoff's type scale ("Design tokens > Typography"), as a
 /// [ThemeExtension]. Only the roles actually used by a screen built so far are
