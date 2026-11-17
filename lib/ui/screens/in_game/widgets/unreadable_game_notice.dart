@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -9,14 +10,14 @@ import '../../home/unreadable_game_sheet.dart';
 
 /// What a game tab shows when the saved game can't be loaded: the [message], and a way out
 /// by deleting the game (with its confirmation sheet), after which the MJ lands back on Home.
-class UnreadableGameNotice extends StatelessWidget {
+class UnreadableGameNotice extends ConsumerWidget {
   const UnreadableGameNotice({required this.gameId, required this.message, super.key});
 
   final int gameId;
   final String message;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final router = GoRouter.of(context);
 
     return Center(
@@ -36,6 +37,7 @@ class UnreadableGameNotice extends StatelessWidget {
               variant: AppButtonVariant.secondary,
               onPressed: () => showUnreadableGameSheet(
                 context,
+                ref,
                 gameId: gameId,
                 onDeleted: () => router.go('/'),
               ),

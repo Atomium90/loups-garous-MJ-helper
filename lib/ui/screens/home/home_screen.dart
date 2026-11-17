@@ -277,7 +277,7 @@ class _EnCoursCard extends ConsumerWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(AppRadii.button),
           onTap: () => unreadable
-              ? showUnreadableGameSheet(context, gameId: game.id)
+              ? showUnreadableGameSheet(context, ref, gameId: game.id)
               : context.go('/games/${game.id}/game'),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
