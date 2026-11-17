@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// The design handoff's semantic colour tokens ("Design tokens > Colour"), as a
 /// [ThemeExtension] so both the light and dark palettes are

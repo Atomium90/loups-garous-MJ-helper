@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 // `Override` (used below) isn't in flutter_riverpod.dart's own export list - see
 // test/support/pump_app.dart for the same note.
 import 'package:flutter_riverpod/misc.dart';
