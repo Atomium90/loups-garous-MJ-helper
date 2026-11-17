@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' show ThemeMode;
+import 'package:material_ui/material_ui.dart' show ThemeMode;
 
 /// The MJ's app-wide preferences, persisted via `shared_preferences`.
 /// Hand-written (like `SessionCursor` / `DaySnapshot`) - three fields and no
