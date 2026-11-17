@@ -16,6 +16,7 @@ import '../../utils/french_date_format.dart';
 import '../../utils/french_winner_label.dart';
 import '../../widgets/app_button.dart';
 import 'past_game_sheet.dart';
+import 'unreadable_game_sheet.dart';
 import '../../widgets/app_icon_button.dart';
 import '../../widgets/section_label.dart';
 
@@ -259,6 +260,7 @@ class _EnCoursCard extends ConsumerWidget {
     final typography = context.typography;
     final daysElapsed = DateTime.now().difference(game.createdAt).inDays;
     final summary = ref.watch(sessionSummaryProvider(game.id)).value;
+    final unreadable = summary?.unreadable ?? false;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -274,7 +276,9 @@ class _EnCoursCard extends ConsumerWidget {
         borderRadius: BorderRadius.circular(AppRadii.button),
         child: InkWell(
           borderRadius: BorderRadius.circular(AppRadii.button),
-          onTap: () => context.go('/games/${game.id}/game'),
+          onTap: () => unreadable
+              ? showUnreadableGameSheet(context, gameId: game.id)
+              : context.go('/games/${game.id}/game'),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
             child: Row(
@@ -302,9 +306,11 @@ class _EnCoursCard extends ConsumerWidget {
                         style: typography.rowLabel.copyWith(color: colors.textPrimary),
                       ),
                       Text(
-                        summary?.line ?? 'Partie en cours',
+                        unreadable ? 'Partie illisible' : summary?.line ?? 'Partie en cours',
                         style: typography.meta.copyWith(
-                          color: summary != null ? colors.accentText : colors.textSecondary,
+                          color: summary != null && !unreadable
+                              ? colors.accentText
+                              : colors.textSecondary,
                         ),
                       ),
                     ],
