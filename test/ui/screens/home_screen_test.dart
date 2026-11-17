@@ -24,6 +24,85 @@ void main() {
     expect(find.text('En cours'.toUpperCase()), findsNothing);
   });
 
+  testWidgets('a game whose saved state is unreadable offers to delete it from Home', (
+    tester,
+  ) async {
+    final now = DateTime.now();
+    final repository = FakeGameRepository(
+      initialGames: [
+        Game(
+          id: 1,
+          name: 'Soirée abîmée',
+          createdAt: now,
+          updatedAt: now,
+          playerCount: 9,
+          status: GameStatus.inProgress,
+          sessionJson: '{not json',
+        ),
+        Game(
+          id: 2,
+          name: 'Soirée intacte',
+          createdAt: now.subtract(const Duration(days: 1)),
+          updatedAt: now.subtract(const Duration(days: 1)),
+          playerCount: 9,
+          status: GameStatus.inProgress,
+        ),
+      ],
+    );
+    await pumpScreen(
+      tester,
+      const HomeScreen(),
+      overrides: [gameRepositoryProvider.overrideWithValue(repository)],
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Partie illisible'), findsOneWidget);
+
+    await tester.tap(find.text('Soirée abîmée'));
+    await tester.pumpAndSettle();
+    expect(find.text('Supprimer cette partie'), findsOneWidget);
+
+    await tester.tap(find.text('Supprimer cette partie'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Soirée abîmée'), findsNothing);
+    expect(find.text('Partie illisible'), findsNothing);
+    // the other game is untouched
+    expect(find.text('Soirée intacte'), findsOneWidget);
+    expect(await repository.getGame(2), isNotNull);
+  });
+
+  testWidgets('cancelling the unreadable-game sheet keeps the game', (tester) async {
+    final now = DateTime.now();
+    final repository = FakeGameRepository(
+      initialGames: [
+        Game(
+          id: 1,
+          name: 'Soirée abîmée',
+          createdAt: now,
+          updatedAt: now,
+          playerCount: 9,
+          status: GameStatus.inProgress,
+          sessionJson: '[]',
+        ),
+      ],
+    );
+    await pumpScreen(
+      tester,
+      const HomeScreen(),
+      overrides: [gameRepositoryProvider.overrideWithValue(repository)],
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Soirée abîmée'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Annuler'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Soirée abîmée'), findsOneWidget);
+    expect(await repository.getGame(1), isNotNull);
+  });
+
   testWidgets('one in-progress game renders under En cours with the fallback resume line', (
     tester,
   ) async {

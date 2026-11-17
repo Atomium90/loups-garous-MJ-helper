@@ -29,6 +29,17 @@ void main() {
     expect(find.byType(HomeScreen), findsOneWidget);
   });
 
+  testWidgets('Réglages says the games stay on the device', (tester) async {
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
+      initialLocation: '/settings',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Vos parties restent sur cet appareil'), findsOneWidget);
+  });
+
   testWidgets('switching the theme segment persists the choice', (tester) async {
     await pumpAppRouter(
       tester,

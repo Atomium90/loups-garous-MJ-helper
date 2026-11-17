@@ -4,6 +4,7 @@ import 'package:rules_engine/rules_engine.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_dimensions.dart';
 import '../../../theme/app_typography.dart';
+import '../../../widgets/app_sheet.dart';
 
 /// The wake-order aide-mémoire: one line per role, this game's composition in
 /// order first, the rest dimmed and grouped last. Reached from the `?` in the
@@ -12,15 +13,8 @@ Future<void> showAideMemoireSheet(
   BuildContext context,
   Map<String, int> composition,
 ) {
-  return showModalBottomSheet<void>(
-    context: context,
-    backgroundColor: context.colors.bgScreen,
-    isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(
-        top: Radius.circular(AppRadii.sheetTop),
-      ),
-    ),
+  return showAppSheet<void>(
+    context,
     builder: (_) => _AideMemoire(composition: composition),
   );
 }
@@ -64,17 +58,7 @@ class _AideMemoire extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: colors.borderHairline,
-                    borderRadius: BorderRadius.circular(AppRadii.pill),
-                  ),
-                ),
-              ),
+              const SheetHandle(bottomGap: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

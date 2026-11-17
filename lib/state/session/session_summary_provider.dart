@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rules_engine/rules_engine.dart';
 
+import '../../data/database/app_database.dart';
 import '../providers/game_repository_provider.dart';
 import 'night_script.dart';
 import 'session_cursor.dart';
@@ -14,7 +15,14 @@ class SessionSummary {
   final String phaseLabel;
   final String stepLabel;
 
-  const SessionSummary({required this.phaseLabel, required this.stepLabel});
+  /// True when the saved game state can't be read back (corrupted, or written by a
+  /// version of the app this one doesn't understand). There is no line to show.
+  final bool unreadable;
+
+  const SessionSummary({required this.phaseLabel, required this.stepLabel})
+    : unreadable = false;
+
+  const SessionSummary.unreadable() : phaseLabel = '', stepLabel = '', unreadable = true;
 
   String get line => '$phaseLabel · $stepLabel';
 }
@@ -28,6 +36,16 @@ final sessionSummaryProvider =
   final blob = game?.sessionJson;
   if (blob == null) return null;
 
+  try {
+    return _summarize(game!, blob);
+  } catch (_) {
+    // Anything that fails to decode (bad JSON, a missing key, an unknown role) means the
+    // saved state is unusable; say so instead of failing the whole card.
+    return const SessionSummary.unreadable();
+  }
+});
+
+SessionSummary _summarize(Game game, String blob) {
   final decoded = jsonDecode(blob) as Map<String, dynamic>;
   final engine = GameStateJson.decode(decoded['engine'] as Map<String, dynamic>);
 
@@ -46,10 +64,10 @@ final sessionSummaryProvider =
   final cursor = SessionCursor.fromJson(decoded['cursor'] as Map<String, dynamic>);
   final script = buildNightScript(
     engine: engine,
-    composition: game!.compositionJson ?? const {},
+    composition: game.compositionJson ?? const {},
   );
   final stepLabel = cursor.stepIndex < script.steps.length
       ? script.steps[cursor.stepIndex].role.name
       : 'fin de la nuit';
   return SessionSummary(phaseLabel: 'Nuit ${engine.nightIndex}', stepLabel: stepLabel);
-});
+}

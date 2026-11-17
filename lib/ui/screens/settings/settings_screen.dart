@@ -101,9 +101,19 @@ class _SettingsBody extends StatelessWidget {
           decoration: BoxDecoration(
             border: Border(top: BorderSide(color: colors.borderHairline)),
           ),
-          child: Text(
-            'Loup Garou MJ · V1 · hors ligne',
-            style: typography.counter.copyWith(color: colors.textTertiary),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 4,
+            children: [
+              Text(
+                'Loup Garou MJ · V1 · hors ligne',
+                style: typography.counter.copyWith(color: colors.textTertiary),
+              ),
+              Text(
+                'Vos parties restent sur cet appareil : désinstaller l’app les supprime.',
+                style: typography.counter.copyWith(color: colors.textTertiary),
+              ),
+            ],
           ),
         ),
       ],

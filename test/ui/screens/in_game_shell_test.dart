@@ -46,6 +46,37 @@ Future<int> _runningGame(FakeGameRepository repo) async {
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
+  testWidgets('an unreadable saved game can be deleted from its game screen', (tester) async {
+    final repo = FakeGameRepository();
+    final id = await repo.createGame(initialPlayerCount: 3);
+    await repo.saveComposition(
+      gameId: id,
+      playerCount: 3,
+      roleCounts: const {'loup_garou': 1, 'voyante': 1, 'sorciere': 1},
+    );
+    await repo.savePlayerNames(gameId: id, names: const ['Ana', 'Bo', 'Cy']);
+    await repo.startGame(id);
+    await repo.saveSession(gameId: id, sessionJson: '{not json');
+
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(repo)],
+      initialLocation: '/games/$id/game',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Impossible de charger la partie.'), findsOneWidget);
+
+    await tester.tap(find.text('Supprimer cette partie'));
+    await tester.pumpAndSettle();
+    // the confirmation sheet repeats the label on its own button
+    await tester.tap(find.text('Supprimer cette partie').last);
+    await tester.pumpAndSettle();
+
+    expect(await repo.getGame(id), isNull);
+    expect(find.byType(HomeScreen), findsOneWidget);
+  });
+
   testWidgets('the shell shows the three tabs and switches branches', (tester) async {
     final repo = FakeGameRepository();
     final id = await _runningGame(repo);

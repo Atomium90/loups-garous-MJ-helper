@@ -92,4 +92,35 @@ void main() {
     expect(find.text('Voyante'), findsOneWidget);
     expect(find.textContaining('2 éliminés restent cachés'), findsOneWidget);
   });
+
+  testWidgets('a completed game whose saved state is unreadable still opens its recap', (
+    tester,
+  ) async {
+    final id = await repo.createGame(initialPlayerCount: 4);
+    await repo.saveComposition(
+      gameId: id,
+      playerCount: 4,
+      roleCounts: const {'loup_garou': 1, 'villageois': 3},
+    );
+    await repo.savePlayerNames(gameId: id, names: const ['Ana', 'Bo', 'Cy', 'Di']);
+    await repo.startGame(id);
+    await repo.saveSession(gameId: id, sessionJson: '{not json');
+    await repo.endGame(gameId: id, winner: GameWinner.wolves);
+
+    await tester.binding.setSurfaceSize(const Size(400, 1600));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(repo)],
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Loups'));
+    await tester.pumpAndSettle();
+
+    // the winner is stored apart from the damaged blob, so it still shows
+    expect(find.text('Vainqueurs'), findsOneWidget);
+    expect(find.text('Les Loups-Garous'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }

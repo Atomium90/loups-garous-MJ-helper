@@ -11,6 +11,7 @@ import '../../theme/app_typography.dart';
 import '../../utils/french_death_cause.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/player_avatar.dart';
+import 'widgets/unreadable_game_notice.dart';
 
 /// The Village tab: the alive/dead snapshot. "Who's still alive?" is the
 /// most-asked question of a real session, so this is a plain lookup - the
@@ -25,21 +26,14 @@ class VillageTab extends ConsumerWidget {
     final sessionAsync = ref.watch(gameSessionProvider(gameId));
     return sessionAsync.when(
       loading: () => const SizedBox.shrink(),
-      error: (_, _) => _centered(context, 'Impossible de charger le village.'),
+      error: (_, _) => UnreadableGameNotice(
+        gameId: gameId,
+        message: 'Impossible de charger le village.',
+      ),
       data: (session) => _VillageBody(gameId: gameId, session: session),
     );
   }
 
-  Widget _centered(BuildContext context, String message) => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(AppSpacing.screen),
-      child: Text(
-        message,
-        textAlign: TextAlign.center,
-        style: context.typography.body.copyWith(color: context.colors.textSecondary),
-      ),
-    ),
-  );
 }
 
 class _VillageBody extends StatelessWidget {

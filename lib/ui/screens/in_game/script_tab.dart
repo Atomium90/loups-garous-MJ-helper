@@ -16,6 +16,7 @@ import '../../widgets/player_avatar.dart';
 import 'widgets/identify_step.dart';
 import 'widgets/simple_act.dart';
 import 'widgets/target_pick.dart';
+import 'widgets/unreadable_game_notice.dart';
 import 'widgets/witch_act.dart';
 
 /// The Script tab: the current step of the loop. Night -> the wake script;
@@ -31,15 +32,9 @@ class ScriptTab extends ConsumerWidget {
 
     return sessionAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, _) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.screen),
-          child: Text(
-            'Impossible de charger la partie.',
-            textAlign: TextAlign.center,
-            style: context.typography.body.copyWith(color: context.colors.textSecondary),
-          ),
-        ),
+      error: (_, _) => UnreadableGameNotice(
+        gameId: gameId,
+        message: 'Impossible de charger la partie.',
       ),
       data: (session) => session.engine.phase == GamePhase.night
           ? _NightBody(gameId: gameId, session: session)

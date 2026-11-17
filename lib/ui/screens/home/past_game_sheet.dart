@@ -17,20 +17,13 @@ import '../../utils/french_date_format.dart';
 import '../../utils/french_role_label.dart';
 import '../../utils/french_winner_label.dart';
 import '../../widgets/app_button.dart';
+import '../../widgets/app_sheet.dart';
 import '../../widgets/player_avatar.dart';
 
 /// Reopening a finished game: the winner, the run's length, and who was still
 /// standing (survivors' roles only - a finished game legitimately has gaps).
 Future<void> showPastGameSheet(BuildContext context, Game game) {
-  return showModalBottomSheet<void>(
-    context: context,
-    backgroundColor: context.colors.bgScreen,
-    isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadii.sheetTop)),
-    ),
-    builder: (_) => _PastGameSheet(game: game),
-  );
+  return showAppSheet<void>(context, builder: (_) => _PastGameSheet(game: game));
 }
 
 class _PastGameSheet extends ConsumerWidget {
@@ -64,17 +57,7 @@ class _PastGameSheet extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 14),
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: colors.borderHairline,
-                  borderRadius: BorderRadius.circular(AppRadii.pill),
-                ),
-              ),
-            ),
+            const SheetHandle(),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -256,10 +239,16 @@ class _PastGameSheet extends ConsumerWidget {
   }
 }
 
+/// Null when there is no saved state or it can't be read: the sheet then still shows the
+/// winner, the date and the composition, just without the run's length and survivors.
 GameState? _decodeEngine(String? sessionJson) {
   if (sessionJson == null) return null;
-  final decoded = jsonDecode(sessionJson) as Map<String, dynamic>;
-  return GameStateJson.decode(decoded['engine'] as Map<String, dynamic>);
+  try {
+    final decoded = jsonDecode(sessionJson) as Map<String, dynamic>;
+    return GameStateJson.decode(decoded['engine'] as Map<String, dynamic>);
+  } catch (_) {
+    return null;
+  }
 }
 
 class _Stat extends StatelessWidget {
