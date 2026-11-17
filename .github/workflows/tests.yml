@@ -27,11 +27,60 @@ jobs:
       - run: dart run build_runner build --delete-conflicting-outputs
 
       - run: flutter analyze
-      - run: flutter test
+      - run: flutter test --coverage
 
       - run: dart pub get
         working-directory: packages/rules_engine
       - run: dart analyze
         working-directory: packages/rules_engine
-      - run: dart test
+      - run: dart test --coverage=coverage
         working-directory: packages/rules_engine
+
+      # SonarCloud wants LCOV files with paths relative to the repository root: format the
+      # engine's raw coverage, then prefix its paths with the package folder.
+      - name: Write the engine LCOV report
+        working-directory: packages/rules_engine
+        run: |
+          dart run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info \
+            --report-on=lib --packages=.dart_tool/package_config.json --base-directory=.
+          sed -i 's#^SF:#SF:packages/rules_engine/#' coverage/lcov.info
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: |
+            coverage/lcov.info
+            packages/rules_engine/coverage/lcov.info
+          if-no-files-found: error
+
+  # SonarCloud analysis, once the tests have produced their coverage. Skipped for pull requests
+  # from forks, which don't get the repository secrets.
+  sonar:
+    name: SonarCloud analysis
+    needs: test
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork != true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+          # Full history so SonarCloud can compute blame and what counts as new code.
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: coverage
+
+      - name: Check the coverage reports are where the scan expects them
+        run: |
+          test -s coverage/lcov.info
+          test -s packages/rules_engine/coverage/lcov.info
+
+      - name: Run SonarCloud scan
+        uses: SonarSource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9 # v8.3.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
