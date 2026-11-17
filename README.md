@@ -114,8 +114,9 @@ Two GitHub Actions workflows, `.github/workflows/`:
   `dart test` for `packages/rules_engine`. Both regenerate the Drift/Riverpod/freezed code
   first (`build_runner`), same as the local `dart run build_runner build` step above — it isn't
   committed to git. It also writes LCOV coverage reports for the app and the engine and runs a
-  SonarCloud analysis on them (`sonar-project.properties`; needs the `SONAR_TOKEN` repository
-  secret).
+  SonarCloud analysis on them (`sonar-project.properties`). The analysis stores no secret: it
+  authenticates through GitHub OIDC, which needs the repository bound to a SonarCloud project
+  with secretless analysis enabled in the organization settings.
 - **`release.yml`** — on a pushed `vX.Y.Z` tag (or manual dispatch with an existing tag, from
   the Actions tab): checks that the tag matches the `version:` in `pubspec.yaml`, builds a
   release APK and attaches it, with a SHA-256 checksum, to a **draft** GitHub Release marked
