@@ -3,6 +3,8 @@ include: package:flutter_lints/flutter.yaml
 analyzer:
   exclude:
     - build/**
+    # The rules engine is its own package, analyzed by its own `dart analyze` step.
+    - packages/**
     - android/**
     - ios/**
     - web/**

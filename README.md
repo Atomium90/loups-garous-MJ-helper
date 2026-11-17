@@ -1,7 +1,7 @@
 # Loup Garou MJ
 
 [![Tests](https://github.com/Atomium90/loups-garous-MJ-helper/actions/workflows/tests.yml/badge.svg)](https://github.com/Atomium90/loups-garous-MJ-helper/actions/workflows/tests.yml)
-[![Build APK](https://github.com/Atomium90/loups-garous-MJ-helper/actions/workflows/build-apk.yml/badge.svg)](https://github.com/Atomium90/loups-garous-MJ-helper/actions/workflows/build-apk.yml)
+[![Release](https://github.com/Atomium90/loups-garous-MJ-helper/actions/workflows/release.yml/badge.svg)](https://github.com/Atomium90/loups-garous-MJ-helper/actions/workflows/release.yml)
 
 A companion app for the Game Master (MJ) of **Les Loups-Garous de Thiercelieux** (the French
 werewolf/mafia party game). The physical board game stays central: players and the MJ play face
@@ -113,11 +113,23 @@ Two GitHub Actions workflows, `.github/workflows/`:
 - **`tests.yml`** — on every push/PR to `main`: `flutter analyze`, `flutter test`, and
   `dart test` for `packages/rules_engine`. Both regenerate the Drift/Riverpod/freezed code
   first (`build_runner`), same as the local `dart run build_runner build` step above — it isn't
-  committed to git.
-- **`build-apk.yml`** — on push to `main` and on manual dispatch (the Actions tab): builds a
-  release APK and publishes it as a GitHub Release tagged `build-N`, ready to download and
-  sideload on a phone. Signed with Flutter's default debug key for now (see the `TODO` in
-  `android/app/build.gradle.kts`) — installable for testing, not a store release.
+  committed to git. It also writes LCOV coverage reports for the app and the engine and runs a
+  SonarCloud analysis on them (`sonar-project.properties`). The analysis stores no secret: it
+  authenticates through GitHub OIDC, which needs the repository bound to a SonarCloud project
+  with secretless analysis enabled in the organization settings.
+- **`release.yml`** — on a pushed `vX.Y.Z` tag (or manual dispatch with an existing tag, from
+  the Actions tab): checks that the tag matches the `version:` in `pubspec.yaml`, builds a
+  release APK and attaches it, with a SHA-256 checksum, to a **draft** GitHub Release marked
+  pre-release. Release notes are written by hand before publishing, and a published release is
+  never overwritten. The APK is signed with Flutter's default debug key for now (see the
+  `TODO` in `android/app/build.gradle.kts`) — installable for testing, not a store release.
+
+Only real releases get a tag. A version bump in `pubspec.yaml` alone does not publish anything:
+
+```bash
+git tag v0.2.0     # must match `version: 0.2.0+N` in pubspec.yaml
+git push origin v0.2.0
+```
 
 ### App icon & splash
 
