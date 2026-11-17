@@ -195,4 +195,9 @@ class DriftGameRepository implements GameRepository {
       _db.games,
     )..where((g) => g.id.equals(gameId) & g.status.equalsValue(GameStatus.setup))).go();
   }
+
+  @override
+  Future<void> deleteGame(int gameId) {
+    return (_db.delete(_db.games)..where((g) => g.id.equals(gameId))).go();
+  }
 }

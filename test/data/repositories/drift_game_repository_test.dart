@@ -361,6 +361,33 @@ void main() {
     });
   });
 
+  group('deleteGame', () {
+    test('deletes a started game with its roster and journal', () async {
+      final id = await repository.createGame();
+      await repository.saveComposition(gameId: id, playerCount: 8, roleCounts: const {});
+      await repository.startGame(id);
+      await repository.appendNightLog(
+        gameId: id,
+        entries: const [NightLogEntry(phaseLabel: 'NUIT 1', iconName: 'wolves', line: 'x')],
+      );
+
+      await repository.deleteGame(id);
+
+      expect(await repository.getGame(id), isNull);
+      expect(await (db.select(db.players)..where((p) => p.gameId.equals(id))).get(), isEmpty);
+      expect(await (db.select(db.nightLog)..where((e) => e.gameId.equals(id))).get(), isEmpty);
+    });
+
+    test('leaves the other games alone', () async {
+      final kept = await repository.createGame();
+      final removed = await repository.createGame();
+
+      await repository.deleteGame(removed);
+
+      expect(await repository.getGame(kept), isNotNull);
+    });
+  });
+
   group('watchGames', () {
     test('emits an initial empty snapshot when there are no games', () async {
       final queue = StreamQueue(repository.watchGames());
