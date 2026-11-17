@@ -78,6 +78,17 @@ jobs:
         with:
           name: coverage
 
+      # SonarCloud's Dart analysis resolves imports through .dart_tool/package_config.json and
+      # needs the generated code, or every import and part file is reported as an error.
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: stable
+          flutter-version: '3.50.0'
+      - run: flutter pub get --enforce-lockfile
+      - run: dart run build_runner build --delete-conflicting-outputs
+      - run: dart pub get
+        working-directory: packages/rules_engine
+
       - name: Check the coverage reports are where the scan expects them
         run: |
           test -s coverage/lcov.info
