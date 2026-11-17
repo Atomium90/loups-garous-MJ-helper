@@ -256,10 +256,16 @@ class _PastGameSheet extends ConsumerWidget {
   }
 }
 
+/// Null when there is no saved state or it can't be read: the sheet then still shows the
+/// winner, the date and the composition, just without the run's length and survivors.
 GameState? _decodeEngine(String? sessionJson) {
   if (sessionJson == null) return null;
-  final decoded = jsonDecode(sessionJson) as Map<String, dynamic>;
-  return GameStateJson.decode(decoded['engine'] as Map<String, dynamic>);
+  try {
+    final decoded = jsonDecode(sessionJson) as Map<String, dynamic>;
+    return GameStateJson.decode(decoded['engine'] as Map<String, dynamic>);
+  } catch (_) {
+    return null;
+  }
 }
 
 class _Stat extends StatelessWidget {
