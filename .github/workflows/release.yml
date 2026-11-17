@@ -1,0 +1,167 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to build and release (e.g. v0.2.0)"
+        required: true
+
+# Read-only by default: only the job that creates the release asks for more.
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # Resolve the tag being released and check it against the version in pubspec.yaml, once,
+  # so the later jobs don't repeat it.
+  resolve:
+    name: Resolve tag and version
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.check-version.outputs.tag }}
+      version: ${{ steps.check-version.outputs.version }}
+    steps:
+      # The tag name comes from whoever pushed the tag or started the run, so it reaches the
+      # script through the environment, never pasted into the script text, and nothing but a
+      # plain version tag goes any further: the name ends up in a git ref and in later steps.
+      - name: Determine tag
+        id: resolve-tag
+        env:
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          tag="${INPUT_TAG:-$REF_NAME}"
+          if ! [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Not a version tag: '$tag'. Expected something like v0.2.0."
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+          ref: ${{ steps.resolve-tag.outputs.tag }}
+
+      - name: Check pubspec.yaml version matches the tag
+        id: check-version
+        env:
+          TAG: ${{ steps.resolve-tag.outputs.tag }}
+        run: |
+          expected="${TAG#v}"
+          # `version: 0.2.0+2` -> `0.2.0` (the part after `+` is the build number).
+          actual=$(sed -nE 's/^version:[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+)(\+[0-9]+)?[[:space:]]*$/\1/p' pubspec.yaml | head -n 1)
+          if [ -z "$actual" ]; then
+            echo "::error::Could not find a 'version:' line in pubspec.yaml."
+            exit 1
+          fi
+          if [ "$actual" != "$expected" ]; then
+            echo "::error::Tag $TAG expects pubspec.yaml version '$expected', but pubspec.yaml has '$actual'. Bump the version and re-tag."
+            exit 1
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$actual" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build APK
+    needs: resolve
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+          ref: ${{ needs.resolve.outputs.tag }}
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - run: flutter pub get
+
+      # Drift/Riverpod/freezed codegen isn't committed (see .gitignore) - regenerate it before
+      # building, or the app doesn't compile on a fresh checkout.
+      - run: dart run build_runner build --delete-conflicting-outputs
+
+      # Signed with the Flutter template's default debug key for now (see
+      # android/app/build.gradle.kts) - installable, not a real store release. A proper
+      # keystore is a separate, later decision (tied to the final applicationId).
+      - run: flutter build apk --release
+
+      - name: Name the APK and write its checksum
+        env:
+          VERSION: ${{ needs.resolve.outputs.version }}
+        run: |
+          mkdir dist
+          mv build/app/outputs/flutter-apk/app-release.apk "dist/loup-garou-mj-${VERSION}.apk"
+          cd dist
+          sha256sum ./*.apk | tee SHA256SUMS.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: dist/*
+
+  # Create (or update) a DRAFT GitHub Release with the APK and its checksum attached. Left as a
+  # draft deliberately: the release notes are written by hand in the GitHub UI, this job only
+  # automates the mechanical build-and-attach step. It is marked as a pre-release while the APK
+  # is signed with the debug key.
+  # A release that is already published is never touched: replacing the files of a public
+  # version would make its checksums meaningless, so the job stops instead.
+  publish:
+    name: Publish draft release
+    needs: [resolve, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-apk
+          path: dist
+
+      - name: Create or update the draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.resolve.outputs.tag }}
+          REPO: ${{ github.repository }}
+        run: |
+          # none, draft or published: a draft can be filled in again, a published release cannot.
+          releases=$(gh release list --repo "$REPO" --limit 200 --json tagName,isDraft)
+          state=$(jq -r --arg tag "$TAG" '
+            map(select(.tagName == $tag))
+            | if length == 0 then "none" elif .[0].isDraft then "draft" else "published" end
+          ' <<< "$releases")
+          echo "Release $TAG: $state"
+          case "$state" in
+            published)
+              echo "::error::Release $TAG is already published, its files are never replaced. Bump the version and tag again."
+              exit 1
+              ;;
+            draft)
+              gh release upload "$TAG" dist/* --repo "$REPO" --clobber
+              ;;
+            none)
+              gh release create "$TAG" dist/* --repo "$REPO" --draft --prerelease \
+                --verify-tag --title "Loup Garou MJ $TAG" --generate-notes
+              ;;
+          esac
+
+      - name: Show the checksum for the release notes
+        run: |
+          {
+            echo "### SHA-256"
+            echo
+            echo '```'
+            cat dist/SHA256SUMS.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
