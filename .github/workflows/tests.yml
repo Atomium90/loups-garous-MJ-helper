@@ -21,7 +21,7 @@ jobs:
           channel: stable
           flutter-version: '3.50.0'
 
-      - run: flutter pub get
+      - run: flutter pub get --enforce-lockfile
 
       # Drift/Riverpod/freezed codegen isn't committed (see .gitignore) - regenerate it before
       # analyzing/testing, or nothing in lib/ compiles on a fresh checkout.
