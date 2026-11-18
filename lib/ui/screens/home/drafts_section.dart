@@ -9,11 +9,12 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
-import '../../utils/french_date_format.dart';
 import '../../widgets/app_icon_button.dart';
 import '../../widgets/confirm_sheet.dart';
 import '../../widgets/section_label.dart';
 import 'draft_step.dart';
+import '../../utils/l10n.dart';
+import '../../utils/labels.dart';
 
 /// Home's "Brouillons": games that were started (a composition, some names) but never
 /// launched. Each resumes on the setup screen it stopped at, and can be deleted.
@@ -78,7 +79,7 @@ class _DraftRow extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        game.name ?? 'Partie du ${frenchDayMonthLabel(game.createdAt)}',
+                        gameTitle(context.l10n, game),
                         style: typography.rowLabel.copyWith(color: colors.textPrimary),
                       ),
                       Text(

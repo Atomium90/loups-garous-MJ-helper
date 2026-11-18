@@ -8,7 +8,6 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
-import '../../utils/french_death_cause.dart';
 import '../../utils/l10n.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/avatar_pick_cell.dart';
@@ -18,6 +17,7 @@ import 'widgets/simple_act.dart';
 import 'widgets/target_pick.dart';
 import 'widgets/unreadable_game_notice.dart';
 import 'widgets/witch_act.dart';
+import '../../utils/labels.dart';
 
 /// The Script tab: the current step of the loop. Night -> the wake script;
 /// day -> the recap. (The per-step bodies land in the next commits.)
@@ -987,7 +987,7 @@ class _DayRecapBody extends StatelessWidget {
                 _RecapDeathRow(
                   name: death.name,
                   roleId: session.rosterRoleId(death.id),
-                  cause: frenchDeathCauseLabel(death.causeOfDeath!),
+                  cause: deathCauseLabel(context.l10n, death.causeOfDeath!),
                 ),
               ],
               if (saved != null) ...[

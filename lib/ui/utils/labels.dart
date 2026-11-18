@@ -1,6 +1,11 @@
+import 'package:intl/intl.dart' show toBeginningOfSentenceCase;
+import 'package:material_ui/material_ui.dart' show IconData;
 import 'package:rules_engine/rules_engine.dart';
 
+import '../../data/database/app_database.dart';
+import '../../data/models/game_winner.dart';
 import '../../l10n/localizations.dart';
+import '../theme/app_icons.dart';
 
 /// "Voyante", "2 Loups-Garous", "2 Villageois" (or "Seer", "2 Werewolves" in English).
 String roleCountLabel(AppLocalizations l10n, String roleId, int count) =>
@@ -34,3 +39,42 @@ String deckLine(AppLocalizations l10n, Map<String, int> composition, RoleRegistr
 /// the matching physical cards aside: "le Chasseur · la Voyante".
 String reserveLine(AppLocalizations l10n, List<String> reserveRoleIds) =>
     reserveRoleIds.map(l10n.roleWithArticle).join(' · ');
+
+/// A game's title: its own name, or "Partie du 14 août" / "Game of August 14" from its date.
+String gameTitle(AppLocalizations l10n, Game game) =>
+    game.name ?? l10n.gameDefaultName(game.createdAt);
+
+/// "Août 2026" - the month-group label above Accueil's Historique rows.
+String monthYearLabel(AppLocalizations l10n, DateTime date) {
+  final label = l10n.monthYearLabel(date);
+  return toBeginningOfSentenceCase(label, l10n.localeName);
+}
+
+/// The winning side, as the MJ declared it on the end-of-game screen.
+String winnerLabel(AppLocalizations l10n, GameWinner winner) => l10n.winnerLabel(winner.name);
+
+/// Terse form for a right-aligned history row: "Village", "Loups", "Amoureux", "Annulée".
+String winnerShort(AppLocalizations l10n, GameWinner winner) => l10n.winnerShort(winner.name);
+
+IconData winnerIcon(GameWinner winner) => switch (winner) {
+  GameWinner.village => AppIcons.home,
+  GameWinner.wolves => AppIcons.wolves,
+  GameWinner.lovers => AppIcons.cupid,
+  GameWinner.none => AppIcons.cancelled,
+};
+
+String _causeKey(DeathCause cause) => switch (cause) {
+  WolvesKill() => 'wolves',
+  WitchDeathPotionKill() => 'witchPoison',
+  DayVoteKill() => 'dayVote',
+  HunterShotKill() => 'hunterShot',
+  LoversCascadeKill() => 'loversGrief',
+};
+
+/// The day recap's cause line: "Victime des Loups", "Potion de mort de la Sorcière".
+String deathCauseLabel(AppLocalizations l10n, DeathCause cause) =>
+    l10n.deathCauseLabel(_causeKey(cause));
+
+/// The Village tab's terse sub-line, after the phase: "Nuit 3 · potion de mort".
+String deathCauseShort(AppLocalizations l10n, DeathCause cause) =>
+    l10n.deathCauseShort(_causeKey(cause));

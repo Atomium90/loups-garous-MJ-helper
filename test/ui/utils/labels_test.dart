@@ -1,10 +1,17 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/widgets.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:loup_garou_mj/data/database/app_database.dart';
+import 'package:loup_garou_mj/data/models/game_status.dart';
+import 'package:loup_garou_mj/data/models/game_winner.dart';
 import 'package:loup_garou_mj/l10n/localizations.dart';
 import 'package:loup_garou_mj/ui/utils/labels.dart';
 import 'package:rules_engine/rules_engine.dart';
 
 void main() {
+  setUpAll(initializeDateFormatting);
+
   final registry = RoleRegistry.base;
   final fr = lookupAppLocalizations(const Locale('fr'));
   final en = lookupAppLocalizations(const Locale('en'));
@@ -85,6 +92,77 @@ void main() {
       };
 
       expect(withTip, {'cupidon', 'sorciere'});
+    });
+  });
+
+  group('winners', () {
+    test('are named in full and in short, in both languages', () {
+      expect(winnerLabel(fr, GameWinner.wolves), 'Les Loups-Garous');
+      expect(winnerLabel(en, GameWinner.wolves), 'The Werewolves');
+      expect(winnerLabel(fr, GameWinner.none), 'Personne');
+      expect(winnerLabel(en, GameWinner.none), 'Nobody');
+      expect(winnerShort(fr, GameWinner.village), 'Village');
+      expect(winnerShort(fr, GameWinner.none), 'Annulée');
+      expect(winnerShort(en, GameWinner.none), 'Cancelled');
+    });
+
+    test('every winner has a label, a short label and an icon', () {
+      for (final winner in GameWinner.values) {
+        expect(winnerLabel(fr, winner), isNotEmpty);
+        expect(winnerShort(en, winner), isNotEmpty);
+        expect(winnerIcon(winner), isNotNull);
+      }
+    });
+  });
+
+  group('death causes', () {
+    const causes = <DeathCause>[
+      WolvesKill(),
+      WitchDeathPotionKill(),
+      DayVoteKill(),
+      HunterShotKill(shooterPlayerId: 'a'),
+      LoversCascadeKill(causingPlayerId: 'a'),
+    ];
+
+    test('each has a distinct long and short label in both languages', () {
+      for (final l10n in [fr, en]) {
+        expect({for (final c in causes) deathCauseLabel(l10n, c)}, hasLength(causes.length));
+        expect({for (final c in causes) deathCauseShort(l10n, c)}, hasLength(causes.length));
+      }
+    });
+
+    test('read naturally', () {
+      expect(deathCauseLabel(fr, const WolvesKill()), 'Victime des Loups');
+      expect(deathCauseShort(fr, const WitchDeathPotionKill()), 'potion de mort');
+      expect(deathCauseLabel(en, const HunterShotKill(shooterPlayerId: 'a')), "Hunter's shot");
+    });
+  });
+
+  group('dates', () {
+    final date = DateTime(2026, 8, 14);
+
+    test('a game without a name is titled by its date', () {
+      final game = Game(
+        id: 1,
+        createdAt: date,
+        updatedAt: date,
+        playerCount: 8,
+        status: GameStatus.setup,
+      );
+
+      expect(gameTitle(fr, game), 'Partie du 14 août');
+      expect(gameTitle(en, game), 'Game of August 14');
+      expect(gameTitle(fr, game.copyWith(name: const Value('Soirée'))), 'Soirée');
+    });
+
+    test('the month group label starts with a capital', () {
+      expect(monthYearLabel(fr, date), 'Août 2026');
+      expect(monthYearLabel(en, date), 'August 2026');
+    });
+
+    test('a day and month', () {
+      expect(fr.dayMonthLabel(date), '14 août');
+      expect(en.dayMonthLabel(date), 'August 14');
     });
   });
 

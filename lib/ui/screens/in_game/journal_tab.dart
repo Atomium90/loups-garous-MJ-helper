@@ -8,7 +8,8 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
-import '../../utils/french_date_format.dart';
+import '../../utils/l10n.dart';
+import '../../utils/labels.dart';
 
 /// The Journal tab: every logged line, grouped under its uppercase phase
 /// header, most recent first.
@@ -35,7 +36,7 @@ class JournalTab extends ConsumerWidget {
               Text('Journal', style: typography.screenTitle.copyWith(color: colors.textPrimary)),
               if (game != null)
                 Text(
-                  game.name ?? 'Partie du ${frenchDayMonthLabel(game.createdAt)}',
+                  gameTitle(context.l10n, game),
                   style: typography.meta.copyWith(color: colors.textSecondary),
                 ),
             ],

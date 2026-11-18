@@ -56,5 +56,71 @@
         "type": "String"
       }
     }
+  },
+  "winnerLabel": "{winner, select, village{Le village} wolves{Les Loups-Garous} lovers{Les Amoureux} other{Personne}}",
+  "@winnerLabel": {
+    "description": "The winning side, from the winner name (village, wolves, lovers, none).",
+    "placeholders": {
+      "winner": {
+        "type": "String"
+      }
+    }
+  },
+  "winnerShort": "{winner, select, village{Village} wolves{Loups} lovers{Amoureux} other{Annulée}}",
+  "@winnerShort": {
+    "description": "Terse winning side for a history row.",
+    "placeholders": {
+      "winner": {
+        "type": "String"
+      }
+    }
+  },
+  "deathCauseLabel": "{cause, select, wolves{Victime des Loups} witchPoison{Potion de mort de la Sorcière} dayVote{Vote du village} hunterShot{Tir du Chasseur} other{Mort de chagrin}}",
+  "@deathCauseLabel": {
+    "description": "A death's cause in the day recap, from the cause key (wolves, witchPoison, dayVote, hunterShot, loversGrief).",
+    "placeholders": {
+      "cause": {
+        "type": "String"
+      }
+    }
+  },
+  "deathCauseShort": "{cause, select, wolves{Loups} witchPoison{potion de mort} dayVote{vote du village} hunterShot{tir du Chasseur} other{mort de chagrin}}",
+  "@deathCauseShort": {
+    "description": "Terse death cause shown after the phase in the Village tab.",
+    "placeholders": {
+      "cause": {
+        "type": "String"
+      }
+    }
+  },
+  "gameDefaultName": "Partie du {date}",
+  "@gameDefaultName": {
+    "description": "Name of a game that has none: its start date.",
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "MMMMd"
+      }
+    }
+  },
+  "dayMonthLabel": "{date}",
+  "@dayMonthLabel": {
+    "description": "A date as day and month.",
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "MMMMd"
+      }
+    }
+  },
+  "monthYearLabel": "{date}",
+  "@monthYearLabel": {
+    "description": "A date as month and year (the caller capitalises it).",
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "yMMMM"
+      }
+    }
   }
 }

@@ -13,10 +13,8 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
-import '../../utils/french_date_format.dart';
 import '../../utils/l10n.dart';
 import '../../utils/labels.dart';
-import '../../utils/french_winner_label.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/app_sheet.dart';
 import '../../widgets/player_avatar.dart';
@@ -68,13 +66,13 @@ class _PastGameSheet extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        game.name ?? 'Partie du ${frenchDayMonthLabel(game.createdAt)}',
+                        gameTitle(context.l10n, game),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: typography.rowLabel.copyWith(fontSize: 17, color: colors.textPrimary),
                       ),
                       Text(
-                        frenchDayMonthLabel(game.endedAt ?? game.createdAt),
+                        context.l10n.dayMonthLabel(game.endedAt ?? game.createdAt),
                         style: typography.meta.copyWith(color: colors.textTertiary),
                       ),
                     ],
@@ -102,7 +100,7 @@ class _PastGameSheet extends ConsumerWidget {
                     width: 34,
                     height: 34,
                     decoration: BoxDecoration(color: colors.bgScreen, shape: BoxShape.circle),
-                    child: Icon(frenchWinnerIcon(winner), size: 17, color: colors.textPrimary),
+                    child: Icon(winnerIcon(winner), size: 17, color: colors.textPrimary),
                   ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,7 +110,7 @@ class _PastGameSheet extends ConsumerWidget {
                         style: typography.counter.copyWith(color: colors.textTertiary),
                       ),
                       Text(
-                        frenchWinnerLabel(winner),
+                        winnerLabel(context.l10n, winner),
                         style: typography.rowLabel.copyWith(fontSize: 15, color: colors.textPrimary),
                       ),
                     ],

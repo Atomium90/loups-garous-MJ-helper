@@ -12,8 +12,6 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
-import '../../utils/french_date_format.dart';
-import '../../utils/french_winner_label.dart';
 import '../../widgets/app_button.dart';
 import 'delete_game_sheet.dart';
 import 'drafts_section.dart';
@@ -21,6 +19,8 @@ import 'past_game_sheet.dart';
 import 'unreadable_game_sheet.dart';
 import '../../widgets/app_icon_button.dart';
 import '../../widgets/section_label.dart';
+import '../../utils/l10n.dart';
+import '../../utils/labels.dart';
 
 /// The empty state and the games list are the same route ("Accueil"), branching on whether
 /// [gameListProvider] is empty - not two separate routes, so the "which screen" decision lives
@@ -310,7 +310,7 @@ class _EnCoursCard extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        game.name ?? 'Partie du ${frenchDayMonthLabel(game.createdAt)}',
+                        gameTitle(context.l10n, game),
                         style: typography.rowLabel.copyWith(color: colors.textPrimary),
                       ),
                       Text(
@@ -348,7 +348,7 @@ class _HistoriqueSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final groups = <(String, List<Game>)>[];
     for (final game in games) {
-      final label = frenchMonthYearLabel(game.createdAt);
+      final label = monthYearLabel(context.l10n, game.createdAt);
       if (groups.isNotEmpty && groups.last.$1 == label) {
         groups.last.$2.add(game);
       } else {
@@ -417,13 +417,13 @@ class _HistoriqueRow extends StatelessWidget {
             ),
             Expanded(
               child: Text(
-                game.name ?? 'Partie du ${frenchDayMonthLabel(game.createdAt)}',
+                gameTitle(context.l10n, game),
                 style: typography.body.copyWith(color: colors.textPrimary),
               ),
             ),
             if (winner != null)
               Text(
-                frenchWinnerShort(winner),
+                winnerShort(context.l10n, winner),
                 style: typography.counter.copyWith(color: colors.textSecondary),
               ),
           ],

@@ -9,10 +9,10 @@ import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../utils/l10n.dart';
-import '../../utils/french_death_cause.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/player_avatar.dart';
 import 'widgets/unreadable_game_notice.dart';
+import '../../utils/labels.dart';
 
 /// The Village tab: the alive/dead snapshot. "Who's still alive?" is the
 /// most-asked question of a real session, so this is a plain lookup - the
@@ -117,7 +117,7 @@ class _VillageBody extends StatelessWidget {
               roleId: _confirmedRole(p.id),
               isCaptain: p.id == captainId,
               dead: true,
-              deathLine: _deathLine(p),
+              deathLine: _deathLine(context, p),
             ),
         ],
         const SizedBox(height: 20),
@@ -131,12 +131,12 @@ class _VillageBody extends StatelessWidget {
     );
   }
 
-  String? _deathLine(Player p) {
+  String? _deathLine(BuildContext context, Player p) {
     final cause = p.causeOfDeath;
     final night = p.diedOnNight;
     if (cause == null || night == null) return null;
     final phase = p.diedOnPhase == GamePhase.day ? 'Jour' : 'Nuit';
-    return '$phase $night · ${frenchDeathCauseShort(cause)}';
+    return '$phase $night · ${deathCauseShort(context.l10n, cause)}';
   }
 }
 

@@ -12,9 +12,9 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
-import '../../utils/french_date_format.dart';
-import '../../utils/french_winner_label.dart';
 import '../../widgets/app_button.dart';
+import '../../utils/l10n.dart';
+import '../../utils/labels.dart';
 
 /// The end-of-game screen: the MJ declares the winner and closes the game. The
 /// app never decides this itself - the count is a signal, not a verdict.
@@ -92,7 +92,7 @@ class _EndGameScreenState extends ConsumerState<EndGameScreen> {
                         ),
                         if (game != null)
                           Text(
-                            game.name ?? 'Partie du ${frenchDayMonthLabel(game.createdAt)}',
+                            gameTitle(context.l10n, game),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: typography.meta.copyWith(color: colors.textSecondary),
@@ -212,7 +212,7 @@ class _WinnerRow extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                frenchWinnerIcon(winner),
+                winnerIcon(winner),
                 size: 17,
                 color: selected ? colors.accentText : colors.textSecondary,
               ),
@@ -222,7 +222,7 @@ class _WinnerRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    frenchWinnerLabel(winner),
+                    winnerLabel(context.l10n, winner),
                     style: typography.rowLabel.copyWith(
                       color: selected ? colors.accentText : colors.textPrimary,
                     ),
