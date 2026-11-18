@@ -34,7 +34,7 @@ class ScriptTab extends ConsumerWidget {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (_, _) => UnreadableGameNotice(
         gameId: gameId,
-        message: 'Impossible de charger la partie.',
+        message: context.l10n.scriptLoadError,
       ),
       data: (session) => session.engine.phase == GamePhase.night
           ? _NightBody(gameId: gameId, session: session)
@@ -113,16 +113,16 @@ class _NightBody extends ConsumerWidget {
         lockedNote: locked.isEmpty
             ? null
             : voleurAmongLocked
-            ? 'Le Voleur a volé une carte de ${context.l10n.roleName(step.role.id)} : il compte en plus.'
-            : 'Déjà connu grâce à la Voyante.',
+            ? context.l10n.scriptThiefExtra(context.l10n.roleName(step.role.id))
+            : context.l10n.scriptSeerKnown,
         onConfirm: (rowIds) => notifier.identifyRole(roleId, rowIds),
         onDefer: notifier.skipStep,
       );
     }
-    return _actBody(notifier, step.role);
+    return _actBody(context, notifier, step.role);
   }
 
-  Widget _actBody(GameSession notifier, Role role) {
+  Widget _actBody(BuildContext context, GameSession notifier, Role role) {
     final alive = session.engine.alivePlayers;
     Candidate cand(Player p) => (id: p.id, name: p.name);
 
@@ -155,11 +155,11 @@ class _NightBody extends ConsumerWidget {
 
       case 'loup_garou':
         return TargetPick(
-          question: 'Qui les Loups dévorent-ils ?',
+          question: context.l10n.scriptWolvesQuestion,
           candidates: [for (final p in alive) if (p.roleId != 'loup_garou') cand(p)],
-          confirmLabel: (name) => 'Les Loups désignent $name',
+          confirmLabel: context.l10n.scriptWolvesPick,
           onConfirm: (id) => notifier.applyAction(WolvesTarget(targetPlayerId: id)),
-          secondaryLabel: 'Passer ce rôle',
+          secondaryLabel: context.l10n.scriptSkipRole,
           onSecondary: notifier.skipStep,
         );
 
@@ -177,7 +177,7 @@ class _NightBody extends ConsumerWidget {
       case 'voleur':
         final voleur = session.engine.players.where((p) => p.roleId == 'voleur').firstOrNull;
         if (voleur == null || session.reserveRoleIds.isEmpty) {
-          return SimpleAct(primaryLabel: 'Passer ce rôle', onPrimary: notifier.skipStep);
+          return SimpleAct(primaryLabel: context.l10n.scriptSkipRole, onPrimary: notifier.skipStep);
         }
         return _VoleurAct(
           reserveRoleIds: session.reserveRoleIds,
@@ -188,7 +188,7 @@ class _NightBody extends ConsumerWidget {
         );
 
       default:
-        return SimpleAct(primaryLabel: 'Passer ce rôle', onPrimary: notifier.skipStep);
+        return SimpleAct(primaryLabel: context.l10n.scriptSkipRole, onPrimary: notifier.skipStep);
     }
   }
 }
@@ -229,7 +229,7 @@ class _VoleurActState extends State<_VoleurAct> {
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 18, AppSpacing.screen, 8),
           child: Text(
-            'Les deux cartes de la pioche',
+            context.l10n.scriptThiefReserve,
             style: typography.rowLabel.copyWith(color: colors.textPrimary),
           ),
         ),
@@ -255,8 +255,7 @@ class _VoleurActState extends State<_VoleurAct> {
           Padding(
             padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 8),
             child: Text(
-              'Le Voleur devient ${context.l10n.roleWithArticle(stolen!)} : '
-              "réveillez-le à son tour cette nuit s'il n'est pas déjà passé.",
+              context.l10n.scriptThiefBecomes(context.l10n.roleWithArticle(stolen!)),
               style: typography.meta.copyWith(color: colors.warnText, height: 1.5),
             ),
           ),
@@ -269,10 +268,10 @@ class _VoleurActState extends State<_VoleurAct> {
           ),
           child: AppButton(
             label: !picked
-                ? 'Choisissez une carte'
+                ? context.l10n.scriptPickCard
                 : keeps
-                ? 'Le Voleur garde sa carte'
-                : 'Le Voleur prend ${context.l10n.roleWithArticle(stolen!)}',
+                ? context.l10n.scriptThiefKeeps
+                : context.l10n.scriptThiefTakes(context.l10n.roleWithArticle(stolen!)),
             onPressed: !picked ? null : () => widget.onConfirm(stolen),
           ),
         ),
@@ -312,7 +311,7 @@ class _KeepCardOption extends StatelessWidget {
             ),
             Expanded(
               child: Text(
-                'Il garde sa carte',
+                context.l10n.scriptThiefKeepOption,
                 style: typography.rowLabel.copyWith(
                   color: selected ? colors.accentText : colors.textPrimary,
                 ),
@@ -372,11 +371,11 @@ class _SeerActState extends State<_SeerAct> {
   Widget build(BuildContext context) {
     return switch (_phase) {
       _SeerPhase.pickTarget => TargetPick(
-        question: 'Qui la Voyante observe-t-elle ?',
+        question: context.l10n.scriptSeerQuestion,
         candidates: [for (final t in widget.targets) (id: '${t.rowId}', name: t.name)],
-        confirmLabel: (name) => 'La Voyante observe $name',
+        confirmLabel: context.l10n.scriptSeerPick,
         onConfirm: _onTargetPicked,
-        secondaryLabel: 'Passer ce rôle',
+        secondaryLabel: context.l10n.scriptSkipRole,
         onSecondary: widget.onSkip,
       ),
       _SeerPhase.noteCard => _SeerNote(
@@ -420,14 +419,14 @@ class _SeerNoteState extends State<_SeerNote> {
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 18, AppSpacing.screen, 4),
           child: Text(
-            'Sa carte n\'est pas encore notée. Montrez-la à la Voyante, puis notez-la.',
+            context.l10n.scriptSeerNote,
             style: typography.meta.copyWith(color: colors.textSecondary, height: 1.5),
           ),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 12, AppSpacing.screen, 8),
           child: Text(
-            'La carte de ${widget.name}',
+            context.l10n.scriptCardOf(widget.name),
             style: typography.meta.copyWith(color: colors.textTertiary),
           ),
         ),
@@ -454,8 +453,8 @@ class _SeerNoteState extends State<_SeerNote> {
           ),
           child: AppButton(
             label: _roleId == null
-                ? 'Choisissez une carte'
-                : '${widget.name} est ${context.l10n.roleWithArticle(_roleId!)}',
+                ? context.l10n.scriptPickCard
+                : context.l10n.scriptNameIs(widget.name, context.l10n.roleWithArticle(_roleId!)),
             onPressed: _roleId == null ? null : () => widget.onConfirm(_roleId!),
           ),
         ),
@@ -493,7 +492,7 @@ class _SeerResult extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'La Voyante voit',
+                  context.l10n.scriptSeerSees,
                   style: typography.counter.copyWith(color: colors.accentText),
                 ),
                 const SizedBox(height: 8),
@@ -511,7 +510,7 @@ class _SeerResult extends StatelessWidget {
                     ),
                     Expanded(
                       child: Text(
-                        '$name est ${context.l10n.roleWithArticle(roleId)}',
+                        context.l10n.scriptNameIs(name, context.l10n.roleWithArticle(roleId)),
                         style: typography.rowLabel.copyWith(
                           fontSize: 16,
                           color: colors.textPrimary,
@@ -525,7 +524,7 @@ class _SeerResult extends StatelessWidget {
                         borderRadius: BorderRadius.circular(AppRadii.pill),
                       ),
                       child: Text(
-                        wolves ? 'Loups' : 'Village',
+                        wolves ? context.l10n.compositionWolves : context.l10n.compositionVillage,
                         style: typography.counter.copyWith(color: colors.textSecondary),
                       ),
                     ),
@@ -543,7 +542,7 @@ class _SeerResult extends StatelessWidget {
             AppSpacing.screen,
             AppSpacing.screen,
           ),
-          child: AppButton(label: 'Continuer', onPressed: onContinue),
+          child: AppButton(label: context.l10n.commonContinue, onPressed: onContinue),
         ),
       ],
     );
@@ -595,12 +594,12 @@ class _LoversPickState extends State<_LoversPick> {
             children: [
               Expanded(
                 child: Text(
-                  'Qui sont les amoureux ?',
+                  context.l10n.scriptLoversQuestion,
                   style: typography.rowLabel.copyWith(color: colors.textPrimary),
                 ),
               ),
               Text(
-                '${_selected.length} sur 2',
+                context.l10n.identifyProgress(_selected.length, 2),
                 style: typography.counter.copyWith(color: colors.accentText),
               ),
             ],
@@ -636,15 +635,15 @@ class _LoversPickState extends State<_LoversPick> {
             children: [
               AppButton(
                 label: complete
-                    ? 'Cupidon unit ${_name(_selected[0])} et ${_name(_selected[1])}'
-                    : 'Choisissez deux joueurs',
+                    ? context.l10n.scriptLoversPair(_name(_selected[0]), _name(_selected[1]))
+                    : context.l10n.scriptLoversPick,
                 leadingIcon: complete ? AppIcons.cupid : null,
                 onPressed: complete
                     ? () => widget.onConfirm(_selected[0], _selected[1])
                     : null,
               ),
               AppButton(
-                label: 'Passer ce rôle',
+                label: context.l10n.scriptSkipRole,
                 variant: AppButtonVariant.secondary,
                 onPressed: widget.onSkip,
               ),
@@ -671,7 +670,7 @@ class _FinalizePrompt extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 10),
           child: Text(
-            'Tous les rôles ont joué.',
+            context.l10n.scriptAllPlayed,
             style: context.typography.body.copyWith(color: colors.textSecondary),
           ),
         ),
@@ -682,7 +681,7 @@ class _FinalizePrompt extends StatelessWidget {
             AppSpacing.screen,
             AppSpacing.screen,
           ),
-          child: AppButton(label: 'Résoudre la nuit', onPressed: onResolve),
+          child: AppButton(label: context.l10n.scriptResolveNight, onPressed: onResolve),
         ),
       ],
     );
@@ -711,7 +710,7 @@ class _NightHeader extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _PhaseEyebrow(icon: AppIcons.night, label: 'Nuit $nightIndex'),
+          _PhaseEyebrow(icon: AppIcons.night, label: context.l10n.summaryPhase('night', nightIndex)),
           if (showDots)
             Row(
               spacing: 5,
@@ -950,8 +949,8 @@ class _DayRecapBody extends StatelessWidget {
     }
 
     final ctaLabel = engine.nightIndex == 1 && engine.captainPlayerId == null
-        ? 'Élire le Capitaine'
-        : 'Ouvrir le vote du village';
+        ? context.l10n.scriptElectCaptain
+        : context.l10n.scriptOpenVote;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(
@@ -963,7 +962,7 @@ class _DayRecapBody extends StatelessWidget {
       children: [
         _PhaseEyebrow(
           icon: AppIcons.day,
-          label: 'Jour ${engine.nightIndex} se lève',
+          label: context.l10n.scriptDayRises(engine.nightIndex),
           iconColor: colors.warnText,
         ),
         const SizedBox(height: 14),
@@ -978,8 +977,8 @@ class _DayRecapBody extends StatelessWidget {
             children: [
               Text(
                 deaths.isEmpty
-                    ? "Personne n'est mort cette nuit"
-                    : 'Cette nuit, le village a perdu',
+                    ? context.l10n.scriptNobodyDied
+                    : context.l10n.scriptVillageLost,
                 style: typography.meta.copyWith(color: colors.textTertiary),
               ),
               for (final death in deaths) ...[
@@ -995,7 +994,7 @@ class _DayRecapBody extends StatelessWidget {
                 Divider(color: colors.borderHairline, height: 1),
                 const SizedBox(height: 12),
                 Text(
-                  '$saved a été attaqué par les Loups, puis sauvé. Ne l\'annoncez pas.',
+                  context.l10n.scriptSavedNote(saved),
                   style: typography.meta.copyWith(color: colors.textSecondary, height: 1.5),
                 ),
               ],
@@ -1006,8 +1005,18 @@ class _DayRecapBody extends StatelessWidget {
         Row(
           spacing: 8,
           children: [
-            Expanded(child: _StatCell(label: 'Village', value: aliveByTeam[Team.village] ?? 0)),
-            Expanded(child: _StatCell(label: 'Loups', value: aliveByTeam[Team.werewolves] ?? 0)),
+            Expanded(
+              child: _StatCell(
+                label: context.l10n.compositionVillage,
+                value: aliveByTeam[Team.village] ?? 0,
+              ),
+            ),
+            Expanded(
+              child: _StatCell(
+                label: context.l10n.compositionWolves,
+                value: aliveByTeam[Team.werewolves] ?? 0,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 16),
@@ -1056,8 +1065,8 @@ class _RecapDeathRow extends StatelessWidget {
                   Flexible(
                     child: Text(
                       role == null
-                          ? 'Rôle non révélé'
-                          : 'Était ${context.l10n.roleWithArticle(role.id)}',
+                          ? context.l10n.scriptRoleNotRevealed
+                          : context.l10n.scriptWasRole(context.l10n.roleWithArticle(role.id)),
                       style: typography.meta.copyWith(
                         color: colors.textPrimary,
                         fontWeight: FontWeight.w500,
@@ -1091,27 +1100,24 @@ class _CaptainElectionBody extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _DayEyebrow(label: 'Jour ${session.engine.nightIndex}'),
+        _DayEyebrow(label: context.l10n.summaryPhase('day', session.engine.nightIndex)),
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 12),
-          child: const _RoleBanner(
+          child: _RoleBanner(
             icon: AppIcons.captain,
-            title: 'Le Capitaine',
-            body: 'Le village élit son Capitaine. N\'importe quel joueur, quel que soit '
-                'son rôle. Sa voix compte double au vote. Cet écran revient si le '
-                'Capitaine meurt : il désigne alors son successeur.',
+            title: context.l10n.scriptCaptainTitle,
+            body: context.l10n.scriptCaptainBody,
           ),
         ),
         Expanded(
           child: TargetPick(
-            question: 'Qui est élu ?',
+            question: context.l10n.scriptCaptainQuestion,
             candidates: _alive(session.engine),
             selectedStyle: AvatarSelectedStyle.captain,
             confirmIcon: AppIcons.captain,
-            pendingLabel: 'Choisissez un joueur',
-            confirmLabel: (name) => '$name est Capitaine',
+            confirmLabel: context.l10n.scriptCaptainIs,
             onConfirm: (id) => notifier.electCaptain(id),
-            secondaryLabel: 'Pas de Capitaine cette partie',
+            secondaryLabel: context.l10n.scriptNoCaptain,
             onSecondary: () => notifier.electCaptain(null),
           ),
         ),
@@ -1137,24 +1143,24 @@ class _VoteBody extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _DayEyebrow(label: 'Jour ${session.engine.nightIndex} · vote'),
+        _DayEyebrow(label: context.l10n.scriptVoteEyebrow(session.engine.nightIndex)),
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 12),
           child: _RoleBanner(
             icon: AppIcons.vote,
-            title: 'Le vote',
+            title: context.l10n.scriptVoteTitle,
             body: captainName == null
-                ? 'Le village débat, puis désigne.'
-                : 'Le village débat, puis désigne. La voix de $captainName compte double.',
+                ? context.l10n.scriptVoteBody
+                : context.l10n.scriptVoteBodyCaptain(captainName),
           ),
         ),
         Expanded(
           child: TargetPick(
-            question: 'Qui est éliminé ?',
+            question: context.l10n.scriptVoteQuestion,
             candidates: _alive(session.engine),
             avatarSize: AppSizes.avatarVoteGrid,
             crossAxisCount: AppSizes.gridColumnsSmallPool,
-            confirmLabel: (name) => 'Le village élimine $name',
+            confirmLabel: context.l10n.scriptVoteEliminates,
             onConfirm: (id) => notifier.eliminateByVote(id),
             badgeFor: (c) => c.id == captainId
                 ? Container(
@@ -1163,7 +1169,7 @@ class _VoteBody extends StatelessWidget {
                     child: Icon(AppIcons.captain, size: 11, color: colors.warnText),
                   )
                 : null,
-            secondaryLabel: 'Égalité, personne n\'est éliminé',
+            secondaryLabel: context.l10n.scriptVoteTie,
             onSecondary: () => notifier.eliminateByVote(null),
           ),
         ),
@@ -1187,7 +1193,7 @@ class _NextNightPrompt extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 10),
           child: Text(
-            'Le jour est terminé.',
+            context.l10n.scriptDayOver,
             style: context.typography.body.copyWith(color: context.colors.textSecondary),
           ),
         ),
@@ -1199,7 +1205,7 @@ class _NextNightPrompt extends StatelessWidget {
             AppSpacing.screen,
           ),
           child: AppButton(
-            label: 'Commencer la nuit $nextNight',
+            label: context.l10n.scriptStartNight(nextNight),
             leadingIcon: AppIcons.night,
             onPressed: onStart,
           ),
@@ -1236,7 +1242,10 @@ class _RevealPanelState extends State<_RevealPanel> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const _SheetHandle(),
-        _DeadHeader(name: dead.name, subtitle: 'Éliminé nuit ${dead.diedOnNight}'),
+        _DeadHeader(
+          name: dead.name,
+          subtitle: context.l10n.scriptEliminatedNight(dead.diedOnNight ?? 0),
+        ),
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 16, AppSpacing.screen, 0),
           child: Container(
@@ -1246,7 +1255,7 @@ class _RevealPanelState extends State<_RevealPanel> {
               borderRadius: BorderRadius.circular(AppRadii.cardSmall),
             ),
             child: Text(
-              "Retournez sa carte devant la table. Son rôle n'a pas encore été noté.",
+              context.l10n.scriptRevealHint,
               style: typography.meta.copyWith(color: colors.textSecondary, height: 1.5),
             ),
           ),
@@ -1254,7 +1263,7 @@ class _RevealPanelState extends State<_RevealPanel> {
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 18, AppSpacing.screen, 8),
           child: Text(
-            'Quelle était sa carte ?',
+            context.l10n.scriptRevealQuestion,
             style: typography.meta.copyWith(color: colors.textTertiary),
           ),
         ),
@@ -1285,14 +1294,14 @@ class _RevealPanelState extends State<_RevealPanel> {
             children: [
               AppButton(
                 label: _roleId == null
-                    ? 'Choisissez une carte'
-                    : '${dead.name} était ${context.l10n.roleWithArticle(_roleId!)}',
+                    ? context.l10n.scriptPickCard
+                    : context.l10n.scriptNameWas(dead.name, context.l10n.roleWithArticle(_roleId!)),
                 onPressed: _roleId == null
                     ? null
                     : () => widget.notifier.revealRole(int.parse(dead.id), _roleId!),
               ),
               AppButton(
-                label: 'Je ne note pas',
+                label: context.l10n.scriptDontNote,
                 variant: AppButtonVariant.secondary,
                 onPressed: () => widget.notifier.skipReveal(dead.id),
               ),
@@ -1352,7 +1361,7 @@ class _RoleOption extends StatelessWidget {
             ),
             if (remaining > 1)
               Text(
-                '$remaining restants',
+                context.l10n.scriptRemaining(remaining),
                 style: typography.counter.copyWith(color: colors.textTertiary),
               ),
           ],
@@ -1409,7 +1418,10 @@ class _HunterShotPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const _SheetHandle(),
-        _DeadHeader(name: hunter.name, subtitle: 'Éliminé nuit ${hunter.diedOnNight}'),
+        _DeadHeader(
+          name: hunter.name,
+          subtitle: context.l10n.scriptEliminatedNight(hunter.diedOnNight ?? 0),
+        ),
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 16, AppSpacing.screen, 0),
           child: _RevealedCard(roleId: session.rosterRoleId(deadHunterId)),
@@ -1432,14 +1444,14 @@ class _HunterShotPanel extends StatelessWidget {
                     TextSpan(
                       children: [
                         TextSpan(
-                          text: 'Le Chasseur tire. ',
+                          text: context.l10n.scriptHunterShoots,
                           style: typography.meta.copyWith(
                             color: colors.warnText,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                         TextSpan(
-                          text: 'Il emporte un joueur avec lui, tout de suite.',
+                          text: context.l10n.scriptHunterTakes,
                           style: typography.meta.copyWith(color: colors.textSecondary),
                         ),
                       ],
@@ -1452,12 +1464,12 @@ class _HunterShotPanel extends StatelessWidget {
         ),
         Expanded(
           child: TargetPick(
-            question: 'Sa cible',
+            question: context.l10n.scriptHunterTarget,
             candidates: _alive(session.engine),
             crossAxisCount: AppSizes.gridColumnsSmallPool,
-            confirmLabel: (name) => '$name est éliminé',
+            confirmLabel: context.l10n.scriptHunterEliminated,
             onConfirm: (id) => notifier.hunterShoot(id),
-            secondaryLabel: 'Il ne tire pas',
+            secondaryLabel: context.l10n.scriptHunterNoShot,
             onSecondary: () => notifier.hunterShoot(null),
           ),
         ),
@@ -1484,23 +1496,22 @@ class _SuccessionPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const _SheetHandle(),
-        _DeadHeader(name: dead.name, subtitle: 'Le Capitaine est mort'),
+        _DeadHeader(name: dead.name, subtitle: context.l10n.scriptCaptainDead),
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 16, AppSpacing.screen, 12),
-          child: const _RoleBanner(
+          child: _RoleBanner(
             icon: AppIcons.captain,
-            title: 'La succession',
-            body: 'Avant de partir, le Capitaine désigne son successeur. '
-                'Sa voix comptera double à son tour.',
+            title: context.l10n.scriptSuccessionTitle,
+            body: context.l10n.scriptSuccessionBody,
           ),
         ),
         Expanded(
           child: TargetPick(
-            question: 'Qui lui succède ?',
+            question: context.l10n.scriptSuccessionQuestion,
             candidates: _alive(session.engine),
             selectedStyle: AvatarSelectedStyle.captain,
             confirmIcon: AppIcons.captain,
-            confirmLabel: (name) => '$name devient Capitaine',
+            confirmLabel: context.l10n.scriptCaptainBecomes,
             onConfirm: (id) => notifier.nameCaptainSuccessor(id),
           ),
         ),
@@ -1531,7 +1542,9 @@ class _LoversAckPanel extends StatelessWidget {
         const _SheetHandle(),
         _DeadHeader(
           name: lover.name,
-          subtitle: partnerName == null ? 'Meurt de chagrin' : 'Amoureux de $partnerName',
+          subtitle: partnerName == null
+              ? context.l10n.scriptDiesOfHeartbreak
+              : context.l10n.scriptInLoveWith(partnerName),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 16, AppSpacing.screen, 0),
@@ -1547,9 +1560,8 @@ class _LoversAckPanel extends StatelessWidget {
             ),
             child: Text(
               partnerName == null
-                  ? "L'autre amoureux ne survit pas à sa disparition. Annoncez-le au village."
-                  : "$partnerName n'est plus, et les amoureux de Cupidon partent ensemble. "
-                        'Annoncez la mort de ${lover.name} au village.',
+                  ? context.l10n.scriptLoversNoPartner
+                  : context.l10n.scriptLoversPartner(partnerName, lover.name),
               style: typography.meta.copyWith(color: colors.textSecondary, height: 1.5),
             ),
           ),
@@ -1562,7 +1574,7 @@ class _LoversAckPanel extends StatelessWidget {
             AppSpacing.screen,
             AppSpacing.screen,
           ),
-          child: AppButton(label: 'Compris', onPressed: notifier.acknowledgeLoversDeaths),
+          child: AppButton(label: context.l10n.scriptGotIt, onPressed: notifier.acknowledgeLoversDeaths),
         ),
       ],
     );
@@ -1649,9 +1661,9 @@ class _RevealedCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Sa carte', style: typography.counter.copyWith(color: colors.textTertiary)),
+                Text(context.l10n.scriptTheirCard, style: typography.counter.copyWith(color: colors.textTertiary)),
                 Text(
-                  role == null ? 'Rôle non révélé' : context.l10n.roleName(role.id),
+                  role == null ? context.l10n.scriptRoleNotRevealed : context.l10n.roleName(role.id),
                   style: typography.rowLabel.copyWith(color: colors.textPrimary),
                 ),
               ],
@@ -1665,7 +1677,7 @@ class _RevealedCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppRadii.pill),
               ),
               child: Text(
-                wolves ? 'Loups' : 'Village',
+                wolves ? context.l10n.compositionWolves : context.l10n.compositionVillage,
                 style: typography.counter.copyWith(
                   color: wolves ? colors.accentText : colors.textSecondary,
                 ),
@@ -1769,7 +1781,7 @@ class _StatCell extends StatelessWidget {
                   style: typography.rowLabel.copyWith(fontSize: 20, color: colors.textPrimary),
                 ),
                 TextSpan(
-                  text: 'vivants',
+                  text: context.l10n.scriptAliveUnit,
                   style: typography.counter.copyWith(color: colors.textTertiary),
                 ),
               ],

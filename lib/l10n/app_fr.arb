@@ -980,5 +980,404 @@
         "type": "String"
       }
     }
+  },
+  "scriptLoadError": "Impossible de charger la partie.",
+  "@scriptLoadError": {
+    "description": "The script tab failed to load."
+  },
+  "scriptThiefExtra": "Le Voleur a volé une carte de {role} : il compte en plus.",
+  "@scriptThiefExtra": {
+    "description": "Note on the identify step when the Thief holds a stolen card of this role.",
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptSeerKnown": "Déjà connu grâce à la Voyante.",
+  "@scriptSeerKnown": {
+    "description": "Note on the identify step for a holder the Seer already revealed."
+  },
+  "scriptWolvesQuestion": "Qui les Loups dévorent-ils ?",
+  "@scriptWolvesQuestion": {
+    "description": "The Werewolves' target question."
+  },
+  "scriptWolvesPick": "Les Loups désignent {name}",
+  "@scriptWolvesPick": {
+    "description": "Button that confirms the Werewolves target.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptSkipRole": "Passer ce rôle",
+  "@scriptSkipRole": {
+    "description": "Button that moves on without playing the role."
+  },
+  "scriptThiefReserve": "Les deux cartes de la pioche",
+  "@scriptThiefReserve": {
+    "description": "Heading above the two cards the Thief can take."
+  },
+  "scriptThiefBecomes": "Le Voleur devient {role} : réveillez-le à son tour cette nuit s'il n'est pas déjà passé.",
+  "@scriptThiefBecomes": {
+    "description": "Nudge when the Thief steals a role that wakes at night; role has its article.",
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptPickCard": "Choisissez une carte",
+  "@scriptPickCard": {
+    "description": "Disabled button text until a card is picked."
+  },
+  "scriptThiefKeeps": "Le Voleur garde sa carte",
+  "@scriptThiefKeeps": {
+    "description": "Button that confirms the Thief keeps their card."
+  },
+  "scriptThiefTakes": "Le Voleur prend {role}",
+  "@scriptThiefTakes": {
+    "description": "Button that confirms the card the Thief takes; role has its article.",
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptThiefKeepOption": "Il garde sa carte",
+  "@scriptThiefKeepOption": {
+    "description": "Option: the Thief keeps their own card."
+  },
+  "scriptSeerQuestion": "Qui la Voyante observe-t-elle ?",
+  "@scriptSeerQuestion": {
+    "description": "The Seer's target question."
+  },
+  "scriptSeerPick": "La Voyante observe {name}",
+  "@scriptSeerPick": {
+    "description": "Button that confirms the Seer target.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptSeerNote": "Sa carte n'est pas encore notée. Montrez-la à la Voyante, puis notez-la.",
+  "@scriptSeerNote": {
+    "description": "Asks the MJ to note the card the Seer is about to see."
+  },
+  "scriptCardOf": "La carte de {name}",
+  "@scriptCardOf": {
+    "description": "Label above the list of cards to pick for a player.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptNameIs": "{name} est {role}",
+  "@scriptNameIs": {
+    "description": "A player and their role; role has its article.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptSeerSees": "La Voyante voit",
+  "@scriptSeerSees": {
+    "description": "Heading of the card the Seer is shown."
+  },
+  "scriptLoversQuestion": "Qui sont les amoureux ?",
+  "@scriptLoversQuestion": {
+    "description": "Cupid's question."
+  },
+  "scriptLoversPair": "Cupidon unit {first} et {second}",
+  "@scriptLoversPair": {
+    "description": "Button that confirms the two lovers.",
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "second": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptLoversPick": "Choisissez deux joueurs",
+  "@scriptLoversPick": {
+    "description": "Disabled button text until two lovers are picked."
+  },
+  "scriptAllPlayed": "Tous les rôles ont joué.",
+  "@scriptAllPlayed": {
+    "description": "End of the night script."
+  },
+  "scriptResolveNight": "Résoudre la nuit",
+  "@scriptResolveNight": {
+    "description": "Button that resolves the night and starts the day."
+  },
+  "scriptDayRises": "Jour {index} se lève",
+  "@scriptDayRises": {
+    "description": "Eyebrow of the day recap.",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "scriptNobodyDied": "Personne n'est mort cette nuit",
+  "@scriptNobodyDied": {
+    "description": "Day recap when the night killed nobody."
+  },
+  "scriptVillageLost": "Cette nuit, le village a perdu",
+  "@scriptVillageLost": {
+    "description": "Day recap heading above the deaths."
+  },
+  "scriptSavedNote": "{name} a été attaqué par les Loups, puis sauvé. Ne l'annoncez pas.",
+  "@scriptSavedNote": {
+    "description": "Day recap note about the player the Witch saved.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptAliveUnit": "vivants",
+  "@scriptAliveUnit": {
+    "description": "Unit under the number of living players of a side."
+  },
+  "scriptElectCaptain": "Élire le Capitaine",
+  "@scriptElectCaptain": {
+    "description": "Day recap button that goes to the Captain election."
+  },
+  "scriptOpenVote": "Ouvrir le vote du village",
+  "@scriptOpenVote": {
+    "description": "Day recap button that goes to the vote."
+  },
+  "scriptRoleNotRevealed": "Rôle non révélé",
+  "@scriptRoleNotRevealed": {
+    "description": "A player's card was never recorded."
+  },
+  "scriptWasRole": "Était {role}",
+  "@scriptWasRole": {
+    "description": "The card of a dead player; role has its article.",
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptCaptainTitle": "Le Capitaine",
+  "@scriptCaptainTitle": {
+    "description": "Title of the Captain banner."
+  },
+  "scriptCaptainBody": "Le village élit son Capitaine. N'importe quel joueur, quel que soit son rôle. Sa voix compte double au vote. Cet écran revient si le Capitaine meurt : il désigne alors son successeur.",
+  "@scriptCaptainBody": {
+    "description": "Explains the Captain election."
+  },
+  "scriptCaptainQuestion": "Qui est élu ?",
+  "@scriptCaptainQuestion": {
+    "description": "Captain election question."
+  },
+  "scriptCaptainIs": "{name} est Capitaine",
+  "@scriptCaptainIs": {
+    "description": "Button that confirms the elected Captain.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptNoCaptain": "Pas de Capitaine cette partie",
+  "@scriptNoCaptain": {
+    "description": "Button that skips the Captain election."
+  },
+  "scriptVoteEyebrow": "Jour {index} · vote",
+  "@scriptVoteEyebrow": {
+    "description": "Eyebrow of the vote.",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "scriptVoteTitle": "Le vote",
+  "@scriptVoteTitle": {
+    "description": "Title of the vote banner."
+  },
+  "scriptVoteBody": "Le village débat, puis désigne.",
+  "@scriptVoteBody": {
+    "description": "Vote banner text."
+  },
+  "scriptVoteBodyCaptain": "Le village débat, puis désigne. La voix de {name} compte double.",
+  "@scriptVoteBodyCaptain": {
+    "description": "Vote banner text when there is a Captain.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptVoteQuestion": "Qui est éliminé ?",
+  "@scriptVoteQuestion": {
+    "description": "Vote question."
+  },
+  "scriptVoteEliminates": "Le village élimine {name}",
+  "@scriptVoteEliminates": {
+    "description": "Button that confirms the eliminated player.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptVoteTie": "Égalité, personne n'est éliminé",
+  "@scriptVoteTie": {
+    "description": "Button for a tied vote."
+  },
+  "scriptDayOver": "Le jour est terminé.",
+  "@scriptDayOver": {
+    "description": "End of the day."
+  },
+  "scriptStartNight": "Commencer la nuit {index}",
+  "@scriptStartNight": {
+    "description": "Button that starts the next night.",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "scriptEliminatedNight": "Éliminé nuit {index}",
+  "@scriptEliminatedNight": {
+    "description": "Subtitle of a player who died in the night.",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "scriptRevealHint": "Retournez sa carte devant la table. Son rôle n'a pas encore été noté.",
+  "@scriptRevealHint": {
+    "description": "Asks the MJ to reveal and note a dead player card."
+  },
+  "scriptRevealQuestion": "Quelle était sa carte ?",
+  "@scriptRevealQuestion": {
+    "description": "Question above the card list for a dead player."
+  },
+  "scriptNameWas": "{name} était {role}",
+  "@scriptNameWas": {
+    "description": "Button that records the card of a dead player; role has its article.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptDontNote": "Je ne note pas",
+  "@scriptDontNote": {
+    "description": "Button that skips noting a dead player's card."
+  },
+  "scriptRemaining": "{count} restants",
+  "@scriptRemaining": {
+    "description": "How many copies of a role are left to place.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scriptHunterShoots": "Le Chasseur tire. ",
+  "@scriptHunterShoots": {
+    "description": "Start of the Hunter banner sentence (keep the trailing space)."
+  },
+  "scriptHunterTakes": "Il emporte un joueur avec lui, tout de suite.",
+  "@scriptHunterTakes": {
+    "description": "End of the Hunter banner sentence."
+  },
+  "scriptHunterTarget": "Sa cible",
+  "@scriptHunterTarget": {
+    "description": "The Hunter's target question."
+  },
+  "scriptHunterEliminated": "{name} est éliminé",
+  "@scriptHunterEliminated": {
+    "description": "Button that confirms the Hunter's target.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptHunterNoShot": "Il ne tire pas",
+  "@scriptHunterNoShot": {
+    "description": "Button when the Hunter shoots nobody."
+  },
+  "scriptCaptainDead": "Le Capitaine est mort",
+  "@scriptCaptainDead": {
+    "description": "Subtitle of the succession panel."
+  },
+  "scriptSuccessionTitle": "La succession",
+  "@scriptSuccessionTitle": {
+    "description": "Title of the succession banner."
+  },
+  "scriptSuccessionBody": "Avant de partir, le Capitaine désigne son successeur. Sa voix comptera double à son tour.",
+  "@scriptSuccessionBody": {
+    "description": "Explains the Captain succession."
+  },
+  "scriptSuccessionQuestion": "Qui lui succède ?",
+  "@scriptSuccessionQuestion": {
+    "description": "Succession question."
+  },
+  "scriptCaptainBecomes": "{name} devient Capitaine",
+  "@scriptCaptainBecomes": {
+    "description": "Button that confirms the new Captain.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptDiesOfHeartbreak": "Meurt de chagrin",
+  "@scriptDiesOfHeartbreak": {
+    "description": "Subtitle when a lover dies and the partner is unknown."
+  },
+  "scriptInLoveWith": "Amoureux de {name}",
+  "@scriptInLoveWith": {
+    "description": "Subtitle of a lover who dies with their partner.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptLoversNoPartner": "L'autre amoureux ne survit pas à sa disparition. Annoncez-le au village.",
+  "@scriptLoversNoPartner": {
+    "description": "Lover grief note without a known partner."
+  },
+  "scriptLoversPartner": "{partner} n'est plus, et les amoureux de Cupidon partent ensemble. Annoncez la mort de {name} au village.",
+  "@scriptLoversPartner": {
+    "description": "Lover grief note.",
+    "placeholders": {
+      "partner": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptGotIt": "Compris",
+  "@scriptGotIt": {
+    "description": "Button that acknowledges a lover death."
+  },
+  "scriptTheirCard": "Sa carte",
+  "@scriptTheirCard": {
+    "description": "Label above the revealed card of a dead player."
   }
 }
