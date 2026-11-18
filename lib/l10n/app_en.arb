@@ -150,7 +150,7 @@
   "aideTitle": "Wake-up order",
   "aideSubtitle": "Your composition, in order",
   "aideFooter": "One line per role, no more. For the details, the paper rules stay on the table.",
-  "identifyQuestionOne": "Who is the {role}?",
+  "identifyQuestionOne": "Who has the {role} card?",
   "identifyQuestionMany": "Who are the {roles}?",
   "identifyProgress": "{count} of {total}",
   "identifySave": "Save",
