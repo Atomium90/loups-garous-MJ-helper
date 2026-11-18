@@ -14,6 +14,28 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../support/fake_game_repository.dart';
 import '../../support/pump_app.dart';
 
+/// Starts the real app (language handling included) with [stored] as the saved language
+/// and [device] as the phone's language, then opens Réglages.
+Future<void> _openSettingsInApp(
+  WidgetTester tester, {
+  String? stored,
+  Locale device = const Locale('fr', 'FR'),
+}) async {
+  SharedPreferences.setMockInitialValues({'language': ?stored});
+  tester.platformDispatcher.localesTestValue = [device];
+  addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
+      child: const MainApp(),
+    ),
+  );
+  await tester.pumpAndSettle();
+
+  await tester.tap(find.byIcon(AppIcons.settings));
+  await tester.pumpAndSettle();
+}
+
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
@@ -78,17 +100,7 @@ void main() {
     });
 
     testWidgets('a stored English choice shows the whole app in English', (tester) async {
-      SharedPreferences.setMockInitialValues({'language': 'en'});
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
-          child: const MainApp(),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byIcon(AppIcons.settings));
-      await tester.pumpAndSettle();
+      await _openSettingsInApp(tester, stored: 'en');
 
       expect(find.text('LANGUAGE'), findsOneWidget);
       expect(find.text('System'), findsOneWidget);
@@ -96,37 +108,13 @@ void main() {
     });
 
     testWidgets('a stored French choice shows French even on an English device', (tester) async {
-      SharedPreferences.setMockInitialValues({'language': 'fr'});
-      tester.platformDispatcher.localesTestValue = const [Locale('en', 'US')];
-      addTearDown(tester.platformDispatcher.clearLocalesTestValue);
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
-          child: const MainApp(),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byIcon(AppIcons.settings));
-      await tester.pumpAndSettle();
+      await _openSettingsInApp(tester, stored: 'fr', device: const Locale('en', 'US'));
 
       expect(find.text('LANGUE'), findsOneWidget);
     });
 
     testWidgets('following the device gives English on a non-French phone', (tester) async {
-      SharedPreferences.setMockInitialValues({});
-      tester.platformDispatcher.localesTestValue = const [Locale('de', 'DE')];
-      addTearDown(tester.platformDispatcher.clearLocalesTestValue);
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
-          child: const MainApp(),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byIcon(AppIcons.settings));
-      await tester.pumpAndSettle();
+      await _openSettingsInApp(tester, device: const Locale('de', 'DE'));
 
       expect(find.text('LANGUAGE'), findsOneWidget);
     });
