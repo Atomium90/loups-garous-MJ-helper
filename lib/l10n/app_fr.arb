@@ -393,7 +393,7 @@
       }
     }
   },
-  "unitNights": "{count, plural, =1{nuit} other{nuits}}",
+  "unitNights": "{count, plural, =0{nuits} =1{nuit} other{nuits}}",
   "@unitNights": {
     "description": "Unit next to a number of nights.",
     "placeholders": {
@@ -402,7 +402,7 @@
       }
     }
   },
-  "unitDays": "{count, plural, =1{jour} other{jours}}",
+  "unitDays": "{count, plural, =0{jours} =1{jour} other{jours}}",
   "@unitDays": {
     "description": "Unit next to a number of days.",
     "placeholders": {
@@ -431,7 +431,7 @@
       }
     }
   },
-  "pastHiddenRoles": "{count, plural, =1{Le rôle de l'éliminé reste caché.} other{Les rôles des {count} éliminés restent cachés.}}",
+  "pastHiddenRoles": "{count, plural, =0{Personne n'a été éliminé.} =1{Le rôle de l'éliminé reste caché.} other{Les rôles des {count} éliminés restent cachés.}}",
   "@pastHiddenRoles": {
     "description": "Note under the survivors: the eliminated players' roles are not shown.",
     "placeholders": {
@@ -447,5 +447,137 @@
   "pastReplay": "Rejouer",
   "@pastReplay": {
     "description": "Button that starts a new game with the same players and composition."
+  },
+  "commonContinue": "Continuer",
+  "@commonContinue": {
+    "description": "Generic button that goes on to the next step."
+  },
+  "gameLoadError": "Impossible de charger cette partie.",
+  "@gameLoadError": {
+    "description": "A setup screen could not load its game."
+  },
+  "playersTitle": "Les joueurs",
+  "@playersTitle": {
+    "description": "Title of the screen where the players are named."
+  },
+  "playersNamedCount": "{named} sur {total} nommés",
+  "@playersNamedCount": {
+    "description": "How many players have a name so far.",
+    "placeholders": {
+      "named": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "playerHint": "Joueur {number}",
+  "@playerHint": {
+    "description": "Placeholder of a player's name field.",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "regularsBook": "Carnet d'habitués",
+  "@regularsBook": {
+    "description": "Upcoming feature: a list of usual players."
+  },
+  "soonPill": "bientôt",
+  "@soonPill": {
+    "description": "Pill on a feature that is not available yet."
+  },
+  "playerCountLabel": "{count, plural, =1{{count} joueur} other{{count} joueurs}}",
+  "@playerCountLabel": {
+    "description": "A number of players with its unit.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "compositionTitle": "Composition",
+  "@compositionTitle": {
+    "description": "Title of the screen where the roles in play are chosen."
+  },
+  "compositionVillage": "Village",
+  "@compositionVillage": {
+    "description": "Heading above the village-side roles."
+  },
+  "compositionWolves": "Loups",
+  "@compositionWolves": {
+    "description": "Heading above the werewolf-side roles."
+  },
+  "compositionPlayers": "Joueurs",
+  "@compositionPlayers": {
+    "description": "Label of the player count stepper."
+  },
+  "compositionSuggestion": "{count, plural, =1{Suggestion pour {count} joueur} other{Suggestion pour {count} joueurs}}",
+  "@compositionSuggestion": {
+    "description": "Title of the suggested composition for that many players.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "compositionUseSuggestion": "Utiliser cette compo",
+  "@compositionUseSuggestion": {
+    "description": "Button that applies the suggested composition."
+  },
+  "compositionInReserve": "en réserve",
+  "@compositionInReserve": {
+    "description": "Note on a role whose cards are all set aside for the Thief's reserve."
+  },
+  "reserveTitle": "Réserve du Voleur",
+  "@reserveTitle": {
+    "description": "Heading of the two cards set aside for the Thief."
+  },
+  "reserveExplain": "Deux cartes en plus des joueurs, posées au centre. Le Voleur pourra en prendre une à la place de la sienne.",
+  "@reserveExplain": {
+    "description": "Explains the Thief's reserve."
+  },
+  "reserveCard": "Carte {number}",
+  "@reserveCard": {
+    "description": "Label of one of the two reserve cards.",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "reservePick": "Choisir une carte",
+  "@reservePick": {
+    "description": "Placeholder of a reserve card that has no role yet."
+  },
+  "reserveWhichCard": "Quelle carte ?",
+  "@reserveWhichCard": {
+    "description": "Title of the sheet where a reserve card is chosen."
+  },
+  "compositionRoleCount": "{assigned, plural, =0{0 rôles} =1{1 rôle} other{{assigned} rôles}} pour {players, plural, =1{1 joueur} other{{players} joueurs}}",
+  "@compositionRoleCount": {
+    "description": "How many roles are picked for how many players.",
+    "placeholders": {
+      "assigned": {
+        "type": "int"
+      },
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "compositionComplete": "Compo complète",
+  "@compositionComplete": {
+    "description": "Shown when every player has a role."
+  },
+  "compositionPickReserve": "Choisissez les 2 cartes de réserve du Voleur",
+  "@compositionPickReserve": {
+    "description": "Hint shown while the Thief's reserve is incomplete."
+  },
+  "compositionStart": "Lancer la partie",
+  "@compositionStart": {
+    "description": "Button that validates the composition and goes on to the players."
   }
 }

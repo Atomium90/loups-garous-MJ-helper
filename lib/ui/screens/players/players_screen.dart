@@ -7,6 +7,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
+import '../../utils/l10n.dart';
 import '../../widgets/setup_header.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/app_text_field.dart';
@@ -32,7 +33,7 @@ class PlayersScreen extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.screen),
               child: Text(
-                'Impossible de charger cette partie.',
+                context.l10n.gameLoadError,
                 textAlign: TextAlign.center,
                 style: context.typography.body.copyWith(color: context.colors.textSecondary),
               ),
@@ -101,8 +102,8 @@ class _PlayersFormState extends ConsumerState<_PlayersForm> {
     return Column(
       children: [
         SetupHeader(
-          title: 'Les joueurs',
-          subtitle: '$namedCount sur $total nommés',
+          title: context.l10n.playersTitle,
+          subtitle: context.l10n.playersNamedCount(namedCount, total),
           onBack: () => context.go('/'),
         ),
         Expanded(
@@ -132,7 +133,7 @@ class _PlayersFormState extends ConsumerState<_PlayersForm> {
             AppSpacing.screen,
           ),
           child: AppButton(
-            label: 'Continuer',
+            label: context.l10n.commonContinue,
             onPressed: allNamed ? _onContinue : null,
           ),
         ),
@@ -200,7 +201,7 @@ class _PlayerNameRowState extends State<_PlayerNameRow> {
           child: AppTextField(
             controller: widget.controller,
             focusNode: widget.focusNode,
-            hintText: 'Joueur ${widget.index + 1}',
+            hintText: context.l10n.playerHint(widget.index + 1),
             textInputAction: widget.isLast ? TextInputAction.done : TextInputAction.next,
             onChanged: widget.onChanged,
           ),
@@ -225,7 +226,7 @@ class _CarnetRow extends StatelessWidget {
           Icon(AppIcons.regulars, size: 15, color: colors.textTertiary),
           const SizedBox(width: 8),
           Text(
-            "Carnet d'habitués",
+            context.l10n.regularsBook,
             style: context.typography.meta.copyWith(color: colors.textTertiary),
           ),
           const SizedBox(width: 8),

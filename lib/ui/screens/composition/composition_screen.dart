@@ -46,7 +46,7 @@ class CompositionScreen extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.screen),
               child: Text(
-                'Impossible de charger cette partie.',
+                context.l10n.gameLoadError,
                 textAlign: TextAlign.center,
                 style: context.typography.body.copyWith(color: context.colors.textSecondary),
               ),
@@ -80,8 +80,8 @@ class _CompositionBody extends StatelessWidget {
     return Column(
       children: [
         SetupHeader(
-          title: 'Composition',
-          subtitle: '${draft.playerCount} joueurs',
+          title: context.l10n.compositionTitle,
+          subtitle: context.l10n.playerCountLabel(draft.playerCount),
           // Leaving keeps the game as a draft (what was picked is saved as it is edited);
           // only the trash button under Brouillons on Home deletes it.
           onBack: () => context.go('/'),
@@ -99,13 +99,13 @@ class _CompositionBody extends StatelessWidget {
                 _SuggestionCard(draft: draft, notifier: notifier),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
-                  child: Text('Village', style: typography.meta.copyWith(color: colors.textTertiary)),
+                  child: Text(context.l10n.compositionVillage, style: typography.meta.copyWith(color: colors.textTertiary)),
                 ),
                 _RoleGroup(roles: villageRoles, draft: draft, notifier: notifier),
                 const SizedBox(height: 14),
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
-                  child: Text('Loups', style: typography.meta.copyWith(color: colors.textTertiary)),
+                  child: Text(context.l10n.compositionWolves, style: typography.meta.copyWith(color: colors.textTertiary)),
                 ),
                 _RoleGroup(roles: wolfRoles, draft: draft, notifier: notifier),
                 if (draft.hasVoleur) ...[
@@ -147,7 +147,7 @@ class _PlayerCountRow extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: Text(
-              'Joueurs',
+              context.l10n.compositionPlayers,
               style: context.typography.body.copyWith(color: colors.textSecondary),
             ),
           ),
@@ -201,7 +201,7 @@ class _SuggestionCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Suggestion pour ${draft.playerCount} joueurs',
+                      context.l10n.compositionSuggestion(draft.playerCount),
                       style: typography.rowLabel.copyWith(color: colors.accentText),
                     ),
                     const SizedBox(height: 2),
@@ -245,7 +245,7 @@ class _SuggestionApplyButton extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           child: Text(
-            'Utiliser cette compo',
+            context.l10n.compositionUseSuggestion,
             style: typography.chipLabel.copyWith(color: colors.textPrimary),
           ),
         ),
@@ -309,7 +309,7 @@ class _SingletonRoleChip extends StatelessWidget {
       label: context.l10n.roleName(role.id),
       selected: inDeal,
       enabled: !claimedByReserve,
-      note: claimedByReserve ? 'en réserve' : null,
+      note: claimedByReserve ? context.l10n.compositionInReserve : null,
       onTap: () => notifier.toggleRole(role.id),
     );
   }
@@ -388,13 +388,12 @@ class _ReserveSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Réserve du Voleur',
+          context.l10n.reserveTitle,
           style: typography.meta.copyWith(color: colors.textTertiary),
         ),
         const SizedBox(height: 4),
         Text(
-          'Deux cartes en plus des joueurs, posées au centre. Le Voleur pourra en '
-          'prendre une à la place de la sienne.',
+          context.l10n.reserveExplain,
           style: typography.counter.copyWith(color: colors.textSecondary, height: 1.5),
         ),
         const SizedBox(height: 10),
@@ -447,13 +446,13 @@ class _ReserveSlot extends StatelessWidget {
           child: Row(
             children: [
               Text(
-                'Carte ${index + 1}',
+                context.l10n.reserveCard(index + 1),
                 style: typography.counter.copyWith(color: colors.textTertiary),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  filled ? context.l10n.roleName(roleId!) : 'Choisir une carte',
+                  filled ? context.l10n.roleName(roleId!) : context.l10n.reservePick,
                   style: typography.rowLabel.copyWith(
                     color: filled ? colors.accentText : colors.textSecondary,
                   ),
@@ -495,7 +494,7 @@ class _RolePickerSheet extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 16, AppSpacing.screen, 8),
             child: Text(
-              'Quelle carte ?',
+              context.l10n.reserveWhichCard,
               style: typography.rowLabel.copyWith(color: colors.textPrimary),
             ),
           ),
@@ -546,7 +545,7 @@ class _Footer extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '${draft.assignedCount} rôles pour ${draft.playerCount} joueurs',
+                context.l10n.compositionRoleCount(draft.assignedCount, draft.playerCount),
                 style: typography.counter.copyWith(color: colors.textTertiary),
               ),
               if (draft.remaining == 0 && draft.reserveComplete)
@@ -556,7 +555,7 @@ class _Footer extends StatelessWidget {
                   children: [
                     Icon(AppIcons.compositionComplete, size: 13, color: colors.successText),
                     Text(
-                      'Compo complète',
+                      context.l10n.compositionComplete,
                       style: typography.counter.copyWith(color: colors.successText),
                     ),
                   ],
@@ -565,11 +564,11 @@ class _Footer extends StatelessWidget {
           ),
           if (draft.hasVoleur && !draft.reserveComplete)
             Text(
-              'Choisissez les 2 cartes de réserve du Voleur',
+              context.l10n.compositionPickReserve,
               style: typography.counter.copyWith(color: colors.warnText),
             ),
           AppButton(
-            label: 'Lancer la partie',
+            label: context.l10n.compositionStart,
             onPressed: draft.isValid
                 ? () async {
                     // Capture the router before the await: commit() invalidates
