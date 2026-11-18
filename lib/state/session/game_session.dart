@@ -221,8 +221,8 @@ class GameSession extends _$GameSession {
       ? c
       : SessionCursor(stepIndex: script.steps.length, subStep: NightSubStep.act);
 
-  String _phaseLabel(GameState s) =>
-      s.phase == GamePhase.night ? 'NUIT ${s.nightIndex}' : 'JOUR ${s.nightIndex}';
+  JournalPhase _journalPhase(GameState s) =>
+      s.phase == GamePhase.night ? JournalPhase.night : JournalPhase.day;
 
   // --- night: identification ---
 
@@ -292,9 +292,10 @@ class GameSession extends _$GameSession {
       gameId: gameId,
       entries: [
         NightLogEntry(
-          phaseLabel: _phaseLabel(s.engine),
-          iconName: 'seer',
-          line: 'La Voyante observe ${engine.playerById('$targetRowId').name}',
+          phase: _journalPhase(s.engine),
+          phaseIndex: s.engine.nightIndex,
+          kind: JournalKind.seerObserves,
+          args: {'player': engine.playerById('$targetRowId').name},
         ),
       ],
     );
@@ -374,9 +375,9 @@ class GameSession extends _$GameSession {
       gameId: gameId,
       entries: [
         NightLogEntry(
-          phaseLabel: _phaseLabel(s.engine),
-          iconName: 'scale',
-          line: "Égalité, personne n'est éliminé",
+          phase: _journalPhase(s.engine),
+          phaseIndex: s.engine.nightIndex,
+          kind: JournalKind.voteTie,
         ),
       ],
     );
@@ -439,9 +440,10 @@ class GameSession extends _$GameSession {
       for (final e in result.events)
         if (e is PlayerDied && e.cause is LoversCascadeKill)
           NightLogEntry(
-            phaseLabel: _phaseLabel(result.state),
-            iconName: 'skull',
-            line: '${s.engine.playerById(e.playerId).name} meurt de chagrin',
+            phase: _journalPhase(result.state),
+            phaseIndex: result.state.nightIndex,
+            kind: JournalKind.heartbreakDeath,
+            args: {'player': s.engine.playerById(e.playerId).name},
           ),
     ];
     if (lines.isNotEmpty) {

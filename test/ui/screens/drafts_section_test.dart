@@ -79,7 +79,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(CompositionScreen), findsOneWidget);
-    expect(find.text('1 rôles pour 8 joueurs'), findsOneWidget);
+    expect(find.text('1 rôle pour 8 joueurs'), findsOneWidget);
   });
 
   testWidgets('a started game is not listed under Brouillons', (tester) async {

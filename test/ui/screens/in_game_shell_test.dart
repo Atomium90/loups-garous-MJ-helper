@@ -108,8 +108,18 @@ void main() {
     await repo.appendNightLog(
       gameId: id,
       entries: const [
-        NightLogEntry(phaseLabel: 'NUIT 1', iconName: 'wolves', line: 'Les Loups désignent Bo'),
-        NightLogEntry(phaseLabel: 'NUIT 1', iconName: 'flask', line: 'La Sorcière empoisonne Cy'),
+        NightLogEntry(
+          phase: JournalPhase.night,
+          phaseIndex: 1,
+          kind: JournalKind.wolvesTarget,
+          args: {'player': 'Bo'},
+        ),
+        NightLogEntry(
+          phase: JournalPhase.night,
+          phaseIndex: 1,
+          kind: JournalKind.witchPoison,
+          args: {'player': 'Cy'},
+        ),
       ],
     );
 

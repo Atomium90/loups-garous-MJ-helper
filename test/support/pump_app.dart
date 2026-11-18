@@ -5,26 +5,47 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:loup_garou_mj/l10n/localizations.dart';
 import 'package:loup_garou_mj/ui/router/app_router.dart';
 import 'package:loup_garou_mj/ui/theme/app_theme.dart';
 
 /// Wraps [child] in a minimal `MaterialApp`/`Scaffold` carrying [AppTheme.light], so widgets
 /// that read `context.colors`/`context.typography` (every widget under `lib/ui/`) resolve
 /// without each test re-declaring the same boilerplate.
-Future<void> pumpApp(WidgetTester tester, Widget child) {
+///
+/// Every helper here runs in French by default, the language the existing assertions are written
+/// in; pass [locale] to check another one.
+Future<void> pumpApp(WidgetTester tester, Widget child, {Locale locale = const Locale('fr')}) {
   return tester.pumpWidget(
-    MaterialApp(theme: AppTheme.light(), home: Scaffold(body: child)),
+    MaterialApp(
+      theme: AppTheme.light(),
+      locale: locale,
+      localizationsDelegates: appLocalizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Scaffold(body: child),
+    ),
   );
 }
 
 /// [pumpApp], plus a [ProviderScope] with [overrides] - for a screen that reads Riverpod
 /// providers directly (as opposed to a plain component test, which never needs Riverpod at
 /// all). No `Scaffold` wrapper here: a screen builds its own.
-Future<void> pumpScreen(WidgetTester tester, Widget child, {List<Override> overrides = const []}) {
+Future<void> pumpScreen(
+  WidgetTester tester,
+  Widget child, {
+  List<Override> overrides = const [],
+  Locale locale = const Locale('fr'),
+}) {
   return tester.pumpWidget(
     ProviderScope(
       overrides: overrides,
-      child: MaterialApp(theme: AppTheme.light(), home: child),
+      child: MaterialApp(
+        theme: AppTheme.light(),
+        locale: locale,
+        localizationsDelegates: appLocalizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: child,
+      ),
     ),
   );
 }
@@ -38,6 +59,7 @@ Future<GoRouter> pumpAppRouter(
   WidgetTester tester, {
   List<Override> overrides = const [],
   String initialLocation = '/',
+  Locale locale = const Locale('fr'),
 }) async {
   final container = ProviderContainer(overrides: overrides);
   addTearDown(container.dispose);
@@ -48,7 +70,13 @@ Future<GoRouter> pumpAppRouter(
   await tester.pumpWidget(
     UncontrolledProviderScope(
       container: container,
-      child: MaterialApp.router(routerConfig: router, theme: AppTheme.light()),
+      child: MaterialApp.router(
+        routerConfig: router,
+        theme: AppTheme.light(),
+        locale: locale,
+        localizationsDelegates: appLocalizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+      ),
     ),
   );
   return router;

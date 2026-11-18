@@ -9,6 +9,7 @@ part 'settings_providers.g.dart';
 const _kThemeMode = 'theme_mode';
 const _kKeepScreenOn = 'keep_screen_on';
 const _kAideMemoire = 'aide_memoire';
+const _kLanguage = 'language';
 
 /// The one `SharedPreferences` handle. Override in tests with an instance from
 /// `SharedPreferences.setMockInitialValues({})`.
@@ -31,7 +32,18 @@ class Settings extends _$Settings {
       keepScreenOn: prefs.getBool(_kKeepScreenOn) ?? AppSettings.defaults.keepScreenOn,
       aideMemoireInScript:
           prefs.getBool(_kAideMemoire) ?? AppSettings.defaults.aideMemoireInScript,
+      language: AppLanguage.fromCode(prefs.getString(_kLanguage)),
     );
+  }
+
+  Future<void> setLanguage(AppLanguage language) async {
+    final prefs = await ref.read(sharedPreferencesProvider.future);
+    if (language.code == null) {
+      await prefs.remove(_kLanguage);
+    } else {
+      await prefs.setString(_kLanguage, language.code!);
+    }
+    state = AsyncData((state.value ?? AppSettings.defaults).copyWith(language: language));
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {

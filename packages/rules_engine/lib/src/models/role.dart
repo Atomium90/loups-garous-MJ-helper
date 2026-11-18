@@ -5,8 +5,8 @@ import 'team.dart';
 import 'wake_condition.dart';
 
 class Role {
+  /// Stable key, never shown: the app looks the role's name and texts up by it.
   final String id;
-  final String name;
 
   /// Null only for Voleur: his team is unresolved until he steals a card.
   final Team? team;
@@ -40,15 +40,8 @@ class Role {
   /// Effect resolved by the death cascade when a player with this role dies.
   final DeathEffect onDeath;
 
-  /// Short, action-focused instruction shown to the MJ. Not narrative rule
-  /// text: the app is an assistant, not a replacement for the MJ knowing
-  /// the game.
-  final String ruleText;
-  final String? mjTips;
-
   const Role({
     required this.id,
-    required this.name,
     required this.team,
     this.extensionId,
     this.copies = 1,
@@ -58,8 +51,6 @@ class Role {
     this.orderConstraints = const [],
     this.actionType = ActionType.none,
     this.onDeath = DeathEffect.none,
-    required this.ruleText,
-    this.mjTips,
   });
 
   @override

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../state/providers/game_repository_provider.dart';
+import '../../utils/l10n.dart';
 import '../../widgets/confirm_sheet.dart';
 
 /// Offered when a saved game can't be read back (its data is damaged, or comes from a version
@@ -16,12 +17,9 @@ Future<void> showUnreadableGameSheet(
 }) async {
   final deleted = await showConfirmSheet(
     context,
-    title: 'Partie illisible',
-    message:
-        "Les données de cette partie sont abîmées, ou viennent d'une version de "
-        "l'app que celle-ci ne comprend pas. Vous pouvez la supprimer : vos autres "
-        'parties ne sont pas touchées.',
-    confirmLabel: 'Supprimer cette partie',
+    title: context.l10n.unreadableGameTitle,
+    message: context.l10n.unreadableGameMessage,
+    confirmLabel: context.l10n.deleteGameConfirm,
     onConfirm: () => ref.read(gameRepositoryProvider).deleteGame(gameId),
   );
   if (deleted == true) onDeleted?.call();

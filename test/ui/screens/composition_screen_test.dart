@@ -107,7 +107,7 @@ void main() {
     expect(find.text('0 rôles pour 8 joueurs'), findsOneWidget);
     await tester.tap(find.text('Voyante'));
     await tester.pump();
-    expect(find.text('1 rôles pour 8 joueurs'), findsOneWidget);
+    expect(find.text('1 rôle pour 8 joueurs'), findsOneWidget);
 
     await tester.tap(find.text('Voyante'));
     await tester.pump();
@@ -127,7 +127,7 @@ void main() {
 
     await tester.tap(_stepperPlusAt(2)); // player-count(0), villageois(1), loup_garou(2)
     await tester.pump();
-    expect(find.text('1 rôles pour 8 joueurs'), findsOneWidget);
+    expect(find.text('1 rôle pour 8 joueurs'), findsOneWidget);
 
     await tester.tap(_stepperPlusAt(2));
     await tester.pump();
@@ -251,14 +251,14 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('en réserve'), findsOneWidget);
-    expect(find.text('1 rôles pour 8 joueurs'), findsOneWidget); // just the Voleur
+    expect(find.text('1 rôle pour 8 joueurs'), findsOneWidget); // just the Voleur
 
     // Tapping the disabled Sorcière chip does nothing (count stays at 1).
     await tester.tap(
       find.descendant(of: find.byType(AppChip), matching: find.text('Sorcière')),
     );
     await tester.pump();
-    expect(find.text('1 rôles pour 8 joueurs'), findsOneWidget);
+    expect(find.text('1 rôle pour 8 joueurs'), findsOneWidget);
   });
 
   testWidgets('the reserve picker hides the Voleur and cards already spent by the deal', (
@@ -325,7 +325,7 @@ void main() {
 
     expect(repository.allGames.single.compositionJson, {'voyante': 1});
     expect(find.byType(CompositionScreen), findsOneWidget);
-    expect(find.text('1 rôles pour 8 joueurs'), findsOneWidget);
+    expect(find.text('1 rôle pour 8 joueurs'), findsOneWidget);
   });
 
   group('the suggestion card', () {

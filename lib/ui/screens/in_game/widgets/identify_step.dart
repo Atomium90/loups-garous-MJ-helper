@@ -4,7 +4,7 @@ import 'package:rules_engine/rules_engine.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_dimensions.dart';
 import '../../../theme/app_typography.dart';
-import '../../../utils/french_role_label.dart';
+import '../../../utils/l10n.dart';
 import '../../../widgets/app_button.dart';
 import '../../../widgets/avatar_pick_cell.dart';
 
@@ -69,10 +69,9 @@ class _IdentifyStepState extends State<IdentifyStep> {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final typography = context.typography;
-    final registry = RoleRegistry.base;
     final question = widget.count == 1
-        ? 'Qui est ${widget.role.name} ?'
-        : 'Qui sont les ${frenchRolePlural(widget.role.id, registry)} ?';
+        ? context.l10n.identifyQuestionOne(context.l10n.roleName(widget.role.id))
+        : context.l10n.identifyQuestionMany(context.l10n.rolePlural(widget.role.id));
     final complete = _selected.length == widget.count;
 
     return Column(
@@ -90,7 +89,7 @@ class _IdentifyStepState extends State<IdentifyStep> {
               ),
               const SizedBox(width: 8),
               Text(
-                '${_selected.length} sur ${widget.count}',
+                context.l10n.identifyProgress(_selected.length, widget.count),
                 style: typography.counter.copyWith(color: colors.accentText),
               ),
             ],
@@ -140,11 +139,13 @@ class _IdentifyStepState extends State<IdentifyStep> {
             spacing: 8,
             children: [
               AppButton(
-                label: complete ? 'Enregistrer' : 'Choisissez ${widget.count} ${widget.count == 1 ? 'joueur' : 'joueurs'}',
+                label: complete
+                    ? context.l10n.identifySave
+                    : context.l10n.identifyPick(widget.count),
                 onPressed: complete ? () => widget.onConfirm(_selected.toList()) : null,
               ),
               AppButton(
-                label: 'Je noterai plus tard',
+                label: context.l10n.identifyLater,
                 variant: AppButtonVariant.secondary,
                 onPressed: widget.onDefer,
               ),

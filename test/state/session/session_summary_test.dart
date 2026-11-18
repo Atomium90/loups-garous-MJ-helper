@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:loup_garou_mj/data/database/app_database.dart';
 import 'package:loup_garou_mj/data/models/game_status.dart';
+import 'package:loup_garou_mj/data/models/night_log_entry.dart';
 import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
 import 'package:loup_garou_mj/state/session/session_cursor.dart';
 import 'package:loup_garou_mj/state/session/session_summary_provider.dart';
@@ -54,7 +55,42 @@ void main() {
     final summary = await _summaryOf(_game(sessionJson: blob));
 
     expect(summary!.unreadable, isFalse);
-    expect(summary.phaseLabel, 'Nuit 1');
+    expect(summary.phase, JournalPhase.night);
+    expect(summary.nightIndex, 1);
+    expect(summary.step, SummaryStep.role);
+    expect(summary.roleId, 'loup_garou');
+  });
+
+  group('a saved day reads back as its stage', () {
+    final engine = GameState.initial(
+      players: [
+        for (final (i, role) in ['loup_garou', 'villageois', 'villageois'].indexed)
+          Player(id: '$i', name: 'P$i', roleId: role),
+      ],
+    ).copyWith(phase: GamePhase.day, nightIndex: 2);
+
+    final stages = {
+      null: SummaryStep.recap,
+      'captain': SummaryStep.captainElection,
+      'vote': SummaryStep.villageVote,
+      'done': SummaryStep.dayDone,
+    };
+    for (final MapEntry(key: stage, value: step) in stages.entries) {
+      test('stage $stage is $step', () async {
+        final blob = jsonEncode({
+          'engine': GameStateJson.encode(engine),
+          'cursor': SessionCursor.nightStart.toJson(),
+          'day': {'stage': ?stage},
+        });
+
+        final summary = await _summaryOf(_game(sessionJson: blob));
+
+        expect(summary!.phase, JournalPhase.day);
+        expect(summary.nightIndex, 2);
+        expect(summary.step, step);
+        expect(summary.roleId, isNull);
+      });
+    }
   });
 
   group('a saved state that cannot be read', () {

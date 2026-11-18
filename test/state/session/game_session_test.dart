@@ -9,6 +9,8 @@ import 'package:loup_garou_mj/state/session/game_session.dart';
 import 'package:loup_garou_mj/state/session/session_cursor.dart';
 import 'package:rules_engine/rules_engine.dart';
 
+import '../../support/journal_text.dart';
+
 /// A started game with a named 6-seat roster and the given composition, ready
 /// for GameSession to seed a night-1 session.
 Future<({int gameId, List<int> seatRowIds})> _startedGame(
@@ -109,7 +111,7 @@ void main() {
 
     // journal has the wolves' line
     final log = await repo.watchNightLog(game.gameId).first;
-    expect(log.map((e) => e.line), contains('Les Loups désignent Di'));
+    expect(frenchJournal(log), contains('Les Loups désignent Di'));
   });
 
   test('a fresh container restores the exact mid-night state from sessionJson', () async {
@@ -199,7 +201,7 @@ void main() {
     expect(s.tonight.steps.map((st) => st.role.id), ['loup_garou']);
     expect(s.currentStepNeedsIdentify, isFalse);
 
-    final log = (await repo.watchNightLog(game.gameId).first).map((e) => e.line).toList();
+    final log = frenchJournal(await repo.watchNightLog(game.gameId).first);
     expect(log, containsAll(<String>[
       'Cupidon unit Bo et Fi',
       'Les Loups désignent Fi',
@@ -306,7 +308,7 @@ void main() {
     expect(s.engine.nightIndex, 2);
     expect(s.tonight.steps.map((st) => st.role.id), contains('voyante'));
 
-    final log = (await repo.watchNightLog(game.gameId).first).map((e) => e.line);
+    final log = frenchJournal(await repo.watchNightLog(game.gameId).first);
     expect(log, contains("Égalité, personne n'est éliminé"));
   });
 
@@ -333,7 +335,7 @@ void main() {
       expect(s.tonight.steps.map((st) => st.role.id), ['voleur', 'voyante', 'loup_garou', 'sorciere']);
       expect(s.cursor.stepIndex, 1); // sitting on the freshly-inserted Voyante step
 
-      final log = (await repo.watchNightLog(game.gameId).first).map((e) => e.line);
+      final log = frenchJournal(await repo.watchNightLog(game.gameId).first);
       expect(log, contains('Le Voleur échange sa carte contre Voyante'));
     });
 
@@ -352,7 +354,7 @@ void main() {
       final s = stateOf(game.gameId);
       expect(s.engine.playerById('${ids[0]}').roleId, 'voleur');
       expect(s.cursor.stepIndex, 1);
-      final log = (await repo.watchNightLog(game.gameId).first).map((e) => e.line);
+      final log = frenchJournal(await repo.watchNightLog(game.gameId).first);
       expect(log, contains('Le Voleur garde sa carte'));
     });
 
@@ -407,7 +409,7 @@ void main() {
       expect(s.engine.playerById('${ids[3]}').roleId, 'loup_garou');
       expect((await repo.getRoster(game.gameId))[3].roleId, 'loup_garou');
       expect(s.currentStep!.role.id, 'loup_garou'); // moved to the Loups' step
-      final log = (await repo.watchNightLog(game.gameId).first).map((e) => e.line);
+      final log = frenchJournal(await repo.watchNightLog(game.gameId).first);
       expect(log, contains('La Voyante observe Di'));
     });
 
@@ -420,7 +422,7 @@ void main() {
       await n.seerInspect(targetRowId: ids[3]);
 
       expect((await repo.getRoster(game.gameId))[3].roleId, isNull);
-      final log = (await repo.watchNightLog(game.gameId).first).map((e) => e.line);
+      final log = frenchJournal(await repo.watchNightLog(game.gameId).first);
       expect(log, contains('La Voyante observe Di'));
       expect(stateOf(game.gameId).currentStep!.role.id, 'loup_garou');
     });

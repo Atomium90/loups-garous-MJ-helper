@@ -5,6 +5,7 @@ import '../../../theme/app_colors.dart';
 import '../../../theme/app_dimensions.dart';
 import '../../../theme/app_icons.dart';
 import '../../../theme/app_typography.dart';
+import '../../../utils/l10n.dart';
 import '../../../widgets/app_button.dart';
 import '../../../widgets/player_avatar.dart';
 import 'target_pick.dart';
@@ -47,15 +48,15 @@ class _WitchActState extends State<WitchAct> {
   Widget build(BuildContext context) {
     if (_poisoning) {
       return TargetPick(
-        question: 'Qui la Sorcière empoisonne-t-elle ?',
+        question: context.l10n.witchPoisonQuestion,
         candidates: widget.candidates,
-        confirmLabel: (name) => 'Elle empoisonne $name',
+        confirmLabel: context.l10n.witchPoisons,
         onConfirm: (id) {
           // back to the potion view (now showing "Mort utilisée" + Terminer)
           setState(() => _poisoning = false);
           widget.onPoison(id);
         },
-        secondaryLabel: 'Annuler',
+        secondaryLabel: context.l10n.commonCancel,
         onSecondary: () => setState(() => _poisoning = false),
       );
     }
@@ -73,8 +74,8 @@ class _WitchActState extends State<WitchAct> {
             spacing: 6,
             runSpacing: 6,
             children: [
-              _PotionPill(label: 'Vie', used: widget.witch.lifePotionUsed),
-              _PotionPill(label: 'Mort', used: widget.witch.deathPotionUsed),
+              _PotionPill(label: context.l10n.potionLife, used: widget.witch.lifePotionUsed),
+              _PotionPill(label: context.l10n.potionDeath, used: widget.witch.deathPotionUsed),
             ],
           ),
         ),
@@ -85,7 +86,7 @@ class _WitchActState extends State<WitchAct> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Victime des Loups cette nuit',
+                  context.l10n.witchVictim,
                   style: context.typography.meta.copyWith(color: colors.textTertiary),
                 ),
                 const SizedBox(height: 8),
@@ -126,18 +127,18 @@ class _WitchActState extends State<WitchAct> {
             children: [
               if (canSave)
                 AppButton(
-                  label: 'Elle sauve ${widget.wolfVictim!.name}',
+                  label: context.l10n.witchSaves(widget.wolfVictim!.name),
                   leadingIcon: AppIcons.witchSave,
                   onPressed: widget.onSave,
                 ),
               if (canPoison)
                 AppButton(
-                  label: 'Elle empoisonne…',
+                  label: context.l10n.witchPoisonsPick,
                   variant: canSave ? AppButtonVariant.secondary : AppButtonVariant.primary,
                   onPressed: () => setState(() => _poisoning = true),
                 ),
               AppButton(
-                label: 'Terminer le tour de la Sorcière',
+                label: context.l10n.witchDone,
                 variant: AppButtonVariant.secondary,
                 onPressed: widget.onDone,
               ),
@@ -166,7 +167,7 @@ class _PotionPill extends StatelessWidget {
         border: used ? Border.all(color: colors.borderHairline) : null,
       ),
       child: Text(
-        used ? '$label utilisée' : '$label disponible',
+        used ? context.l10n.potionUsed(label) : context.l10n.potionAvailable(label),
         style: context.typography.counter.copyWith(
           color: used ? colors.textTertiary : colors.successText,
           decoration: used ? TextDecoration.lineThrough : null,

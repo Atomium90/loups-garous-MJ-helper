@@ -20,13 +20,13 @@ import '../../support/fake_game_repository.dart';
 /// oversized tier - the base box alone never has more candidates than a tier's target slots,
 /// so this is what actually exercises rerollSuggestion's shuffle-and-cut path.
 RoleRegistry _registryWithSurplusTier() => const RoleRegistry([
-  Role(id: 'loup_garou', name: 'Loup', team: Team.werewolves, copies: 4, hasNightCall: true, ruleText: 't'),
-  Role(id: 'villageois', name: 'Villageois', team: Team.village, copies: 20, hasNightCall: false, ruleText: 't'),
-  Role(id: 'a', name: 'A', team: Team.village, suggestionTier: 1, hasNightCall: false, ruleText: 't'),
-  Role(id: 'b', name: 'B', team: Team.village, suggestionTier: 2, hasNightCall: false, ruleText: 't'),
-  Role(id: 'c', name: 'C', team: Team.village, suggestionTier: 2, hasNightCall: false, ruleText: 't'),
-  Role(id: 'd', name: 'D', team: Team.village, suggestionTier: 2, hasNightCall: false, ruleText: 't'),
-  Role(id: 'e', name: 'E', team: Team.village, suggestionTier: 2, hasNightCall: false, ruleText: 't'),
+  Role(id: 'loup_garou', team: Team.werewolves, copies: 4, hasNightCall: true),
+  Role(id: 'villageois', team: Team.village, copies: 20, hasNightCall: false),
+  Role(id: 'a', team: Team.village, suggestionTier: 1, hasNightCall: false),
+  Role(id: 'b', team: Team.village, suggestionTier: 2, hasNightCall: false),
+  Role(id: 'c', team: Team.village, suggestionTier: 2, hasNightCall: false),
+  Role(id: 'd', team: Team.village, suggestionTier: 2, hasNightCall: false),
+  Role(id: 'e', team: Team.village, suggestionTier: 2, hasNightCall: false),
 ]);
 
 void main() {

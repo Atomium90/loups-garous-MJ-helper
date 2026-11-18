@@ -55,7 +55,7 @@ void main() {
       expect(game.reserveRolesJson, isNull);
     });
 
-    test('a roster and a journal from schema 3 survive', () async {
+    test('a roster and a journal from schema 3 survive, as legacy French lines', () async {
       final schema = await verifier.schemaAt(3);
       final raw = schema.rawDatabase;
       raw.execute(
@@ -81,6 +81,12 @@ void main() {
       expect(players.map((p) => p.name), ['Alice', 'Bob']);
       final journal = await db.select(db.nightLog).getSingle();
       expect(journal.line, 'Les Loups désignent Bob');
+      expect(journal.phaseLabel, 'NUIT 1');
+      // Written before the journal was structured: nothing to translate, shown as is.
+      expect(journal.kind, isNull);
+      expect(journal.argsJson, isNull);
+      expect(journal.phase, isNull);
+      expect(journal.phaseIndex, isNull);
     });
 
     test('deleting a migrated game still cascades to its roster and journal', () async {

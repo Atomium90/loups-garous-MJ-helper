@@ -193,9 +193,14 @@ class DriftGameRepository implements GameRepository {
             NightLogCompanion.insert(
               gameId: gameId,
               seq: seq++,
-              phaseLabel: entry.phaseLabel,
+              // The legacy French columns stay empty: this line is rendered from its kind.
+              phaseLabel: '',
               iconName: entry.iconName,
-              line: entry.line,
+              line: '',
+              kind: Value(entry.kind.name),
+              argsJson: Value(entry.argsJson),
+              phase: Value(entry.phase.name),
+              phaseIndex: Value(entry.phaseIndex),
             ),
           );
         }

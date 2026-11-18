@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_dimensions.dart';
 import '../theme/app_icons.dart';
+import '../utils/l10n.dart';
 
 /// The in-game bottom bar (Script / Village / Journal). 3 equal columns, top
 /// hairline; the active column goes `accent/text` at weight 500. The Script
@@ -31,19 +32,19 @@ class GameTabBar extends StatelessWidget {
         children: [
           _Tab(
             icon: scriptIsNight ? AppIcons.night : AppIcons.day,
-            label: 'Script',
+            label: context.l10n.tabScript,
             selected: currentIndex == 0,
             onTap: () => onTap(0),
           ),
           _Tab(
             icon: AppIcons.village,
-            label: 'Village',
+            label: context.l10n.tabVillage,
             selected: currentIndex == 1,
             onTap: () => onTap(1),
           ),
           _Tab(
             icon: AppIcons.journal,
-            label: 'Journal',
+            label: context.l10n.tabJournal,
             selected: currentIndex == 2,
             onTap: () => onTap(2),
           ),

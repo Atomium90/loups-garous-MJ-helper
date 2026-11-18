@@ -11,13 +11,14 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
-import '../../utils/french_date_format.dart';
 import '../../widgets/app_icon_button.dart';
 import '../../widgets/game_tab_bar.dart';
 import 'journal_tab.dart';
 import 'script_tab.dart';
 import 'village_tab.dart';
 import 'widgets/aide_memoire_sheet.dart';
+import '../../utils/l10n.dart';
+import '../../utils/labels.dart';
 
 /// The container for a running game: a persistent 46px header, then an
 /// [IndexedStack] of the three tabs (Script / Village / Journal) with the
@@ -48,7 +49,7 @@ class _InGameShellState extends ConsumerState<InGameShell> {
         ref.watch(settingsProvider).value?.aideMemoireInScript ?? true;
 
     final gameName = game?.name ??
-        (game != null ? 'Partie du ${frenchDayMonthLabel(game.createdAt)}' : 'Partie');
+        (game != null ? gameTitle(context.l10n, game) : context.l10n.gameFallbackName);
 
     return Scaffold(
       body: SafeArea(

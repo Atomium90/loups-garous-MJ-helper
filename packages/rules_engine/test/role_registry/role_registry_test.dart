@@ -79,10 +79,6 @@ void main() {
       expect(registry.byId('sorciere').wakeCondition, WakeCondition.everyNight);
     });
 
-    test('cupidon mentions the lovers recognition step', () {
-      expect(registry.byId('cupidon').ruleText, contains('amoureux'));
-    });
-
     test('every role ships with at least one card, base box multiples spelled out', () {
       for (final role in registry.roles) {
         expect(role.copies, greaterThanOrEqualTo(1), reason: role.id);
@@ -109,7 +105,7 @@ void main() {
   group('RoleRegistry lookups', () {
     test('byId returns the expected role', () {
       final voyante = registry.byId('voyante');
-      expect(voyante.name, 'Voyante');
+      expect(voyante.id, 'voyante');
       expect(voyante.team, Team.village);
     });
 

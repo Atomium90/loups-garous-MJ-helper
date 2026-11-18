@@ -9,6 +9,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
+import '../../utils/l10n.dart';
 import '../../widgets/app_segmented_control.dart';
 import '../../widgets/app_toggle.dart';
 import '../../widgets/bientot_pill.dart';
@@ -55,47 +56,68 @@ class _SettingsBody extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 20, AppSpacing.screen, 4),
             children: [
-              const SectionLabel('Contenu'),
+              SectionLabel(context.l10n.settingsContent),
               _NavRow(
                 icon: AppIcons.boxes,
-                label: 'Mes boîtes',
-                sublabel: 'Boîte de base · 8 rôles',
+                label: context.l10n.settingsMyBoxes,
+                sublabel: context.l10n.settingsBaseBoxRoles(8),
                 onTap: () => context.pushNamed('boxes'),
               ),
-              const _ComingSoonRow(icon: AppIcons.regulars, label: "Carnet d'habitués"),
+              _ComingSoonRow(icon: AppIcons.regulars, label: context.l10n.regularsBook),
               const SizedBox(height: 22),
-              const SectionLabel('Apparence'),
+              SectionLabel(context.l10n.settingsAppearance),
               const SizedBox(height: 10),
               AppSegmentedControl<ThemeMode>(
                 selected: settings.themeMode,
                 onChanged: (m) => notifier?.setThemeMode(m),
-                options: const [
-                  (value: ThemeMode.system, icon: AppIcons.themeSystem, label: 'Système'),
-                  (value: ThemeMode.light, icon: AppIcons.themeLight, label: 'Clair'),
-                  (value: ThemeMode.dark, icon: AppIcons.themeDark, label: 'Sombre'),
+                options: [
+                  (
+                    value: ThemeMode.system,
+                    icon: AppIcons.themeSystem,
+                    label: context.l10n.themeSystem,
+                  ),
+                  (value: ThemeMode.light, icon: AppIcons.themeLight, label: context.l10n.themeLight),
+                  (value: ThemeMode.dark, icon: AppIcons.themeDark, label: context.l10n.themeDark),
                 ],
               ),
               const SizedBox(height: 8),
               Text(
-                "En soirée, le thème sombre fatigue moins l'œil et n'éclaire pas la table.",
+                context.l10n.settingsThemeHint,
                 style: typography.counter.copyWith(color: colors.textTertiary, height: 1.55),
               ),
               const SizedBox(height: 22),
-              const SectionLabel('Pendant la partie'),
+              SectionLabel(context.l10n.settingsLanguageTitle),
+              const SizedBox(height: 10),
+              AppSegmentedControl<AppLanguage>(
+                selected: settings.language,
+                onChanged: (l) => notifier?.setLanguage(l),
+                options: [
+                  (
+                    value: AppLanguage.system,
+                    icon: AppIcons.themeSystem,
+                    label: context.l10n.languageSystem,
+                  ),
+                  // Each language is named in itself, whatever the current one.
+                  (value: AppLanguage.french, icon: AppIcons.language, label: 'Français'),
+                  (value: AppLanguage.english, icon: AppIcons.language, label: 'English'),
+                ],
+              ),
+              const SizedBox(height: 22),
+              SectionLabel(context.l10n.settingsDuringGame),
               _ToggleRow(
                 icon: AppIcons.screenOn,
-                label: "Garder l'écran allumé",
+                label: context.l10n.settingsKeepScreenOn,
                 value: settings.keepScreenOn,
                 onChanged: (v) => notifier?.setKeepScreenOn(v),
               ),
               _ToggleRow(
                 icon: AppIcons.help,
-                label: 'Aide-mémoire dans le script',
+                label: context.l10n.settingsAideMemoire,
                 value: settings.aideMemoireInScript,
                 onChanged: (v) => notifier?.setAideMemoireInScript(v),
               ),
               const SizedBox(height: 22),
-              const SectionLabel('Données'),
+              SectionLabel(context.l10n.settingsData),
               const _DeleteAllGamesRow(),
             ],
           ),
@@ -111,11 +133,11 @@ class _SettingsBody extends StatelessWidget {
             spacing: 4,
             children: [
               Text(
-                'Loup Garou MJ · V1 · hors ligne',
+                context.l10n.settingsFooter,
                 style: typography.counter.copyWith(color: colors.textTertiary),
               ),
               Text(
-                'Vos parties restent sur cet appareil : désinstaller l’app les supprime.',
+                context.l10n.settingsOnDevice,
                 style: typography.counter.copyWith(color: colors.textTertiary),
               ),
             ],
@@ -143,7 +165,7 @@ class _Header extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Text(
-            'Réglages',
+            context.l10n.settingsTitle,
             style: context.typography.screenTitle.copyWith(color: colors.textPrimary),
           ),
         ],
@@ -160,25 +182,24 @@ class _DeleteAllGamesRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return _SettingsRow(
       icon: AppIcons.delete,
-      label: 'Supprimer toutes les parties',
-      sublabel: 'Brouillons, parties en cours et historique',
+      label: context.l10n.deleteAllRow,
+      sublabel: context.l10n.deleteAllRowHint,
       onTap: () => _confirm(context, ref),
     );
   }
 
   Future<void> _confirm(BuildContext context, WidgetRef ref) async {
     final messenger = ScaffoldMessenger.of(context);
+    final doneMessage = context.l10n.deleteAllDone;
     final deleted = await showConfirmSheet(
       context,
-      title: 'Supprimer toutes les parties ?',
-      message:
-          'Les brouillons, les parties en cours et l’historique seront effacés. '
-          'Cette action est définitive.',
-      confirmLabel: 'Tout supprimer',
+      title: context.l10n.deleteAllTitle,
+      message: context.l10n.deleteAllMessage,
+      confirmLabel: context.l10n.deleteAllConfirm,
       onConfirm: () => ref.read(gameRepositoryProvider).deleteAllGames(),
     );
     if (deleted == true) {
-      messenger.showSnackBar(const SnackBar(content: Text('Toutes les parties sont supprimées.')));
+      messenger.showSnackBar(SnackBar(content: Text(doneMessage)));
     }
   }
 }

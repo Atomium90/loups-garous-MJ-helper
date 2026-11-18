@@ -18,7 +18,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -37,6 +37,13 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 5) {
         await m.addColumn(games, games.reserveRolesJson);
+      }
+      // Below 3 the table doesn't exist yet and was just created with all its columns.
+      if (from >= 3 && from < 6) {
+        await m.addColumn(nightLog, nightLog.kind);
+        await m.addColumn(nightLog, nightLog.argsJson);
+        await m.addColumn(nightLog, nightLog.phase);
+        await m.addColumn(nightLog, nightLog.phaseIndex);
       }
     },
     // drift doesn't enable foreign-key enforcement by default; without this the

@@ -1,25 +1,26 @@
 import '../../../data/database/app_database.dart';
+import '../../../l10n/localizations.dart';
 
 /// How far an unstarted game got through setup, which decides where Home resumes it.
 enum DraftStep {
   /// The composition has not been validated: nothing picked yet, or picked but "Lancer la
   /// partie" never pressed.
-  composition('composition', 'Composition à faire'),
+  composition('composition'),
 
   /// Composed (the seats exist), but at least one has no name yet.
-  players('players', 'Joueurs à nommer'),
+  players('players'),
 
   /// Composed and every player named: only "Lancer la partie" is left.
-  beforeNight('beforeNight', 'Prête à démarrer');
+  beforeNight('beforeNight');
 
-  const DraftStep(this.routeName, this.label);
+  const DraftStep(this.routeName);
 
   /// The go_router route name of the setup screen to resume on.
   final String routeName;
-
-  /// Shown under the draft's title on Home.
-  final String label;
 }
+
+/// Shown under the draft's title on Home.
+String draftStepLabel(AppLocalizations l10n, DraftStep step) => l10n.draftStepLabel(step.name);
 
 /// The setup step an unstarted game is at, given its [roster].
 ///

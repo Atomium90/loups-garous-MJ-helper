@@ -12,8 +12,6 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
-import '../../utils/french_date_format.dart';
-import '../../utils/french_winner_label.dart';
 import '../../widgets/app_button.dart';
 import 'delete_game_sheet.dart';
 import 'drafts_section.dart';
@@ -21,6 +19,8 @@ import 'past_game_sheet.dart';
 import 'unreadable_game_sheet.dart';
 import '../../widgets/app_icon_button.dart';
 import '../../widgets/section_label.dart';
+import '../../utils/l10n.dart';
+import '../../utils/labels.dart';
 
 /// The empty state and the games list are the same route ("Accueil"), branching on whether
 /// [gameListProvider] is empty - not two separate routes, so the "which screen" decision lives
@@ -41,7 +41,7 @@ class HomeScreen extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.screen),
               child: Text(
-                'Impossible de charger vos parties.',
+                context.l10n.homeLoadError,
                 textAlign: TextAlign.center,
                 style: context.typography.body.copyWith(
                   color: context.colors.textSecondary,
@@ -85,7 +85,7 @@ class _Header extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'Mes parties',
+            context.l10n.homeTitle,
             style: context.typography.screenTitle.copyWith(
               color: context.colors.textPrimary,
             ),
@@ -143,15 +143,14 @@ class _EmptyState extends ConsumerWidget {
                     ),
                   ),
                   Text(
-                    'Aucune partie',
+                    context.l10n.homeEmptyTitle,
                     textAlign: TextAlign.center,
                     style: typography.rowLabel.copyWith(
                       color: colors.textPrimary,
                     ),
                   ),
                   Text(
-                    "Composez le village, distribuez les cartes, et laissez l'app tenir le fil "
-                    'de la nuit.',
+                    context.l10n.homeEmptyMessage,
                     textAlign: TextAlign.center,
                     style: typography.body.copyWith(
                       color: colors.textSecondary,
@@ -165,7 +164,7 @@ class _EmptyState extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.all(AppSpacing.screen),
           child: AppButton(
-            label: 'Nouvelle partie',
+            label: context.l10n.homeNewGame,
             leadingIcon: AppIcons.newGame,
             onPressed: () => _startNewGame(context, ref),
           ),
@@ -217,7 +216,7 @@ class _GamesList extends ConsumerWidget {
             AppSpacing.screen,
           ),
           child: AppButton(
-            label: 'Nouvelle partie',
+            label: context.l10n.homeNewGame,
             leadingIcon: AppIcons.newGame,
             onPressed: () => _startNewGame(context, ref),
           ),
@@ -245,7 +244,7 @@ class _EnCoursSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         spacing: 8,
         children: [
-          const SectionLabel('En cours'),
+          SectionLabel(context.l10n.homeInProgress),
           for (final (index, game) in games.indexed)
             _EnCoursCard(game: game, isMostRecent: index == 0),
         ],
@@ -310,11 +309,15 @@ class _EnCoursCard extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        game.name ?? 'Partie du ${frenchDayMonthLabel(game.createdAt)}',
+                        gameTitle(context.l10n, game),
                         style: typography.rowLabel.copyWith(color: colors.textPrimary),
                       ),
                       Text(
-                        unreadable ? 'Partie illisible' : summary?.line ?? 'Partie en cours',
+                        unreadable
+                            ? context.l10n.unreadableGameTitle
+                            : summary == null
+                            ? context.l10n.homeGameInProgress
+                            : sessionSummaryLine(context.l10n, summary),
                         style: typography.meta.copyWith(
                           color: summary != null && !unreadable
                               ? colors.accentText
@@ -325,7 +328,7 @@ class _EnCoursCard extends ConsumerWidget {
                   ),
                 ),
                 Text(
-                  '$daysElapsed j.',
+                  context.l10n.homeDaysAgo(daysElapsed),
                   style: typography.micro.copyWith(
                     color: isMostRecent ? colors.textSecondary : colors.textTertiary,
                   ),
@@ -348,7 +351,7 @@ class _HistoriqueSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final groups = <(String, List<Game>)>[];
     for (final game in games) {
-      final label = frenchMonthYearLabel(game.createdAt);
+      final label = monthYearLabel(context.l10n, game.createdAt);
       if (groups.isNotEmpty && groups.last.$1 == label) {
         groups.last.$2.add(game);
       } else {
@@ -366,9 +369,9 @@ class _HistoriqueSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-            padding: EdgeInsets.only(bottom: 6),
-            child: SectionLabel('Historique'),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: SectionLabel(context.l10n.homeHistory),
           ),
           for (final (index, group) in groups.indexed) ...[
             Padding(
@@ -417,13 +420,13 @@ class _HistoriqueRow extends StatelessWidget {
             ),
             Expanded(
               child: Text(
-                game.name ?? 'Partie du ${frenchDayMonthLabel(game.createdAt)}',
+                gameTitle(context.l10n, game),
                 style: typography.body.copyWith(color: colors.textPrimary),
               ),
             ),
             if (winner != null)
               Text(
-                frenchWinnerShort(winner),
+                winnerShort(context.l10n, winner),
                 style: typography.counter.copyWith(color: colors.textSecondary),
               ),
           ],

@@ -8,7 +8,9 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
-import '../../utils/french_date_format.dart';
+import '../../utils/journal_labels.dart';
+import '../../utils/l10n.dart';
+import '../../utils/labels.dart';
 
 /// The Journal tab: every logged line, grouped under its uppercase phase
 /// header, most recent first.
@@ -32,10 +34,10 @@ class JournalTab extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Journal', style: typography.screenTitle.copyWith(color: colors.textPrimary)),
+              Text(context.l10n.journalTitle, style: typography.screenTitle.copyWith(color: colors.textPrimary)),
               if (game != null)
                 Text(
-                  game.name ?? 'Partie du ${frenchDayMonthLabel(game.createdAt)}',
+                  gameTitle(context.l10n, game),
                   style: typography.meta.copyWith(color: colors.textSecondary),
                 ),
             ],
@@ -44,9 +46,9 @@ class JournalTab extends ConsumerWidget {
         Expanded(
           child: logAsync.when(
             loading: () => const SizedBox.shrink(),
-            error: (_, _) => _centered(context, 'Impossible de charger le journal.'),
+            error: (_, _) => _centered(context, context.l10n.journalLoadError),
             data: (rows) => rows.isEmpty
-                ? _centered(context, "Rien à consigner pour l'instant.")
+                ? _centered(context, context.l10n.journalEmpty)
                 : _JournalList(rows: rows),
           ),
         ),
@@ -80,13 +82,14 @@ class _JournalList extends StatelessWidget {
     final children = <Widget>[];
     String? lastPhase;
     for (final row in rows) {
-      if (row.phaseLabel != lastPhase) {
-        lastPhase = row.phaseLabel;
+      final phaseLabel = journalPhaseLabel(context.l10n, row);
+      if (phaseLabel != lastPhase) {
+        lastPhase = phaseLabel;
         children.add(
           Padding(
             padding: EdgeInsets.only(top: children.isEmpty ? 0 : 14, bottom: 6),
             child: Text(
-              row.phaseLabel,
+              phaseLabel,
               style: typography.sectionLabel.copyWith(color: colors.textTertiary),
             ),
           ),
@@ -106,7 +109,7 @@ class _JournalList extends StatelessWidget {
               Icon(icon ?? AppIcons.journal, size: 15, color: colors.textTertiary),
               Expanded(
                 child: Text(
-                  row.line,
+                  journalLine(context.l10n, row),
                   style: typography.body.copyWith(color: colors.textPrimary),
                 ),
               ),

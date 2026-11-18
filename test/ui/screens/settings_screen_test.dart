@@ -2,6 +2,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:loup_garou_mj/data/database/app_database.dart';
 import 'package:loup_garou_mj/data/models/game_status.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:loup_garou_mj/main.dart';
 import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
 import 'package:loup_garou_mj/ui/screens/home/home_screen.dart';
 import 'package:loup_garou_mj/ui/screens/settings/boxes_screen.dart';
@@ -11,6 +13,28 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../support/fake_game_repository.dart';
 import '../../support/pump_app.dart';
+
+/// Starts the real app (language handling included) with [stored] as the saved language
+/// and [device] as the phone's language, then opens Réglages.
+Future<void> _openSettingsInApp(
+  WidgetTester tester, {
+  String? stored,
+  Locale device = const Locale('fr', 'FR'),
+}) async {
+  SharedPreferences.setMockInitialValues({'language': ?stored});
+  tester.platformDispatcher.localesTestValue = [device];
+  addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
+      child: const MainApp(),
+    ),
+  );
+  await tester.pumpAndSettle();
+
+  await tester.tap(find.byIcon(AppIcons.settings));
+  await tester.pumpAndSettle();
+}
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -58,7 +82,50 @@ void main() {
     expect(prefs.getString('theme_mode'), 'dark');
   });
 
+  group('the language', () {
+    testWidgets('can be forced from Réglages and is remembered', (tester) async {
+      await pumpAppRouter(
+        tester,
+        overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
+        initialLocation: '/settings',
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('LANGUE'), findsOneWidget);
+
+      await tester.tap(find.text('English'));
+      await tester.pumpAndSettle();
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('language'), 'en');
+    });
+
+    testWidgets('a stored English choice shows the whole app in English', (tester) async {
+      await _openSettingsInApp(tester, stored: 'en');
+
+      expect(find.text('LANGUAGE'), findsOneWidget);
+      expect(find.text('Light'), findsOneWidget);
+      // The language control and the theme control both have a "System" option.
+      expect(find.text('System'), findsNWidgets(2));
+      expect(find.text('LANGUE'), findsNothing);
+    });
+
+    testWidgets('a stored French choice shows French even on an English device', (tester) async {
+      await _openSettingsInApp(tester, stored: 'fr', device: const Locale('en', 'US'));
+
+      expect(find.text('LANGUE'), findsOneWidget);
+    });
+
+    testWidgets('following the device gives English on a non-French phone', (tester) async {
+      await _openSettingsInApp(tester, device: const Locale('de', 'DE'));
+
+      expect(find.text('LANGUAGE'), findsOneWidget);
+    });
+  });
+
   testWidgets('the aide-mémoire toggle flips and persists', (tester) async {
+    // Réglages is longer than the default test screen since the language section was added.
+    await tester.binding.setSurfaceSize(const Size(400, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAppRouter(
       tester,
       overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],

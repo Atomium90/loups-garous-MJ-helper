@@ -1,0 +1,1383 @@
+{
+  "@@locale": "fr",
+  "appTitle": "Loup Garou MJ",
+  "@appTitle": {
+    "description": "The app's name, shown by the system (task switcher)."
+  },
+  "settingsLanguageTitle": "Langue",
+  "@settingsLanguageTitle": {
+    "description": "Title of the language section in Réglages."
+  },
+  "languageSystem": "Système",
+  "@languageSystem": {
+    "description": "Language choice that follows the phone's language."
+  },
+  "roleName": "{roleId, select, voleur{Voleur} cupidon{Cupidon} voyante{Voyante} loup_garou{Loup-Garou} sorciere{Sorcière} villageois{Villageois} petite_fille{Petite Fille} chasseur{Chasseur} other{Rôle inconnu}}",
+  "@roleName": {
+    "description": "The name of a role card, from its id (singular, no article).",
+    "placeholders": {
+      "roleId": {
+        "type": "String"
+      }
+    }
+  },
+  "rolePlural": "{roleId, select, voleur{Voleurs} cupidon{Cupidons} voyante{Voyantes} loup_garou{Loups-Garous} sorciere{Sorcières} villageois{Villageois} petite_fille{Petites Filles} chasseur{Chasseurs} other{Rôles inconnus}}",
+  "@rolePlural": {
+    "description": "The plural name of a role card, from its id.",
+    "placeholders": {
+      "roleId": {
+        "type": "String"
+      }
+    }
+  },
+  "roleWithArticle": "{roleId, select, voleur{le Voleur} cupidon{le Cupidon} voyante{la Voyante} loup_garou{le Loup-Garou} sorciere{la Sorcière} villageois{le Villageois} petite_fille{la Petite Fille} chasseur{le Chasseur} other{Rôle inconnu}}",
+  "@roleWithArticle": {
+    "description": "A role with its article, e.g. \"le Chasseur\", \"la Voyante\", \"the Hunter\".",
+    "placeholders": {
+      "roleId": {
+        "type": "String"
+      }
+    }
+  },
+  "roleRuleText": "{roleId, select, voleur{Réveillez le Voleur. Il peut échanger sa carte avec l'une des deux cartes non distribuées, ou garder la sienne.} cupidon{Réveillez Cupidon. Il désigne deux joueurs qui tombent amoureux, puis les deux amoureux ouvrent les yeux pour se reconnaître avant de se rendormir.} voyante{Réveillez la Voyante. Elle désigne un joueur dont vous lui révélez le rôle.} loup_garou{Réveillez les Loups-Garous. Ils désignent ensemble leur victime.} sorciere{Réveillez la Sorcière. Montrez-lui la victime des Loups. Elle peut utiliser sa potion de vie et/ou sa potion de mort.} villageois{Aucune action de nuit.} petite_fille{Aucun appel : elle peut risquer un œil pendant l'appel des Loups-Garous, à ses risques.} chasseur{Aucune action de nuit : à sa mort (jour ou nuit), il élimine immédiatement un joueur de son choix.} other{}}",
+  "@roleRuleText": {
+    "description": "The instruction the game master follows when this role is called, from the role id.",
+    "placeholders": {
+      "roleId": {
+        "type": "String"
+      }
+    }
+  },
+  "roleMjTips": "{roleId, select, cupidon{Notez qui sont les amoureux : si l'un meurt, l'autre meurt aussi.} sorciere{Chaque potion ne peut être utilisée qu'une seule fois par partie.} other{}}",
+  "@roleMjTips": {
+    "description": "An optional reminder for the game master about this role, from the role id. Empty when the role has none.",
+    "placeholders": {
+      "roleId": {
+        "type": "String"
+      }
+    }
+  },
+  "winnerLabel": "{winner, select, village{Le village} wolves{Les Loups-Garous} lovers{Les Amoureux} other{Personne}}",
+  "@winnerLabel": {
+    "description": "The winning side, from the winner name (village, wolves, lovers, none).",
+    "placeholders": {
+      "winner": {
+        "type": "String"
+      }
+    }
+  },
+  "winnerShort": "{winner, select, village{Village} wolves{Loups} lovers{Amoureux} other{Annulée}}",
+  "@winnerShort": {
+    "description": "Terse winning side for a history row.",
+    "placeholders": {
+      "winner": {
+        "type": "String"
+      }
+    }
+  },
+  "deathCauseLabel": "{cause, select, wolves{Victime des Loups} witchPoison{Potion de mort de la Sorcière} dayVote{Vote du village} hunterShot{Tir du Chasseur} other{Mort de chagrin}}",
+  "@deathCauseLabel": {
+    "description": "A death's cause in the day recap, from the cause key (wolves, witchPoison, dayVote, hunterShot, loversGrief).",
+    "placeholders": {
+      "cause": {
+        "type": "String"
+      }
+    }
+  },
+  "deathCauseShort": "{cause, select, wolves{Loups} witchPoison{potion de mort} dayVote{vote du village} hunterShot{tir du Chasseur} other{mort de chagrin}}",
+  "@deathCauseShort": {
+    "description": "Terse death cause shown after the phase in the Village tab.",
+    "placeholders": {
+      "cause": {
+        "type": "String"
+      }
+    }
+  },
+  "gameDefaultName": "Partie du {date}",
+  "@gameDefaultName": {
+    "description": "Name of a game that has none: its start date.",
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "MMMMd"
+      }
+    }
+  },
+  "dayMonthLabel": "{date}",
+  "@dayMonthLabel": {
+    "description": "A date as day and month.",
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "MMMMd"
+      }
+    }
+  },
+  "monthYearLabel": "{date}",
+  "@monthYearLabel": {
+    "description": "A date as month and year (the caller capitalises it).",
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "yMMMM"
+      }
+    }
+  },
+  "journalPhaseHeader": "{phase, select, night{NUIT {index}} day{JOUR {index}} other{{index}}}",
+  "@journalPhaseHeader": {
+    "description": "Header a group of journal lines sits under: the phase (night or day) and its number.",
+    "placeholders": {
+      "phase": {
+        "type": "String"
+      },
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "journalWolvesTarget": "Les Loups désignent {player}",
+  "@journalWolvesTarget": {
+    "description": "Journal: the Werewolves' victim.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalWitchSave": "La Sorcière sauve {player}",
+  "@journalWitchSave": {
+    "description": "Journal: the Witch uses her life potion.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalWitchPoison": "La Sorcière empoisonne {player}",
+  "@journalWitchPoison": {
+    "description": "Journal: the Witch uses her death potion.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalCupidPair": "Cupidon unit {player} et {other}",
+  "@journalCupidPair": {
+    "description": "Journal: Cupid's two lovers.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      },
+      "other": {
+        "type": "String"
+      }
+    }
+  },
+  "journalThiefKeep": "Le Voleur garde sa carte",
+  "@journalThiefKeep": {
+    "description": "Journal: the Thief declines both reserve cards."
+  },
+  "journalThiefSwap": "Le Voleur échange sa carte contre {role}",
+  "@journalThiefSwap": {
+    "description": "Journal: the Thief takes a reserve card; role is the role's name.",
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "journalCaptainElected": "{player} est Capitaine",
+  "@journalCaptainElected": {
+    "description": "Journal: the village elects its Captain.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalCaptainSuccessor": "{player} devient Capitaine",
+  "@journalCaptainSuccessor": {
+    "description": "Journal: a dying Captain names a successor.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalVillageEliminates": "Le village élimine {player}",
+  "@journalVillageEliminates": {
+    "description": "Journal: the day vote's outcome.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalVoteTie": "Égalité, personne n'est éliminé",
+  "@journalVoteTie": {
+    "description": "Journal: the day vote ends in a tie."
+  },
+  "journalHunterNoShot": "Le Chasseur ne tire pas",
+  "@journalHunterNoShot": {
+    "description": "Journal: the dying Hunter takes nobody down."
+  },
+  "journalHunterShoots": "Le Chasseur emporte {player}",
+  "@journalHunterShoots": {
+    "description": "Journal: the dying Hunter's target.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalSeerObserves": "La Voyante observe {player}",
+  "@journalSeerObserves": {
+    "description": "Journal: the player the Seer looked at.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalHeartbreakDeath": "{player} meurt de chagrin",
+  "@journalHeartbreakDeath": {
+    "description": "Journal: a lover dies with the other.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "summaryPhase": "{phase, select, day{Jour {index}} other{Nuit {index}}}",
+  "@summaryPhase": {
+    "description": "Home's resume line, first part: the phase (night or day) and its number.",
+    "placeholders": {
+      "phase": {
+        "type": "String"
+      },
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "summaryStepNightEnd": "fin de la nuit",
+  "@summaryStepNightEnd": {
+    "description": "Resume line: every night role has played."
+  },
+  "summaryStepRecap": "récap",
+  "@summaryStepRecap": {
+    "description": "Resume line: the day's recap of the night."
+  },
+  "summaryStepCaptainElection": "élection du Capitaine",
+  "@summaryStepCaptainElection": {
+    "description": "Resume line: the village elects its Captain."
+  },
+  "summaryStepVillageVote": "vote du village",
+  "@summaryStepVillageVote": {
+    "description": "Resume line: the day vote."
+  },
+  "summaryStepDayDone": "fin du jour",
+  "@summaryStepDayDone": {
+    "description": "Resume line: the day is over."
+  },
+  "summaryStepChainEffect": "effet en chaîne",
+  "@summaryStepChainEffect": {
+    "description": "Resume line: a death triggers another (Hunter, Captain, lovers)."
+  },
+  "commonCancel": "Annuler",
+  "@commonCancel": {
+    "description": "Button that dismisses a confirmation without doing anything."
+  },
+  "deleteGameTitle": "Supprimer cette partie ?",
+  "@deleteGameTitle": {
+    "description": "Title of the sheet that asks before deleting a game."
+  },
+  "deleteGameMessage": "« {name} » sera supprimée avec son journal. Cette action est définitive.",
+  "@deleteGameMessage": {
+    "description": "Warning before deleting a game; name is the game title.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteGameConfirm": "Supprimer cette partie",
+  "@deleteGameConfirm": {
+    "description": "Button that deletes the game."
+  },
+  "unreadableGameTitle": "Partie illisible",
+  "@unreadableGameTitle": {
+    "description": "Title of a saved game that cannot be read back (also its line on Home)."
+  },
+  "unreadableGameMessage": "Les données de cette partie sont abîmées, ou viennent d'une version de l'app que celle-ci ne comprend pas. Vous pouvez la supprimer : vos autres parties ne sont pas touchées.",
+  "@unreadableGameMessage": {
+    "description": "Explains an unreadable game and offers to delete it."
+  },
+  "draftStepLabel": "{step, select, composition{Composition à faire} players{Joueurs à nommer} other{Prête à démarrer}}",
+  "@draftStepLabel": {
+    "description": "Where an unstarted game stopped in the setup (composition, players, before night).",
+    "placeholders": {
+      "step": {
+        "type": "String"
+      }
+    }
+  },
+  "draftsTitle": "Brouillons",
+  "@draftsTitle": {
+    "description": "Section of Home listing the games that were started but never launched."
+  },
+  "deleteDraftTitle": "Supprimer ce brouillon ?",
+  "@deleteDraftTitle": {
+    "description": "Title of the sheet that asks before deleting a draft."
+  },
+  "deleteDraftMessage": "Cette partie n'a pas commencé : sa composition et les noms des joueurs seront perdus.",
+  "@deleteDraftMessage": {
+    "description": "Warning before deleting a draft."
+  },
+  "deleteDraftConfirm": "Supprimer ce brouillon",
+  "@deleteDraftConfirm": {
+    "description": "Button that deletes the draft."
+  },
+  "homeTitle": "Mes parties",
+  "@homeTitle": {
+    "description": "Title of the Home screen."
+  },
+  "homeLoadError": "Impossible de charger vos parties.",
+  "@homeLoadError": {
+    "description": "Home: the list of games failed to load."
+  },
+  "homeEmptyTitle": "Aucune partie",
+  "@homeEmptyTitle": {
+    "description": "Home with no game at all."
+  },
+  "homeEmptyMessage": "Composez le village, distribuez les cartes, et laissez l'app tenir le fil de la nuit.",
+  "@homeEmptyMessage": {
+    "description": "Home with no game: what the app is for."
+  },
+  "homeNewGame": "Nouvelle partie",
+  "@homeNewGame": {
+    "description": "Button that starts a new game."
+  },
+  "homeInProgress": "En cours",
+  "@homeInProgress": {
+    "description": "Section of Home listing the games being played."
+  },
+  "homeGameInProgress": "Partie en cours",
+  "@homeGameInProgress": {
+    "description": "Home card of a game in progress that has no step to show yet."
+  },
+  "homeDaysAgo": "{count} j.",
+  "@homeDaysAgo": {
+    "description": "Days since a game was created, on its Home card.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeHistory": "Historique",
+  "@homeHistory": {
+    "description": "Section of Home listing the finished games."
+  },
+  "pastWinners": "Vainqueurs",
+  "@pastWinners": {
+    "description": "Label above the winning side of a finished game."
+  },
+  "unitPlayers": "{count, plural, =1{joueur} other{joueurs}}",
+  "@unitPlayers": {
+    "description": "Unit next to a number of players.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unitNights": "{count, plural, =0{nuits} =1{nuit} other{nuits}}",
+  "@unitNights": {
+    "description": "Unit next to a number of nights.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unitDays": "{count, plural, =0{jours} =1{jour} other{jours}}",
+  "@unitDays": {
+    "description": "Unit next to a number of days.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pastDeck": "La compo",
+  "@pastDeck": {
+    "description": "Label above the composition of a finished game."
+  },
+  "pastSurvivors": "Encore debout à la fin",
+  "@pastSurvivors": {
+    "description": "Label above the players alive when the game ended."
+  },
+  "pastSurvivorsCount": "{count} sur {total}",
+  "@pastSurvivorsCount": {
+    "description": "How many players were alive out of the total.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pastHiddenRoles": "{count, plural, =0{Personne n'a été éliminé.} =1{Le rôle de l'éliminé reste caché.} other{Les rôles des {count} éliminés restent cachés.}}",
+  "@pastHiddenRoles": {
+    "description": "Note under the survivors: the eliminated players' roles are not shown.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pastFullJournal": "Voir le journal complet",
+  "@pastFullJournal": {
+    "description": "Button that opens a finished game's journal."
+  },
+  "pastReplay": "Rejouer",
+  "@pastReplay": {
+    "description": "Button that starts a new game with the same players and composition."
+  },
+  "commonContinue": "Continuer",
+  "@commonContinue": {
+    "description": "Generic button that goes on to the next step."
+  },
+  "gameLoadError": "Impossible de charger cette partie.",
+  "@gameLoadError": {
+    "description": "A setup screen could not load its game."
+  },
+  "playersTitle": "Les joueurs",
+  "@playersTitle": {
+    "description": "Title of the screen where the players are named."
+  },
+  "playersNamedCount": "{named} sur {total} nommés",
+  "@playersNamedCount": {
+    "description": "How many players have a name so far.",
+    "placeholders": {
+      "named": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "playerHint": "Joueur {number}",
+  "@playerHint": {
+    "description": "Placeholder of a player's name field.",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "regularsBook": "Carnet d'habitués",
+  "@regularsBook": {
+    "description": "Upcoming feature: a list of usual players."
+  },
+  "soonPill": "bientôt",
+  "@soonPill": {
+    "description": "Pill on a feature that is not available yet."
+  },
+  "playerCountLabel": "{count, plural, =1{{count} joueur} other{{count} joueurs}}",
+  "@playerCountLabel": {
+    "description": "A number of players with its unit.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "compositionTitle": "Composition",
+  "@compositionTitle": {
+    "description": "Title of the screen where the roles in play are chosen."
+  },
+  "compositionVillage": "Village",
+  "@compositionVillage": {
+    "description": "Heading above the village-side roles."
+  },
+  "compositionWolves": "Loups",
+  "@compositionWolves": {
+    "description": "Heading above the werewolf-side roles."
+  },
+  "compositionPlayers": "Joueurs",
+  "@compositionPlayers": {
+    "description": "Label of the player count stepper."
+  },
+  "compositionSuggestion": "{count, plural, =1{Suggestion pour {count} joueur} other{Suggestion pour {count} joueurs}}",
+  "@compositionSuggestion": {
+    "description": "Title of the suggested composition for that many players.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "compositionUseSuggestion": "Utiliser cette compo",
+  "@compositionUseSuggestion": {
+    "description": "Button that applies the suggested composition."
+  },
+  "compositionInReserve": "en réserve",
+  "@compositionInReserve": {
+    "description": "Note on a role whose cards are all set aside for the Thief's reserve."
+  },
+  "reserveTitle": "Réserve du Voleur",
+  "@reserveTitle": {
+    "description": "Heading of the two cards set aside for the Thief."
+  },
+  "reserveExplain": "Deux cartes en plus des joueurs, posées au centre. Le Voleur pourra en prendre une à la place de la sienne.",
+  "@reserveExplain": {
+    "description": "Explains the Thief's reserve."
+  },
+  "reserveCard": "Carte {number}",
+  "@reserveCard": {
+    "description": "Label of one of the two reserve cards.",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "reservePick": "Choisir une carte",
+  "@reservePick": {
+    "description": "Placeholder of a reserve card that has no role yet."
+  },
+  "reserveWhichCard": "Quelle carte ?",
+  "@reserveWhichCard": {
+    "description": "Title of the sheet where a reserve card is chosen."
+  },
+  "compositionRoleCount": "{assigned, plural, =0{0 rôles} =1{1 rôle} other{{assigned} rôles}} pour {players, plural, =1{1 joueur} other{{players} joueurs}}",
+  "@compositionRoleCount": {
+    "description": "How many roles are picked for how many players.",
+    "placeholders": {
+      "assigned": {
+        "type": "int"
+      },
+      "players": {
+        "type": "int"
+      }
+    }
+  },
+  "compositionComplete": "Compo complète",
+  "@compositionComplete": {
+    "description": "Shown when every player has a role."
+  },
+  "compositionPickReserve": "Choisissez les 2 cartes de réserve du Voleur",
+  "@compositionPickReserve": {
+    "description": "Hint shown while the Thief's reserve is incomplete."
+  },
+  "compositionStart": "Lancer la partie",
+  "@compositionStart": {
+    "description": "Button that validates the composition and goes on to the players."
+  },
+  "beforeNightTitle": "Avant la nuit 1",
+  "@beforeNightTitle": {
+    "description": "Title of the last setup screen, before the first night."
+  },
+  "beforeNightVillage": "Le village",
+  "@beforeNightVillage": {
+    "description": "Label above the roster of players."
+  },
+  "beforeNightRolesToDiscover": "rôles à découvrir",
+  "@beforeNightRolesToDiscover": {
+    "description": "Reminder that the players roles are not known yet."
+  },
+  "beforeNightDeal": "La donne",
+  "@beforeNightDeal": {
+    "description": "Label above the cards in play."
+  },
+  "beforeNightDealTitle": "Distribuez les {count} cartes",
+  "@beforeNightDealTitle": {
+    "description": "Tells the MJ how many cards to hand out.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "beforeNightDealHint": "Mélangez et distribuez à l'aveugle. L'app note les rôles au fil de la nuit 1, quand chacun se réveille.",
+  "@beforeNightDealHint": {
+    "description": "How the cards are dealt."
+  },
+  "beforeNightReserveHint": "Posez ces 2 cartes au centre, face cachée : {cards}.",
+  "@beforeNightReserveHint": {
+    "description": "Where to put the Thief's reserve cards; cards lists them.",
+    "placeholders": {
+      "cards": {
+        "type": "String"
+      }
+    }
+  },
+  "beforeNightStart": "Commencer la nuit 1",
+  "@beforeNightStart": {
+    "description": "Button that starts the first night."
+  },
+  "settingsTitle": "Réglages",
+  "@settingsTitle": {
+    "description": "Title of the settings screen."
+  },
+  "settingsContent": "Contenu",
+  "@settingsContent": {
+    "description": "Settings section: boxes and other content."
+  },
+  "settingsMyBoxes": "Mes boîtes",
+  "@settingsMyBoxes": {
+    "description": "The boxes (base game and expansions) the MJ owns."
+  },
+  "settingsBaseBoxRoles": "Boîte de base · {count} rôles",
+  "@settingsBaseBoxRoles": {
+    "description": "Summary of what the owned boxes provide.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsAppearance": "Apparence",
+  "@settingsAppearance": {
+    "description": "Settings section: theme."
+  },
+  "themeSystem": "Système",
+  "@themeSystem": {
+    "description": "Theme option that follows the device's."
+  },
+  "themeLight": "Clair",
+  "@themeLight": {
+    "description": "Light theme."
+  },
+  "themeDark": "Sombre",
+  "@themeDark": {
+    "description": "Dark theme."
+  },
+  "settingsThemeHint": "En soirée, le thème sombre fatigue moins l'œil et n'éclaire pas la table.",
+  "@settingsThemeHint": {
+    "description": "Why the dark theme is worth it."
+  },
+  "settingsDuringGame": "Pendant la partie",
+  "@settingsDuringGame": {
+    "description": "Settings section: in-game behaviour."
+  },
+  "settingsKeepScreenOn": "Garder l'écran allumé",
+  "@settingsKeepScreenOn": {
+    "description": "Toggle: stop the screen from sleeping during a game."
+  },
+  "settingsAideMemoire": "Aide-mémoire dans le script",
+  "@settingsAideMemoire": {
+    "description": "Toggle: show the quick-reference button in the script."
+  },
+  "settingsData": "Données",
+  "@settingsData": {
+    "description": "Settings section: stored games."
+  },
+  "settingsFooter": "Loup Garou MJ · V1 · hors ligne",
+  "@settingsFooter": {
+    "description": "App name, version and mode in the footer."
+  },
+  "settingsOnDevice": "Vos parties restent sur cet appareil : désinstaller l’app les supprime.",
+  "@settingsOnDevice": {
+    "description": "Footer: where the games are stored."
+  },
+  "deleteAllRow": "Supprimer toutes les parties",
+  "@deleteAllRow": {
+    "description": "Settings row that wipes every game."
+  },
+  "deleteAllRowHint": "Brouillons, parties en cours et historique",
+  "@deleteAllRowHint": {
+    "description": "What deleting all games covers."
+  },
+  "deleteAllTitle": "Supprimer toutes les parties ?",
+  "@deleteAllTitle": {
+    "description": "Title of the sheet that asks before wiping every game."
+  },
+  "deleteAllMessage": "Les brouillons, les parties en cours et l’historique seront effacés. Cette action est définitive.",
+  "@deleteAllMessage": {
+    "description": "Warning before wiping every game."
+  },
+  "deleteAllConfirm": "Tout supprimer",
+  "@deleteAllConfirm": {
+    "description": "Button that wipes every game."
+  },
+  "deleteAllDone": "Toutes les parties sont supprimées.",
+  "@deleteAllDone": {
+    "description": "Snackbar after every game was deleted."
+  },
+  "boxesRolesAvailable": "{count} rôles disponibles pour vos parties",
+  "@boxesRolesAvailable": {
+    "description": "How many roles the owned boxes give.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "boxesOwned": "Possédées",
+  "@boxesOwned": {
+    "description": "Heading above the boxes the MJ owns."
+  },
+  "boxBaseName": "Loups-Garous de Thiercelieux",
+  "@boxBaseName": {
+    "description": "Name of the base game's box."
+  },
+  "boxBaseDetail": "Boîte de base · {count} cartes",
+  "@boxBaseDetail": {
+    "description": "Kind and size of the base box.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "boxesExpansions": "Extensions",
+  "@boxesExpansions": {
+    "description": "Heading above the expansions."
+  },
+  "boxExpansionDetail": "Extension · {count} cartes",
+  "@boxExpansionDetail": {
+    "description": "Kind and size of an expansion.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "boxesFooter": "Les extensions arrivent après la V1. La boîte de base couvre 8 à 18 joueurs.",
+  "@boxesFooter": {
+    "description": "Footer of the boxes screen."
+  },
+  "endGameTitle": "Terminer la partie",
+  "@endGameTitle": {
+    "description": "Title of the end-of-game screen and its confirm button."
+  },
+  "endGameAliveCount": "{wolves, plural, =0{0 Loups vivants} =1{1 Loup vivant} other{{wolves} Loups vivants}}, {village, plural, =0{0 villageois} =1{1 villageois} other{{village} villageois}}.",
+  "@endGameAliveCount": {
+    "description": "How many werewolves and villagers are still alive.",
+    "placeholders": {
+      "wolves": {
+        "type": "int"
+      },
+      "village": {
+        "type": "int"
+      }
+    }
+  },
+  "endGameJudge": "À vous de juger si la partie est jouée. L'app ne conclut rien.",
+  "@endGameJudge": {
+    "description": "The app leaves the call to the MJ."
+  },
+  "endGameWho": "Qui gagne ?",
+  "@endGameWho": {
+    "description": "Heading above the choice of the winning side."
+  },
+  "endGamePickWinner": "Choisissez le vainqueur",
+  "@endGamePickWinner": {
+    "description": "Disabled button text until a winner is chosen."
+  },
+  "endGameKeepPlaying": "On continue à jouer",
+  "@endGameKeepPlaying": {
+    "description": "Button that goes back to the game."
+  },
+  "endGameCancelled": "Partie annulée",
+  "@endGameCancelled": {
+    "description": "Sub-label of the option that ends a game with no winner."
+  },
+  "gameFallbackName": "Partie",
+  "@gameFallbackName": {
+    "description": "Name of a game whose details have not loaded yet."
+  },
+  "tabScript": "Script",
+  "@tabScript": {
+    "description": "In-game tab: the night and day script."
+  },
+  "tabVillage": "Village",
+  "@tabVillage": {
+    "description": "In-game tab: the players."
+  },
+  "tabJournal": "Journal",
+  "@tabJournal": {
+    "description": "In-game tab: the log of what happened."
+  },
+  "journalTitle": "Journal",
+  "@journalTitle": {
+    "description": "Title of the journal."
+  },
+  "journalLoadError": "Impossible de charger le journal.",
+  "@journalLoadError": {
+    "description": "The journal failed to load."
+  },
+  "journalEmpty": "Rien à consigner pour l'instant.",
+  "@journalEmpty": {
+    "description": "The journal has no line yet."
+  },
+  "villageLoadError": "Impossible de charger le village.",
+  "@villageLoadError": {
+    "description": "The village tab failed to load."
+  },
+  "villageTitle": "Le village",
+  "@villageTitle": {
+    "description": "Title of the village tab."
+  },
+  "villageAliveCount": "{alive, plural, =0{0 vivants} =1{1 vivant} other{{alive} vivants}} sur {total}",
+  "@villageAliveCount": {
+    "description": "How many players are still alive out of the total.",
+    "placeholders": {
+      "alive": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "villageAliveSection": "Vivants",
+  "@villageAliveSection": {
+    "description": "Heading above the living players."
+  },
+  "villageDeadSection": "Éliminés",
+  "@villageDeadSection": {
+    "description": "Heading above the eliminated players."
+  },
+  "deathLine": "{phase} · {cause}",
+  "@deathLine": {
+    "description": "When and how a player died: phase is e.g. \"Nuit 2\", cause is short.",
+    "placeholders": {
+      "phase": {
+        "type": "String"
+      },
+      "cause": {
+        "type": "String"
+      }
+    }
+  },
+  "aideTitle": "Ordre de réveil",
+  "@aideTitle": {
+    "description": "Title of the quick-reference sheet."
+  },
+  "aideSubtitle": "Votre compo, dans l'ordre",
+  "@aideSubtitle": {
+    "description": "Subtitle of the quick-reference sheet."
+  },
+  "aideFooter": "Une ligne par rôle, jamais plus. Pour le détail, la règle papier reste sur la table.",
+  "@aideFooter": {
+    "description": "Footer of the quick-reference sheet."
+  },
+  "identifyQuestionOne": "Qui est {role} ?",
+  "@identifyQuestionOne": {
+    "description": "Asks who holds a role; role is its name.",
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "identifyQuestionMany": "Qui sont les {roles} ?",
+  "@identifyQuestionMany": {
+    "description": "Asks who holds a role that several players have; roles is its plural name.",
+    "placeholders": {
+      "roles": {
+        "type": "String"
+      }
+    }
+  },
+  "identifyProgress": "{count} sur {total}",
+  "@identifyProgress": {
+    "description": "How many players are picked out of how many to pick.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "identifySave": "Enregistrer",
+  "@identifySave": {
+    "description": "Button that records who holds the role."
+  },
+  "identifyPick": "{count, plural, =1{Choisissez {count} joueur} other{Choisissez {count} joueurs}}",
+  "@identifyPick": {
+    "description": "Disabled button text while not enough players are picked.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "identifyLater": "Je noterai plus tard",
+  "@identifyLater": {
+    "description": "Button that skips noting who holds the role."
+  },
+  "pickPlayer": "Choisissez un joueur",
+  "@pickPlayer": {
+    "description": "Disabled button text until a player is picked."
+  },
+  "witchPoisonQuestion": "Qui la Sorcière empoisonne-t-elle ?",
+  "@witchPoisonQuestion": {
+    "description": "The Witch's death potion target."
+  },
+  "witchPoisons": "Elle empoisonne {name}",
+  "@witchPoisons": {
+    "description": "Button that confirms the poison target.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "witchSaves": "Elle sauve {name}",
+  "@witchSaves": {
+    "description": "Button that uses the life potion on the victim.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "witchPoisonsPick": "Elle empoisonne…",
+  "@witchPoisonsPick": {
+    "description": "Button that opens the poison target picker."
+  },
+  "witchDone": "Terminer le tour de la Sorcière",
+  "@witchDone": {
+    "description": "Button that ends the Witch's turn."
+  },
+  "witchVictim": "Victime des Loups cette nuit",
+  "@witchVictim": {
+    "description": "Label above the victim of the Werewolves shown to the Witch."
+  },
+  "potionLife": "Vie",
+  "@potionLife": {
+    "description": "Name of the Witch's life potion."
+  },
+  "potionDeath": "Mort",
+  "@potionDeath": {
+    "description": "Name of the Witch's death potion."
+  },
+  "potionUsed": "{potion} utilisée",
+  "@potionUsed": {
+    "description": "A potion that was already used.",
+    "placeholders": {
+      "potion": {
+        "type": "String"
+      }
+    }
+  },
+  "potionAvailable": "{potion} disponible",
+  "@potionAvailable": {
+    "description": "A potion that is still available.",
+    "placeholders": {
+      "potion": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptLoadError": "Impossible de charger la partie.",
+  "@scriptLoadError": {
+    "description": "The script tab failed to load."
+  },
+  "scriptThiefExtra": "Le Voleur a volé une carte de {role} : il compte en plus.",
+  "@scriptThiefExtra": {
+    "description": "Note on the identify step when the Thief holds a stolen card of this role.",
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptSeerKnown": "Déjà connu grâce à la Voyante.",
+  "@scriptSeerKnown": {
+    "description": "Note on the identify step for a holder the Seer already revealed."
+  },
+  "scriptWolvesQuestion": "Qui les Loups dévorent-ils ?",
+  "@scriptWolvesQuestion": {
+    "description": "The Werewolves' target question."
+  },
+  "scriptWolvesPick": "Les Loups désignent {name}",
+  "@scriptWolvesPick": {
+    "description": "Button that confirms the Werewolves target.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptSkipRole": "Passer ce rôle",
+  "@scriptSkipRole": {
+    "description": "Button that moves on without playing the role."
+  },
+  "scriptThiefReserve": "Les deux cartes de la pioche",
+  "@scriptThiefReserve": {
+    "description": "Heading above the two cards the Thief can take."
+  },
+  "scriptThiefBecomes": "Le Voleur devient {role} : réveillez-le à son tour cette nuit s'il n'est pas déjà passé.",
+  "@scriptThiefBecomes": {
+    "description": "Nudge when the Thief steals a role that wakes at night; role has its article.",
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptPickCard": "Choisissez une carte",
+  "@scriptPickCard": {
+    "description": "Disabled button text until a card is picked."
+  },
+  "scriptThiefKeeps": "Le Voleur garde sa carte",
+  "@scriptThiefKeeps": {
+    "description": "Button that confirms the Thief keeps their card."
+  },
+  "scriptThiefTakes": "Le Voleur prend {role}",
+  "@scriptThiefTakes": {
+    "description": "Button that confirms the card the Thief takes; role has its article.",
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptThiefKeepOption": "Il garde sa carte",
+  "@scriptThiefKeepOption": {
+    "description": "Option: the Thief keeps their own card."
+  },
+  "scriptSeerQuestion": "Qui la Voyante observe-t-elle ?",
+  "@scriptSeerQuestion": {
+    "description": "The Seer's target question."
+  },
+  "scriptSeerPick": "La Voyante observe {name}",
+  "@scriptSeerPick": {
+    "description": "Button that confirms the Seer target.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptSeerNote": "Sa carte n'est pas encore notée. Montrez-la à la Voyante, puis notez-la.",
+  "@scriptSeerNote": {
+    "description": "Asks the MJ to note the card the Seer is about to see."
+  },
+  "scriptCardOf": "La carte de {name}",
+  "@scriptCardOf": {
+    "description": "Label above the list of cards to pick for a player.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptNameIs": "{name} est {role}",
+  "@scriptNameIs": {
+    "description": "A player and their role; role has its article.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptSeerSees": "La Voyante voit",
+  "@scriptSeerSees": {
+    "description": "Heading of the card the Seer is shown."
+  },
+  "scriptLoversQuestion": "Qui sont les amoureux ?",
+  "@scriptLoversQuestion": {
+    "description": "Cupid's question."
+  },
+  "scriptLoversPair": "Cupidon unit {first} et {second}",
+  "@scriptLoversPair": {
+    "description": "Button that confirms the two lovers.",
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "second": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptLoversPick": "Choisissez deux joueurs",
+  "@scriptLoversPick": {
+    "description": "Disabled button text until two lovers are picked."
+  },
+  "scriptAllPlayed": "Tous les rôles ont joué.",
+  "@scriptAllPlayed": {
+    "description": "End of the night script."
+  },
+  "scriptResolveNight": "Résoudre la nuit",
+  "@scriptResolveNight": {
+    "description": "Button that resolves the night and starts the day."
+  },
+  "scriptDayRises": "Jour {index} se lève",
+  "@scriptDayRises": {
+    "description": "Eyebrow of the day recap.",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "scriptNobodyDied": "Personne n'est mort cette nuit",
+  "@scriptNobodyDied": {
+    "description": "Day recap when the night killed nobody."
+  },
+  "scriptVillageLost": "Cette nuit, le village a perdu",
+  "@scriptVillageLost": {
+    "description": "Day recap heading above the deaths."
+  },
+  "scriptSavedNote": "{name} a été attaqué par les Loups, puis sauvé. Ne l'annoncez pas.",
+  "@scriptSavedNote": {
+    "description": "Day recap note about the player the Witch saved.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptAliveUnit": "vivants",
+  "@scriptAliveUnit": {
+    "description": "Unit under the number of living players of a side."
+  },
+  "scriptElectCaptain": "Élire le Capitaine",
+  "@scriptElectCaptain": {
+    "description": "Day recap button that goes to the Captain election."
+  },
+  "scriptOpenVote": "Ouvrir le vote du village",
+  "@scriptOpenVote": {
+    "description": "Day recap button that goes to the vote."
+  },
+  "scriptRoleNotRevealed": "Rôle non révélé",
+  "@scriptRoleNotRevealed": {
+    "description": "A player's card was never recorded."
+  },
+  "scriptWasRole": "Était {role}",
+  "@scriptWasRole": {
+    "description": "The card of a dead player; role has its article.",
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptCaptainTitle": "Le Capitaine",
+  "@scriptCaptainTitle": {
+    "description": "Title of the Captain banner."
+  },
+  "scriptCaptainBody": "Le village élit son Capitaine. N'importe quel joueur, quel que soit son rôle. Sa voix compte double au vote. Cet écran revient si le Capitaine meurt : il désigne alors son successeur.",
+  "@scriptCaptainBody": {
+    "description": "Explains the Captain election."
+  },
+  "scriptCaptainQuestion": "Qui est élu ?",
+  "@scriptCaptainQuestion": {
+    "description": "Captain election question."
+  },
+  "scriptCaptainIs": "{name} est Capitaine",
+  "@scriptCaptainIs": {
+    "description": "Button that confirms the elected Captain.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptNoCaptain": "Pas de Capitaine cette partie",
+  "@scriptNoCaptain": {
+    "description": "Button that skips the Captain election."
+  },
+  "scriptVoteEyebrow": "Jour {index} · vote",
+  "@scriptVoteEyebrow": {
+    "description": "Eyebrow of the vote.",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "scriptVoteTitle": "Le vote",
+  "@scriptVoteTitle": {
+    "description": "Title of the vote banner."
+  },
+  "scriptVoteBody": "Le village débat, puis désigne.",
+  "@scriptVoteBody": {
+    "description": "Vote banner text."
+  },
+  "scriptVoteBodyCaptain": "Le village débat, puis désigne. La voix de {name} compte double.",
+  "@scriptVoteBodyCaptain": {
+    "description": "Vote banner text when there is a Captain.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptVoteQuestion": "Qui est éliminé ?",
+  "@scriptVoteQuestion": {
+    "description": "Vote question."
+  },
+  "scriptVoteEliminates": "Le village élimine {name}",
+  "@scriptVoteEliminates": {
+    "description": "Button that confirms the eliminated player.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptVoteTie": "Égalité, personne n'est éliminé",
+  "@scriptVoteTie": {
+    "description": "Button for a tied vote."
+  },
+  "scriptDayOver": "Le jour est terminé.",
+  "@scriptDayOver": {
+    "description": "End of the day."
+  },
+  "scriptStartNight": "Commencer la nuit {index}",
+  "@scriptStartNight": {
+    "description": "Button that starts the next night.",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "scriptEliminatedNight": "Éliminé nuit {index}",
+  "@scriptEliminatedNight": {
+    "description": "Subtitle of a player who died in the night.",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "scriptRevealHint": "Retournez sa carte devant la table. Son rôle n'a pas encore été noté.",
+  "@scriptRevealHint": {
+    "description": "Asks the MJ to reveal and note a dead player card."
+  },
+  "scriptRevealQuestion": "Quelle était sa carte ?",
+  "@scriptRevealQuestion": {
+    "description": "Question above the card list for a dead player."
+  },
+  "scriptNameWas": "{name} était {role}",
+  "@scriptNameWas": {
+    "description": "Button that records the card of a dead player; role has its article.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptDontNote": "Je ne note pas",
+  "@scriptDontNote": {
+    "description": "Button that skips noting a dead player's card."
+  },
+  "scriptRemaining": "{count} restants",
+  "@scriptRemaining": {
+    "description": "How many copies of a role are left to place.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scriptHunterShoots": "Le Chasseur tire. ",
+  "@scriptHunterShoots": {
+    "description": "Start of the Hunter banner sentence (keep the trailing space)."
+  },
+  "scriptHunterTakes": "Il emporte un joueur avec lui, tout de suite.",
+  "@scriptHunterTakes": {
+    "description": "End of the Hunter banner sentence."
+  },
+  "scriptHunterTarget": "Sa cible",
+  "@scriptHunterTarget": {
+    "description": "The Hunter's target question."
+  },
+  "scriptHunterEliminated": "{name} est éliminé",
+  "@scriptHunterEliminated": {
+    "description": "Button that confirms the Hunter's target.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptHunterNoShot": "Il ne tire pas",
+  "@scriptHunterNoShot": {
+    "description": "Button when the Hunter shoots nobody."
+  },
+  "scriptCaptainDead": "Le Capitaine est mort",
+  "@scriptCaptainDead": {
+    "description": "Subtitle of the succession panel."
+  },
+  "scriptSuccessionTitle": "La succession",
+  "@scriptSuccessionTitle": {
+    "description": "Title of the succession banner."
+  },
+  "scriptSuccessionBody": "Avant de partir, le Capitaine désigne son successeur. Sa voix comptera double à son tour.",
+  "@scriptSuccessionBody": {
+    "description": "Explains the Captain succession."
+  },
+  "scriptSuccessionQuestion": "Qui lui succède ?",
+  "@scriptSuccessionQuestion": {
+    "description": "Succession question."
+  },
+  "scriptCaptainBecomes": "{name} devient Capitaine",
+  "@scriptCaptainBecomes": {
+    "description": "Button that confirms the new Captain.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptDiesOfHeartbreak": "Meurt de chagrin",
+  "@scriptDiesOfHeartbreak": {
+    "description": "Subtitle when a lover dies and the partner is unknown."
+  },
+  "scriptInLoveWith": "Amoureux de {name}",
+  "@scriptInLoveWith": {
+    "description": "Subtitle of a lover who dies with their partner.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptLoversNoPartner": "L'autre amoureux ne survit pas à sa disparition. Annoncez-le au village.",
+  "@scriptLoversNoPartner": {
+    "description": "Lover grief note without a known partner."
+  },
+  "scriptLoversPartner": "{partner} n'est plus, et les amoureux de Cupidon partent ensemble. Annoncez la mort de {name} au village.",
+  "@scriptLoversPartner": {
+    "description": "Lover grief note.",
+    "placeholders": {
+      "partner": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptGotIt": "Compris",
+  "@scriptGotIt": {
+    "description": "Button that acknowledges a lover death."
+  },
+  "scriptTheirCard": "Sa carte",
+  "@scriptTheirCard": {
+    "description": "Label above the revealed card of a dead player."
+  }
+}

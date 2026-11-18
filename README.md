@@ -64,10 +64,14 @@ listed as coming soon.
 
 Also not built: the regulars address book and the extension boxes.
 
+The app speaks French and English. Réglages has a language setting (system, Français,
+English); "system" follows the phone, French for a French phone and English for any other.
+
 ## Architecture
 
 ```
 lib/
+  l10n/                  French and English messages (.arb) and the delegates the app uses
   data/                  Drift schema + repositories
   state/
     session/               GameSession orchestrator, night cursor + day snapshot, journal-line rendering
@@ -105,6 +109,28 @@ cd packages/rules_engine
 dart pub get
 dart test
 ```
+
+### Languages and texts
+
+Every text the user reads lives in `lib/l10n/app_fr.arb` (the template, with a description per
+message) and `lib/l10n/app_en.arb`. `flutter pub get` generates the typed `AppLocalizations`
+class from them into `lib/l10n/generated/` (not committed); screens read it with
+`context.l10n.someMessage`.
+
+- **A new text**: add the message to `app_fr.arb` with its `@message` description (and its
+  placeholders), add the translation to `app_en.arb`, then use it. `flutter test` checks that
+  both files have the same messages and the same placeholders.
+- **Counts and genders** are ICU `plural` / `select` messages in the file, never string
+  concatenation in Dart. French treats 0 as singular, so a message that can show zero spells out
+  `=0`.
+- **A role** has no text in the rules engine, which is language-free: its name, plural, article,
+  rule text and game master tip are `select` messages keyed by the role id (`roleName`,
+  `rolePlural`, `roleWithArticle`, `roleRuleText`, `roleMjTips`). Adding a role means adding a
+  line to each; a test fails if a role of the registry lacks one in either language.
+- **The journal** stores what happened (a kind, player names, a role id), not a sentence, and
+  is turned into text when displayed. Journal lines saved before this existed stay in French.
+- **A new language** is a new `app_xx.arb`, the language in `AppLanguage`, and its name in
+  Réglages.
 
 ### CI
 

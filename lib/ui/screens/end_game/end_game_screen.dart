@@ -12,9 +12,9 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
-import '../../utils/french_date_format.dart';
-import '../../utils/french_winner_label.dart';
 import '../../widgets/app_button.dart';
+import '../../utils/l10n.dart';
+import '../../utils/labels.dart';
 
 /// The end-of-game screen: the MJ declares the winner and closes the game. The
 /// app never decides this itself - the count is a signal, not a verdict.
@@ -87,12 +87,12 @@ class _EndGameScreenState extends ConsumerState<EndGameScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Terminer la partie',
+                          context.l10n.endGameTitle,
                           style: typography.screenTitle.copyWith(color: colors.textPrimary),
                         ),
                         if (game != null)
                           Text(
-                            game.name ?? 'Partie du ${frenchDayMonthLabel(game.createdAt)}',
+                            gameTitle(context.l10n, game),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: typography.meta.copyWith(color: colors.textSecondary),
@@ -117,12 +117,12 @@ class _EndGameScreenState extends ConsumerState<EndGameScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _countLine(wolves, village),
+                          context.l10n.endGameAliveCount(wolves, village),
                           style: typography.body.copyWith(color: colors.textPrimary, height: 1.55),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          "À vous de juger si la partie est jouée. L'app ne conclut rien.",
+                          context.l10n.endGameJudge,
                           style: typography.meta.copyWith(color: colors.textTertiary, height: 1.55),
                         ),
                       ],
@@ -130,7 +130,7 @@ class _EndGameScreenState extends ConsumerState<EndGameScreen> {
                   ),
                   const SizedBox(height: 20),
                   Text(
-                    'Qui gagne ?',
+                    context.l10n.endGameWho,
                     style: typography.meta.copyWith(color: colors.textTertiary),
                   ),
                   const SizedBox(height: 10),
@@ -155,11 +155,13 @@ class _EndGameScreenState extends ConsumerState<EndGameScreen> {
                 spacing: 8,
                 children: [
                   AppButton(
-                    label: _winner == null ? 'Choisissez le vainqueur' : 'Terminer la partie',
+                    label: _winner == null
+                        ? context.l10n.endGamePickWinner
+                        : context.l10n.endGameTitle,
                     onPressed: _winner == null || _saving ? null : _confirm,
                   ),
                   AppButton(
-                    label: 'On continue à jouer',
+                    label: context.l10n.endGameKeepPlaying,
                     variant: AppButtonVariant.secondary,
                     onPressed: _back,
                   ),
@@ -170,12 +172,6 @@ class _EndGameScreenState extends ConsumerState<EndGameScreen> {
         ),
       ),
     );
-  }
-
-  String _countLine(int wolves, int village) {
-    final w = wolves == 1 ? '1 Loup vivant' : '$wolves Loups vivants';
-    final v = village == 1 ? '1 villageois' : '$village villageois';
-    return '$w, $v.';
   }
 }
 
@@ -212,7 +208,7 @@ class _WinnerRow extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                frenchWinnerIcon(winner),
+                winnerIcon(winner),
                 size: 17,
                 color: selected ? colors.accentText : colors.textSecondary,
               ),
@@ -222,14 +218,14 @@ class _WinnerRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    frenchWinnerLabel(winner),
+                    winnerLabel(context.l10n, winner),
                     style: typography.rowLabel.copyWith(
                       color: selected ? colors.accentText : colors.textPrimary,
                     ),
                   ),
                   if (winner == GameWinner.none)
                     Text(
-                      'Partie annulée',
+                      context.l10n.endGameCancelled,
                       style: typography.counter.copyWith(color: colors.textTertiary),
                     ),
                 ],

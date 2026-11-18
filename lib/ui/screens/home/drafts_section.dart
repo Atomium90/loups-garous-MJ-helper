@@ -9,11 +9,12 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
-import '../../utils/french_date_format.dart';
 import '../../widgets/app_icon_button.dart';
 import '../../widgets/confirm_sheet.dart';
 import '../../widgets/section_label.dart';
 import 'draft_step.dart';
+import '../../utils/l10n.dart';
+import '../../utils/labels.dart';
 
 /// Home's "Brouillons": games that were started (a composition, some names) but never
 /// launched. Each resumes on the setup screen it stopped at, and can be deleted.
@@ -30,7 +31,7 @@ class DraftsSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         spacing: 8,
         children: [
-          const SectionLabel('Brouillons'),
+          SectionLabel(context.l10n.draftsTitle),
           for (final game in games) _DraftRow(game: game),
         ],
       ),
@@ -78,11 +79,11 @@ class _DraftRow extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        game.name ?? 'Partie du ${frenchDayMonthLabel(game.createdAt)}',
+                        gameTitle(context.l10n, game),
                         style: typography.rowLabel.copyWith(color: colors.textPrimary),
                       ),
                       Text(
-                        step.label,
+                        draftStepLabel(context.l10n, step),
                         style: typography.meta.copyWith(color: colors.textSecondary),
                       ),
                     ],
@@ -104,11 +105,9 @@ class _DraftRow extends ConsumerWidget {
   void _confirmDelete(BuildContext context, WidgetRef ref) {
     showConfirmSheet(
       context,
-      title: 'Supprimer ce brouillon ?',
-      message:
-          "Cette partie n'a pas commencé : sa composition et les noms des joueurs "
-          'seront perdus.',
-      confirmLabel: 'Supprimer ce brouillon',
+      title: context.l10n.deleteDraftTitle,
+      message: context.l10n.deleteDraftMessage,
+      confirmLabel: context.l10n.deleteDraftConfirm,
       onConfirm: () => ref.read(gameRepositoryProvider).discardDraft(game.id),
     );
   }

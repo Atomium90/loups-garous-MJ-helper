@@ -34,7 +34,7 @@ void main() {
     for (final p in state.players) {
       final role = roleRegistry.byId(p.roleId);
       final status = p.alive ? 'vivant' : 'mort  ';
-      print('  $status  ${p.name} (${role.name})');
+      print('  $status  ${p.name} (${role.id})');
     }
   }
 
@@ -45,7 +45,7 @@ void main() {
     aliveRoleIds: state.alivePlayers.map((p) => p.roleId).toSet(),
     nightIndex: state.nightIndex,
   );
-  print('Ordre d\'appel : ${script.steps.map((s) => s.role.name).join(' -> ')}');
+  print('Ordre d\'appel : ${script.steps.map((s) => s.role.id).join(' -> ')}');
 
   print('\n  Voleur (Alice) garde sa carte.');
   act(const VoleurSwap(voleurPlayerId: 'alice'));
@@ -55,7 +55,7 @@ void main() {
 
   final davidRole = roleRegistry.byId(state.playerById('david').roleId);
   print(
-    '  Voyante (Chloé) regarde le rôle de David : ${davidRole.name}. '
+    '  Voyante (Chloé) regarde le rôle de David : ${davidRole.id}. '
     '(information privée, aucune GameAction : ça ne change pas l\'état)',
   );
 

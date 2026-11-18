@@ -25,6 +25,7 @@ void main() {
     expect(settings.themeMode, ThemeMode.system);
     expect(settings.keepScreenOn, isTrue);
     expect(settings.aideMemoireInScript, isTrue);
+    expect(settings.language, AppLanguage.system);
   });
 
   test('reads stored values', () async {
@@ -56,9 +57,45 @@ void main() {
     expect(prefs.getBool('keep_screen_on'), isFalse);
   });
 
+  group('the language', () {
+    test('is read from the stored code', () async {
+      final container = await containerWith({'language': 'en'});
+
+      expect((await container.read(settingsProvider.future)).language, AppLanguage.english);
+    });
+
+    test('an unknown stored code means follow the device', () async {
+      final container = await containerWith({'language': 'xx'});
+
+      expect((await container.read(settingsProvider.future)).language, AppLanguage.system);
+    });
+
+    test('is stored by code, and removed when going back to the device language', () async {
+      final container = await containerWith({});
+      await container.read(settingsProvider.future);
+      final notifier = container.read(settingsProvider.notifier);
+      final prefs = await SharedPreferences.getInstance();
+
+      await notifier.setLanguage(AppLanguage.french);
+      expect(container.read(settingsProvider).value?.language, AppLanguage.french);
+      expect(prefs.getString('language'), 'fr');
+
+      await notifier.setLanguage(AppLanguage.system);
+      expect(container.read(settingsProvider).value?.language, AppLanguage.system);
+      expect(prefs.containsKey('language'), isFalse);
+    });
+
+    test('each choice maps to the locale to force', () {
+      expect(AppLanguage.system.locale, isNull);
+      expect(AppLanguage.french.locale?.languageCode, 'fr');
+      expect(AppLanguage.english.locale?.languageCode, 'en');
+    });
+  });
+
   test('AppSettings.copyWith leaves other fields intact', () {
     const s = AppSettings.defaults;
     expect(s.copyWith(keepScreenOn: false).themeMode, ThemeMode.system);
     expect(s.copyWith(keepScreenOn: false).aideMemoireInScript, isTrue);
+    expect(s.copyWith(language: AppLanguage.english).keepScreenOn, isTrue);
   });
 }
