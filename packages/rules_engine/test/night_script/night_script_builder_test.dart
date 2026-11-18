@@ -7,12 +7,10 @@ Role _scriptRole(
   WakeCondition wakeCondition = WakeCondition.everyNight,
 }) => Role(
   id: id,
-  name: id,
   team: Team.village,
   hasNightCall: true,
   wakeCondition: wakeCondition,
   orderConstraints: orderConstraints,
-  ruleText: 'text',
 );
 
 void main() {
@@ -234,13 +232,7 @@ void main() {
     });
 
     test('hasNightCall false is always excluded, even if otherwise eligible-looking', () {
-      final passive = Role(
-        id: 'passive',
-        name: 'Passive',
-        team: Team.village,
-        hasNightCall: false,
-        ruleText: 'text',
-      );
+      final passive = Role(id: 'passive', team: Team.village, hasNightCall: false);
       final script = builder.build(
         compositionRoles: [passive],
         aliveRoleIds: {'passive'},

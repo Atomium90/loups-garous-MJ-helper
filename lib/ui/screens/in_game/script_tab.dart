@@ -1651,7 +1651,7 @@ class _RevealedCard extends StatelessWidget {
               children: [
                 Text('Sa carte', style: typography.counter.copyWith(color: colors.textTertiary)),
                 Text(
-                  role?.name ?? 'Rôle non révélé',
+                  role == null ? 'Rôle non révélé' : context.l10n.roleName(role.id),
                   style: typography.rowLabel.copyWith(color: colors.textPrimary),
                 ),
               ],
