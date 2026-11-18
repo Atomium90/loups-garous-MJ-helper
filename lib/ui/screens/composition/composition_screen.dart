@@ -5,7 +5,6 @@ import 'package:rules_engine/rules_engine.dart';
 
 import '../../../state/composition/composition_draft.dart';
 import '../../../state/composition/composition_editor_notifier.dart';
-import '../../../state/providers/game_repository_provider.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
@@ -115,14 +114,14 @@ class _CompositionBody extends StatelessWidget {
   }
 }
 
-class _Header extends ConsumerWidget {
+class _Header extends StatelessWidget {
   const _Header({required this.gameId, required this.playerCount});
 
   final int gameId;
   final int playerCount;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final colors = context.colors;
     final typography = context.typography;
     return Padding(
@@ -134,12 +133,9 @@ class _Header extends ConsumerWidget {
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
             visualDensity: VisualDensity.compact,
-            onPressed: () async {
-              // Every game reaching this screen got here via fresh "Nouvelle partie", so it's
-              // always still GameStatus.setup here - exactly what discardDraft exists for.
-              await ref.read(gameRepositoryProvider).discardDraft(gameId);
-              if (context.mounted) context.go('/');
-            },
+            // Leaving keeps the game as a draft (what was picked is saved as it is edited);
+            // only the trash button under Brouillons on Home deletes it.
+            onPressed: () => context.go('/'),
           ),
           const SizedBox(width: 10),
           Column(

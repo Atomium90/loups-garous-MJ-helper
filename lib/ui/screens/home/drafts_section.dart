@@ -48,7 +48,7 @@ class _DraftRow extends ConsumerWidget {
     final colors = context.colors;
     final typography = context.typography;
     final roster = ref.watch(rosterProvider(game.id)).value ?? const <PlayerRow>[];
-    final step = draftStepOf(game, roster);
+    final step = draftStepOf(roster);
 
     return Container(
       decoration: BoxDecoration(

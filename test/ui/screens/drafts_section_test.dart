@@ -62,6 +62,26 @@ void main() {
     expect(find.text('Prête à démarrer'), findsOneWidget);
   });
 
+  testWidgets('a draft whose composition was only started still resumes on the composition', (
+    tester,
+  ) async {
+    final repo = FakeGameRepository();
+    final id = await repo.createGame(initialPlayerCount: 8);
+    await repo.saveCompositionDraft(
+      gameId: id,
+      playerCount: 8,
+      roleCounts: const {'voyante': 1},
+    );
+    await _pumpHome(tester, repo);
+
+    expect(find.text('Composition à faire'), findsOneWidget);
+    await tester.tap(find.text('Composition à faire'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(CompositionScreen), findsOneWidget);
+    expect(find.text('1 rôles pour 8 joueurs'), findsOneWidget);
+  });
+
   testWidgets('a started game is not listed under Brouillons', (tester) async {
     final now = DateTime.now();
     final repo = FakeGameRepository(

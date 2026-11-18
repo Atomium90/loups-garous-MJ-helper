@@ -286,7 +286,7 @@ void main() {
     expect(find.widgetWithText(ListTile, 'Loup-Garou'), findsOneWidget); // 4 in box, 0 dealt
   });
 
-  testWidgets('back chevron discards the draft and returns home', (tester) async {
+  testWidgets('back chevron keeps the game as a draft and returns home', (tester) async {
     final repository = FakeGameRepository();
     await pumpAppRouter(
       tester,
@@ -300,8 +300,32 @@ void main() {
     await tester.tap(find.byIcon(AppIcons.back));
     await tester.pumpAndSettle();
 
-    expect(repository.allGames, isEmpty);
+    expect(repository.allGames, hasLength(1));
     expect(find.byType(HomeScreen), findsOneWidget);
+    expect(find.text('BROUILLONS'), findsOneWidget);
+    expect(find.text('Composition à faire'), findsOneWidget);
+  });
+
+  testWidgets('what was picked is still there when the composition is reopened', (tester) async {
+    final repository = FakeGameRepository();
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(repository)],
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Nouvelle partie'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Voyante'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(AppIcons.back));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Composition à faire'));
+    await tester.pumpAndSettle();
+
+    expect(repository.allGames.single.compositionJson, {'voyante': 1});
+    expect(find.byType(CompositionScreen), findsOneWidget);
+    expect(find.text('1 rôles pour 8 joueurs'), findsOneWidget);
   });
 
   group('the suggestion card', () {
