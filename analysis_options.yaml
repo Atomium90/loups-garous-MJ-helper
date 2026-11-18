@@ -13,3 +13,4 @@ analyzer:
     - linux/**
     - lib/**/*.g.dart
     - lib/**/*.freezed.dart
+    - lib/l10n/generated/**

@@ -1,0 +1,7 @@
+{
+  "@@locale": "fr",
+  "appTitle": "Loup Garou MJ",
+  "@appTitle": {
+    "description": "The app's name, shown by the system (task switcher)."
+  }
+}
