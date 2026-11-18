@@ -63,22 +63,24 @@ class _AideMemoire extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.l10n.aideTitle,
-                        style: typography.screenTitle.copyWith(
-                          color: colors.textPrimary,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.l10n.aideTitle,
+                          style: typography.screenTitle.copyWith(
+                            color: colors.textPrimary,
+                          ),
                         ),
-                      ),
-                      Text(
-                        context.l10n.aideSubtitle,
-                        style: typography.meta.copyWith(
-                          color: colors.textSecondary,
+                        Text(
+                          context.l10n.aideSubtitle,
+                          style: typography.meta.copyWith(
+                            color: colors.textSecondary,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   IconButton(
                     icon: Icon(
