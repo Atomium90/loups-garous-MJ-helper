@@ -29,7 +29,7 @@ class VillageTab extends ConsumerWidget {
       loading: () => const SizedBox.shrink(),
       error: (_, _) => UnreadableGameNotice(
         gameId: gameId,
-        message: 'Impossible de charger le village.',
+        message: context.l10n.villageLoadError,
       ),
       data: (session) => _VillageBody(gameId: gameId, session: session),
     );
@@ -82,24 +82,24 @@ class _VillageBody extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Le village',
+                    context.l10n.villageTitle,
                     style: typography.screenTitle.copyWith(color: colors.textPrimary),
                   ),
                   Text(
-                    '${alive.length} vivants sur ${players.length}',
+                    context.l10n.villageAliveCount(alive.length, players.length),
                     style: typography.meta.copyWith(color: colors.textSecondary),
                   ),
                 ],
               ),
             ),
-            _TeamPill(label: 'Village $villageAlive', accent: true),
+            _TeamPill(label: '${context.l10n.tabVillage} $villageAlive', accent: true),
             const SizedBox(width: 6),
-            _TeamPill(label: 'Loups $wolvesAlive', accent: false),
+            _TeamPill(label: '${context.l10n.compositionWolves} $wolvesAlive', accent: false),
           ],
         ),
         const SizedBox(height: 10),
         if (alive.isNotEmpty) ...[
-          _SectionLabel('Vivants'),
+          _SectionLabel(context.l10n.villageAliveSection),
           for (final p in alive)
             _PlayerRow(
               name: p.name,
@@ -110,7 +110,7 @@ class _VillageBody extends StatelessWidget {
         ],
         if (dead.isNotEmpty) ...[
           const SizedBox(height: 16),
-          _SectionLabel('Éliminés'),
+          _SectionLabel(context.l10n.villageDeadSection),
           for (final p in dead)
             _PlayerRow(
               name: p.name,
@@ -122,7 +122,7 @@ class _VillageBody extends StatelessWidget {
         ],
         const SizedBox(height: 20),
         AppButton(
-          label: 'Terminer la partie',
+          label: context.l10n.endGameTitle,
           variant: AppButtonVariant.secondary,
           leadingIcon: AppIcons.endGame,
           onPressed: () => context.push('/games/$gameId/end'),
@@ -135,8 +135,8 @@ class _VillageBody extends StatelessWidget {
     final cause = p.causeOfDeath;
     final night = p.diedOnNight;
     if (cause == null || night == null) return null;
-    final phase = p.diedOnPhase == GamePhase.day ? 'Jour' : 'Nuit';
-    return '$phase $night · ${deathCauseShort(context.l10n, cause)}';
+    final phase = context.l10n.summaryPhase(p.diedOnPhase == GamePhase.day ? 'day' : 'night', night);
+    return context.l10n.deathLine(phase, deathCauseShort(context.l10n, cause));
   }
 }
 
@@ -203,7 +203,8 @@ class _PlayerRow extends StatelessWidget {
     final typography = context.typography;
     final id = roleId;
     final wolves = id != null && RoleRegistry.base.byIdOrNull(id)?.team == Team.werewolves;
-    final roleText = id == null ? 'Rôle inconnu' : context.l10n.roleName(id);
+    // An unknown id falls back to the neutral "unknown role" name.
+    final roleText = context.l10n.roleName(id ?? '');
 
     return Opacity(
       opacity: dead ? 0.5 : 1,

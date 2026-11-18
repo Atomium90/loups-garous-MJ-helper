@@ -18,6 +18,7 @@ import 'script_tab.dart';
 import 'village_tab.dart';
 import 'widgets/aide_memoire_sheet.dart';
 import '../../utils/l10n.dart';
+import '../../utils/labels.dart';
 
 /// The container for a running game: a persistent 46px header, then an
 /// [IndexedStack] of the three tabs (Script / Village / Journal) with the
@@ -48,7 +49,7 @@ class _InGameShellState extends ConsumerState<InGameShell> {
         ref.watch(settingsProvider).value?.aideMemoireInScript ?? true;
 
     final gameName = game?.name ??
-        (game != null ? 'Partie du ${context.l10n.dayMonthLabel(game.createdAt)}' : 'Partie');
+        (game != null ? gameTitle(context.l10n, game) : context.l10n.gameFallbackName);
 
     return Scaffold(
       body: SafeArea(

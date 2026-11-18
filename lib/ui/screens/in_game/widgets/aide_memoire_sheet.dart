@@ -67,13 +67,13 @@ class _AideMemoire extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Ordre de réveil',
+                        context.l10n.aideTitle,
                         style: typography.screenTitle.copyWith(
                           color: colors.textPrimary,
                         ),
                       ),
                       Text(
-                        'Votre compo, dans l\'ordre',
+                        context.l10n.aideSubtitle,
                         style: typography.meta.copyWith(
                           color: colors.textSecondary,
                         ),
@@ -113,7 +113,7 @@ class _AideMemoire extends StatelessWidget {
                 ),
                 padding: const EdgeInsets.only(top: 12),
                 child: Text(
-                  'Une ligne par rôle, jamais plus. Pour le détail, la règle papier reste sur la table.',
+                  context.l10n.aideFooter,
                   style: typography.counter.copyWith(
                     color: colors.textTertiary,
                     height: 1.5,

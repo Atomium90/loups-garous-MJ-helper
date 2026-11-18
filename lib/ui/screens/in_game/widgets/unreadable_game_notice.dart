@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_dimensions.dart';
 import '../../../theme/app_typography.dart';
+import '../../../utils/l10n.dart';
 import '../../../widgets/app_button.dart';
 import '../../home/unreadable_game_sheet.dart';
 
@@ -33,7 +34,7 @@ class UnreadableGameNotice extends ConsumerWidget {
               style: context.typography.body.copyWith(color: context.colors.textSecondary),
             ),
             AppButton(
-              label: 'Supprimer cette partie',
+              label: context.l10n.deleteGameConfirm,
               variant: AppButtonVariant.secondary,
               onPressed: () => showUnreadableGameSheet(
                 context,

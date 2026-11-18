@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_dimensions.dart';
 import '../../../theme/app_typography.dart';
+import '../../../utils/l10n.dart';
 import '../../../widgets/app_button.dart';
 import '../../../widgets/avatar_pick_cell.dart';
 import '../../../widgets/player_avatar.dart';
@@ -20,7 +21,7 @@ class TargetPick extends StatefulWidget {
     required this.candidates,
     required this.confirmLabel,
     required this.onConfirm,
-    this.pendingLabel = 'Choisissez un joueur',
+    this.pendingLabel,
     this.confirmIcon,
     this.selectedStyle = AvatarSelectedStyle.accent,
     this.avatarSize = AppSizes.avatarSelectionGrid,
@@ -39,8 +40,8 @@ class TargetPick extends StatefulWidget {
   final String Function(String name) confirmLabel;
   final ValueChanged<String> onConfirm;
 
-  /// Primary label while nothing is picked (inert).
-  final String pendingLabel;
+  /// Primary label while nothing is picked (inert); "Pick a player" when null.
+  final String? pendingLabel;
 
   /// Optional leading icon on the confirm button (a crown for the captain).
   final IconData? confirmIcon;
@@ -112,7 +113,7 @@ class _TargetPickState extends State<TargetPick> {
             children: [
               AppButton(
                 label: selected == null
-                    ? widget.pendingLabel
+                    ? widget.pendingLabel ?? context.l10n.pickPlayer
                     : widget.confirmLabel(selected.name),
                 leadingIcon: selected == null ? null : widget.confirmIcon,
                 onPressed: selected == null ? null : () => widget.onConfirm(selected.id),

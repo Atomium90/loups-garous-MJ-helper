@@ -789,5 +789,196 @@
   "endGameCancelled": "Partie annulée",
   "@endGameCancelled": {
     "description": "Sub-label of the option that ends a game with no winner."
+  },
+  "gameFallbackName": "Partie",
+  "@gameFallbackName": {
+    "description": "Name of a game whose details have not loaded yet."
+  },
+  "tabScript": "Script",
+  "@tabScript": {
+    "description": "In-game tab: the night and day script."
+  },
+  "tabVillage": "Village",
+  "@tabVillage": {
+    "description": "In-game tab: the players."
+  },
+  "tabJournal": "Journal",
+  "@tabJournal": {
+    "description": "In-game tab: the log of what happened."
+  },
+  "journalTitle": "Journal",
+  "@journalTitle": {
+    "description": "Title of the journal."
+  },
+  "journalLoadError": "Impossible de charger le journal.",
+  "@journalLoadError": {
+    "description": "The journal failed to load."
+  },
+  "journalEmpty": "Rien à consigner pour l'instant.",
+  "@journalEmpty": {
+    "description": "The journal has no line yet."
+  },
+  "villageLoadError": "Impossible de charger le village.",
+  "@villageLoadError": {
+    "description": "The village tab failed to load."
+  },
+  "villageTitle": "Le village",
+  "@villageTitle": {
+    "description": "Title of the village tab."
+  },
+  "villageAliveCount": "{alive, plural, =0{0 vivants} =1{1 vivant} other{{alive} vivants}} sur {total}",
+  "@villageAliveCount": {
+    "description": "How many players are still alive out of the total.",
+    "placeholders": {
+      "alive": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "villageAliveSection": "Vivants",
+  "@villageAliveSection": {
+    "description": "Heading above the living players."
+  },
+  "villageDeadSection": "Éliminés",
+  "@villageDeadSection": {
+    "description": "Heading above the eliminated players."
+  },
+  "deathLine": "{phase} · {cause}",
+  "@deathLine": {
+    "description": "When and how a player died: phase is e.g. \"Nuit 2\", cause is short.",
+    "placeholders": {
+      "phase": {
+        "type": "String"
+      },
+      "cause": {
+        "type": "String"
+      }
+    }
+  },
+  "aideTitle": "Ordre de réveil",
+  "@aideTitle": {
+    "description": "Title of the quick-reference sheet."
+  },
+  "aideSubtitle": "Votre compo, dans l'ordre",
+  "@aideSubtitle": {
+    "description": "Subtitle of the quick-reference sheet."
+  },
+  "aideFooter": "Une ligne par rôle, jamais plus. Pour le détail, la règle papier reste sur la table.",
+  "@aideFooter": {
+    "description": "Footer of the quick-reference sheet."
+  },
+  "identifyQuestionOne": "Qui est {role} ?",
+  "@identifyQuestionOne": {
+    "description": "Asks who holds a role; role is its name.",
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "identifyQuestionMany": "Qui sont les {roles} ?",
+  "@identifyQuestionMany": {
+    "description": "Asks who holds a role that several players have; roles is its plural name.",
+    "placeholders": {
+      "roles": {
+        "type": "String"
+      }
+    }
+  },
+  "identifyProgress": "{count} sur {total}",
+  "@identifyProgress": {
+    "description": "How many players are picked out of how many to pick.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "identifySave": "Enregistrer",
+  "@identifySave": {
+    "description": "Button that records who holds the role."
+  },
+  "identifyPick": "{count, plural, =1{Choisissez {count} joueur} other{Choisissez {count} joueurs}}",
+  "@identifyPick": {
+    "description": "Disabled button text while not enough players are picked.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "identifyLater": "Je noterai plus tard",
+  "@identifyLater": {
+    "description": "Button that skips noting who holds the role."
+  },
+  "pickPlayer": "Choisissez un joueur",
+  "@pickPlayer": {
+    "description": "Disabled button text until a player is picked."
+  },
+  "witchPoisonQuestion": "Qui la Sorcière empoisonne-t-elle ?",
+  "@witchPoisonQuestion": {
+    "description": "The Witch's death potion target."
+  },
+  "witchPoisons": "Elle empoisonne {name}",
+  "@witchPoisons": {
+    "description": "Button that confirms the poison target.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "witchSaves": "Elle sauve {name}",
+  "@witchSaves": {
+    "description": "Button that uses the life potion on the victim.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "witchPoisonsPick": "Elle empoisonne…",
+  "@witchPoisonsPick": {
+    "description": "Button that opens the poison target picker."
+  },
+  "witchDone": "Terminer le tour de la Sorcière",
+  "@witchDone": {
+    "description": "Button that ends the Witch's turn."
+  },
+  "witchVictim": "Victime des Loups cette nuit",
+  "@witchVictim": {
+    "description": "Label above the victim of the Werewolves shown to the Witch."
+  },
+  "potionLife": "Vie",
+  "@potionLife": {
+    "description": "Name of the Witch's life potion."
+  },
+  "potionDeath": "Mort",
+  "@potionDeath": {
+    "description": "Name of the Witch's death potion."
+  },
+  "potionUsed": "{potion} utilisée",
+  "@potionUsed": {
+    "description": "A potion that was already used.",
+    "placeholders": {
+      "potion": {
+        "type": "String"
+      }
+    }
+  },
+  "potionAvailable": "{potion} disponible",
+  "@potionAvailable": {
+    "description": "A potion that is still available.",
+    "placeholders": {
+      "potion": {
+        "type": "String"
+      }
+    }
   }
 }

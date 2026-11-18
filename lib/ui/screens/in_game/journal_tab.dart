@@ -34,7 +34,7 @@ class JournalTab extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Journal', style: typography.screenTitle.copyWith(color: colors.textPrimary)),
+              Text(context.l10n.journalTitle, style: typography.screenTitle.copyWith(color: colors.textPrimary)),
               if (game != null)
                 Text(
                   gameTitle(context.l10n, game),
@@ -46,9 +46,9 @@ class JournalTab extends ConsumerWidget {
         Expanded(
           child: logAsync.when(
             loading: () => const SizedBox.shrink(),
-            error: (_, _) => _centered(context, 'Impossible de charger le journal.'),
+            error: (_, _) => _centered(context, context.l10n.journalLoadError),
             data: (rows) => rows.isEmpty
-                ? _centered(context, "Rien à consigner pour l'instant.")
+                ? _centered(context, context.l10n.journalEmpty)
                 : _JournalList(rows: rows),
           ),
         ),
