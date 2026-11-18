@@ -1,4 +1,7 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:loup_garou_mj/data/database/app_database.dart';
+import 'package:loup_garou_mj/data/models/game_status.dart';
 import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
 import 'package:loup_garou_mj/ui/screens/home/home_screen.dart';
 import 'package:loup_garou_mj/ui/screens/settings/boxes_screen.dart';
@@ -68,6 +71,68 @@ void main() {
 
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getBool('aide_memoire'), isFalse);
+  });
+
+  group('deleting every game', () {
+    FakeGameRepository repositoryWithGames() {
+      final now = DateTime.now();
+      return FakeGameRepository(
+        initialGames: [
+          for (final (i, status) in [
+            GameStatus.setup,
+            GameStatus.inProgress,
+            GameStatus.completed,
+          ].indexed)
+            Game(
+              id: i + 1,
+              createdAt: now,
+              updatedAt: now,
+              playerCount: 8,
+              status: status,
+            ),
+        ],
+      );
+    }
+
+    Future<void> openSettings(WidgetTester tester, FakeGameRepository repository) async {
+      await tester.binding.setSurfaceSize(const Size(400, 1200));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await pumpAppRouter(
+        tester,
+        overrides: [gameRepositoryProvider.overrideWithValue(repository)],
+        initialLocation: '/settings',
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('asks first, then clears drafts, running games and history', (tester) async {
+      final repository = repositoryWithGames();
+      await openSettings(tester, repository);
+
+      await tester.tap(find.text('Supprimer toutes les parties'));
+      await tester.pumpAndSettle();
+      expect(find.text('Supprimer toutes les parties ?'), findsOneWidget);
+      expect(repository.allGames, hasLength(3));
+
+      await tester.tap(find.text('Tout supprimer'));
+      await tester.pumpAndSettle();
+
+      expect(repository.allGames, isEmpty);
+      expect(find.text('Toutes les parties sont supprimées.'), findsOneWidget);
+    });
+
+    testWidgets('cancelling keeps every game', (tester) async {
+      final repository = repositoryWithGames();
+      await openSettings(tester, repository);
+
+      await tester.tap(find.text('Supprimer toutes les parties'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Annuler'));
+      await tester.pumpAndSettle();
+
+      expect(repository.allGames, hasLength(3));
+      expect(find.text('Toutes les parties sont supprimées.'), findsNothing);
+    });
   });
 
   testWidgets('Mes boîtes opens from Réglages and is informational', (tester) async {

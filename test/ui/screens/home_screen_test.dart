@@ -103,6 +103,58 @@ void main() {
     expect(await repository.getGame(1), isNotNull);
   });
 
+  group('deleting a game in progress with a long press', () {
+    Future<FakeGameRepository> pumpWithRunningGame(WidgetTester tester) async {
+      final now = DateTime.now();
+      final repository = FakeGameRepository(
+        initialGames: [
+          Game(
+            id: 1,
+            name: 'Soirée jeux',
+            createdAt: now,
+            updatedAt: now,
+            playerCount: 9,
+            status: GameStatus.inProgress,
+          ),
+        ],
+      );
+      await pumpScreen(
+        tester,
+        const HomeScreen(),
+        overrides: [gameRepositoryProvider.overrideWithValue(repository)],
+      );
+      await tester.pumpAndSettle();
+      return repository;
+    }
+
+    testWidgets('asks first, then removes the game', (tester) async {
+      final repository = await pumpWithRunningGame(tester);
+
+      await tester.longPress(find.text('Soirée jeux'));
+      await tester.pumpAndSettle();
+      expect(find.text('Supprimer cette partie ?'), findsOneWidget);
+      expect(find.textContaining('« Soirée jeux »'), findsOneWidget);
+
+      await tester.tap(find.text('Supprimer cette partie'));
+      await tester.pumpAndSettle();
+
+      expect(await repository.getGame(1), isNull);
+      expect(find.text('Aucune partie'), findsOneWidget);
+    });
+
+    testWidgets('cancelling keeps the game', (tester) async {
+      final repository = await pumpWithRunningGame(tester);
+
+      await tester.longPress(find.text('Soirée jeux'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Annuler'));
+      await tester.pumpAndSettle();
+
+      expect(await repository.getGame(1), isNotNull);
+      expect(find.text('Soirée jeux'), findsOneWidget);
+    });
+  });
+
   testWidgets('one in-progress game renders under En cours with the fallback resume line', (
     tester,
   ) async {

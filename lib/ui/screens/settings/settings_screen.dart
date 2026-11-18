@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../state/providers/game_repository_provider.dart';
 import '../../../state/settings/settings.dart';
 import '../../../state/settings/settings_providers.dart';
 import '../../theme/app_colors.dart';
@@ -11,6 +12,7 @@ import '../../theme/app_typography.dart';
 import '../../widgets/app_segmented_control.dart';
 import '../../widgets/app_toggle.dart';
 import '../../widgets/bientot_pill.dart';
+import '../../widgets/confirm_sheet.dart';
 import '../../widgets/section_label.dart';
 
 /// Réglages. Reached from the gear on Accueil and from the in-game header;
@@ -92,6 +94,9 @@ class _SettingsBody extends StatelessWidget {
                 value: settings.aideMemoireInScript,
                 onChanged: (v) => notifier?.setAideMemoireInScript(v),
               ),
+              const SizedBox(height: 22),
+              const SectionLabel('Données'),
+              const _DeleteAllGamesRow(),
             ],
           ),
         ),
@@ -144,6 +149,37 @@ class _Header extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// "Supprimer toutes les parties": a clean slate for the games list, after a confirmation.
+class _DeleteAllGamesRow extends ConsumerWidget {
+  const _DeleteAllGamesRow();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return _SettingsRow(
+      icon: AppIcons.delete,
+      label: 'Supprimer toutes les parties',
+      sublabel: 'Brouillons, parties en cours et historique',
+      onTap: () => _confirm(context, ref),
+    );
+  }
+
+  Future<void> _confirm(BuildContext context, WidgetRef ref) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final deleted = await showConfirmSheet(
+      context,
+      title: 'Supprimer toutes les parties ?',
+      message:
+          'Les brouillons, les parties en cours et l’historique seront effacés. '
+          'Cette action est définitive.',
+      confirmLabel: 'Tout supprimer',
+      onConfirm: () => ref.read(gameRepositoryProvider).deleteAllGames(),
+    );
+    if (deleted == true) {
+      messenger.showSnackBar(const SnackBar(content: Text('Toutes les parties sont supprimées.')));
+    }
   }
 }
 

@@ -23,9 +23,7 @@ class CompositionEditor extends _$CompositionEditor {
   void setPlayerCount(int count) {
     final draft = state.value;
     if (draft == null || count < 0) return;
-    state = AsyncData(
-      draft.copyWith(playerCount: count, suggestion: _suggestionFor(count)),
-    );
+    _edit(draft.copyWith(playerCount: count, suggestion: _suggestionFor(count)));
   }
 
   /// Repicks a suggestion for the same player count, without touching the rest of the draft -
@@ -43,7 +41,7 @@ class CompositionEditor extends _$CompositionEditor {
     final draft = state.value;
     final suggestion = draft?.suggestion;
     if (draft == null || suggestion == null) return;
-    state = AsyncData(_withCounts(draft, Map<String, int>.from(suggestion.roleCounts)));
+    _edit(_withCounts(draft, Map<String, int>.from(suggestion.roleCounts)));
   }
 
   CompositionSuggestion _suggestionFor(int playerCount) =>
@@ -58,7 +56,7 @@ class CompositionEditor extends _$CompositionEditor {
     } else {
       counts[roleId] = 1;
     }
-    state = AsyncData(_withCounts(draft, counts));
+    _edit(_withCounts(draft, counts));
   }
 
   void setRoleCount(String roleId, int count) {
@@ -70,13 +68,13 @@ class CompositionEditor extends _$CompositionEditor {
     } else {
       counts[roleId] = count;
     }
-    state = AsyncData(_withCounts(draft, counts));
+    _edit(_withCounts(draft, counts));
   }
 
   void clearRoles() {
     final draft = state.value;
     if (draft == null) return;
-    state = AsyncData(draft.copyWith(roleCounts: const {}, reserveRoleIds: const []));
+    _edit(draft.copyWith(roleCounts: const {}, reserveRoleIds: const []));
   }
 
   /// Sets the reserve card in [slot] (0 or 1) to [roleId]. Only meaningful
@@ -89,9 +87,7 @@ class CompositionEditor extends _$CompositionEditor {
       reserve[i] = draft.reserveRoleIds[i];
     }
     reserve[slot] = roleId;
-    state = AsyncData(
-      draft.copyWith(reserveRoleIds: [for (final r in reserve) if (r.isNotEmpty) r]),
-    );
+    _edit(draft.copyWith(reserveRoleIds: [for (final r in reserve) if (r.isNotEmpty) r]));
   }
 
   /// Drops the reserve card in [slot], if set.
@@ -99,7 +95,29 @@ class CompositionEditor extends _$CompositionEditor {
     final draft = state.value;
     if (draft == null || slot < 0 || slot >= draft.reserveRoleIds.length) return;
     final reserve = List<String>.from(draft.reserveRoleIds)..removeAt(slot);
-    state = AsyncData(draft.copyWith(reserveRoleIds: reserve));
+    _edit(draft.copyWith(reserveRoleIds: reserve));
+  }
+
+  /// Shows [next] and remembers it on the game, so what the MJ picked survives leaving the
+  /// screen (or the app): the game stays an unstarted draft until "Lancer la partie".
+  void _edit(CompositionDraft next) {
+    state = AsyncData(next);
+    _remember(next);
+  }
+
+  /// Best effort and not awaited: a failed or late write must never block editing, and the
+  /// draft is written again on the next edit anyway.
+  void _remember(CompositionDraft draft) {
+    if (!ref.mounted) return;
+    ref
+        .read(gameRepositoryProvider)
+        .saveCompositionDraft(
+          gameId: draft.gameId,
+          playerCount: draft.playerCount,
+          roleCounts: draft.roleCounts,
+          reserveRoleIds: draft.hasVoleur ? draft.reserveRoleIds : const [],
+        )
+        .catchError((Object _) {});
   }
 
   /// Applies new role counts, clearing the reserve when the Voleur is no

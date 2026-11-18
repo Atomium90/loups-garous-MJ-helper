@@ -8,6 +8,7 @@ import 'package:loup_garou_mj/data/models/game_winner.dart';
 import 'package:loup_garou_mj/data/repositories/drift_game_repository.dart';
 import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
 import 'package:loup_garou_mj/state/session/session_cursor.dart';
+import 'package:loup_garou_mj/ui/theme/app_icons.dart';
 import 'package:rules_engine/rules_engine.dart';
 
 import '../../support/pump_app.dart';
@@ -93,9 +94,8 @@ void main() {
     expect(find.textContaining('2 éliminés restent cachés'), findsOneWidget);
   });
 
-  testWidgets('a completed game whose saved state is unreadable still opens its recap', (
-    tester,
-  ) async {
+  /// A finished 4-player game won by [winner]; [sessionJson], if given, is its saved state.
+  Future<int> finishedGame(GameWinner winner, {String? sessionJson}) async {
     final id = await repo.createGame(initialPlayerCount: 4);
     await repo.saveComposition(
       gameId: id,
@@ -104,9 +104,13 @@ void main() {
     );
     await repo.savePlayerNames(gameId: id, names: const ['Ana', 'Bo', 'Cy', 'Di']);
     await repo.startGame(id);
-    await repo.saveSession(gameId: id, sessionJson: '{not json');
-    await repo.endGame(gameId: id, winner: GameWinner.wolves);
+    if (sessionJson != null) await repo.saveSession(gameId: id, sessionJson: sessionJson);
+    await repo.endGame(gameId: id, winner: winner);
+    return id;
+  }
 
+  /// Opens Home and taps the history row labelled [winnerLabel] to show its recap.
+  Future<void> openRecap(WidgetTester tester, String winnerLabel) async {
     await tester.binding.setSurfaceSize(const Size(400, 1600));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAppRouter(
@@ -114,9 +118,44 @@ void main() {
       overrides: [gameRepositoryProvider.overrideWithValue(repo)],
     );
     await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Loups'));
+    await tester.tap(find.text(winnerLabel));
     await tester.pumpAndSettle();
+  }
+
+  testWidgets('a finished game can be deleted from its recap', (tester) async {
+    final id = await finishedGame(GameWinner.village);
+    await openRecap(tester, 'Village');
+
+    await tester.tap(find.byIcon(AppIcons.delete));
+    await tester.pumpAndSettle();
+    expect(find.text('Supprimer cette partie ?'), findsOneWidget);
+    await tester.tap(find.text('Supprimer cette partie'));
+    await tester.pumpAndSettle();
+
+    expect(await repo.getGame(id), isNull);
+    // the recap closed and the history is empty again
+    expect(find.text('Vainqueurs'), findsNothing);
+    expect(find.text('Aucune partie'), findsOneWidget);
+  });
+
+  testWidgets('cancelling the deletion keeps the finished game and its recap', (tester) async {
+    final id = await finishedGame(GameWinner.village);
+    await openRecap(tester, 'Village');
+
+    await tester.tap(find.byIcon(AppIcons.delete));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Annuler'));
+    await tester.pumpAndSettle();
+
+    expect(await repo.getGame(id), isNotNull);
+    expect(find.text('Vainqueurs'), findsOneWidget);
+  });
+
+  testWidgets('a completed game whose saved state is unreadable still opens its recap', (
+    tester,
+  ) async {
+    await finishedGame(GameWinner.wolves, sessionJson: '{not json');
+    await openRecap(tester, 'Loups');
 
     // the winner is stored apart from the damaged blob, so it still shows
     expect(find.text('Vainqueurs'), findsOneWidget);

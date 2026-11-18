@@ -19,6 +19,12 @@ abstract final class AppIcons {
   /// Accueil's empty-state circle.
   static const emptyState = TablerIcons.moonStars;
 
+  /// An unstarted game on Accueil ("Brouillons").
+  static const draft = TablerIcons.pencil;
+
+  /// Deletes a draft.
+  static const delete = TablerIcons.trash;
+
   /// The most recent "en cours" game's card.
   static const resumeActive = TablerIcons.playerPlayFilled;
 
