@@ -5,6 +5,7 @@ import 'package:loup_garou_mj/data/repositories/drift_game_repository.dart';
 import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
 import 'package:loup_garou_mj/ui/widgets/app_button.dart';
 import 'package:loup_garou_mj/ui/widgets/player_avatar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../support/pump_app.dart';
 
@@ -25,6 +26,8 @@ void main() {
   late DriftGameRepository repo;
 
   setUp(() {
+    // These tests are about picking players on a small screen: no lines to read above the grid.
+    SharedPreferences.setMockInitialValues({'narration_level': 'off'});
     db = AppDatabase.forTesting(NativeDatabase.memory());
     repo = DriftGameRepository(db);
     addTearDown(db.close);

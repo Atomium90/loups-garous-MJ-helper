@@ -64,6 +64,11 @@ listed as coming soon.
 
 Also not built: the regulars address book and the extension boxes.
 
+The script also tells the MJ what to say out loud: waking and putting each role back to sleep,
+the morning and who died, the Captain election, the vote, and the Hunter's, the Captain's and
+a lover's death. A "Phrases du MJ" setting in Réglages chooses between none, the essential line
+of each moment, or the full text (the default), and the block can be folded away in the game.
+
 The app speaks French and English. Réglages has a language setting (system, Français,
 English); "system" follows the phone, French for a French phone and English for any other.
 
@@ -127,6 +132,10 @@ class from them into `lib/l10n/generated/` (not committed); screens read it with
   rule text and game master tip are `select` messages keyed by the role id (`roleName`,
   `rolePlural`, `roleWithArticle`, `roleRuleText`, `roleMjTips`). Adding a role means adding a
   line to each; a test fails if a role of the registry lacks one in either language.
+- **The lines the MJ reads aloud** are `narr...` messages: a head (the essential) and a body
+  (the rest) per moment, and a call, a task and a closing line per role as `select` messages
+  keyed by the role id, so a new role adds a line to each. `lib/ui/utils/narration.dart`
+  assembles them; the `NarrationBlock` widget shows them at the level chosen in Réglages.
 - **The journal** stores what happened (a kind, player names, a role id), not a sentence, and
   is turned into text when displayed. Journal lines saved before this existed stay in French.
 - **A new language** is a new `app_xx.arb`, the language in `AppLanguage`, and its name in
