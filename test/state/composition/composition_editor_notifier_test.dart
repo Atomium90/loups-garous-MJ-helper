@@ -300,6 +300,84 @@ void main() {
     });
   });
 
+  group('CompositionEditor remembers an unfinished composition', () {
+    late FakeGameRepository repository;
+    late ProviderContainer container;
+
+    setUp(() {
+      repository = FakeGameRepository();
+      container = ProviderContainer(
+        overrides: [gameRepositoryProvider.overrideWithValue(repository)],
+      );
+      addTearDown(container.dispose);
+    });
+
+    Future<CompositionEditor> editorFor(int id) async {
+      await container.read(compositionEditorProvider(id).future);
+      return container.read(compositionEditorProvider(id).notifier);
+    }
+
+    Game gameOf(int id) => repository.allGames.singleWhere((g) => g.id == id);
+
+    test('role edits are written to the game without seeding any seat', () async {
+      final id = await repository.createGame();
+      final editor = await editorFor(id);
+
+      editor.setPlayerCount(10);
+      editor.toggleRole('voyante');
+      editor.setRoleCount('loup_garou', 2);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(gameOf(id).playerCount, 10);
+      expect(gameOf(id).compositionJson, {'voyante': 1, 'loup_garou': 2});
+      expect(repository.rosterOf(id), isEmpty);
+      expect(gameOf(id).status, GameStatus.setup);
+    });
+
+    test('removing roles is remembered too', () async {
+      final id = await repository.createGame();
+      final editor = await editorFor(id);
+
+      editor.toggleRole('voyante');
+      editor.toggleRole('voyante');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(gameOf(id).compositionJson, isEmpty);
+    });
+
+    test('a reopened screen gets the picked roles back', () async {
+      final id = await repository.createGame(initialPlayerCount: 9);
+      final editor = await editorFor(id);
+      editor.toggleRole('voyante');
+      editor.toggleRole('chasseur');
+      await Future<void>.delayed(Duration.zero);
+
+      final reopened = ProviderContainer(
+        overrides: [gameRepositoryProvider.overrideWithValue(repository)],
+      );
+      addTearDown(reopened.dispose);
+      final draft = await reopened.read(compositionEditorProvider(id).future);
+
+      expect(draft.playerCount, 9);
+      expect(draft.roleCounts, {'voyante': 1, 'chasseur': 1});
+    });
+
+    test('once the seats exist, further edits no longer change the saved composition', () async {
+      final id = await repository.createGame(initialPlayerCount: 4);
+      await repository.saveComposition(
+        gameId: id,
+        playerCount: 4,
+        roleCounts: const {'loup_garou': 1, 'villageois': 3},
+      );
+      final editor = await editorFor(id);
+
+      editor.toggleRole('voyante');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(gameOf(id).compositionJson, {'loup_garou': 1, 'villageois': 3});
+    });
+  });
+
   group('CompositionEditor.commit wiring with the real repository', () {
     test('invalidates gameListProvider and gameProvider after commit', () async {
       final db = AppDatabase.forTesting(NativeDatabase.memory());
