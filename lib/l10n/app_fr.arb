@@ -122,5 +122,131 @@
         "format": "yMMMM"
       }
     }
+  },
+  "journalPhaseHeader": "{phase, select, night{NUIT {index}} day{JOUR {index}} other{{index}}}",
+  "@journalPhaseHeader": {
+    "description": "Header a group of journal lines sits under: the phase (night or day) and its number.",
+    "placeholders": {
+      "phase": {
+        "type": "String"
+      },
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "journalWolvesTarget": "Les Loups désignent {player}",
+  "@journalWolvesTarget": {
+    "description": "Journal: the Werewolves' victim.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalWitchSave": "La Sorcière sauve {player}",
+  "@journalWitchSave": {
+    "description": "Journal: the Witch uses her life potion.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalWitchPoison": "La Sorcière empoisonne {player}",
+  "@journalWitchPoison": {
+    "description": "Journal: the Witch uses her death potion.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalCupidPair": "Cupidon unit {player} et {other}",
+  "@journalCupidPair": {
+    "description": "Journal: Cupid's two lovers.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      },
+      "other": {
+        "type": "String"
+      }
+    }
+  },
+  "journalThiefKeep": "Le Voleur garde sa carte",
+  "@journalThiefKeep": {
+    "description": "Journal: the Thief declines both reserve cards."
+  },
+  "journalThiefSwap": "Le Voleur échange sa carte contre {role}",
+  "@journalThiefSwap": {
+    "description": "Journal: the Thief takes a reserve card; role is the role's name.",
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "journalCaptainElected": "{player} est Capitaine",
+  "@journalCaptainElected": {
+    "description": "Journal: the village elects its Captain.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalCaptainSuccessor": "{player} devient Capitaine",
+  "@journalCaptainSuccessor": {
+    "description": "Journal: a dying Captain names a successor.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalVillageEliminates": "Le village élimine {player}",
+  "@journalVillageEliminates": {
+    "description": "Journal: the day vote's outcome.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalVoteTie": "Égalité, personne n'est éliminé",
+  "@journalVoteTie": {
+    "description": "Journal: the day vote ends in a tie."
+  },
+  "journalHunterNoShot": "Le Chasseur ne tire pas",
+  "@journalHunterNoShot": {
+    "description": "Journal: the dying Hunter takes nobody down."
+  },
+  "journalHunterShoots": "Le Chasseur emporte {player}",
+  "@journalHunterShoots": {
+    "description": "Journal: the dying Hunter's target.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalSeerObserves": "La Voyante observe {player}",
+  "@journalSeerObserves": {
+    "description": "Journal: the player the Seer looked at.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalHeartbreakDeath": "{player} meurt de chagrin",
+  "@journalHeartbreakDeath": {
+    "description": "Journal: a lover dies with the other.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
   }
 }

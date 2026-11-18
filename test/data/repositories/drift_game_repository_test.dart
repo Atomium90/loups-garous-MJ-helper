@@ -280,14 +280,24 @@ void main() {
       await repository.appendNightLog(
         gameId: id,
         entries: const [
-          NightLogEntry(phaseLabel: 'NUIT 1', iconName: 'wolves', line: 'Les Loups désignent Théo'),
+          NightLogEntry(
+            phase: JournalPhase.night,
+            phaseIndex: 1,
+            kind: JournalKind.wolvesTarget,
+            args: {'player': 'Théo'},
+          ),
         ],
       );
       await repository.appendNightLog(
         gameId: id,
         entries: const [
-          NightLogEntry(phaseLabel: 'NUIT 1', iconName: 'flask', line: 'La Sorcière empoisonne Noa'),
-          NightLogEntry(phaseLabel: 'JOUR 1', iconName: 'sun', line: 'Le jour se lève'),
+          NightLogEntry(
+            phase: JournalPhase.night,
+            phaseIndex: 1,
+            kind: JournalKind.witchPoison,
+            args: {'player': 'Noa'},
+          ),
+          NightLogEntry(phase: JournalPhase.day, phaseIndex: 1, kind: JournalKind.voteTie),
         ],
       );
 
@@ -296,11 +306,31 @@ void main() {
             ..orderBy([(e) => OrderingTerm.asc(e.seq)]))
           .get();
       expect(rows.map((r) => r.seq), [1, 2, 3]);
-      expect(rows.map((r) => r.line), [
-        'Les Loups désignent Théo',
-        'La Sorcière empoisonne Noa',
-        'Le jour se lève',
-      ]);
+      expect(rows.map((r) => r.kind), ['wolvesTarget', 'witchPoison', 'voteTie']);
+    });
+
+    test('appendNightLog stores a line as data, not as text', () async {
+      final id = await repository.createGame();
+      await repository.appendNightLog(
+        gameId: id,
+        entries: const [
+          NightLogEntry(
+            phase: JournalPhase.day,
+            phaseIndex: 2,
+            kind: JournalKind.cupidPair,
+            args: {'player': 'Théo', 'other': 'Noa'},
+          ),
+        ],
+      );
+
+      final row = await (db.select(db.nightLog)..where((e) => e.gameId.equals(id))).getSingle();
+      expect(row.kind, 'cupidPair');
+      expect(NightLogEntry.decodeArgs(row.argsJson), {'player': 'Théo', 'other': 'Noa'});
+      expect(row.phase, 'day');
+      expect(row.phaseIndex, 2);
+      expect(row.iconName, 'cupid');
+      expect(row.line, isEmpty);
+      expect(row.phaseLabel, isEmpty);
     });
 
     test('watchNightLog streams newest-first and re-emits on append', () async {
@@ -311,11 +341,11 @@ void main() {
       await repository.appendNightLog(
         gameId: id,
         entries: const [
-          NightLogEntry(phaseLabel: 'NUIT 1', iconName: 'wolves', line: 'un'),
-          NightLogEntry(phaseLabel: 'NUIT 1', iconName: 'flask', line: 'deux'),
+          NightLogEntry(phase: JournalPhase.night, phaseIndex: 1, kind: JournalKind.thiefKeep),
+          NightLogEntry(phase: JournalPhase.night, phaseIndex: 1, kind: JournalKind.hunterNoShot),
         ],
       );
-      expect((await queue.next).map((r) => r.line), ['deux', 'un']);
+      expect((await queue.next).map((r) => r.kind), ['hunterNoShot', 'thiefKeep']);
 
       await queue.cancel();
     });
@@ -324,7 +354,9 @@ void main() {
       final id = await repository.createGame();
       await repository.appendNightLog(
         gameId: id,
-        entries: const [NightLogEntry(phaseLabel: 'NUIT 1', iconName: 'wolves', line: 'x')],
+        entries: const [
+          NightLogEntry(phase: JournalPhase.night, phaseIndex: 1, kind: JournalKind.thiefKeep),
+        ],
       );
 
       await repository.discardDraft(id);
@@ -417,7 +449,9 @@ void main() {
       await repository.startGame(id);
       await repository.appendNightLog(
         gameId: id,
-        entries: const [NightLogEntry(phaseLabel: 'NUIT 1', iconName: 'wolves', line: 'x')],
+        entries: const [
+          NightLogEntry(phase: JournalPhase.night, phaseIndex: 1, kind: JournalKind.thiefKeep),
+        ],
       );
 
       await repository.deleteGame(id);
@@ -445,7 +479,9 @@ void main() {
       await repository.startGame(started);
       await repository.appendNightLog(
         gameId: started,
-        entries: const [NightLogEntry(phaseLabel: 'NUIT 1', iconName: 'wolves', line: 'x')],
+        entries: const [
+          NightLogEntry(phase: JournalPhase.night, phaseIndex: 1, kind: JournalKind.thiefKeep),
+        ],
       );
 
       await repository.deleteAllGames();

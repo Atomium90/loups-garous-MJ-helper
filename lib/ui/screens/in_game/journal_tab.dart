@@ -8,6 +8,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
+import '../../utils/journal_labels.dart';
 import '../../utils/l10n.dart';
 import '../../utils/labels.dart';
 
@@ -81,13 +82,14 @@ class _JournalList extends StatelessWidget {
     final children = <Widget>[];
     String? lastPhase;
     for (final row in rows) {
-      if (row.phaseLabel != lastPhase) {
-        lastPhase = row.phaseLabel;
+      final phaseLabel = journalPhaseLabel(context.l10n, row);
+      if (phaseLabel != lastPhase) {
+        lastPhase = phaseLabel;
         children.add(
           Padding(
             padding: EdgeInsets.only(top: children.isEmpty ? 0 : 14, bottom: 6),
             child: Text(
-              row.phaseLabel,
+              phaseLabel,
               style: typography.sectionLabel.copyWith(color: colors.textTertiary),
             ),
           ),
@@ -107,7 +109,7 @@ class _JournalList extends StatelessWidget {
               Icon(icon ?? AppIcons.journal, size: 15, color: colors.textTertiary),
               Expanded(
                 child: Text(
-                  row.line,
+                  journalLine(context.l10n, row),
                   style: typography.body.copyWith(color: colors.textPrimary),
                 ),
               ),

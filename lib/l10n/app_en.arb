@@ -14,5 +14,20 @@
   "deathCauseShort": "{cause, select, wolves{Wolves} witchPoison{death potion} dayVote{village vote} hunterShot{Hunter's shot} other{died of grief}}",
   "gameDefaultName": "Game of {date}",
   "dayMonthLabel": "{date}",
-  "monthYearLabel": "{date}"
+  "monthYearLabel": "{date}",
+  "journalPhaseHeader": "{phase, select, night{NIGHT {index}} day{DAY {index}} other{{index}}}",
+  "journalWolvesTarget": "The Werewolves pick {player}",
+  "journalWitchSave": "The Witch saves {player}",
+  "journalWitchPoison": "The Witch poisons {player}",
+  "journalCupidPair": "Cupid pairs {player} and {other}",
+  "journalThiefKeep": "The Thief keeps their card",
+  "journalThiefSwap": "The Thief swaps their card for {role}",
+  "journalCaptainElected": "{player} is Captain",
+  "journalCaptainSuccessor": "{player} becomes Captain",
+  "journalVillageEliminates": "The village eliminates {player}",
+  "journalVoteTie": "Tie, nobody is eliminated",
+  "journalHunterNoShot": "The Hunter doesn't shoot",
+  "journalHunterShoots": "The Hunter takes {player} down",
+  "journalSeerObserves": "The Seer looks at {player}",
+  "journalHeartbreakDeath": "{player} dies of heartbreak"
 }
