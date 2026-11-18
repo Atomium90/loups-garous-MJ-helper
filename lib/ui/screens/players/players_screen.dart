@@ -7,6 +7,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
+import '../../widgets/setup_header.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/app_text_field.dart';
 import '../../widgets/bientot_pill.dart';
@@ -99,7 +100,11 @@ class _PlayersFormState extends ConsumerState<_PlayersForm> {
 
     return Column(
       children: [
-        _Header(namedCount: namedCount, total: total),
+        SetupHeader(
+          title: 'Les joueurs',
+          subtitle: '$namedCount sur $total nommés',
+          onBack: () => context.go('/'),
+        ),
         Expanded(
           child: ListView(
             padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 14, AppSpacing.screen, 0),
@@ -136,45 +141,6 @@ class _PlayersFormState extends ConsumerState<_PlayersForm> {
   }
 }
 
-class _Header extends StatelessWidget {
-  const _Header({required this.namedCount, required this.total});
-
-  final int namedCount;
-  final int total;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final typography = context.typography;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 24, AppSpacing.screen, 4),
-      child: Row(
-        children: [
-          IconButton(
-            icon: Icon(AppIcons.back, size: 18, color: colors.textSecondary),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-            visualDensity: VisualDensity.compact,
-            // Backing out of naming abandons the setup (the game stays GameStatus.setup and
-            // just doesn't surface on Home - the accepted orphan tradeoff).
-            onPressed: () => context.go('/'),
-          ),
-          const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Les joueurs', style: typography.screenTitle.copyWith(color: colors.textPrimary)),
-              Text(
-                '$namedCount sur $total nommés',
-                style: typography.meta.copyWith(color: colors.textSecondary),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _PlayerNameRow extends StatefulWidget {
   const _PlayerNameRow({

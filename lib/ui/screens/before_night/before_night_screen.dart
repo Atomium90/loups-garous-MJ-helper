@@ -11,6 +11,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
+import '../../widgets/setup_header.dart';
 import '../../utils/french_date_format.dart';
 import '../../utils/french_role_label.dart';
 import '../../widgets/app_button.dart';
@@ -80,7 +81,11 @@ class _Body extends ConsumerWidget {
 
     return Column(
       children: [
-        _Header(subtitle: game.name ?? 'Partie du ${frenchDayMonthLabel(game.createdAt)}'),
+        SetupHeader(
+          title: 'Avant la nuit 1',
+          subtitle: game.name ?? 'Partie du ${frenchDayMonthLabel(game.createdAt)}',
+          onBack: () => context.pop(),
+        ),
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 14, AppSpacing.screen, 0),
           child: _DealCallout(cardCount: game.playerCount),
@@ -133,42 +138,6 @@ class _Body extends ConsumerWidget {
   }
 }
 
-class _Header extends StatelessWidget {
-  const _Header({required this.subtitle});
-
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final typography = context.typography;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 24, AppSpacing.screen, 4),
-      child: Row(
-        children: [
-          IconButton(
-            icon: Icon(AppIcons.back, size: 18, color: colors.textSecondary),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-            visualDensity: VisualDensity.compact,
-            onPressed: () => context.pop(),
-          ),
-          const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Avant la nuit 1',
-                style: typography.screenTitle.copyWith(color: colors.textPrimary),
-              ),
-              Text(subtitle, style: typography.meta.copyWith(color: colors.textSecondary)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _DealCallout extends StatelessWidget {
   const _DealCallout({required this.cardCount});

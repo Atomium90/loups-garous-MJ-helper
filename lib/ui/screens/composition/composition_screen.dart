@@ -9,6 +9,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
+import '../../widgets/setup_header.dart';
 import '../../utils/french_role_label.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/app_chip.dart';
@@ -77,7 +78,13 @@ class _CompositionBody extends StatelessWidget {
 
     return Column(
       children: [
-        _Header(gameId: gameId, playerCount: draft.playerCount),
+        SetupHeader(
+          title: 'Composition',
+          subtitle: '${draft.playerCount} joueurs',
+          // Leaving keeps the game as a draft (what was picked is saved as it is edited);
+          // only the trash button under Brouillons on Home deletes it.
+          onBack: () => context.go('/'),
+        ),
         _PlayerCountRow(
           playerCount: draft.playerCount,
           onChanged: notifier.setPlayerCount,
@@ -114,45 +121,6 @@ class _CompositionBody extends StatelessWidget {
   }
 }
 
-class _Header extends StatelessWidget {
-  const _Header({required this.gameId, required this.playerCount});
-
-  final int gameId;
-  final int playerCount;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final typography = context.typography;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 24, AppSpacing.screen, 4),
-      child: Row(
-        children: [
-          IconButton(
-            icon: Icon(AppIcons.back, size: 18, color: colors.textSecondary),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-            visualDensity: VisualDensity.compact,
-            // Leaving keeps the game as a draft (what was picked is saved as it is edited);
-            // only the trash button under Brouillons on Home deletes it.
-            onPressed: () => context.go('/'),
-          ),
-          const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Composition', style: typography.screenTitle.copyWith(color: colors.textPrimary)),
-              Text(
-                '$playerCount joueurs',
-                style: typography.meta.copyWith(color: colors.textSecondary),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _PlayerCountRow extends StatelessWidget {
   const _PlayerCountRow({required this.playerCount, required this.onChanged});
