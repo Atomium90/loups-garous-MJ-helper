@@ -92,10 +92,45 @@ void main() {
     });
   });
 
+  group('the narration', () {
+    test('is full by default, with its hint not yet seen', () async {
+      final container = await containerWith({});
+      final settings = await container.read(settingsProvider.future);
+
+      expect(settings.narrationLevel, NarrationLevel.full);
+      expect(settings.narrationHintSeen, isFalse);
+    });
+
+    test('reads the stored level, and an unknown one means full', () async {
+      final short = await containerWith({'narration_level': 'short'});
+      expect((await short.read(settingsProvider.future)).narrationLevel, NarrationLevel.short);
+
+      final unknown = await containerWith({'narration_level': 'loud'});
+      expect((await unknown.read(settingsProvider.future)).narrationLevel, NarrationLevel.full);
+    });
+
+    test('the level and the seen hint persist', () async {
+      final container = await containerWith({});
+      await container.read(settingsProvider.future);
+      final notifier = container.read(settingsProvider.notifier);
+      final prefs = await SharedPreferences.getInstance();
+
+      await notifier.setNarrationLevel(NarrationLevel.off);
+      await notifier.dismissNarrationHint();
+
+      final settings = container.read(settingsProvider).value!;
+      expect(settings.narrationLevel, NarrationLevel.off);
+      expect(settings.narrationHintSeen, isTrue);
+      expect(prefs.getString('narration_level'), 'off');
+      expect(prefs.getBool('narration_hint_seen'), isTrue);
+    });
+  });
+
   test('AppSettings.copyWith leaves other fields intact', () {
     const s = AppSettings.defaults;
     expect(s.copyWith(keepScreenOn: false).themeMode, ThemeMode.system);
     expect(s.copyWith(keepScreenOn: false).aideMemoireInScript, isTrue);
     expect(s.copyWith(language: AppLanguage.english).keepScreenOn, isTrue);
+    expect(s.copyWith(narrationLevel: NarrationLevel.off).narrationHintSeen, isFalse);
   });
 }

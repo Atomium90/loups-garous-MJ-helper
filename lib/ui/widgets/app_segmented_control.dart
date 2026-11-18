@@ -4,7 +4,8 @@ import '../theme/app_colors.dart';
 import '../theme/app_dimensions.dart';
 import '../theme/app_typography.dart';
 
-typedef SegmentOption<T> = ({T value, IconData icon, String label});
+/// One segment: a label and, optionally, an icon before it.
+typedef SegmentOption<T> = ({T value, IconData? icon, String label});
 
 /// A pill-track segmented control (the Apparence control in Réglages): an
 /// inset track, the selected segment lifted onto `bg/screen` with a hairline.
@@ -55,13 +56,14 @@ class AppSegmentedControl<T> extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     spacing: 5,
                     children: [
-                      Icon(
-                        option.icon,
-                        size: 14,
-                        color: option.value == selected
-                            ? colors.textPrimary
-                            : colors.textSecondary,
-                      ),
+                      if (option.icon != null)
+                        Icon(
+                          option.icon,
+                          size: 14,
+                          color: option.value == selected
+                              ? colors.textPrimary
+                              : colors.textSecondary,
+                        ),
                       Flexible(
                         child: Text(
                           option.label,

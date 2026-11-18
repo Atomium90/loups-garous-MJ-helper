@@ -82,6 +82,24 @@ void main() {
     expect(prefs.getString('theme_mode'), 'dark');
   });
 
+  testWidgets('the narration level can be changed and is remembered', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 1600));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
+      initialLocation: '/settings',
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('PHRASES DU MJ'), findsOneWidget);
+
+    await tester.tap(find.text('Courtes'));
+    await tester.pumpAndSettle();
+
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('narration_level'), 'short');
+  });
+
   group('the language', () {
     testWidgets('can be forced from Réglages and is remembered', (tester) async {
       await pumpAppRouter(

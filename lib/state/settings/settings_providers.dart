@@ -10,6 +10,8 @@ const _kThemeMode = 'theme_mode';
 const _kKeepScreenOn = 'keep_screen_on';
 const _kAideMemoire = 'aide_memoire';
 const _kLanguage = 'language';
+const _kNarrationLevel = 'narration_level';
+const _kNarrationHintSeen = 'narration_hint_seen';
 
 /// The one `SharedPreferences` handle. Override in tests with an instance from
 /// `SharedPreferences.setMockInitialValues({})`.
@@ -33,7 +35,22 @@ class Settings extends _$Settings {
       aideMemoireInScript:
           prefs.getBool(_kAideMemoire) ?? AppSettings.defaults.aideMemoireInScript,
       language: AppLanguage.fromCode(prefs.getString(_kLanguage)),
+      narrationLevel: NarrationLevel.fromName(prefs.getString(_kNarrationLevel)),
+      narrationHintSeen: prefs.getBool(_kNarrationHintSeen) ?? false,
     );
+  }
+
+  Future<void> setNarrationLevel(NarrationLevel level) async {
+    final prefs = await ref.read(sharedPreferencesProvider.future);
+    await prefs.setString(_kNarrationLevel, level.name);
+    state = AsyncData((state.value ?? AppSettings.defaults).copyWith(narrationLevel: level));
+  }
+
+  /// The MJ has seen the hint about limiting the narration (closed it or opened Réglages).
+  Future<void> dismissNarrationHint() async {
+    final prefs = await ref.read(sharedPreferencesProvider.future);
+    await prefs.setBool(_kNarrationHintSeen, true);
+    state = AsyncData((state.value ?? AppSettings.defaults).copyWith(narrationHintSeen: true));
   }
 
   Future<void> setLanguage(AppLanguage language) async {

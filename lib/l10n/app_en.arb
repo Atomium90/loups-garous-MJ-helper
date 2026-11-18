@@ -234,5 +234,10 @@
   "scriptLoversNoPartner": "The other lover does not survive their loss. Announce it to the village.",
   "scriptLoversPartner": "{partner} is gone, and Cupid's lovers go together. Announce {name}'s death to the village.",
   "scriptGotIt": "Got it",
-  "scriptTheirCard": "Their card"
+  "scriptTheirCard": "Their card",
+  "settingsNarrationTitle": "Narration",
+  "narrationOff": "Off",
+  "narrationShort": "Short",
+  "narrationFull": "Full",
+  "settingsNarrationHint": "The lines to read aloud: each role's call, the morning, the vote, the Hunter's death. Short keeps only the essentials."
 }

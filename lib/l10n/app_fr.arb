@@ -1379,5 +1379,25 @@
   "scriptTheirCard": "Sa carte",
   "@scriptTheirCard": {
     "description": "Label above the revealed card of a dead player."
+  },
+  "settingsNarrationTitle": "Phrases du MJ",
+  "@settingsNarrationTitle": {
+    "description": "Settings section: the lines the MJ can read aloud to the players."
+  },
+  "narrationOff": "Aucune",
+  "@narrationOff": {
+    "description": "Narration level: no lines shown."
+  },
+  "narrationShort": "Courtes",
+  "@narrationShort": {
+    "description": "Narration level: only the essential line of each moment."
+  },
+  "narrationFull": "Complètes",
+  "@narrationFull": {
+    "description": "Narration level: the whole script."
+  },
+  "settingsNarrationHint": "Les phrases à lire à voix haute : l'appel de chaque rôle, le matin, le vote, la mort du Chasseur. Courtes ne garde que l'essentiel.",
+  "@settingsNarrationHint": {
+    "description": "Explains the narration setting."
   }
 }
