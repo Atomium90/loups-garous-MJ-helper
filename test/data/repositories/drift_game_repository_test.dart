@@ -361,6 +361,55 @@ void main() {
     });
   });
 
+  group('saveCompositionDraft', () {
+    test('stores the composition without creating any seat', () async {
+      final id = await repository.createGame();
+
+      await repository.saveCompositionDraft(
+        gameId: id,
+        playerCount: 10,
+        roleCounts: const {'voyante': 1, 'loup_garou': 2},
+        reserveRoleIds: const ['chasseur', 'cupidon'],
+      );
+
+      final game = (await repository.getGame(id))!;
+      expect(game.playerCount, 10);
+      expect(game.compositionJson, {'voyante': 1, 'loup_garou': 2});
+      expect(game.reserveRolesJson, ['chasseur', 'cupidon']);
+      expect(game.status, GameStatus.setup);
+      expect(await repository.getRoster(id), isEmpty);
+    });
+
+    test('does nothing once the composition was validated and the seats exist', () async {
+      final id = await repository.createGame();
+      await repository.saveComposition(
+        gameId: id,
+        playerCount: 4,
+        roleCounts: const {'loup_garou': 1, 'villageois': 3},
+      );
+
+      await repository.saveCompositionDraft(
+        gameId: id,
+        playerCount: 6,
+        roleCounts: const {'voyante': 1},
+      );
+
+      final game = (await repository.getGame(id))!;
+      expect(game.playerCount, 4);
+      expect(game.compositionJson, {'loup_garou': 1, 'villageois': 3});
+    });
+
+    test('ignores a game that no longer exists', () async {
+      await repository.saveCompositionDraft(
+        gameId: 999,
+        playerCount: 8,
+        roleCounts: const {},
+      );
+
+      expect(await repository.getGame(999), isNull);
+    });
+  });
+
   group('deleteGame', () {
     test('deletes a started game with its roster and journal', () async {
       final id = await repository.createGame();

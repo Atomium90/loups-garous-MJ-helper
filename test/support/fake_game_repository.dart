@@ -108,6 +108,24 @@ class FakeGameRepository implements GameRepository {
   }
 
   @override
+  Future<void> saveCompositionDraft({
+    required int gameId,
+    required int playerCount,
+    required Map<String, int> roleCounts,
+    List<String> reserveRoleIds = const [],
+  }) async {
+    final game = _games[gameId];
+    if (game == null || (_rosters[gameId] ?? const []).isNotEmpty) return;
+    _games[gameId] = game.copyWith(
+      playerCount: playerCount,
+      compositionJson: Value(roleCounts),
+      reserveRolesJson: Value(reserveRoleIds.isEmpty ? null : reserveRoleIds),
+      updatedAt: DateTime.now(),
+    );
+    _changes.add(null);
+  }
+
+  @override
   Stream<List<PlayerRow>> watchRoster(int gameId) async* {
     yield rosterOf(gameId);
     yield* _changes.stream.map((_) => rosterOf(gameId));

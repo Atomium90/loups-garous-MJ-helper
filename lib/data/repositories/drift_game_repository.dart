@@ -66,6 +66,28 @@ class DriftGameRepository implements GameRepository {
   }
 
   @override
+  Future<void> saveCompositionDraft({
+    required int gameId,
+    required int playerCount,
+    required Map<String, int> roleCounts,
+    List<String> reserveRoleIds = const [],
+  }) {
+    return _db.transaction(() async {
+      final seats = await (_db.select(_db.players)..where((p) => p.gameId.equals(gameId))).get();
+      if (seats.isNotEmpty) return;
+
+      await (_db.update(_db.games)..where((g) => g.id.equals(gameId))).write(
+        GamesCompanion(
+          playerCount: Value(playerCount),
+          compositionJson: Value(roleCounts),
+          reserveRolesJson: Value(reserveRoleIds.isEmpty ? null : reserveRoleIds),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+    });
+  }
+
+  @override
   Stream<List<PlayerRow>> watchRoster(int gameId) {
     final query = _db.select(_db.players)
       ..where((p) => p.gameId.equals(gameId))

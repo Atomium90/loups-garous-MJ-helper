@@ -28,6 +28,17 @@ abstract class GameRepository {
     List<String> reserveRoleIds = const [],
   });
 
+  /// Remembers a composition that is still being edited, so leaving the composition screen
+  /// doesn't lose it: writes the same columns as [saveComposition] but seeds no roster, so the
+  /// game does not count as composed yet. Does nothing once the game has a roster: from then on
+  /// the composition only changes through [saveComposition] ("Lancer la partie").
+  Future<void> saveCompositionDraft({
+    required int gameId,
+    required int playerCount,
+    required Map<String, int> roleCounts,
+    List<String> reserveRoleIds = const [],
+  });
+
   /// Reactive roster for one game, ordered by seatIndex.
   Stream<List<PlayerRow>> watchRoster(int gameId);
 
