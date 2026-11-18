@@ -62,12 +62,16 @@ class AppSegmentedControl<T> extends StatelessWidget {
                             ? colors.textPrimary
                             : colors.textSecondary,
                       ),
-                      Text(
-                        option.label,
-                        style: typography.chipLabel.copyWith(
-                          color: option.value == selected
-                              ? colors.textPrimary
-                              : colors.textSecondary,
+                      Flexible(
+                        child: Text(
+                          option.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: typography.chipLabel.copyWith(
+                            color: option.value == selected
+                                ? colors.textPrimary
+                                : colors.textSecondary,
+                          ),
                         ),
                       ),
                     ],

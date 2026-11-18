@@ -9,6 +9,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
+import '../../utils/l10n.dart';
 import '../../widgets/app_segmented_control.dart';
 import '../../widgets/app_toggle.dart';
 import '../../widgets/bientot_pill.dart';
@@ -79,6 +80,23 @@ class _SettingsBody extends StatelessWidget {
               Text(
                 "En soirée, le thème sombre fatigue moins l'œil et n'éclaire pas la table.",
                 style: typography.counter.copyWith(color: colors.textTertiary, height: 1.55),
+              ),
+              const SizedBox(height: 22),
+              SectionLabel(context.l10n.settingsLanguageTitle),
+              const SizedBox(height: 10),
+              AppSegmentedControl<AppLanguage>(
+                selected: settings.language,
+                onChanged: (l) => notifier?.setLanguage(l),
+                options: [
+                  (
+                    value: AppLanguage.system,
+                    icon: AppIcons.themeSystem,
+                    label: context.l10n.languageSystem,
+                  ),
+                  // Each language is named in itself, whatever the current one.
+                  (value: AppLanguage.french, icon: AppIcons.language, label: 'Français'),
+                  (value: AppLanguage.english, icon: AppIcons.language, label: 'English'),
+                ],
               ),
               const SizedBox(height: 22),
               const SectionLabel('Pendant la partie'),

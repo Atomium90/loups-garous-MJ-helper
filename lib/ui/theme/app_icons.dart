@@ -61,6 +61,10 @@ abstract final class AppIcons {
   /// Apparence segmented control: follow the OS.
   static const themeSystem = TablerIcons.deviceMobile;
 
+  /// The Langue control's French and English options (its "Système" option reuses
+  /// [themeSystem]).
+  static const language = TablerIcons.language;
+
   /// Apparence segmented control: force light.
   static const themeLight = TablerIcons.sun;
 
