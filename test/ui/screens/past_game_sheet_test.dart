@@ -94,7 +94,8 @@ void main() {
     expect(find.textContaining('2 éliminés restent cachés'), findsOneWidget);
   });
 
-  testWidgets('a finished game can be deleted from its recap', (tester) async {
+  /// A finished 4-player game won by [winner]; [sessionJson], if given, is its saved state.
+  Future<int> finishedGame(GameWinner winner, {String? sessionJson}) async {
     final id = await repo.createGame(initialPlayerCount: 4);
     await repo.saveComposition(
       gameId: id,
@@ -103,8 +104,13 @@ void main() {
     );
     await repo.savePlayerNames(gameId: id, names: const ['Ana', 'Bo', 'Cy', 'Di']);
     await repo.startGame(id);
-    await repo.endGame(gameId: id, winner: GameWinner.village);
+    if (sessionJson != null) await repo.saveSession(gameId: id, sessionJson: sessionJson);
+    await repo.endGame(gameId: id, winner: winner);
+    return id;
+  }
 
+  /// Opens Home and taps the history row labelled [winnerLabel] to show its recap.
+  Future<void> openRecap(WidgetTester tester, String winnerLabel) async {
     await tester.binding.setSurfaceSize(const Size(400, 1600));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAppRouter(
@@ -112,8 +118,13 @@ void main() {
       overrides: [gameRepositoryProvider.overrideWithValue(repo)],
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Village'));
+    await tester.tap(find.text(winnerLabel));
     await tester.pumpAndSettle();
+  }
+
+  testWidgets('a finished game can be deleted from its recap', (tester) async {
+    final id = await finishedGame(GameWinner.village);
+    await openRecap(tester, 'Village');
 
     await tester.tap(find.byIcon(AppIcons.delete));
     await tester.pumpAndSettle();
@@ -128,24 +139,8 @@ void main() {
   });
 
   testWidgets('cancelling the deletion keeps the finished game and its recap', (tester) async {
-    final id = await repo.createGame(initialPlayerCount: 4);
-    await repo.saveComposition(
-      gameId: id,
-      playerCount: 4,
-      roleCounts: const {'loup_garou': 1, 'villageois': 3},
-    );
-    await repo.startGame(id);
-    await repo.endGame(gameId: id, winner: GameWinner.village);
-
-    await tester.binding.setSurfaceSize(const Size(400, 1600));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    await pumpAppRouter(
-      tester,
-      overrides: [gameRepositoryProvider.overrideWithValue(repo)],
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Village'));
-    await tester.pumpAndSettle();
+    final id = await finishedGame(GameWinner.village);
+    await openRecap(tester, 'Village');
 
     await tester.tap(find.byIcon(AppIcons.delete));
     await tester.pumpAndSettle();
@@ -159,27 +154,8 @@ void main() {
   testWidgets('a completed game whose saved state is unreadable still opens its recap', (
     tester,
   ) async {
-    final id = await repo.createGame(initialPlayerCount: 4);
-    await repo.saveComposition(
-      gameId: id,
-      playerCount: 4,
-      roleCounts: const {'loup_garou': 1, 'villageois': 3},
-    );
-    await repo.savePlayerNames(gameId: id, names: const ['Ana', 'Bo', 'Cy', 'Di']);
-    await repo.startGame(id);
-    await repo.saveSession(gameId: id, sessionJson: '{not json');
-    await repo.endGame(gameId: id, winner: GameWinner.wolves);
-
-    await tester.binding.setSurfaceSize(const Size(400, 1600));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    await pumpAppRouter(
-      tester,
-      overrides: [gameRepositoryProvider.overrideWithValue(repo)],
-    );
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Loups'));
-    await tester.pumpAndSettle();
+    await finishedGame(GameWinner.wolves, sessionJson: '{not json');
+    await openRecap(tester, 'Loups');
 
     // the winner is stored apart from the damaged blob, so it still shows
     expect(find.text('Vainqueurs'), findsOneWidget);
