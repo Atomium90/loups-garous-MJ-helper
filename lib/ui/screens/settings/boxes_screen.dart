@@ -5,6 +5,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
+import '../../utils/l10n.dart';
 import '../../widgets/app_toggle.dart';
 import '../../widgets/bientot_pill.dart';
 import '../../widgets/section_label.dart';
@@ -15,10 +16,12 @@ import '../../widgets/section_label.dart';
 class BoxesScreen extends StatelessWidget {
   const BoxesScreen({super.key});
 
+  /// Expansion names are proper nouns: shown as they are in both languages. Placeholders until
+  /// the expansions are really supported.
   static const _extensions = [
-    ('Nouvelle Lune', 'Extension · 6 cartes'),
-    ('La Bouche du Loup', 'Extension · 6 cartes'),
-    ('Village aux Loups-Garous', 'Extension · 12 cartes'),
+    ('Nouvelle Lune', 6),
+    ('La Bouche du Loup', 6),
+    ('Village aux Loups-Garous', 12),
   ];
 
   @override
@@ -43,7 +46,7 @@ class BoxesScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    'Mes boîtes',
+                    context.l10n.settingsMyBoxes,
                     style: typography.screenTitle.copyWith(color: colors.textPrimary),
                   ),
                 ],
@@ -64,7 +67,7 @@ class BoxesScreen extends StatelessWidget {
                       children: [
                         Icon(AppIcons.boxes, size: 18, color: colors.accentText),
                         Text(
-                          '8 rôles disponibles pour vos parties',
+                          context.l10n.boxesRolesAvailable(8),
                           style: typography.body.copyWith(
                             fontWeight: FontWeight.w500,
                             color: colors.accentText,
@@ -74,7 +77,7 @@ class BoxesScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 18),
-                  const SectionLabel('Possédées'),
+                  SectionLabel(context.l10n.boxesOwned),
                   const SizedBox(height: 4),
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: AppSpacing.rowSettings),
@@ -85,11 +88,11 @@ class BoxesScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Loups-Garous de Thiercelieux',
+                                context.l10n.boxBaseName,
                                 style: typography.rowLabel.copyWith(color: colors.textPrimary),
                               ),
                               Text(
-                                'Boîte de base · 8 cartes',
+                                context.l10n.boxBaseDetail(8),
                                 style: typography.meta.copyWith(color: colors.textSecondary),
                               ),
                             ],
@@ -101,8 +104,8 @@ class BoxesScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 14),
-                  const SectionLabel('Extensions'),
-                  for (final (name, meta) in _extensions)
+                  SectionLabel(context.l10n.boxesExpansions),
+                  for (final (name, cards) in _extensions)
                     Opacity(
                       opacity: 0.55,
                       child: Container(
@@ -124,7 +127,7 @@ class BoxesScreen extends StatelessWidget {
                                     ),
                                   ),
                                   Text(
-                                    meta,
+                                    context.l10n.boxExpansionDetail(cards),
                                     style: typography.meta.copyWith(color: colors.textTertiary),
                                   ),
                                 ],
@@ -145,7 +148,7 @@ class BoxesScreen extends StatelessWidget {
                 border: Border(top: BorderSide(color: colors.borderHairline)),
               ),
               child: Text(
-                'Les extensions arrivent après la V1. La boîte de base couvre 8 à 18 joueurs.',
+                context.l10n.boxesFooter,
                 style: typography.counter.copyWith(color: colors.textTertiary, height: 1.55),
               ),
             ),

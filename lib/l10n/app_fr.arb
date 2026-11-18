@@ -579,5 +579,215 @@
   "compositionStart": "Lancer la partie",
   "@compositionStart": {
     "description": "Button that validates the composition and goes on to the players."
+  },
+  "beforeNightTitle": "Avant la nuit 1",
+  "@beforeNightTitle": {
+    "description": "Title of the last setup screen, before the first night."
+  },
+  "beforeNightVillage": "Le village",
+  "@beforeNightVillage": {
+    "description": "Label above the roster of players."
+  },
+  "beforeNightRolesToDiscover": "rôles à découvrir",
+  "@beforeNightRolesToDiscover": {
+    "description": "Reminder that the players roles are not known yet."
+  },
+  "beforeNightDeal": "La donne",
+  "@beforeNightDeal": {
+    "description": "Label above the cards in play."
+  },
+  "beforeNightDealTitle": "Distribuez les {count} cartes",
+  "@beforeNightDealTitle": {
+    "description": "Tells the MJ how many cards to hand out.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "beforeNightDealHint": "Mélangez et distribuez à l'aveugle. L'app note les rôles au fil de la nuit 1, quand chacun se réveille.",
+  "@beforeNightDealHint": {
+    "description": "How the cards are dealt."
+  },
+  "beforeNightReserveHint": "Posez ces 2 cartes au centre, face cachée : {cards}.",
+  "@beforeNightReserveHint": {
+    "description": "Where to put the Thief's reserve cards; cards lists them.",
+    "placeholders": {
+      "cards": {
+        "type": "String"
+      }
+    }
+  },
+  "beforeNightStart": "Commencer la nuit 1",
+  "@beforeNightStart": {
+    "description": "Button that starts the first night."
+  },
+  "settingsTitle": "Réglages",
+  "@settingsTitle": {
+    "description": "Title of the settings screen."
+  },
+  "settingsContent": "Contenu",
+  "@settingsContent": {
+    "description": "Settings section: boxes and other content."
+  },
+  "settingsMyBoxes": "Mes boîtes",
+  "@settingsMyBoxes": {
+    "description": "The boxes (base game and expansions) the MJ owns."
+  },
+  "settingsBaseBoxRoles": "Boîte de base · {count} rôles",
+  "@settingsBaseBoxRoles": {
+    "description": "Summary of what the owned boxes provide.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsAppearance": "Apparence",
+  "@settingsAppearance": {
+    "description": "Settings section: theme."
+  },
+  "themeSystem": "Système",
+  "@themeSystem": {
+    "description": "Theme option that follows the device's."
+  },
+  "themeLight": "Clair",
+  "@themeLight": {
+    "description": "Light theme."
+  },
+  "themeDark": "Sombre",
+  "@themeDark": {
+    "description": "Dark theme."
+  },
+  "settingsThemeHint": "En soirée, le thème sombre fatigue moins l'œil et n'éclaire pas la table.",
+  "@settingsThemeHint": {
+    "description": "Why the dark theme is worth it."
+  },
+  "settingsDuringGame": "Pendant la partie",
+  "@settingsDuringGame": {
+    "description": "Settings section: in-game behaviour."
+  },
+  "settingsKeepScreenOn": "Garder l'écran allumé",
+  "@settingsKeepScreenOn": {
+    "description": "Toggle: stop the screen from sleeping during a game."
+  },
+  "settingsAideMemoire": "Aide-mémoire dans le script",
+  "@settingsAideMemoire": {
+    "description": "Toggle: show the quick-reference button in the script."
+  },
+  "settingsData": "Données",
+  "@settingsData": {
+    "description": "Settings section: stored games."
+  },
+  "settingsFooter": "Loup Garou MJ · V1 · hors ligne",
+  "@settingsFooter": {
+    "description": "App name, version and mode in the footer."
+  },
+  "settingsOnDevice": "Vos parties restent sur cet appareil : désinstaller l’app les supprime.",
+  "@settingsOnDevice": {
+    "description": "Footer: where the games are stored."
+  },
+  "deleteAllRow": "Supprimer toutes les parties",
+  "@deleteAllRow": {
+    "description": "Settings row that wipes every game."
+  },
+  "deleteAllRowHint": "Brouillons, parties en cours et historique",
+  "@deleteAllRowHint": {
+    "description": "What deleting all games covers."
+  },
+  "deleteAllTitle": "Supprimer toutes les parties ?",
+  "@deleteAllTitle": {
+    "description": "Title of the sheet that asks before wiping every game."
+  },
+  "deleteAllMessage": "Les brouillons, les parties en cours et l’historique seront effacés. Cette action est définitive.",
+  "@deleteAllMessage": {
+    "description": "Warning before wiping every game."
+  },
+  "deleteAllConfirm": "Tout supprimer",
+  "@deleteAllConfirm": {
+    "description": "Button that wipes every game."
+  },
+  "deleteAllDone": "Toutes les parties sont supprimées.",
+  "@deleteAllDone": {
+    "description": "Snackbar after every game was deleted."
+  },
+  "boxesRolesAvailable": "{count} rôles disponibles pour vos parties",
+  "@boxesRolesAvailable": {
+    "description": "How many roles the owned boxes give.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "boxesOwned": "Possédées",
+  "@boxesOwned": {
+    "description": "Heading above the boxes the MJ owns."
+  },
+  "boxBaseName": "Loups-Garous de Thiercelieux",
+  "@boxBaseName": {
+    "description": "Name of the base game's box."
+  },
+  "boxBaseDetail": "Boîte de base · {count} cartes",
+  "@boxBaseDetail": {
+    "description": "Kind and size of the base box.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "boxesExpansions": "Extensions",
+  "@boxesExpansions": {
+    "description": "Heading above the expansions."
+  },
+  "boxExpansionDetail": "Extension · {count} cartes",
+  "@boxExpansionDetail": {
+    "description": "Kind and size of an expansion.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "boxesFooter": "Les extensions arrivent après la V1. La boîte de base couvre 8 à 18 joueurs.",
+  "@boxesFooter": {
+    "description": "Footer of the boxes screen."
+  },
+  "endGameTitle": "Terminer la partie",
+  "@endGameTitle": {
+    "description": "Title of the end-of-game screen and its confirm button."
+  },
+  "endGameAliveCount": "{wolves, plural, =0{0 Loups vivants} =1{1 Loup vivant} other{{wolves} Loups vivants}}, {village, plural, =0{0 villageois} =1{1 villageois} other{{village} villageois}}.",
+  "@endGameAliveCount": {
+    "description": "How many werewolves and villagers are still alive.",
+    "placeholders": {
+      "wolves": {
+        "type": "int"
+      },
+      "village": {
+        "type": "int"
+      }
+    }
+  },
+  "endGameJudge": "À vous de juger si la partie est jouée. L'app ne conclut rien.",
+  "@endGameJudge": {
+    "description": "The app leaves the call to the MJ."
+  },
+  "endGameWho": "Qui gagne ?",
+  "@endGameWho": {
+    "description": "Heading above the choice of the winning side."
+  },
+  "endGamePickWinner": "Choisissez le vainqueur",
+  "@endGamePickWinner": {
+    "description": "Disabled button text until a winner is chosen."
+  },
+  "endGameKeepPlaying": "On continue à jouer",
+  "@endGameKeepPlaying": {
+    "description": "Button that goes back to the game."
+  },
+  "endGameCancelled": "Partie annulée",
+  "@endGameCancelled": {
+    "description": "Sub-label of the option that ends a game with no winner."
   }
 }

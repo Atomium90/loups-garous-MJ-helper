@@ -47,10 +47,10 @@ class BeforeNightScreen extends ConsumerWidget {
           _ when gameAsync.isLoading || rosterAsync.isLoading =>
             const Center(child: CircularProgressIndicator()),
           _ when gameAsync.hasError || rosterAsync.hasError =>
-            centered('Impossible de charger cette partie.'),
+            centered(context.l10n.gameLoadError),
           (AsyncData(value: final game), AsyncData(value: final roster)) =>
             game == null
-                ? centered('Impossible de charger cette partie.')
+                ? centered(context.l10n.gameLoadError)
                 : _Body(gameId: gameId, game: game, roster: roster),
           _ => const Center(child: CircularProgressIndicator()),
         },
@@ -82,7 +82,7 @@ class _Body extends ConsumerWidget {
     return Column(
       children: [
         SetupHeader(
-          title: 'Avant la nuit 1',
+          title: context.l10n.beforeNightTitle,
           subtitle: gameTitle(context.l10n, game),
           onBack: () => context.pop(),
         ),
@@ -96,12 +96,15 @@ class _Body extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _LabelRow(left: 'Le village', right: 'rôles à découvrir'),
+                _LabelRow(
+                  left: context.l10n.beforeNightVillage,
+                  right: context.l10n.beforeNightRolesToDiscover,
+                ),
                 const SizedBox(height: 8),
                 _RosterGrid(roster: roster),
                 const SizedBox(height: 16),
                 Text(
-                  'La donne',
+                  context.l10n.beforeNightDeal,
                   style: context.typography.meta.copyWith(color: context.colors.textTertiary),
                 ),
                 const SizedBox(height: 6),
@@ -128,7 +131,7 @@ class _Body extends ConsumerWidget {
             AppSpacing.screen,
           ),
           child: AppButton(
-            label: 'Commencer la nuit 1',
+            label: context.l10n.beforeNightStart,
             leadingIcon: AppIcons.nightStart,
             onPressed: () => _onStart(context, ref),
           ),
@@ -164,7 +167,7 @@ class _DealCallout extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Distribuez les $cardCount cartes',
+                  context.l10n.beforeNightDealTitle(cardCount),
                   style: typography.body.copyWith(
                     fontWeight: FontWeight.w500,
                     color: colors.accentText,
@@ -172,8 +175,7 @@ class _DealCallout extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  "Mélangez et distribuez à l'aveugle. L'app note les rôles au fil de la "
-                  'nuit 1, quand chacun se réveille.',
+                  context.l10n.beforeNightDealHint,
                   style: typography.meta.copyWith(color: colors.textSecondary, height: 1.55),
                 ),
               ],
@@ -212,7 +214,7 @@ class _ReserveCallout extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Réserve du Voleur',
+                  context.l10n.reserveTitle,
                   style: typography.body.copyWith(
                     fontWeight: FontWeight.w500,
                     color: colors.textPrimary,
@@ -220,7 +222,7 @@ class _ReserveCallout extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  'Posez ces 2 cartes au centre, face cachée : $line.',
+                  context.l10n.beforeNightReserveHint(line),
                   style: typography.meta.copyWith(color: colors.textSecondary, height: 1.55),
                 ),
               ],
@@ -280,13 +282,13 @@ class _RosterGrid extends StatelessWidget {
                   child: Row(
                     children: [
                       PlayerAvatar(
-                        name: player.name.isEmpty ? 'Joueur ${i + 1}' : player.name,
+                        name: player.name.isEmpty ? context.l10n.playerHint(i + 1) : player.name,
                         fillColor: colors.bgScreen,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          player.name.isEmpty ? 'Joueur ${i + 1}' : player.name,
+                          player.name.isEmpty ? context.l10n.playerHint(i + 1) : player.name,
                           overflow: TextOverflow.ellipsis,
                           style: context.typography.body.copyWith(color: colors.textPrimary),
                         ),

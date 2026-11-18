@@ -103,7 +103,9 @@ void main() {
       await _openSettingsInApp(tester, stored: 'en');
 
       expect(find.text('LANGUAGE'), findsOneWidget);
-      expect(find.text('System'), findsOneWidget);
+      expect(find.text('Light'), findsOneWidget);
+      // The language control and the theme control both have a "System" option.
+      expect(find.text('System'), findsNWidgets(2));
       expect(find.text('LANGUE'), findsNothing);
     });
 
