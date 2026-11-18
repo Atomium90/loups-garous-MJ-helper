@@ -11,5 +11,50 @@
   "languageSystem": "Système",
   "@languageSystem": {
     "description": "Language choice that follows the phone's language."
+  },
+  "roleName": "{roleId, select, voleur{Voleur} cupidon{Cupidon} voyante{Voyante} loup_garou{Loup-Garou} sorciere{Sorcière} villageois{Villageois} petite_fille{Petite Fille} chasseur{Chasseur} other{Rôle inconnu}}",
+  "@roleName": {
+    "description": "The name of a role card, from its id (singular, no article).",
+    "placeholders": {
+      "roleId": {
+        "type": "String"
+      }
+    }
+  },
+  "rolePlural": "{roleId, select, voleur{Voleurs} cupidon{Cupidons} voyante{Voyantes} loup_garou{Loups-Garous} sorciere{Sorcières} villageois{Villageois} petite_fille{Petites Filles} chasseur{Chasseurs} other{Rôles inconnus}}",
+  "@rolePlural": {
+    "description": "The plural name of a role card, from its id.",
+    "placeholders": {
+      "roleId": {
+        "type": "String"
+      }
+    }
+  },
+  "roleWithArticle": "{roleId, select, voleur{le Voleur} cupidon{le Cupidon} voyante{la Voyante} loup_garou{le Loup-Garou} sorciere{la Sorcière} villageois{le Villageois} petite_fille{la Petite Fille} chasseur{le Chasseur} other{Rôle inconnu}}",
+  "@roleWithArticle": {
+    "description": "A role with its article, e.g. \"le Chasseur\", \"la Voyante\", \"the Hunter\".",
+    "placeholders": {
+      "roleId": {
+        "type": "String"
+      }
+    }
+  },
+  "roleRuleText": "{roleId, select, voleur{Réveillez le Voleur. Il peut échanger sa carte avec l'une des deux cartes non distribuées, ou garder la sienne.} cupidon{Réveillez Cupidon. Il désigne deux joueurs qui tombent amoureux, puis les deux amoureux ouvrent les yeux pour se reconnaître avant de se rendormir.} voyante{Réveillez la Voyante. Elle désigne un joueur dont vous lui révélez le rôle.} loup_garou{Réveillez les Loups-Garous. Ils désignent ensemble leur victime.} sorciere{Réveillez la Sorcière. Montrez-lui la victime des Loups. Elle peut utiliser sa potion de vie et/ou sa potion de mort.} villageois{Aucune action de nuit.} petite_fille{Aucun appel : elle peut risquer un œil pendant l'appel des Loups-Garous, à ses risques.} chasseur{Aucune action de nuit : à sa mort (jour ou nuit), il élimine immédiatement un joueur de son choix.} other{}}",
+  "@roleRuleText": {
+    "description": "The instruction the game master follows when this role is called, from the role id.",
+    "placeholders": {
+      "roleId": {
+        "type": "String"
+      }
+    }
+  },
+  "roleMjTips": "{roleId, select, cupidon{Notez qui sont les amoureux : si l'un meurt, l'autre meurt aussi.} sorciere{Chaque potion ne peut être utilisée qu'une seule fois par partie.} other{}}",
+  "@roleMjTips": {
+    "description": "An optional reminder for the game master about this role, from the role id. Empty when the role has none.",
+    "placeholders": {
+      "roleId": {
+        "type": "String"
+      }
+    }
   }
 }

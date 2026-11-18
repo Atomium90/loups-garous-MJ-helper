@@ -9,7 +9,7 @@ import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../utils/french_death_cause.dart';
-import '../../utils/french_role_label.dart';
+import '../../utils/l10n.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/avatar_pick_cell.dart';
 import '../../widgets/player_avatar.dart';
@@ -113,7 +113,7 @@ class _NightBody extends ConsumerWidget {
         lockedNote: locked.isEmpty
             ? null
             : voleurAmongLocked
-            ? 'Le Voleur a volé une carte de ${step.role.name} : il compte en plus.'
+            ? 'Le Voleur a volé une carte de ${context.l10n.roleName(step.role.id)} : il compte en plus.'
             : 'Déjà connu grâce à la Voyante.',
         onConfirm: (rowIds) => notifier.identifyRole(roleId, rowIds),
         onDefer: notifier.skipStep,
@@ -255,7 +255,7 @@ class _VoleurActState extends State<_VoleurAct> {
           Padding(
             padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 8),
             child: Text(
-              'Le Voleur devient ${roleWithArticle(stolen!, RoleRegistry.base)} : '
+              'Le Voleur devient ${context.l10n.roleWithArticle(stolen!)} : '
               "réveillez-le à son tour cette nuit s'il n'est pas déjà passé.",
               style: typography.meta.copyWith(color: colors.warnText, height: 1.5),
             ),
@@ -272,7 +272,7 @@ class _VoleurActState extends State<_VoleurAct> {
                 ? 'Choisissez une carte'
                 : keeps
                 ? 'Le Voleur garde sa carte'
-                : 'Le Voleur prend ${roleWithArticle(stolen!, RoleRegistry.base)}',
+                : 'Le Voleur prend ${context.l10n.roleWithArticle(stolen!)}',
             onPressed: !picked ? null : () => widget.onConfirm(stolen),
           ),
         ),
@@ -455,7 +455,7 @@ class _SeerNoteState extends State<_SeerNote> {
           child: AppButton(
             label: _roleId == null
                 ? 'Choisissez une carte'
-                : '${widget.name} est ${roleWithArticle(_roleId!, RoleRegistry.base)}',
+                : '${widget.name} est ${context.l10n.roleWithArticle(_roleId!)}',
             onPressed: _roleId == null ? null : () => widget.onConfirm(_roleId!),
           ),
         ),
@@ -511,7 +511,7 @@ class _SeerResult extends StatelessWidget {
                     ),
                     Expanded(
                       child: Text(
-                        '$name est ${roleWithArticle(roleId, RoleRegistry.base)}',
+                        '$name est ${context.l10n.roleWithArticle(roleId)}',
                         style: typography.rowLabel.copyWith(
                           fontSize: 16,
                           color: colors.textPrimary,
@@ -826,7 +826,7 @@ class _ScriptCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      role.name,
+                      context.l10n.roleName(role.id),
                       style: typography.rowLabel.copyWith(
                         fontSize: 16,
                         color: colors.textPrimary,
@@ -844,7 +844,7 @@ class _ScriptCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            role.ruleText,
+            context.l10n.roleRuleText(role.id),
             style: typography.body.copyWith(color: colors.textSecondary, height: 1.6),
           ),
         ],
@@ -1057,7 +1057,7 @@ class _RecapDeathRow extends StatelessWidget {
                     child: Text(
                       role == null
                           ? 'Rôle non révélé'
-                          : 'Était ${roleWithArticle(role.id, RoleRegistry.base)}',
+                          : 'Était ${context.l10n.roleWithArticle(role.id)}',
                       style: typography.meta.copyWith(
                         color: colors.textPrimary,
                         fontWeight: FontWeight.w500,
@@ -1286,7 +1286,7 @@ class _RevealPanelState extends State<_RevealPanel> {
               AppButton(
                 label: _roleId == null
                     ? 'Choisissez une carte'
-                    : '${dead.name} était ${roleWithArticle(_roleId!, RoleRegistry.base)}',
+                    : '${dead.name} était ${context.l10n.roleWithArticle(_roleId!)}',
                 onPressed: _roleId == null
                     ? null
                     : () => widget.notifier.revealRole(int.parse(dead.id), _roleId!),
@@ -1344,7 +1344,7 @@ class _RoleOption extends StatelessWidget {
             ),
             Expanded(
               child: Text(
-                RoleRegistry.base.byId(roleId).name,
+                context.l10n.roleName(roleId),
                 style: typography.rowLabel.copyWith(
                   color: selected ? colors.accentText : colors.textPrimary,
                 ),

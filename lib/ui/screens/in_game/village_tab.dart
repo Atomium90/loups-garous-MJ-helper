@@ -8,6 +8,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
+import '../../utils/l10n.dart';
 import '../../utils/french_death_cause.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/player_avatar.dart';
@@ -202,7 +203,7 @@ class _PlayerRow extends StatelessWidget {
     final typography = context.typography;
     final id = roleId;
     final wolves = id != null && RoleRegistry.base.byIdOrNull(id)?.team == Team.werewolves;
-    final roleText = id == null ? 'Rôle inconnu' : RoleRegistry.base.byId(id).name;
+    final roleText = id == null ? 'Rôle inconnu' : context.l10n.roleName(id);
 
     return Opacity(
       opacity: dead ? 0.5 : 1,

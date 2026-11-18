@@ -13,7 +13,8 @@ import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../widgets/setup_header.dart';
 import '../../utils/french_date_format.dart';
-import '../../utils/french_role_label.dart';
+import '../../utils/l10n.dart';
+import '../../utils/labels.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/player_avatar.dart';
 
@@ -76,7 +77,7 @@ class _Body extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final composition = game.compositionJson ?? const <String, int>{};
-    final deckLine = frenchDeckLine(composition, RoleRegistry.base);
+    final deck = deckLine(context.l10n, composition, RoleRegistry.base);
     final reserve = game.reserveRolesJson ?? const <String>[];
 
     return Column(
@@ -106,7 +107,7 @@ class _Body extends ConsumerWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  deckLine,
+                  deck,
                   style: context.typography.meta.copyWith(
                     color: context.colors.textSecondary,
                     height: 1.7,
@@ -114,7 +115,7 @@ class _Body extends ConsumerWidget {
                 ),
                 if (reserve.isNotEmpty) ...[
                   const SizedBox(height: 16),
-                  _ReserveCallout(line: frenchReserveLine(reserve, RoleRegistry.base)),
+                  _ReserveCallout(line: reserveLine(context.l10n, reserve)),
                 ],
               ],
             ),

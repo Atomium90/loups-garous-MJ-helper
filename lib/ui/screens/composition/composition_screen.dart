@@ -10,7 +10,8 @@ import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../widgets/setup_header.dart';
-import '../../utils/french_role_label.dart';
+import '../../utils/l10n.dart';
+import '../../utils/labels.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/app_chip.dart';
 import '../../widgets/app_stepper.dart';
@@ -205,7 +206,7 @@ class _SuggestionCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      frenchDeckLine(suggestion.roleCounts, RoleRegistry.base),
+                      deckLine(context.l10n, suggestion.roleCounts, RoleRegistry.base),
                       style: typography.counter.copyWith(color: colors.textSecondary),
                     ),
                   ],
@@ -275,7 +276,7 @@ class _RoleGroup extends StatelessWidget {
         for (final role in roles)
           _scalingRoleIds.contains(role.id)
               ? _RoleCountChip(
-                  label: role.name,
+                  label: context.l10n.roleName(role.id),
                   count: draft.roleCounts[role.id] ?? 0,
                   // Capped by the table size and by the box cards still free
                   // (4 wolves / 13 villagers, minus any set aside as reserve).
@@ -305,7 +306,7 @@ class _SingletonRoleChip extends StatelessWidget {
     final claimedByReserve =
         !inDeal && draft.cardsLeft(role.id, RoleRegistry.base) <= 0;
     return AppChip(
-      label: role.name,
+      label: context.l10n.roleName(role.id),
       selected: inDeal,
       enabled: !claimedByReserve,
       note: claimedByReserve ? 'en réserve' : null,
@@ -452,7 +453,7 @@ class _ReserveSlot extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  filled ? RoleRegistry.base.byId(roleId!).name : 'Choisir une carte',
+                  filled ? context.l10n.roleName(roleId!) : 'Choisir une carte',
                   style: typography.rowLabel.copyWith(
                     color: filled ? colors.accentText : colors.textSecondary,
                   ),
@@ -505,7 +506,7 @@ class _RolePickerSheet extends StatelessWidget {
                 for (final role in roles)
                   ListTile(
                     title: Text(
-                      role.name,
+                      context.l10n.roleName(role.id),
                       style: typography.body.copyWith(color: colors.textPrimary),
                     ),
                     onTap: () => Navigator.of(context).pop(role.id),

@@ -4,6 +4,7 @@ import 'package:rules_engine/rules_engine.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_dimensions.dart';
 import '../../../theme/app_typography.dart';
+import '../../../utils/l10n.dart';
 import '../../../widgets/app_sheet.dart';
 
 /// The wake-order aide-mémoire: one line per role, this game's composition in
@@ -165,14 +166,14 @@ class _RoleLine extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    role.name,
+                    context.l10n.roleName(role.id),
                     style: typography.body.copyWith(
                       color: colors.textPrimary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   Text(
-                    role.ruleText,
+                    context.l10n.roleRuleText(role.id),
                     style: typography.meta.copyWith(
                       color: colors.textSecondary,
                       height: 1.5,

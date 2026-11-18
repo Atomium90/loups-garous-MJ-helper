@@ -14,7 +14,8 @@ import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../utils/french_date_format.dart';
-import '../../utils/french_role_label.dart';
+import '../../utils/l10n.dart';
+import '../../utils/labels.dart';
 import '../../utils/french_winner_label.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/app_sheet.dart';
@@ -132,7 +133,7 @@ class _PastGameSheet extends ConsumerWidget {
             Text('La compo', style: typography.meta.copyWith(color: colors.textTertiary)),
             const SizedBox(height: 4),
             Text(
-              frenchDeckLine(game.compositionJson ?? const {}, registry),
+              deckLine(context.l10n, game.compositionJson ?? const {}, registry),
               style: typography.meta.copyWith(color: colors.textSecondary, height: 1.7),
             ),
             const SizedBox(height: 12),
@@ -317,7 +318,7 @@ class _SurvivorRow extends StatelessWidget {
             child: Text(name, style: typography.body.copyWith(color: colors.textPrimary)),
           ),
           Text(
-            id == null ? 'Rôle inconnu' : RoleRegistry.base.byId(id).name,
+            id == null ? 'Rôle inconnu' : context.l10n.roleName(id),
             style: typography.counter.copyWith(
               color: wolves ? colors.accentText : colors.textSecondary,
               fontWeight: wolves ? FontWeight.w500 : FontWeight.w400,

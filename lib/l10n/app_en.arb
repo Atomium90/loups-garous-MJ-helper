@@ -2,5 +2,10 @@
   "@@locale": "en",
   "appTitle": "Loup Garou MJ",
   "settingsLanguageTitle": "Language",
-  "languageSystem": "System"
+  "languageSystem": "System",
+  "roleName": "{roleId, select, voleur{Thief} cupidon{Cupid} voyante{Seer} loup_garou{Werewolf} sorciere{Witch} villageois{Villager} petite_fille{Little Girl} chasseur{Hunter} other{Unknown role}}",
+  "rolePlural": "{roleId, select, voleur{Thieves} cupidon{Cupids} voyante{Seers} loup_garou{Werewolves} sorciere{Witches} villageois{Villagers} petite_fille{Little Girls} chasseur{Hunters} other{Unknown roles}}",
+  "roleWithArticle": "{roleId, select, voleur{the Thief} cupidon{Cupid} voyante{the Seer} loup_garou{the Werewolf} sorciere{the Witch} villageois{the Villager} petite_fille{the Little Girl} chasseur{the Hunter} other{Unknown role}}",
+  "roleRuleText": "{roleId, select, voleur{Wake the Thief. He may swap his card with one of the two undealt cards, or keep his own.} cupidon{Wake Cupid. He picks two players who fall in love, then the two lovers open their eyes to recognise each other before going back to sleep.} voyante{Wake the Seer. She points at a player, whose role you reveal to her.} loup_garou{Wake the Werewolves. Together they choose their victim.} sorciere{Wake the Witch. Show her the wolves' victim. She may use her life potion and/or her death potion.} villageois{No night action.} petite_fille{No call: she may peek during the Werewolves' turn, at her own risk.} chasseur{No night action: when he dies (day or night), he immediately eliminates a player of his choice.} other{}}",
+  "roleMjTips": "{roleId, select, cupidon{Note who the lovers are: if one dies, the other dies too.} sorciere{Each potion can only be used once per game.} other{}}"
 }
