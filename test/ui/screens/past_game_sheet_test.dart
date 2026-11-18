@@ -8,6 +8,7 @@ import 'package:loup_garou_mj/data/models/game_winner.dart';
 import 'package:loup_garou_mj/data/repositories/drift_game_repository.dart';
 import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
 import 'package:loup_garou_mj/state/session/session_cursor.dart';
+import 'package:loup_garou_mj/ui/theme/app_icons.dart';
 import 'package:rules_engine/rules_engine.dart';
 
 import '../../support/pump_app.dart';
@@ -91,6 +92,68 @@ void main() {
     expect(find.text('Loup-Garou'), findsOneWidget);
     expect(find.text('Voyante'), findsOneWidget);
     expect(find.textContaining('2 éliminés restent cachés'), findsOneWidget);
+  });
+
+  testWidgets('a finished game can be deleted from its recap', (tester) async {
+    final id = await repo.createGame(initialPlayerCount: 4);
+    await repo.saveComposition(
+      gameId: id,
+      playerCount: 4,
+      roleCounts: const {'loup_garou': 1, 'villageois': 3},
+    );
+    await repo.savePlayerNames(gameId: id, names: const ['Ana', 'Bo', 'Cy', 'Di']);
+    await repo.startGame(id);
+    await repo.endGame(gameId: id, winner: GameWinner.village);
+
+    await tester.binding.setSurfaceSize(const Size(400, 1600));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(repo)],
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Village'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(AppIcons.delete));
+    await tester.pumpAndSettle();
+    expect(find.text('Supprimer cette partie ?'), findsOneWidget);
+    await tester.tap(find.text('Supprimer cette partie'));
+    await tester.pumpAndSettle();
+
+    expect(await repo.getGame(id), isNull);
+    // the recap closed and the history is empty again
+    expect(find.text('Vainqueurs'), findsNothing);
+    expect(find.text('Aucune partie'), findsOneWidget);
+  });
+
+  testWidgets('cancelling the deletion keeps the finished game and its recap', (tester) async {
+    final id = await repo.createGame(initialPlayerCount: 4);
+    await repo.saveComposition(
+      gameId: id,
+      playerCount: 4,
+      roleCounts: const {'loup_garou': 1, 'villageois': 3},
+    );
+    await repo.startGame(id);
+    await repo.endGame(gameId: id, winner: GameWinner.village);
+
+    await tester.binding.setSurfaceSize(const Size(400, 1600));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(repo)],
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Village'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(AppIcons.delete));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Annuler'));
+    await tester.pumpAndSettle();
+
+    expect(await repo.getGame(id), isNotNull);
+    expect(find.text('Vainqueurs'), findsOneWidget);
   });
 
   testWidgets('a completed game whose saved state is unreadable still opens its recap', (

@@ -19,6 +19,7 @@ import '../../utils/french_winner_label.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/app_sheet.dart';
 import '../../widgets/player_avatar.dart';
+import 'delete_game_sheet.dart';
 
 /// Reopening a finished game: the winner, the run's length, and who was still
 /// standing (survivors' roles only - a finished game legitimately has gaps).
@@ -213,12 +214,27 @@ class _PastGameSheet extends ConsumerWidget {
                     onPressed: null,
                   ),
                 ),
+                SizedBox(
+                  width: 46,
+                  child: AppButton(
+                    label: '',
+                    leadingIcon: AppIcons.delete,
+                    variant: AppButtonVariant.secondary,
+                    onPressed: () => _delete(context, ref),
+                  ),
+                ),
               ],
             ),
           ],
         ),
       ),
     );
+  }
+
+  /// Deletes the game after confirmation, then closes this recap, which no longer has a game.
+  Future<void> _delete(BuildContext context, WidgetRef ref) async {
+    final deleted = await showDeleteGameSheet(context, ref, game);
+    if (deleted && context.mounted) Navigator.of(context).pop();
   }
 
   Future<void> _replay(BuildContext context, WidgetRef ref) async {

@@ -15,6 +15,7 @@ import '../../theme/app_typography.dart';
 import '../../utils/french_date_format.dart';
 import '../../utils/french_winner_label.dart';
 import '../../widgets/app_button.dart';
+import 'delete_game_sheet.dart';
 import 'drafts_section.dart';
 import 'past_game_sheet.dart';
 import 'unreadable_game_sheet.dart';
@@ -284,6 +285,8 @@ class _EnCoursCard extends ConsumerWidget {
           onTap: () => unreadable
               ? showUnreadableGameSheet(context, ref, gameId: game.id)
               : context.go('/games/${game.id}/game'),
+          // Long press is the way to remove a game in progress without opening it.
+          onLongPress: unreadable ? null : () => showDeleteGameSheet(context, ref, game),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
             child: Row(
