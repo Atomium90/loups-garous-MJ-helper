@@ -6,6 +6,7 @@ import 'package:loup_garou_mj/data/repositories/drift_game_repository.dart';
 import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
 import 'package:loup_garou_mj/ui/theme/app_icons.dart';
 import 'package:material_ui/material_ui.dart' show Icons;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../support/pump_app.dart';
 
@@ -16,6 +17,7 @@ void main() {
   late DriftGameRepository repo;
 
   setUp(() {
+    SharedPreferences.setMockInitialValues({});
     db = AppDatabase.forTesting(NativeDatabase.memory());
     repo = DriftGameRepository(db);
     addTearDown(db.close);
@@ -58,6 +60,14 @@ void main() {
 
     // the tab bar and the night header, then the Seer: who holds the card, who she looks at
     see(['Script', 'NIGHT 1', 'Who has the Seer card?', '0 of 1', 'Pick 1 player']);
+    // the lines to read aloud, and the one-time hint about limiting them
+    see([
+      'SAY ALOUD',
+      'The village goes to sleep. Everyone closes their eyes.',
+      'Seer, open your eyes. Pick the player whose role you want to know.',
+      'Seer, go back to sleep.',
+      'You can shorten or hide these lines in Settings.',
+    ]);
     await tapAll(tester, ['Ana', 'Save']);
     see(['Who does the Seer look at?']);
 
@@ -70,17 +80,22 @@ void main() {
 
     // the day recap: Ana was the identified Seer, so her card is spelled out
     see(['DAY 1 BEGINS', 'Tonight, the village lost', 'Was the Seer', 'Victim of the Wolves']);
+    see([
+      'The village wakes up. Everyone opens their eyes.',
+      'Tonight, the village lost Ana. The players concerned turn their card over.',
+    ]);
     await tapAll(tester, ['Elect the Captain']);
 
-    see(['The Captain', 'Who is elected?']);
+    see(['The Captain', 'Who is elected?', 'The village elects its Captain. Talk it over, then pick them: their vote will count double.']);
     await tapAll(tester, ['Bo', 'Bo is Captain']);
 
-    see(['Who is eliminated?', 'Tie, nobody is eliminated']);
+    see(['Who is eliminated?', 'Tie, nobody is eliminated', 'Time to vote. Talk it over, then point at a player. Whoever gets the most votes is eliminated.']);
     expect(find.textContaining("Bo's vote counts double"), findsOneWidget);
     await tapAll(tester, ['Cy', 'The village eliminates Cy']);
 
     // Cy's card was never noted: the reveal panel comes first
     see(['Eliminated night 1', 'What was their card?', '3 left']);
+    see(['Cy, you are eliminated. Turn your card over in front of everyone.']);
     await tapAll(tester, ['Villager', 'Cy was the Villager']);
 
     see(['The day is over.', 'Start night 2']);

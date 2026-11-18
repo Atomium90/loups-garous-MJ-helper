@@ -117,6 +117,23 @@ class _SettingsBody extends StatelessWidget {
                 onChanged: (v) => notifier?.setAideMemoireInScript(v),
               ),
               const SizedBox(height: 22),
+              SectionLabel(context.l10n.settingsNarrationTitle),
+              const SizedBox(height: 10),
+              AppSegmentedControl<NarrationLevel>(
+                selected: settings.narrationLevel,
+                onChanged: (l) => notifier?.setNarrationLevel(l),
+                options: [
+                  (value: NarrationLevel.off, icon: null, label: context.l10n.narrationOff),
+                  (value: NarrationLevel.short, icon: null, label: context.l10n.narrationShort),
+                  (value: NarrationLevel.full, icon: null, label: context.l10n.narrationFull),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                context.l10n.settingsNarrationHint,
+                style: typography.counter.copyWith(color: colors.textTertiary, height: 1.55),
+              ),
+              const SizedBox(height: 22),
               SectionLabel(context.l10n.settingsData),
               const _DeleteAllGamesRow(),
             ],

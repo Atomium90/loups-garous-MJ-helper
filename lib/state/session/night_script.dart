@@ -39,7 +39,7 @@ NightScript buildNightScript({
         if (entry.value > 0) entry.key,
       ...heldRoleIds,
     };
-    final roles = [for (final id in ids) registry.byId(id)];
+    final roles = _inCallOrder([for (final id in ids) registry.byId(id)], registry);
     return _builder.build(
       compositionRoles: roles,
       aliveRoleIds: {
@@ -71,9 +71,21 @@ NightScript buildNightScript({
     consider(registry.byId(id));
   }
 
+  final inOrder = _inCallOrder(callable, registry);
   return _builder.build(
-    compositionRoles: callable,
-    aliveRoleIds: {for (final r in callable) r.id},
+    compositionRoles: inOrder,
+    aliveRoleIds: {for (final r in inOrder) r.id},
     nightIndex: nightIndex,
   );
+}
+
+/// [roles] in the registry's declaration order, which is the official wake order.
+///
+/// The builder keeps the order it is given for roles that no constraint relates, and a role's
+/// constraints only name its neighbours in the chain (Loups come after the Voyante, which comes
+/// after Cupidon). With the Voyante absent nothing ties the Loups to Cupidon any more, so the
+/// order the caller lists them in decides: the composition's own key order must not.
+List<Role> _inCallOrder(List<Role> roles, RoleRegistry registry) {
+  final position = {for (final (i, r) in registry.roles.indexed) r.id: i};
+  return [...roles]..sort((a, b) => position[a.id]!.compareTo(position[b.id]!));
 }

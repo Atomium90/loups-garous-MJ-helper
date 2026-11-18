@@ -1379,5 +1379,162 @@
   "scriptTheirCard": "Sa carte",
   "@scriptTheirCard": {
     "description": "Label above the revealed card of a dead player."
+  },
+  "settingsNarrationTitle": "Phrases du MJ",
+  "@settingsNarrationTitle": {
+    "description": "Settings section: the lines the MJ can read aloud to the players."
+  },
+  "narrationOff": "Aucune",
+  "@narrationOff": {
+    "description": "Narration level: no lines shown."
+  },
+  "narrationShort": "Courtes",
+  "@narrationShort": {
+    "description": "Narration level: only the essential line of each moment."
+  },
+  "narrationFull": "Complètes",
+  "@narrationFull": {
+    "description": "Narration level: the whole script."
+  },
+  "settingsNarrationHint": "Les phrases à lire à voix haute : l'appel de chaque rôle, le matin, le vote, la mort du Chasseur. Courtes ne garde que l'essentiel.",
+  "@settingsNarrationHint": {
+    "description": "Explains the narration setting."
+  },
+  "narrLabel": "À dire",
+  "@narrLabel": {
+    "description": "Label of the block holding the lines the MJ reads to the players."
+  },
+  "narrNames": "{first} et {last}",
+  "@narrNames": {
+    "description": "The last two names of a list (\"Ana, Bo et Cy\").",
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "last": {
+        "type": "String"
+      }
+    }
+  },
+  "narrNightStart": "Le village s'endort. Tout le monde ferme les yeux.",
+  "@narrNightStart": {
+    "description": "Said when the night begins."
+  },
+  "narrCallHead": "{roleId, select, voleur{Voleur, ouvre les yeux.} cupidon{Cupidon, ouvre les yeux.} voyante{Voyante, ouvre les yeux.} loup_garou{Loups-Garous, ouvrez les yeux.} sorciere{Sorcière, ouvre les yeux.} other{}}",
+  "@narrCallHead": {
+    "description": "Said to wake a role; roleId is the role.",
+    "placeholders": {
+      "roleId": {
+        "type": "String"
+      }
+    }
+  },
+  "narrCallBody": "{roleId, select, voleur{Deux cartes sont posées au centre : échange la tienne contre l'une d'elles, ou garde-la.} cupidon{Désigne les deux joueurs qui tomberont amoureux.} voyante{Désigne le joueur dont tu veux connaître le rôle.} loup_garou{Désignez ensemble votre victime.} sorciere{Voici la victime des Loups. Veux-tu la sauver ? Veux-tu empoisonner quelqu'un ?} other{}}",
+  "@narrCallBody": {
+    "description": "Said to tell the awake role what to do.",
+    "placeholders": {
+      "roleId": {
+        "type": "String"
+      }
+    }
+  },
+  "narrClose": "{roleId, select, voleur{Voleur, rendors-toi.} cupidon{Cupidon, rendors-toi. Amoureux, ouvrez les yeux, reconnaissez-vous, puis rendormez-vous.} voyante{Voyante, rendors-toi.} loup_garou{Loups-Garous, rendormez-vous.} sorciere{Sorcière, rendors-toi.} other{}}",
+  "@narrClose": {
+    "description": "Said to put a role back to sleep.",
+    "placeholders": {
+      "roleId": {
+        "type": "String"
+      }
+    }
+  },
+  "narrMorningHead": "Le village se réveille.",
+  "@narrMorningHead": {
+    "description": "Said when the day begins."
+  },
+  "narrMorningBody": "Tout le monde ouvre les yeux.",
+  "@narrMorningBody": {
+    "description": "Said right after the morning wake-up."
+  },
+  "narrDeathsHead": "{count, plural, =0{Cette nuit, personne n'est mort.} other{Cette nuit, le village a perdu {names}.}}",
+  "@narrDeathsHead": {
+    "description": "Announces who died in the night; count is how many, names lists them.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "narrDeathsBody": "Les joueurs concernés retournent leur carte.",
+  "@narrDeathsBody": {
+    "description": "Said after the deaths are announced."
+  },
+  "narrCaptainHead": "Le village élit son Capitaine.",
+  "@narrCaptainHead": {
+    "description": "Said at the Captain election."
+  },
+  "narrCaptainBody": "Discutez, puis désignez-le : sa voix comptera double.",
+  "@narrCaptainBody": {
+    "description": "Said at the Captain election."
+  },
+  "narrVoteHead": "C'est l'heure du vote.",
+  "@narrVoteHead": {
+    "description": "Said when the village votes."
+  },
+  "narrVoteBody": "Discutez, puis désignez un joueur. Celui qui reçoit le plus de voix est éliminé.",
+  "@narrVoteBody": {
+    "description": "Said when the village votes."
+  },
+  "narrRevealHead": "{name}, tu es éliminé.",
+  "@narrRevealHead": {
+    "description": "Said to a player who just died.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "narrRevealBody": "Retourne ta carte devant tout le monde.",
+  "@narrRevealBody": {
+    "description": "Said to a player who just died."
+  },
+  "narrHunterHead": "Chasseur, tu es mort.",
+  "@narrHunterHead": {
+    "description": "Said to the Hunter who just died."
+  },
+  "narrHunterBody": "Emporte qui tu le souhaites dans la tombe.",
+  "@narrHunterBody": {
+    "description": "Said to the Hunter who just died."
+  },
+  "narrSuccessionHead": "Capitaine, tu es mort.",
+  "@narrSuccessionHead": {
+    "description": "Said to the Captain who just died."
+  },
+  "narrSuccessionBody": "Désigne ton successeur avant de partir.",
+  "@narrSuccessionBody": {
+    "description": "Said to the Captain who just died."
+  },
+  "narrLoversHead": "{name}, ton amoureux est mort.",
+  "@narrLoversHead": {
+    "description": "Said to the lover who survives their partner.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "narrLoversBody": "Tu meurs de chagrin : retourne ta carte.",
+  "@narrLoversBody": {
+    "description": "Said to the lover who survives their partner."
+  },
+  "narrHint": "Tu peux limiter ou masquer ces phrases dans Réglages.",
+  "@narrHint": {
+    "description": "One-time hint under the first lines shown."
+  },
+  "commonOk": "OK",
+  "@commonOk": {
+    "description": "Generic button that dismisses a notice."
   }
 }

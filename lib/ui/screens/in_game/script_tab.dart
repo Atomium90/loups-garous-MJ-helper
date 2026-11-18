@@ -9,7 +9,9 @@ import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../utils/l10n.dart';
+import '../../utils/narration.dart';
 import '../../widgets/app_button.dart';
+import '../../widgets/narration_block.dart';
 import '../../widgets/avatar_pick_cell.dart';
 import '../../widgets/player_avatar.dart';
 import 'widgets/identify_step.dart';
@@ -71,11 +73,23 @@ class _NightBody extends ConsumerWidget {
         if (step != null)
           Padding(
             padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 0),
-            child: _ScriptCard(
-              role: step.role,
-              holderNames: session.currentStepNeedsIdentify
-                  ? const []
-                  : _holderNames(step.role.id),
+            child: Column(
+              spacing: 8,
+              children: [
+                _ScriptCard(
+                  role: step.role,
+                  holderNames: session.currentStepNeedsIdentify
+                      ? const []
+                      : _holderNames(step.role.id),
+                ),
+                NarrationBlock(
+                  lines: [
+                    // the first role of the night is preceded by "the village goes to sleep"
+                    if (session.cursor.stepIndex == 0) ...nightStartNarration(context.l10n),
+                    ...roleCallNarration(context.l10n, step.role.id),
+                  ],
+                ),
+              ],
             ),
           ),
         Expanded(child: _body(context, notifier, step)),
@@ -966,6 +980,10 @@ class _DayRecapBody extends StatelessWidget {
           iconColor: colors.warnText,
         ),
         const SizedBox(height: 14),
+        NarrationBlock(
+          lines: morningNarration(context.l10n, [for (final d in deaths) d.name]),
+        ),
+        const SizedBox(height: 14),
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -1109,6 +1127,10 @@ class _CaptainElectionBody extends StatelessWidget {
             body: context.l10n.scriptCaptainBody,
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 12),
+          child: NarrationBlock(lines: captainNarration(context.l10n)),
+        ),
         Expanded(
           child: TargetPick(
             question: context.l10n.scriptCaptainQuestion,
@@ -1153,6 +1175,10 @@ class _VoteBody extends StatelessWidget {
                 ? context.l10n.scriptVoteBody
                 : context.l10n.scriptVoteBodyCaptain(captainName),
           ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 12),
+          child: NarrationBlock(lines: voteNarration(context.l10n)),
         ),
         Expanded(
           child: TargetPick(
@@ -1259,6 +1285,10 @@ class _RevealPanelState extends State<_RevealPanel> {
               style: typography.meta.copyWith(color: colors.textSecondary, height: 1.5),
             ),
           ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 12, AppSpacing.screen, 0),
+          child: NarrationBlock(lines: revealNarration(context.l10n, dead.name)),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 18, AppSpacing.screen, 8),
@@ -1462,6 +1492,10 @@ class _HunterShotPanel extends StatelessWidget {
             ),
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 12, AppSpacing.screen, 0),
+          child: NarrationBlock(lines: hunterNarration(context.l10n)),
+        ),
         Expanded(
           child: TargetPick(
             question: context.l10n.scriptHunterTarget,
@@ -1504,6 +1538,10 @@ class _SuccessionPanel extends StatelessWidget {
             title: context.l10n.scriptSuccessionTitle,
             body: context.l10n.scriptSuccessionBody,
           ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 12),
+          child: NarrationBlock(lines: successionNarration(context.l10n)),
         ),
         Expanded(
           child: TargetPick(
@@ -1565,6 +1603,10 @@ class _LoversAckPanel extends StatelessWidget {
               style: typography.meta.copyWith(color: colors.textSecondary, height: 1.5),
             ),
           ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 12, AppSpacing.screen, 0),
+          child: NarrationBlock(lines: loversNarration(context.l10n, lover.name)),
         ),
         const Spacer(),
         Padding(

@@ -36,6 +36,30 @@ void main() {
       expect(stepIds(script), ['voyante', 'loup_garou', 'sorciere']);
     });
 
+    test('wakes Cupidon before the Loups even with no Voyante to tie them together', () {
+      // The composition lists the Loups first: its key order must not decide the wake order.
+      final script = buildNightScript(
+        engine: _state(),
+        composition: const {'loup_garou': 1, 'cupidon': 1, 'sorciere': 1, 'villageois': 3},
+      );
+      expect(stepIds(script), ['cupidon', 'loup_garou', 'sorciere']);
+    });
+
+    test('keeps the official order whatever order the composition is written in', () {
+      final script = buildNightScript(
+        engine: _state(),
+        composition: const {
+          'sorciere': 1,
+          'loup_garou': 1,
+          'voyante': 1,
+          'cupidon': 1,
+          'voleur': 1,
+          'villageois': 2,
+        },
+      );
+      expect(stepIds(script), ['voleur', 'cupidon', 'voyante', 'loup_garou', 'sorciere']);
+    });
+
     test('picks up a role the Voleur just stole from the reserve', () {
       // The composition has no Voyante (she was set aside as a reserve card);
       // the Voleur swapped his card for her mid-night.
