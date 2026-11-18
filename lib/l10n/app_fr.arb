@@ -284,5 +284,168 @@
   "summaryStepChainEffect": "effet en chaîne",
   "@summaryStepChainEffect": {
     "description": "Resume line: a death triggers another (Hunter, Captain, lovers)."
+  },
+  "commonCancel": "Annuler",
+  "@commonCancel": {
+    "description": "Button that dismisses a confirmation without doing anything."
+  },
+  "deleteGameTitle": "Supprimer cette partie ?",
+  "@deleteGameTitle": {
+    "description": "Title of the sheet that asks before deleting a game."
+  },
+  "deleteGameMessage": "« {name} » sera supprimée avec son journal. Cette action est définitive.",
+  "@deleteGameMessage": {
+    "description": "Warning before deleting a game; name is the game title.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteGameConfirm": "Supprimer cette partie",
+  "@deleteGameConfirm": {
+    "description": "Button that deletes the game."
+  },
+  "unreadableGameTitle": "Partie illisible",
+  "@unreadableGameTitle": {
+    "description": "Title of a saved game that cannot be read back (also its line on Home)."
+  },
+  "unreadableGameMessage": "Les données de cette partie sont abîmées, ou viennent d'une version de l'app que celle-ci ne comprend pas. Vous pouvez la supprimer : vos autres parties ne sont pas touchées.",
+  "@unreadableGameMessage": {
+    "description": "Explains an unreadable game and offers to delete it."
+  },
+  "draftStepLabel": "{step, select, composition{Composition à faire} players{Joueurs à nommer} other{Prête à démarrer}}",
+  "@draftStepLabel": {
+    "description": "Where an unstarted game stopped in the setup (composition, players, before night).",
+    "placeholders": {
+      "step": {
+        "type": "String"
+      }
+    }
+  },
+  "draftsTitle": "Brouillons",
+  "@draftsTitle": {
+    "description": "Section of Home listing the games that were started but never launched."
+  },
+  "deleteDraftTitle": "Supprimer ce brouillon ?",
+  "@deleteDraftTitle": {
+    "description": "Title of the sheet that asks before deleting a draft."
+  },
+  "deleteDraftMessage": "Cette partie n'a pas commencé : sa composition et les noms des joueurs seront perdus.",
+  "@deleteDraftMessage": {
+    "description": "Warning before deleting a draft."
+  },
+  "deleteDraftConfirm": "Supprimer ce brouillon",
+  "@deleteDraftConfirm": {
+    "description": "Button that deletes the draft."
+  },
+  "homeTitle": "Mes parties",
+  "@homeTitle": {
+    "description": "Title of the Home screen."
+  },
+  "homeLoadError": "Impossible de charger vos parties.",
+  "@homeLoadError": {
+    "description": "Home: the list of games failed to load."
+  },
+  "homeEmptyTitle": "Aucune partie",
+  "@homeEmptyTitle": {
+    "description": "Home with no game at all."
+  },
+  "homeEmptyMessage": "Composez le village, distribuez les cartes, et laissez l'app tenir le fil de la nuit.",
+  "@homeEmptyMessage": {
+    "description": "Home with no game: what the app is for."
+  },
+  "homeNewGame": "Nouvelle partie",
+  "@homeNewGame": {
+    "description": "Button that starts a new game."
+  },
+  "homeInProgress": "En cours",
+  "@homeInProgress": {
+    "description": "Section of Home listing the games being played."
+  },
+  "homeGameInProgress": "Partie en cours",
+  "@homeGameInProgress": {
+    "description": "Home card of a game in progress that has no step to show yet."
+  },
+  "homeDaysAgo": "{count} j.",
+  "@homeDaysAgo": {
+    "description": "Days since a game was created, on its Home card.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeHistory": "Historique",
+  "@homeHistory": {
+    "description": "Section of Home listing the finished games."
+  },
+  "pastWinners": "Vainqueurs",
+  "@pastWinners": {
+    "description": "Label above the winning side of a finished game."
+  },
+  "unitPlayers": "{count, plural, =1{joueur} other{joueurs}}",
+  "@unitPlayers": {
+    "description": "Unit next to a number of players.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unitNights": "{count, plural, =1{nuit} other{nuits}}",
+  "@unitNights": {
+    "description": "Unit next to a number of nights.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unitDays": "{count, plural, =1{jour} other{jours}}",
+  "@unitDays": {
+    "description": "Unit next to a number of days.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pastDeck": "La compo",
+  "@pastDeck": {
+    "description": "Label above the composition of a finished game."
+  },
+  "pastSurvivors": "Encore debout à la fin",
+  "@pastSurvivors": {
+    "description": "Label above the players alive when the game ended."
+  },
+  "pastSurvivorsCount": "{count} sur {total}",
+  "@pastSurvivorsCount": {
+    "description": "How many players were alive out of the total.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pastHiddenRoles": "{count, plural, =1{Le rôle de l'éliminé reste caché.} other{Les rôles des {count} éliminés restent cachés.}}",
+  "@pastHiddenRoles": {
+    "description": "Note under the survivors: the eliminated players' roles are not shown.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pastFullJournal": "Voir le journal complet",
+  "@pastFullJournal": {
+    "description": "Button that opens a finished game's journal."
+  },
+  "pastReplay": "Rejouer",
+  "@pastReplay": {
+    "description": "Button that starts a new game with the same players and composition."
   }
 }

@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../theme/app_colors.dart';
+import '../utils/l10n.dart';
 import '../theme/app_dimensions.dart';
 import '../theme/app_typography.dart';
 import 'app_button.dart';
@@ -74,7 +75,7 @@ class _ConfirmSheet extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             AppButton(
-              label: 'Annuler',
+              label: context.l10n.commonCancel,
               variant: AppButtonVariant.secondary,
               onPressed: () => Navigator.of(context).pop(false),
             ),

@@ -1,5 +1,7 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:loup_garou_mj/data/database/app_database.dart';
+import 'package:loup_garou_mj/l10n/localizations.dart';
 import 'package:loup_garou_mj/ui/screens/home/draft_step.dart';
 
 PlayerRow _seat(int index, String name) =>
@@ -28,6 +30,6 @@ void main() {
       'players',
       'beforeNight',
     });
-    expect(DraftStep.players.label, 'Joueurs à nommer');
+    expect(draftStepLabel(lookupAppLocalizations(const Locale('fr')), DraftStep.players), 'Joueurs à nommer');
   });
 }

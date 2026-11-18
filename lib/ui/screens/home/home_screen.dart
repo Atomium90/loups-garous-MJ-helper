@@ -41,7 +41,7 @@ class HomeScreen extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.screen),
               child: Text(
-                'Impossible de charger vos parties.',
+                context.l10n.homeLoadError,
                 textAlign: TextAlign.center,
                 style: context.typography.body.copyWith(
                   color: context.colors.textSecondary,
@@ -85,7 +85,7 @@ class _Header extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'Mes parties',
+            context.l10n.homeTitle,
             style: context.typography.screenTitle.copyWith(
               color: context.colors.textPrimary,
             ),
@@ -143,15 +143,14 @@ class _EmptyState extends ConsumerWidget {
                     ),
                   ),
                   Text(
-                    'Aucune partie',
+                    context.l10n.homeEmptyTitle,
                     textAlign: TextAlign.center,
                     style: typography.rowLabel.copyWith(
                       color: colors.textPrimary,
                     ),
                   ),
                   Text(
-                    "Composez le village, distribuez les cartes, et laissez l'app tenir le fil "
-                    'de la nuit.',
+                    context.l10n.homeEmptyMessage,
                     textAlign: TextAlign.center,
                     style: typography.body.copyWith(
                       color: colors.textSecondary,
@@ -165,7 +164,7 @@ class _EmptyState extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.all(AppSpacing.screen),
           child: AppButton(
-            label: 'Nouvelle partie',
+            label: context.l10n.homeNewGame,
             leadingIcon: AppIcons.newGame,
             onPressed: () => _startNewGame(context, ref),
           ),
@@ -217,7 +216,7 @@ class _GamesList extends ConsumerWidget {
             AppSpacing.screen,
           ),
           child: AppButton(
-            label: 'Nouvelle partie',
+            label: context.l10n.homeNewGame,
             leadingIcon: AppIcons.newGame,
             onPressed: () => _startNewGame(context, ref),
           ),
@@ -245,7 +244,7 @@ class _EnCoursSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         spacing: 8,
         children: [
-          const SectionLabel('En cours'),
+          SectionLabel(context.l10n.homeInProgress),
           for (final (index, game) in games.indexed)
             _EnCoursCard(game: game, isMostRecent: index == 0),
         ],
@@ -314,7 +313,11 @@ class _EnCoursCard extends ConsumerWidget {
                         style: typography.rowLabel.copyWith(color: colors.textPrimary),
                       ),
                       Text(
-                        unreadable ? 'Partie illisible' : summary == null ? 'Partie en cours' : sessionSummaryLine(context.l10n, summary),
+                        unreadable
+                            ? context.l10n.unreadableGameTitle
+                            : summary == null
+                            ? context.l10n.homeGameInProgress
+                            : sessionSummaryLine(context.l10n, summary),
                         style: typography.meta.copyWith(
                           color: summary != null && !unreadable
                               ? colors.accentText
@@ -325,7 +328,7 @@ class _EnCoursCard extends ConsumerWidget {
                   ),
                 ),
                 Text(
-                  '$daysElapsed j.',
+                  context.l10n.homeDaysAgo(daysElapsed),
                   style: typography.micro.copyWith(
                     color: isMostRecent ? colors.textSecondary : colors.textTertiary,
                   ),
@@ -366,9 +369,9 @@ class _HistoriqueSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-            padding: EdgeInsets.only(bottom: 6),
-            child: SectionLabel('Historique'),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: SectionLabel(context.l10n.homeHistory),
           ),
           for (final (index, group) in groups.indexed) ...[
             Padding(

@@ -31,7 +31,7 @@ class DraftsSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         spacing: 8,
         children: [
-          const SectionLabel('Brouillons'),
+          SectionLabel(context.l10n.draftsTitle),
           for (final game in games) _DraftRow(game: game),
         ],
       ),
@@ -83,7 +83,7 @@ class _DraftRow extends ConsumerWidget {
                         style: typography.rowLabel.copyWith(color: colors.textPrimary),
                       ),
                       Text(
-                        step.label,
+                        draftStepLabel(context.l10n, step),
                         style: typography.meta.copyWith(color: colors.textSecondary),
                       ),
                     ],
@@ -105,11 +105,9 @@ class _DraftRow extends ConsumerWidget {
   void _confirmDelete(BuildContext context, WidgetRef ref) {
     showConfirmSheet(
       context,
-      title: 'Supprimer ce brouillon ?',
-      message:
-          "Cette partie n'a pas commencé : sa composition et les noms des joueurs "
-          'seront perdus.',
-      confirmLabel: 'Supprimer ce brouillon',
+      title: context.l10n.deleteDraftTitle,
+      message: context.l10n.deleteDraftMessage,
+      confirmLabel: context.l10n.deleteDraftConfirm,
       onConfirm: () => ref.read(gameRepositoryProvider).discardDraft(game.id),
     );
   }

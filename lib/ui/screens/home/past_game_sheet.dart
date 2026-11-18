@@ -106,7 +106,7 @@ class _PastGameSheet extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Vainqueurs',
+                        context.l10n.pastWinners,
                         style: typography.counter.copyWith(color: colors.textTertiary),
                       ),
                       Text(
@@ -122,13 +122,13 @@ class _PastGameSheet extends ConsumerWidget {
             Row(
               spacing: 20,
               children: [
-                _Stat(value: players.length, unit: 'joueurs'),
-                _Stat(value: nights, unit: 'nuits'),
-                _Stat(value: days, unit: 'jours'),
+                _Stat(value: players.length, unit: context.l10n.unitPlayers(players.length)),
+                _Stat(value: nights, unit: context.l10n.unitNights(nights)),
+                _Stat(value: days, unit: context.l10n.unitDays(days)),
               ],
             ),
             const SizedBox(height: 12),
-            Text('La compo', style: typography.meta.copyWith(color: colors.textTertiary)),
+            Text(context.l10n.pastDeck, style: typography.meta.copyWith(color: colors.textTertiary)),
             const SizedBox(height: 4),
             Text(
               deckLine(context.l10n, game.compositionJson ?? const {}, registry),
@@ -139,11 +139,11 @@ class _PastGameSheet extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Encore debout à la fin',
+                  context.l10n.pastSurvivors,
                   style: typography.meta.copyWith(color: colors.textTertiary),
                 ),
                 Text(
-                  '${survivors.length} sur ${players.length}',
+                  context.l10n.pastSurvivorsCount(survivors.length, players.length),
                   style: typography.counter.copyWith(color: colors.textTertiary),
                 ),
               ],
@@ -161,7 +161,7 @@ class _PastGameSheet extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Text(
-                'Les rôles des ${players.length - survivors.length} éliminés restent cachés.',
+                context.l10n.pastHiddenRoles(players.length - survivors.length),
                 style: typography.counter.copyWith(color: colors.textTertiary, height: 1.5),
               ),
             ),
@@ -183,7 +183,7 @@ class _PastGameSheet extends ConsumerWidget {
                       Icon(AppIcons.journal, size: 15, color: colors.textSecondary),
                       Expanded(
                         child: Text(
-                          'Voir le journal complet',
+                          context.l10n.pastFullJournal,
                           style: typography.body.copyWith(color: colors.accentText),
                         ),
                       ),
@@ -199,7 +199,7 @@ class _PastGameSheet extends ConsumerWidget {
               children: [
                 Expanded(
                   child: AppButton(
-                    label: 'Rejouer',
+                    label: context.l10n.pastReplay,
                     leadingIcon: AppIcons.replay,
                     onPressed: () => _replay(context, ref),
                   ),
@@ -316,7 +316,8 @@ class _SurvivorRow extends StatelessWidget {
             child: Text(name, style: typography.body.copyWith(color: colors.textPrimary)),
           ),
           Text(
-            id == null ? 'Rôle inconnu' : context.l10n.roleName(id),
+            // An unknown id falls back to the neutral "unknown role" name.
+            context.l10n.roleName(id ?? ''),
             style: typography.counter.copyWith(
               color: wolves ? colors.accentText : colors.textSecondary,
               fontWeight: wolves ? FontWeight.w500 : FontWeight.w400,

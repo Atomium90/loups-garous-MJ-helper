@@ -13,9 +13,9 @@ Future<bool> showDeleteGameSheet(BuildContext context, WidgetRef ref, Game game)
   final name = gameTitle(context.l10n, game);
   final deleted = await showConfirmSheet(
     context,
-    title: 'Supprimer cette partie ?',
-    message: '« $name » sera supprimée avec son journal. Cette action est définitive.',
-    confirmLabel: 'Supprimer cette partie',
+    title: context.l10n.deleteGameTitle,
+    message: context.l10n.deleteGameMessage(name),
+    confirmLabel: context.l10n.deleteGameConfirm,
     onConfirm: () => ref.read(gameRepositoryProvider).deleteGame(game.id),
   );
   return deleted == true;
