@@ -222,4 +222,7 @@ class DriftGameRepository implements GameRepository {
   Future<void> deleteGame(int gameId) {
     return (_db.delete(_db.games)..where((g) => g.id.equals(gameId))).go();
   }
+
+  @override
+  Future<void> deleteAllGames() => _db.delete(_db.games).go();
 }

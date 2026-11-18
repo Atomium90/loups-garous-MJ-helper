@@ -240,6 +240,14 @@ class FakeGameRepository implements GameRepository {
   }
 
   @override
+  Future<void> deleteAllGames() async {
+    _games.clear();
+    _rosters.clear();
+    _nightLogs.clear();
+    _changes.add(null);
+  }
+
+  @override
   Future<void> deleteGame(int gameId) async {
     if (_games.remove(gameId) != null) {
       _rosters.remove(gameId);

@@ -79,4 +79,7 @@ abstract class GameRepository {
   /// Deletes a game whatever its status, with its roster and journal. For a game the MJ
   /// chose to remove, e.g. one whose saved state can no longer be read.
   Future<void> deleteGame(int gameId);
+
+  /// Deletes every game, with all their rosters and journals: a clean slate.
+  Future<void> deleteAllGames();
 }
