@@ -314,7 +314,7 @@ class _EnCoursCard extends ConsumerWidget {
                         style: typography.rowLabel.copyWith(color: colors.textPrimary),
                       ),
                       Text(
-                        unreadable ? 'Partie illisible' : summary?.line ?? 'Partie en cours',
+                        unreadable ? 'Partie illisible' : summary == null ? 'Partie en cours' : sessionSummaryLine(context.l10n, summary),
                         style: typography.meta.copyWith(
                           color: summary != null && !unreadable
                               ? colors.accentText

@@ -29,5 +29,12 @@
   "journalHunterNoShot": "The Hunter doesn't shoot",
   "journalHunterShoots": "The Hunter takes {player} down",
   "journalSeerObserves": "The Seer looks at {player}",
-  "journalHeartbreakDeath": "{player} dies of heartbreak"
+  "journalHeartbreakDeath": "{player} dies of heartbreak",
+  "summaryPhase": "{phase, select, day{Day {index}} other{Night {index}}}",
+  "summaryStepNightEnd": "end of the night",
+  "summaryStepRecap": "recap",
+  "summaryStepCaptainElection": "Captain election",
+  "summaryStepVillageVote": "village vote",
+  "summaryStepDayDone": "end of the day",
+  "summaryStepChainEffect": "chain effect"
 }

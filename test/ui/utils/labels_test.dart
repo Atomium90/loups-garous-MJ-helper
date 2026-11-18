@@ -5,7 +5,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:loup_garou_mj/data/database/app_database.dart';
 import 'package:loup_garou_mj/data/models/game_status.dart';
 import 'package:loup_garou_mj/data/models/game_winner.dart';
+import 'package:loup_garou_mj/data/models/night_log_entry.dart';
 import 'package:loup_garou_mj/l10n/localizations.dart';
+import 'package:loup_garou_mj/state/session/session_summary_provider.dart';
 import 'package:loup_garou_mj/ui/utils/labels.dart';
 import 'package:rules_engine/rules_engine.dart';
 
@@ -163,6 +165,43 @@ void main() {
     test('a day and month', () {
       expect(fr.dayMonthLabel(date), '14 août');
       expect(en.dayMonthLabel(date), 'August 14');
+    });
+  });
+
+  group('sessionSummaryLine', () {
+    test('a night names the role whose turn it is', () {
+      const summary = SessionSummary(
+        phase: JournalPhase.night,
+        nightIndex: 1,
+        step: SummaryStep.role,
+        roleId: 'voyante',
+      );
+      expect(sessionSummaryLine(fr, summary), 'Nuit 1 · Voyante');
+      expect(sessionSummaryLine(en, summary), 'Night 1 · Seer');
+    });
+
+    test('every other step has a phrase in both languages', () {
+      for (final step in SummaryStep.values.where((s) => s != SummaryStep.role)) {
+        for (final phase in JournalPhase.values) {
+          final summary = SessionSummary(phase: phase, nightIndex: 2, step: step);
+          expect(sessionSummaryLine(fr, summary), contains(' · '), reason: '$phase $step');
+          expect(
+            sessionSummaryLine(en, summary),
+            isNot(sessionSummaryLine(fr, summary)),
+            reason: '$phase $step',
+          );
+        }
+      }
+    });
+
+    test('a day reads as "Jour" / "Day"', () {
+      const summary = SessionSummary(
+        phase: JournalPhase.day,
+        nightIndex: 2,
+        step: SummaryStep.villageVote,
+      );
+      expect(sessionSummaryLine(fr, summary), 'Jour 2 · vote du village');
+      expect(sessionSummaryLine(en, summary), 'Day 2 · village vote');
     });
   });
 

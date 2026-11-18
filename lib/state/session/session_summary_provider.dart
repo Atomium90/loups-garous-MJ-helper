@@ -4,27 +4,50 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rules_engine/rules_engine.dart';
 
 import '../../data/database/app_database.dart';
+import '../../data/models/night_log_entry.dart';
 import '../providers/game_repository_provider.dart';
 import 'night_script.dart';
 import 'session_cursor.dart';
 
-/// The resume line on Home's "en cours" card, e.g. "Nuit 1 · les Loups" or
-/// "Jour 1 · récap". Null before the night starts (the card then shows a flat
-/// fallback).
+/// Where a game in progress stands, away from any language: the UI words it ("Nuit 1 ·
+/// Voyante", "Day 1 · recap") on Home's "en cours" card. Null before the night starts (the
+/// card then shows a flat fallback).
+enum SummaryStep {
+  /// A night role's turn; [SessionSummary.roleId] says which.
+  role,
+  nightEnd,
+  recap,
+  captainElection,
+  villageVote,
+  dayDone,
+  chainEffect,
+}
+
 class SessionSummary {
-  final String phaseLabel;
-  final String stepLabel;
+  final JournalPhase phase;
+  final int nightIndex;
+  final SummaryStep step;
+
+  /// The role whose turn it is, when [step] is [SummaryStep.role].
+  final String? roleId;
 
   /// True when the saved game state can't be read back (corrupted, or written by a
-  /// version of the app this one doesn't understand). There is no line to show.
+  /// version of the app this one doesn't understand). There is nothing to show.
   final bool unreadable;
 
-  const SessionSummary({required this.phaseLabel, required this.stepLabel})
-    : unreadable = false;
+  const SessionSummary({
+    required this.phase,
+    required this.nightIndex,
+    required this.step,
+    this.roleId,
+  }) : unreadable = false;
 
-  const SessionSummary.unreadable() : phaseLabel = '', stepLabel = '', unreadable = true;
-
-  String get line => '$phaseLabel · $stepLabel';
+  const SessionSummary.unreadable()
+    : phase = JournalPhase.night,
+      nightIndex = 0,
+      step = SummaryStep.recap,
+      roleId = null,
+      unreadable = true;
 }
 
 /// Hand-written (not codegen): decodes the `sessionJson` blob, which embeds a
@@ -50,15 +73,15 @@ SessionSummary _summarize(Game game, String blob) {
   final engine = GameStateJson.decode(decoded['engine'] as Map<String, dynamic>);
 
   if (engine.phase == GamePhase.day) {
-    final stepLabel = engine.cascade != null
-        ? 'effet en chaîne'
+    final step = engine.cascade != null
+        ? SummaryStep.chainEffect
         : switch (decoded['day']?['stage'] as String?) {
-            'captain' => 'élection du Capitaine',
-            'vote' => 'vote du village',
-            'done' => 'fin du jour',
-            _ => 'récap',
+            'captain' => SummaryStep.captainElection,
+            'vote' => SummaryStep.villageVote,
+            'done' => SummaryStep.dayDone,
+            _ => SummaryStep.recap,
           };
-    return SessionSummary(phaseLabel: 'Jour ${engine.nightIndex}', stepLabel: stepLabel);
+    return SessionSummary(phase: JournalPhase.day, nightIndex: engine.nightIndex, step: step);
   }
 
   final cursor = SessionCursor.fromJson(decoded['cursor'] as Map<String, dynamic>);
@@ -66,8 +89,11 @@ SessionSummary _summarize(Game game, String blob) {
     engine: engine,
     composition: game.compositionJson ?? const {},
   );
-  final stepLabel = cursor.stepIndex < script.steps.length
-      ? script.steps[cursor.stepIndex].role.name
-      : 'fin de la nuit';
-  return SessionSummary(phaseLabel: 'Nuit ${engine.nightIndex}', stepLabel: stepLabel);
+  final inRoleTurn = cursor.stepIndex < script.steps.length;
+  return SessionSummary(
+    phase: JournalPhase.night,
+    nightIndex: engine.nightIndex,
+    step: inRoleTurn ? SummaryStep.role : SummaryStep.nightEnd,
+    roleId: inRoleTurn ? script.steps[cursor.stepIndex].role.id : null,
+  );
 }

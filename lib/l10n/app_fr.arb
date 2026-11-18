@@ -248,5 +248,41 @@
         "type": "String"
       }
     }
+  },
+  "summaryPhase": "{phase, select, day{Jour {index}} other{Nuit {index}}}",
+  "@summaryPhase": {
+    "description": "Home's resume line, first part: the phase (night or day) and its number.",
+    "placeholders": {
+      "phase": {
+        "type": "String"
+      },
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "summaryStepNightEnd": "fin de la nuit",
+  "@summaryStepNightEnd": {
+    "description": "Resume line: every night role has played."
+  },
+  "summaryStepRecap": "récap",
+  "@summaryStepRecap": {
+    "description": "Resume line: the day's recap of the night."
+  },
+  "summaryStepCaptainElection": "élection du Capitaine",
+  "@summaryStepCaptainElection": {
+    "description": "Resume line: the village elects its Captain."
+  },
+  "summaryStepVillageVote": "vote du village",
+  "@summaryStepVillageVote": {
+    "description": "Resume line: the day vote."
+  },
+  "summaryStepDayDone": "fin du jour",
+  "@summaryStepDayDone": {
+    "description": "Resume line: the day is over."
+  },
+  "summaryStepChainEffect": "effet en chaîne",
+  "@summaryStepChainEffect": {
+    "description": "Resume line: a death triggers another (Hunter, Captain, lovers)."
   }
 }

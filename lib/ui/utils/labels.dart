@@ -5,6 +5,7 @@ import 'package:rules_engine/rules_engine.dart';
 import '../../data/database/app_database.dart';
 import '../../data/models/game_winner.dart';
 import '../../l10n/localizations.dart';
+import '../../state/session/session_summary_provider.dart';
 import '../theme/app_icons.dart';
 
 /// "Voyante", "2 Loups-Garous", "2 Villageois" (or "Seer", "2 Werewolves" in English).
@@ -78,3 +79,18 @@ String deathCauseLabel(AppLocalizations l10n, DeathCause cause) =>
 /// The Village tab's terse sub-line, after the phase: "Nuit 3 · potion de mort".
 String deathCauseShort(AppLocalizations l10n, DeathCause cause) =>
     l10n.deathCauseShort(_causeKey(cause));
+
+/// Home's resume line for a game in progress: "Nuit 1 · Voyante", "Day 2 · village vote".
+String sessionSummaryLine(AppLocalizations l10n, SessionSummary summary) {
+  final phase = l10n.summaryPhase(summary.phase.name, summary.nightIndex);
+  final step = switch (summary.step) {
+    SummaryStep.role => l10n.roleName(summary.roleId ?? ''),
+    SummaryStep.nightEnd => l10n.summaryStepNightEnd,
+    SummaryStep.recap => l10n.summaryStepRecap,
+    SummaryStep.captainElection => l10n.summaryStepCaptainElection,
+    SummaryStep.villageVote => l10n.summaryStepVillageVote,
+    SummaryStep.dayDone => l10n.summaryStepDayDone,
+    SummaryStep.chainEffect => l10n.summaryStepChainEffect,
+  };
+  return '$phase · $step';
+}
