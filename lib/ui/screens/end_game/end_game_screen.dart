@@ -130,7 +130,9 @@ class _EndGameScreenState extends ConsumerState<EndGameScreen> {
                     style: typography.meta.copyWith(color: colors.textTertiary),
                   ),
                   const SizedBox(height: 10),
-                  for (final w in GameWinner.values)
+                  for (final w in GameWinner.values.where(
+                    (w) => w.requiredRoleId == null || (session?.composition[w.requiredRoleId] ?? 0) > 0,
+                  ))
                     _WinnerRow(
                       winner: w,
                       selected: w == _winner,

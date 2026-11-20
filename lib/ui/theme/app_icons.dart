@@ -106,6 +106,10 @@ abstract final class AppIcons {
   static const thief = TablerIcons.cards;
   static const skull = TablerIcons.skull;
   static const hunter = TablerIcons.crosshair;
+  static const piper = TablerIcons.music;
+  static const whiteWolf = TablerIcons.paw;
+  static const angel = TablerIcons.feather;
+  static const sectarian = TablerIcons.flame;
 
   /// The Witch's "Elle sauve X" button.
   static const witchSave = TablerIcons.heartPlus;
