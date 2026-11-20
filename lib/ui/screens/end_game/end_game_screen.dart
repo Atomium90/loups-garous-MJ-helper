@@ -61,7 +61,7 @@ class _EndGameScreenState extends ConsumerState<EndGameScreen> {
     var wolves = 0;
     if (session != null) {
       for (final p in session.engine.players.where((p) => p.alive)) {
-        RoleRegistry.base.byIdOrNull(p.roleId)?.team == Team.werewolves ? wolves++ : village++;
+        RoleRegistry.all.byIdOrNull(p.roleId)?.team == Team.werewolves ? wolves++ : village++;
       }
     }
 

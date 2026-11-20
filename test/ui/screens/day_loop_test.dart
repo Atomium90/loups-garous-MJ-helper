@@ -154,8 +154,8 @@ void main() {
     await tester.tap(find.text('Ed'));
     await tester.pumpAndSettle();
     await tap(tester, 'La Voyante observe Ed');
-    await tap(tester, 'Villageois');
-    await tap(tester, 'Ed est le Villageois');
+    await tap(tester, 'Simple Villageois');
+    await tap(tester, 'Ed est le Simple Villageois');
     await tap(tester, 'Continuer');
 
     // Loups eat Di, the other lover
@@ -176,7 +176,7 @@ void main() {
 
     // day recap: Ed's card spelled out, Di's marked unrevealed
     expect(find.text('JOUR 1 SE LÈVE'), findsOneWidget);
-    expect(find.text('Était le Villageois'), findsOneWidget);
+    expect(find.text('Était le Simple Villageois'), findsOneWidget);
     expect(find.text('Rôle non révélé'), findsOneWidget);
   });
 

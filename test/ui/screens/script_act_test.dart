@@ -327,7 +327,7 @@ void main() {
       // The still-undealt roles remain offered: 1 more Loup-Garou (Ana took the other) and
       // both Villageois.
       expect(find.text('Loup-Garou'), findsOneWidget);
-      expect(find.text('Villageois'), findsOneWidget);
+      expect(find.text('Simple Villageois'), findsOneWidget);
     },
   );
 

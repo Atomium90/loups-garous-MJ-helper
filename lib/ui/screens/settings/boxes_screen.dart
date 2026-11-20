@@ -1,33 +1,29 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:rules_engine/rules_engine.dart';
 
+import '../../../state/settings/settings_providers.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_typography.dart';
 import '../../utils/l10n.dart';
 import '../../widgets/app_toggle.dart';
-import '../../widgets/bientot_pill.dart';
 import '../../widgets/section_label.dart';
 
-/// Mes boîtes. Informational for V1: the base box is the only one that exists,
-/// extensions are listed as coming soon. Nothing here is persisted or feeds the
-/// composition screen (which uses `RoleRegistry.base` directly).
-class BoxesScreen extends StatelessWidget {
+/// Mes boîtes. The MJ ticks what they own; the composition and its suggestions then only offer
+/// the roles those boxes can supply. The base box is always owned.
+class BoxesScreen extends ConsumerWidget {
   const BoxesScreen({super.key});
 
-  /// Expansion names are proper nouns: shown as they are in both languages. Placeholders until
-  /// the expansions are really supported.
-  static const _extensions = [
-    ('Nouvelle Lune', 6),
-    ('La Bouche du Loup', 6),
-    ('Village aux Loups-Garous', 12),
-  ];
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final typography = context.typography;
+    final pool = ref.watch(cardPoolProvider);
+    final notifier = ref.read(settingsProvider.notifier);
+    final extensions = gameBoxes.where((box) => box.id != baseBoxId);
 
     return Scaffold(
       body: SafeArea(
@@ -66,77 +62,32 @@ class BoxesScreen extends StatelessWidget {
                       spacing: 10,
                       children: [
                         Icon(AppIcons.boxes, size: 18, color: colors.accentText),
-                        Text(
-                          context.l10n.boxesRolesAvailable(8),
-                          style: typography.body.copyWith(
-                            fontWeight: FontWeight.w500,
-                            color: colors.accentText,
+                        Expanded(
+                          child: Text(
+                            context.l10n.boxesRolesAvailable(pool.availableRoleCount),
+                            style: typography.body.copyWith(
+                              fontWeight: FontWeight.w500,
+                              color: colors.accentText,
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 18),
-                  SectionLabel(context.l10n.boxesOwned),
+                  SectionLabel(context.l10n.boxesBase),
                   const SizedBox(height: 4),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.rowSettings),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                context.l10n.boxBaseName,
-                                style: typography.rowLabel.copyWith(color: colors.textPrimary),
-                              ),
-                              Text(
-                                context.l10n.boxBaseDetail(8),
-                                style: typography.meta.copyWith(color: colors.textSecondary),
-                              ),
-                            ],
-                          ),
-                        ),
-                        // Decorative: you can't own zero boxes, so this doesn't toggle.
-                        const AppToggle(value: true, onChanged: null),
-                      ],
-                    ),
-                  ),
+                  // You can't own zero boxes, so the base box doesn't toggle.
+                  _BoxRow(boxId: baseBoxId, pool: pool, owned: true, onChanged: null),
                   const SizedBox(height: 14),
                   SectionLabel(context.l10n.boxesExpansions),
-                  for (final (name, cards) in _extensions)
-                    Opacity(
-                      opacity: 0.55,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: Border(top: BorderSide(color: colors.borderHairline)),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.rowSettings),
-                        child: Row(
-                          spacing: 12,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    name,
-                                    style: typography.rowLabel.copyWith(
-                                      color: colors.textPrimary,
-                                    ),
-                                  ),
-                                  Text(
-                                    context.l10n.boxExpansionDetail(cards),
-                                    style: typography.meta.copyWith(color: colors.textTertiary),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const BientotPill(),
-                          ],
-                        ),
-                      ),
+                  for (final box in extensions)
+                    _BoxRow(
+                      boxId: box.id,
+                      pool: pool,
+                      owned: pool.ownedBoxIds.contains(box.id),
+                      showDivider: true,
+                      onChanged: (owned) => notifier.setBoxOwned(box.id, owned),
                     ),
                 ],
               ),
@@ -154,6 +105,57 @@ class BoxesScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _BoxRow extends StatelessWidget {
+  const _BoxRow({
+    required this.boxId,
+    required this.pool,
+    required this.owned,
+    required this.onChanged,
+    this.showDivider = false,
+  });
+
+  final String boxId;
+  final CardPool pool;
+  final bool owned;
+
+  /// Null for a box that cannot be unticked.
+  final ValueChanged<bool>? onChanged;
+  final bool showDivider;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final typography = context.typography;
+    return Container(
+      decoration: showDivider
+          ? BoxDecoration(border: Border(top: BorderSide(color: colors.borderHairline)))
+          : null,
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.rowSettings),
+      child: Row(
+        spacing: 12,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.l10n.boxName(boxId),
+                  style: typography.rowLabel.copyWith(color: colors.textPrimary),
+                ),
+                Text(
+                  context.l10n.boxDetail(boxId, pool.roleCountOf(boxId)),
+                  style: typography.meta.copyWith(color: colors.textSecondary),
+                ),
+              ],
+            ),
+          ),
+          AppToggle(value: owned, onChanged: onChanged),
+        ],
       ),
     );
   }

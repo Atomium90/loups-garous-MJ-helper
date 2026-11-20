@@ -14,7 +14,7 @@ import 'package:rules_engine/rules_engine.dart';
 void main() {
   setUpAll(initializeDateFormatting);
 
-  final registry = RoleRegistry.base;
+  final registry = RoleRegistry.all;
   final fr = lookupAppLocalizations(const Locale('fr'));
   final en = lookupAppLocalizations(const Locale('en'));
 
@@ -29,9 +29,9 @@ void main() {
       expect(roleCountLabel(en, 'loup_garou', 2), '2 Werewolves');
     });
 
-    test('Villageois is invariable in French', () {
-      expect(roleCountLabel(fr, 'villageois', 3), '3 Villageois');
-      expect(roleCountLabel(en, 'villageois', 3), '3 Villagers');
+    test('Simple Villageois pluralises its first word in French', () {
+      expect(roleCountLabel(fr, 'villageois', 3), '3 Simples Villageois');
+      expect(roleCountLabel(en, 'villageois', 3), '3 Simple Villagers');
     });
   });
 
@@ -48,18 +48,18 @@ void main() {
     test('wolves first, plain villageois last, rest in registry order between', () {
       expect(
         deckLine(fr, composition, registry),
-        '2 Loups-Garous · Cupidon · Voyante · Sorcière · Chasseur · 2 Villageois',
+        '2 Loups-Garous · Cupidon · Voyante · Sorcière · Chasseur · 2 Simples Villageois',
       );
       expect(
         deckLine(en, composition, registry),
-        '2 Werewolves · Cupid · Seer · Witch · Hunter · 2 Villagers',
+        '2 Werewolves · Cupid · Seer · Witch · Hunter · 2 Simple Villagers',
       );
     });
 
     test('drops zero-count entries', () {
       final line = deckLine(fr, const {'loup_garou': 2, 'voyante': 0, 'villageois': 6}, registry);
 
-      expect(line, '2 Loups-Garous · 6 Villageois');
+      expect(line, '2 Loups-Garous · 6 Simples Villageois');
     });
   });
 

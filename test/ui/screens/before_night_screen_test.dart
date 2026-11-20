@@ -46,7 +46,7 @@ void main() {
     expect(find.text('Camille'), findsOneWidget);
     expect(find.text('Awa'), findsOneWidget);
     expect(find.text('Distribuez les 6 cartes'), findsOneWidget);
-    expect(find.text('2 Loups-Garous · Voyante · 3 Villageois'), findsOneWidget);
+    expect(find.text('2 Loups-Garous · Voyante · 3 Simples Villageois'), findsOneWidget);
     expect(find.text('Réserve du Voleur'), findsNothing);
   });
 

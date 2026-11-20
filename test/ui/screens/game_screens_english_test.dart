@@ -55,7 +55,7 @@ void main() {
     }
   }
 
-  testWidgets('night 1, the day recap, the Captain, the vote and the journal', (tester) async {
+  testWidgets('night 1, the day recap, the Sheriff, the vote and the journal', (tester) async {
     await startInEnglish(tester, const {'loup_garou': 1, 'voyante': 1, 'villageois': 3});
 
     // the tab bar and the night header, then the Seer: who holds the card, who she looks at
@@ -84,10 +84,10 @@ void main() {
       'The village wakes up. Everyone opens their eyes.',
       'Tonight, the village lost Ana. The players concerned turn their card over.',
     ]);
-    await tapAll(tester, ['Elect the Captain']);
+    await tapAll(tester, ['Elect the Sheriff']);
 
-    see(['The Captain', 'Who is elected?', 'The village elects its Captain. Talk it over, then pick them: their vote will count double.']);
-    await tapAll(tester, ['Bo', 'Bo is Captain']);
+    see(['The Sheriff', 'Who is elected?', 'The village elects its Sheriff. Talk it over, then pick them: their vote will count double.']);
+    await tapAll(tester, ['Bo', 'Bo is Sheriff']);
 
     see(['Who is eliminated?', 'Tie, nobody is eliminated', 'Time to vote. Talk it over, then point at a player. Whoever gets the most votes is eliminated.']);
     expect(find.textContaining("Bo's vote counts double"), findsOneWidget);
@@ -96,7 +96,7 @@ void main() {
     // Cy's card was never noted: the reveal panel comes first
     see(['Eliminated night 1', 'What was their card?', '3 left']);
     see(['Cy, you are eliminated. Turn your card over in front of everyone.']);
-    await tapAll(tester, ['Villager', 'Cy was the Villager']);
+    await tapAll(tester, ['Simple Villager', 'Cy was the Simple Villager']);
 
     see(['The day is over.', 'Start night 2']);
 
@@ -109,7 +109,7 @@ void main() {
       'DAY 1',
       'NIGHT 1',
       'The village eliminates Cy',
-      'Bo is Captain',
+      'Bo is Sheriff',
       'The Werewolves pick Ana',
     ]);
   });

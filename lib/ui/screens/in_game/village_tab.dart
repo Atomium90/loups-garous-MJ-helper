@@ -67,7 +67,7 @@ class _VillageBody extends StatelessWidget {
       final roleId = _confirmedRole(p.id);
       final team = roleId == null
           ? Team.village
-          : (RoleRegistry.base.byIdOrNull(roleId)?.team ?? Team.village);
+          : (RoleRegistry.all.byIdOrNull(roleId)?.team ?? Team.village);
       team == Team.werewolves ? wolvesAlive++ : villageAlive++;
     }
 
@@ -202,7 +202,7 @@ class _PlayerRow extends StatelessWidget {
     final colors = context.colors;
     final typography = context.typography;
     final id = roleId;
-    final wolves = id != null && RoleRegistry.base.byIdOrNull(id)?.team == Team.werewolves;
+    final wolves = id != null && RoleRegistry.all.byIdOrNull(id)?.team == Team.werewolves;
     // An unknown id falls back to the neutral "unknown role" name.
     final roleText = context.l10n.roleName(id ?? '');
 

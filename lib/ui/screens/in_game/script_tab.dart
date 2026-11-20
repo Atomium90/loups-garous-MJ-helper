@@ -234,7 +234,7 @@ class _VoleurActState extends State<_VoleurAct> {
     final picked = _choice != null;
     final keeps = _choice == '';
     final stolen = keeps ? null : _choice;
-    final stolenRole = stolen == null ? null : RoleRegistry.base.byId(stolen);
+    final stolenRole = stolen == null ? null : RoleRegistry.all.byId(stolen);
     final stealsNightRole = stolenRole?.hasNightCall ?? false;
 
     return Column(
@@ -488,7 +488,7 @@ class _SeerResult extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final typography = context.typography;
-    final role = RoleRegistry.base.byId(roleId);
+    final role = RoleRegistry.all.byId(roleId);
     final wolves = role.team == Team.werewolves;
 
     return Column(
@@ -958,7 +958,7 @@ class _DayRecapBody extends StatelessWidget {
 
     final aliveByTeam = <Team, int>{};
     for (final p in engine.alivePlayers) {
-      final team = RoleRegistry.base.byIdOrNull(p.roleId)?.team ?? Team.village;
+      final team = RoleRegistry.all.byIdOrNull(p.roleId)?.team ?? Team.village;
       aliveByTeam[team] = (aliveByTeam[team] ?? 0) + 1;
     }
 
@@ -1058,7 +1058,7 @@ class _RecapDeathRow extends StatelessWidget {
     final colors = context.colors;
     final typography = context.typography;
     final id = roleId;
-    final role = id == null ? null : RoleRegistry.base.byIdOrNull(id);
+    final role = id == null ? null : RoleRegistry.all.byIdOrNull(id);
     return Row(
       spacing: 12,
       children: [
@@ -1678,7 +1678,7 @@ class _RevealedCard extends StatelessWidget {
     final colors = context.colors;
     final typography = context.typography;
     final id = roleId;
-    final role = id == null ? null : RoleRegistry.base.byIdOrNull(id);
+    final role = id == null ? null : RoleRegistry.all.byIdOrNull(id);
     final wolves = role?.team == Team.werewolves;
     return Container(
       padding: const EdgeInsets.all(14),

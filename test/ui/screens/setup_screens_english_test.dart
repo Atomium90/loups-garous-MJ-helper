@@ -98,11 +98,19 @@ void main() {
   });
 
   testWidgets('My boxes', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpEnglish(tester, const BoxesScreen());
 
     expect(find.text('My boxes'), findsOneWidget);
     expect(find.text('8 roles available for your games'), findsOneWidget);
     expect(find.text('The Werewolves of Millers Hollow'), findsOneWidget);
-    expect(find.text('Expansion · 6 cards'), findsNWidgets(2));
+    expect(find.text('Base box · 8 roles supported'), findsOneWidget);
+    // The compilations and Characters already hold base roles the app runs (Characters: the
+    // extra Werewolves); the sticker boxes hold none yet.
+    expect(find.text('Compilation · 8 roles supported'), findsOneWidget);
+    expect(find.text('Compilation · 7 roles supported'), findsOneWidget);
+    expect(find.text('Expansion · 1 role supported'), findsOneWidget);
+    expect(find.text('Stickers · roles coming soon'), findsNWidgets(2));
   });
 }

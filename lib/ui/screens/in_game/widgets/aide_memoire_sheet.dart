@@ -29,7 +29,7 @@ class _AideMemoire extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final typography = context.typography;
-    final registry = RoleRegistry.base;
+    final registry = RoleRegistry.all;
 
     final inComposition = registry.roles
         .where((r) => (composition[r.id] ?? 0) > 0)

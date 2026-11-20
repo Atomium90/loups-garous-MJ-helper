@@ -8,23 +8,27 @@ class Role {
   /// Stable key, never shown: the app looks the role's name and texts up by it.
   final String id;
 
-  /// Null only for Voleur: his team is unresolved until he steals a card.
-  final Team? team;
+  /// The side the role starts on. [Team.ambiguous] for the roles whose side is only settled
+  /// during the game (the Voleur until he steals a card).
+  final Team team;
 
   /// Null for base game roles.
   final String? extensionId;
 
-  /// How many physical cards of this role its box ships with - the ceiling on
-  /// how many can be in play plus set aside (the Voleur's reserve). Defaults
-  /// to 1 for the singleton roles; the box data overrides it for the ones
-  /// that ship in multiples (4 Loups-Garous, 13 Villageois in the base box).
-  final int copies;
+  /// Whether several players can hold this role in one game (the Loups-Garous, the Simples
+  /// Villageois, the Villageois-Villageois). Every other role is limited to one holder, even
+  /// when several owned boxes each ship a card of it.
+  final bool multiple;
+
+  /// How many players the role takes at once, all or none: the Deux Sœurs are 2, the Trois
+  /// Frères 3. The composition counts these slots, and never splits a group.
+  final int groupSize;
 
   /// Palier de suggestion pour CompositionAdvisor : les rôles d'un même palier sont
   /// interchangeables (tirage aléatoire s'ils sont plus nombreux que les places restantes).
   /// Palier 1 = le plus "essentiel", inclus en premier. Null = jamais suggéré automatiquement
   /// (le MJ l'ajoute lui-même) - le cas du Voleur (exige de choisir 2 cartes de réserve) et des
-  /// deux rôles à copies multiples (loup_garou, villageois), gérés séparément par l'advisor.
+  /// rôles à exemplaires multiples (loup_garou, villageois), gérés séparément par l'advisor.
   final int? suggestionTier;
 
   /// Whether this role is ever emitted as a night-script step by
@@ -44,7 +48,8 @@ class Role {
     required this.id,
     required this.team,
     this.extensionId,
-    this.copies = 1,
+    this.multiple = false,
+    this.groupSize = 1,
     this.suggestionTier,
     required this.hasNightCall,
     this.wakeCondition,

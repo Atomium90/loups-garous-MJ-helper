@@ -16,18 +16,28 @@ import 'package:rules_engine/rules_engine.dart';
 
 import '../../support/fake_game_repository.dart';
 
-/// A registry shaped like the real base game (a wolf role + a villager filler), plus one
-/// oversized tier - the base box alone never has more candidates than a tier's target slots,
-/// so this is what actually exercises rerollSuggestion's shuffle-and-cut path.
-RoleRegistry _registryWithSurplusTier() => const RoleRegistry([
-  Role(id: 'loup_garou', team: Team.werewolves, copies: 4, hasNightCall: true),
-  Role(id: 'villageois', team: Team.village, copies: 20, hasNightCall: false),
-  Role(id: 'a', team: Team.village, suggestionTier: 1, hasNightCall: false),
-  Role(id: 'b', team: Team.village, suggestionTier: 2, hasNightCall: false),
-  Role(id: 'c', team: Team.village, suggestionTier: 2, hasNightCall: false),
-  Role(id: 'd', team: Team.village, suggestionTier: 2, hasNightCall: false),
-  Role(id: 'e', team: Team.village, suggestionTier: 2, hasNightCall: false),
-]);
+/// A pool shaped like the real base game (a wolf role + a villager filler), plus one oversized
+/// tier - the base box alone never has more candidates than a tier's target slots, so this is
+/// what actually exercises rerollSuggestion's shuffle-and-cut path.
+CardPool _poolWithSurplusTier() => CardPool(
+  registry: const RoleRegistry([
+    Role(id: 'loup_garou', team: Team.werewolves, multiple: true, hasNightCall: true),
+    Role(id: 'villageois', team: Team.village, multiple: true, hasNightCall: false),
+    Role(id: 'a', team: Team.village, suggestionTier: 1, hasNightCall: false),
+    Role(id: 'b', team: Team.village, suggestionTier: 2, hasNightCall: false),
+    Role(id: 'c', team: Team.village, suggestionTier: 2, hasNightCall: false),
+    Role(id: 'd', team: Team.village, suggestionTier: 2, hasNightCall: false),
+    Role(id: 'e', team: Team.village, suggestionTier: 2, hasNightCall: false),
+  ]),
+  boxes: const [
+    GameBox(
+      id: baseBoxId,
+      cards: {'loup_garou': 4, 'villageois': 20, 'a': 1, 'b': 1, 'c': 1, 'd': 1, 'e': 1},
+    ),
+  ],
+);
+
+CardPool _basePool() => CardPool(registry: RoleRegistry.all);
 
 void main() {
   group('CompositionEditor with a fake repository', () {
@@ -42,7 +52,7 @@ void main() {
           // Seeded so tests reading `suggestion` get a stable pick (moot for the base registry
           // alone: see composition_advisor_test.dart - it never has a surplus tier to shuffle).
           compositionAdvisorProvider.overrideWithValue(
-            CompositionAdvisor(RoleRegistry.base, random: Random(1)),
+            CompositionAdvisor(_basePool(), random: Random(1)),
           ),
         ],
       );
@@ -98,7 +108,7 @@ void main() {
     test('build seeds a suggestion for the initial player count', () async {
       final id = await fakeRepository.createGame(initialPlayerCount: 8);
       final draft = await container.read(compositionEditorProvider(id).future);
-      final expected = CompositionAdvisor(RoleRegistry.base, random: Random(1)).suggest(8);
+      final expected = CompositionAdvisor(_basePool(), random: Random(1)).suggest(8);
       expect(draft.suggestion?.roleCounts, expected.roleCounts);
     });
 
@@ -214,7 +224,7 @@ void main() {
 
       final draft = container.read(compositionEditorProvider(id)).value!;
       final ids = draft
-          .availableReserveRoles(0, RoleRegistry.base)
+          .availableReserveRoles(0, _basePool())
           .map((r) => r.id)
           .toSet();
       expect(ids, isNot(contains('voleur')));
@@ -226,12 +236,12 @@ void main() {
       notifier.setReserveRole(0, 'chasseur');
       final draft2 = container.read(compositionEditorProvider(id)).value!;
       expect(
-        draft2.availableReserveRoles(0, RoleRegistry.base).map((r) => r.id),
+        draft2.availableReserveRoles(0, _basePool()).map((r) => r.id),
         contains('chasseur'),
       );
       // ...but not for the other slot.
       expect(
-        draft2.availableReserveRoles(1, RoleRegistry.base).map((r) => r.id),
+        draft2.availableReserveRoles(1, _basePool()).map((r) => r.id),
         isNot(contains('chasseur')),
       );
     });
@@ -421,7 +431,7 @@ void main() {
         overrides: [
           gameRepositoryProvider.overrideWithValue(fakeRepository),
           compositionAdvisorProvider.overrideWithValue(
-            CompositionAdvisor(_registryWithSurplusTier(), random: Random(7)),
+            CompositionAdvisor(_poolWithSurplusTier(), random: Random(7)),
           ),
         ],
       );

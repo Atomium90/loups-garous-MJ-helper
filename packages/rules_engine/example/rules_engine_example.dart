@@ -4,7 +4,7 @@
 import 'package:rules_engine/rules_engine.dart';
 
 void main() {
-  final roleRegistry = RoleRegistry.base;
+  final roleRegistry = RoleRegistry.all;
   const scriptBuilder = NightScriptBuilder();
   const machine = GameStateMachine();
 

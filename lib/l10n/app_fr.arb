@@ -12,7 +12,7 @@
   "@languageSystem": {
     "description": "Language choice that follows the phone's language."
   },
-  "roleName": "{roleId, select, voleur{Voleur} cupidon{Cupidon} voyante{Voyante} loup_garou{Loup-Garou} sorciere{Sorcière} villageois{Villageois} petite_fille{Petite Fille} chasseur{Chasseur} other{Rôle inconnu}}",
+  "roleName": "{roleId, select, voleur{Voleur} cupidon{Cupidon} voyante{Voyante} loup_garou{Loup-Garou} sorciere{Sorcière} villageois{Simple Villageois} petite_fille{Petite Fille} chasseur{Chasseur} other{Rôle inconnu}}",
   "@roleName": {
     "description": "The name of a role card, from its id (singular, no article).",
     "placeholders": {
@@ -21,7 +21,7 @@
       }
     }
   },
-  "rolePlural": "{roleId, select, voleur{Voleurs} cupidon{Cupidons} voyante{Voyantes} loup_garou{Loups-Garous} sorciere{Sorcières} villageois{Villageois} petite_fille{Petites Filles} chasseur{Chasseurs} other{Rôles inconnus}}",
+  "rolePlural": "{roleId, select, voleur{Voleurs} cupidon{Cupidons} voyante{Voyantes} loup_garou{Loups-Garous} sorciere{Sorcières} villageois{Simples Villageois} petite_fille{Petites Filles} chasseur{Chasseurs} other{Rôles inconnus}}",
   "@rolePlural": {
     "description": "The plural name of a role card, from its id.",
     "placeholders": {
@@ -30,7 +30,7 @@
       }
     }
   },
-  "roleWithArticle": "{roleId, select, voleur{le Voleur} cupidon{le Cupidon} voyante{la Voyante} loup_garou{le Loup-Garou} sorciere{la Sorcière} villageois{le Villageois} petite_fille{la Petite Fille} chasseur{le Chasseur} other{Rôle inconnu}}",
+  "roleWithArticle": "{roleId, select, voleur{le Voleur} cupidon{le Cupidon} voyante{la Voyante} loup_garou{le Loup-Garou} sorciere{la Sorcière} villageois{le Simple Villageois} petite_fille{la Petite Fille} chasseur{le Chasseur} other{Rôle inconnu}}",
   "@roleWithArticle": {
     "description": "A role with its article, e.g. \"le Chasseur\", \"la Voyante\", \"the Hunter\".",
     "placeholders": {
@@ -510,6 +510,14 @@
   "@compositionWolves": {
     "description": "Heading above the werewolf-side roles."
   },
+  "compositionSolo": "Solitaires",
+  "@compositionSolo": {
+    "description": "Heading above the roles that play for their own goal."
+  },
+  "compositionAmbiguous": "Ambigus",
+  "@compositionAmbiguous": {
+    "description": "Heading above the roles that can change side or role during the game."
+  },
   "compositionPlayers": "Joueurs",
   "@compositionPlayers": {
     "description": "Label of the player count stepper."
@@ -634,11 +642,14 @@
   "@settingsMyBoxes": {
     "description": "The boxes (base game and expansions) the MJ owns."
   },
-  "settingsBaseBoxRoles": "Boîte de base · {count} rôles",
-  "@settingsBaseBoxRoles": {
+  "settingsOwnedBoxes": "{boxes, plural, =1{1 boîte} other{{boxes} boîtes}} · {roles, plural, =0{aucun rôle} =1{1 rôle} other{{roles} rôles}}",
+  "@settingsOwnedBoxes": {
     "description": "Summary of what the owned boxes provide.",
     "placeholders": {
-      "count": {
+      "boxes": {
+        "type": "int"
+      },
+      "roles": {
         "type": "int"
       }
     }
@@ -711,7 +722,7 @@
   "@deleteAllDone": {
     "description": "Snackbar after every game was deleted."
   },
-  "boxesRolesAvailable": "{count} rôles disponibles pour vos parties",
+  "boxesRolesAvailable": "{count, plural, =0{Aucun rôle disponible} =1{1 rôle disponible pour vos parties} other{{count} rôles disponibles pour vos parties}}",
   "@boxesRolesAvailable": {
     "description": "How many roles the owned boxes give.",
     "placeholders": {
@@ -720,37 +731,36 @@
       }
     }
   },
-  "boxesOwned": "Possédées",
-  "@boxesOwned": {
-    "description": "Heading above the boxes the MJ owns."
+  "boxesBase": "Jeu de base",
+  "@boxesBase": {
+    "description": "Heading above the base box, which is always owned."
   },
-  "boxBaseName": "Loups-Garous de Thiercelieux",
-  "@boxBaseName": {
-    "description": "Name of the base game's box."
-  },
-  "boxBaseDetail": "Boîte de base · {count} cartes",
-  "@boxBaseDetail": {
-    "description": "Kind and size of the base box.",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "boxesExpansions": "Extensions",
+  "boxesExpansions": "Extensions et compilations",
   "@boxesExpansions": {
-    "description": "Heading above the expansions."
+    "description": "Heading above the boxes the MJ can tick."
   },
-  "boxExpansionDetail": "Extension · {count} cartes",
-  "@boxExpansionDetail": {
-    "description": "Kind and size of an expansion.",
+  "boxName": "{boxId, select, base{Loups-Garous de Thiercelieux} new_moon{Nouvelle Lune} village{Le Village} characters{Personnages} pact{Le Pacte} best_of{Best Of} other{Boîte inconnue}}",
+  "@boxName": {
+    "description": "Name of a box, by box id. Proper nouns of the printed products.",
     "placeholders": {
-      "count": {
+      "boxId": {
+        "type": "String"
+      }
+    }
+  },
+  "boxDetail": "{boxId, select, base{Boîte de base} new_moon{Autocollants} village{Autocollants} characters{Extension} pact{Compilation} best_of{Compilation} other{Boîte}} · {roles, plural, =0{rôles à venir} =1{1 rôle géré} other{{roles} rôles gérés}}",
+  "@boxDetail": {
+    "description": "What kind of box it is and how many of its roles the app runs.",
+    "placeholders": {
+      "boxId": {
+        "type": "String"
+      },
+      "roles": {
         "type": "int"
       }
     }
   },
-  "boxesFooter": "Les extensions arrivent après la V1. La boîte de base couvre 8 à 18 joueurs.",
+  "boxesFooter": "Cochez ce que vous possédez : la composition ne propose que les rôles de vos boîtes. Les rôles de chaque extension arrivent au fil des mises à jour.",
   "@boxesFooter": {
     "description": "Footer of the boxes screen."
   },

@@ -29,7 +29,7 @@ void main() {
 
   group('the role calls', () {
     test('every role that wakes at night has a call, a task and a way back to sleep', () {
-      for (final role in RoleRegistry.base.roles.where((r) => r.hasNightCall)) {
+      for (final role in RoleRegistry.all.roles.where((r) => r.hasNightCall)) {
         for (final l10n in [fr, en]) {
           final lines = roleCallNarration(l10n, role.id);
           expect(lines, hasLength(2), reason: '${role.id} in ${l10n.localeName}');
