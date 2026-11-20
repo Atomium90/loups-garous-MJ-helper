@@ -7,6 +7,9 @@ class NightScriptStep {
   final int stepIndex;
 
   const NightScriptStep({required this.role, required this.stepIndex});
+
+  /// The MJ may pass this call without acting.
+  bool get optional => role.optionalCall;
 }
 
 class NightScript {
