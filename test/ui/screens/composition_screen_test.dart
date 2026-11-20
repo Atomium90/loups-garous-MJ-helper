@@ -334,7 +334,7 @@ void main() {
     // produces: 2 Loups-Garous + every tier-1/2 special (Cupidon, Voyante, Sorcière,
     // Chasseur) + 2 Villageois filling the rest.
     const suggestionPhrase = '2 Loups-Garous · Cupidon · Voyante · Sorcière · Chasseur · '
-        '2 Villageois';
+        '2 Simples Villageois';
 
     testWidgets('shows the advisor pick for the current player count', (tester) async {
       final repository = FakeGameRepository(initialGames: [_draftGame(id: 1, playerCount: 8)]);
