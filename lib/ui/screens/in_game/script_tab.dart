@@ -7,6 +7,7 @@ import '../../../data/models/game_winner.dart';
 import '../../../state/session/day_plan.dart';
 import '../../../state/session/game_session.dart';
 import '../../../state/session/session_cursor.dart';
+import '../../../state/settings/settings_providers.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
@@ -104,6 +105,9 @@ class _NightBody extends ConsumerWidget {
   }
 
   Widget _body(BuildContext context, GameSession notifier, NightScriptStep? step) {
+    if (session.engine.cascade != null) {
+      return _ChainPanel(session: session, notifier: notifier);
+    }
     if (step == null) {
       return _FinalizePrompt(onResolve: () => notifier.applyAction(const FinalizeNight()));
     }
@@ -1029,6 +1033,10 @@ IconData _roleIcon(String roleId) => switch (roleId) {
   'cupidon' => AppIcons.cupid,
   'voleur' => AppIcons.thief,
   'chasseur' => AppIcons.hunter,
+  'ancien' => AppIcons.elder,
+  'chevalier' => AppIcons.knight,
+  'joueur_de_flute' => AppIcons.piperRole,
+  'joueurs_charmes' => AppIcons.piperRole,
   'renard' => AppIcons.fox,
   'deux_soeurs' => AppIcons.sisters,
   'montreur_d_ours' => AppIcons.bearTamer,
@@ -1722,6 +1730,11 @@ class _ChainPanel extends StatelessWidget {
         notifier: notifier,
         deadCaptainId: deadCaptainId,
       ),
+      PendingKnightWound(:final deadKnightId) => _KnightWoundPanel(
+        session: session,
+        notifier: notifier,
+        deadKnightId: deadKnightId,
+      ),
     };
   }
 }
@@ -1850,6 +1863,63 @@ class _SuccessionPanel extends StatelessWidget {
             confirmIcon: AppIcons.captain,
             confirmLabel: context.l10n.scriptCaptainBecomes,
             onConfirm: (id) => notifier.nameCaptainSuccessor(id),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The Knight was devoured: which wolf does his rusty sword leave diseased? The app suggests the
+/// first wolf to his left among the cards it knows; the MJ, who knows the table, decides.
+class _KnightWoundPanel extends ConsumerWidget {
+  const _KnightWoundPanel({
+    required this.session,
+    required this.notifier,
+    required this.deadKnightId,
+  });
+
+  final GameSessionState session;
+  final GameSession notifier;
+  final String deadKnightId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final knight = session.engine.playerById(deadKnightId);
+    final suggested = session.engine.firstWolfToLeftOf(deadKnightId, RoleRegistry.all);
+    final atEnd = ref.watch(settingsProvider).value?.knightDiseaseAtNightEnd ?? false;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _SheetHandle(),
+        _DeadHeader(name: knight.name, subtitle: context.l10n.scriptKnightDead),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 16, AppSpacing.screen, 12),
+          child: _RoleBanner(
+            icon: AppIcons.knight,
+            title: context.l10n.scriptKnightTitle,
+            body: atEnd ? context.l10n.scriptKnightBodyEnd : context.l10n.scriptKnightBodyStart,
+          ),
+        ),
+        if (suggested != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 8),
+            child: Text(
+              context.l10n.scriptKnightSuggested(suggested.name),
+              style: context.typography.meta.copyWith(
+                color: context.colors.textTertiary,
+                height: 1.5,
+              ),
+            ),
+          ),
+        Expanded(
+          child: TargetPick(
+            question: context.l10n.scriptKnightQuestion,
+            candidates: _alive(session.engine),
+            confirmLabel: context.l10n.scriptKnightWounds,
+            onConfirm: notifier.knightContaminate,
+            secondaryLabel: context.l10n.scriptKnightNone,
+            onSecondary: () => notifier.knightContaminate(null),
           ),
         ),
       ],

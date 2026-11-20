@@ -40,6 +40,10 @@ abstract final class GameStateJson {
       'pendingBigBadWolfVictimId': ?state.pendingBigBadWolfVictimId,
       'pendingWhiteWolfVictimId': ?state.pendingWhiteWolfVictimId,
       if (state.wildChild case final w?) 'wildChild': {'child': w.childId, 'model': w.modelId},
+      if (state.woundedElders.isNotEmpty) 'woundedElders': [...state.woundedElders],
+      if (state.villagersPowerless) 'villagersPowerless': true,
+      if (state.knightWound case final k?)
+        'knightWound': {'wolf': k.wolfId, 'dueNight': k.dueNight, 'atNightEnd': k.atNightEnd},
       'cascade': ?_encodeCascade(state.cascade),
       if (state.spentPowers.isNotEmpty) 'spentPowers': state.spentPowers,
     };
@@ -90,6 +94,18 @@ abstract final class GameStateJson {
         null => null,
         final w => WildChildState(childId: w['child'] as String, modelId: w['model'] as String),
       },
+      woundedElders: {
+        for (final id in (json['woundedElders'] as List<dynamic>?) ?? const []) id as String,
+      },
+      villagersPowerless: json['villagersPowerless'] == true,
+      knightWound: switch (json['knightWound'] as Map<String, dynamic>?) {
+        null => null,
+        final k => KnightWound(
+          wolfId: k['wolf'] as String,
+          dueNight: k['dueNight'] as int,
+          atNightEnd: k['atNightEnd'] == true,
+        ),
+      },
       cascade: _decodeCascade(json['cascade'] as Map<String, dynamic>?),
       spentPowers: {
         for (final entry in ((json['spentPowers'] as Map<String, dynamic>?) ?? const {}).entries)
@@ -110,6 +126,10 @@ abstract final class GameStateJson {
           'type': 'captainSuccession',
           'deadCaptainId': deadCaptainId,
         },
+        PendingKnightWound(:final deadKnightId) => {
+          'type': 'knightWound',
+          'deadKnightId': deadKnightId,
+        },
       },
       'remainingQueue': [
         for (final task in cascade.remainingQueue)
@@ -127,6 +147,7 @@ abstract final class GameStateJson {
         'captainSuccession' => PendingCaptainSuccession(
           deadCaptainId: decision['deadCaptainId'] as String,
         ),
+        'knightWound' => PendingKnightWound(deadKnightId: decision['deadKnightId'] as String),
         final other => throw ArgumentError('unknown pending decision type: $other'),
       },
       remainingQueue: [
@@ -155,6 +176,7 @@ abstract final class GameStateJson {
     WolvesKill() => {'type': 'wolves'},
     WitchDeathPotionKill() => {'type': 'witchPotion'},
     WhiteWolfKill() => {'type': 'whiteWolf'},
+    DiseaseKill() => {'type': 'disease'},
     DayVoteKill() => {'type': 'dayVote'},
     HunterShotKill(:final shooterPlayerId) => {
       'type': 'hunterShot',
@@ -171,6 +193,7 @@ abstract final class GameStateJson {
     'wolves' => const WolvesKill(),
     'witchPotion' => const WitchDeathPotionKill(),
     'whiteWolf' => const WhiteWolfKill(),
+    'disease' => const DiseaseKill(),
     'dayVote' => const DayVoteKill(),
     'hunterShot' => HunterShotKill(shooterPlayerId: json!['shooterPlayerId'] as String),
     'loversCascade' => LoversCascadeKill(causingPlayerId: json!['causingPlayerId'] as String),

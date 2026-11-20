@@ -55,6 +55,23 @@ class WhiteWolfEat implements GameAction {
   const WhiteWolfEat({required this.targetPlayerId});
 }
 
+/// The Piper charms one or two players (night).
+class PiperCharm implements GameAction {
+  final List<String> playerIds;
+
+  const PiperCharm({required this.playerIds});
+}
+
+/// Resolves a pending PendingKnightWound: the wolf the sword left diseased, or null when the MJ
+/// finds none to wound. [atNightEnd] is the setting: the disease strikes at the end of the next
+/// night instead of its beginning.
+class KnightContaminate implements GameAction {
+  final String? wolfPlayerId;
+  final bool atNightEnd;
+
+  const KnightContaminate({this.wolfPlayerId, this.atNightEnd = false});
+}
+
 class CupidonPair implements GameAction {
   final String playerAId;
   final String playerBId;

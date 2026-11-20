@@ -69,6 +69,10 @@ List<NightLogEntry> nightLogEntriesFor(GameAction action, GameState before) {
     case WhiteWolfEat(:final targetPlayerId):
       return [entry(JournalKind.whiteWolfEats, {'player': name(targetPlayerId)})];
 
+    case KnightContaminate(:final wolfPlayerId):
+      if (wolfPlayerId == null) return const [];
+      return [entry(JournalKind.knightContaminates, {'player': name(wolfPlayerId)})];
+
     case VoleurSwap(:final stolenRoleId):
       return [
         stolenRoleId == null
@@ -95,4 +99,29 @@ List<NightLogEntry> nightLogEntriesFor(GameAction action, GameState before) {
     default:
       return const [];
   }
+}
+
+/// The journal lines the events of an action add on their own: what the table never sees
+/// announced (an Elder surviving a bite), the powers the villagers lost, a death of disease.
+List<NightLogEntry> nightLogEntriesForEvents(
+  List<GameEvent> events,
+  GameState after, {
+  required JournalPhase phase,
+}) {
+  NightLogEntry entry(JournalKind kind, String playerId) => NightLogEntry(
+    phase: phase,
+    phaseIndex: after.nightIndex,
+    kind: kind,
+    args: {'player': after.playerById(playerId).name},
+  );
+
+  return [
+    for (final e in events)
+      if (e is ElderSurvived)
+        entry(JournalKind.elderSurvives, e.playerId)
+      else if (e is VillagersLostPowers)
+        entry(JournalKind.villagersLosePowers, e.elderPlayerId)
+      else if (e is PlayerDied && e.cause is DiseaseKill)
+        entry(JournalKind.diseaseDeath, e.playerId),
+  ];
 }

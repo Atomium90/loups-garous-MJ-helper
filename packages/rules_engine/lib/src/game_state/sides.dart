@@ -12,6 +12,13 @@ extension PlayerSide on Player {
       teamOverride ?? registry.byIdOrNull(roleId)?.team ?? Team.village;
 }
 
+extension PlayerPack on Player {
+  /// Whether the player wakes with the wolves: the wolf side, and the White Werewolf who plays
+  /// for himself but feasts with them.
+  bool wakesWithWolvesIn(RoleRegistry registry) =>
+      sideIn(registry) == Team.werewolves || roleId == 'loup_garou_blanc';
+}
+
 extension GameStateSides on GameState {
   /// Living players on [side].
   int aliveOnSide(Team side, RoleRegistry registry) =>
@@ -67,7 +74,7 @@ extension GameStateSides on GameState {
   /// Whether [player] wakes with the wolves: the wolf side, and the White Werewolf who plays
   /// for himself but feasts with them. The wolves never choose one of these as their victim.
   bool wakesWithWolves(Player player, RoleRegistry registry) =>
-      player.sideIn(registry) == Team.werewolves || player.roleId == 'loup_garou_blanc';
+      player.wakesWithWolvesIn(registry);
 
   /// Whether a wolf, the Wild Child or the Wolf-Hound has been eliminated: the Big Bad Wolf's
   /// second victim stops from then on.
@@ -78,4 +85,17 @@ extension GameStateSides on GameState {
             p.roleId == 'enfant_sauvage' ||
             p.roleId == 'chien_loup'),
   );
+
+  /// The first living wolf to the left of [playerId], going round the table the other way from the
+  /// roster order, as far as the cards the app knows tell. Null when none is known. "Left" is the
+  /// player's own left.
+  Player? firstWolfToLeftOf(String playerId, RoleRegistry registry) {
+    final seat = players.indexWhere((p) => p.id == playerId);
+    if (seat < 0) throw PlayerNotFoundException(playerId);
+    for (var i = 1; i < players.length; i++) {
+      final candidate = players[(seat - i) % players.length];
+      if (candidate.alive && candidate.wakesWithWolvesIn(registry)) return candidate;
+    }
+    return null;
+  }
 }

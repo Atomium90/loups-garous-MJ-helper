@@ -4,6 +4,7 @@ import 'death_cause.dart';
 import 'game_event.dart';
 import 'game_state.dart';
 import 'pending_decision.dart';
+import 'sides.dart';
 
 /// The three ordered tasks a single death always enqueues, together, only
 /// at the moment that player transitions alive -> dead.
@@ -61,13 +62,28 @@ CascadeResult drainCascade({
           case DeathEffect.none:
             break;
           case DeathEffect.hunterShot:
-            if (candidates.isEmpty) {
+            if (currentState.villagersPowerless) {
+              // The villagers lost their powers: the Hunter's shot is one of them.
+              events.add(HunterShotSkipped(hunterPlayerId: player.id));
+            } else if (candidates.isEmpty) {
               events.add(HunterShotSkipped(hunterPlayerId: player.id));
             } else {
               return CascadeResult(
                 state: currentState,
                 events: events,
                 pendingDecision: PendingHunterShot(deadHunterId: player.id),
+                remainingQueue: q,
+              );
+            }
+          case DeathEffect.knightDisease:
+            // Only devoured by the wolves, and only while the villagers keep their powers.
+            final devoured = player.causeOfDeath is WolvesKill;
+            final wolfLeft = candidates.any((p) => p.wakesWithWolvesIn(roleRegistry));
+            if (devoured && !currentState.villagersPowerless && wolfLeft) {
+              return CascadeResult(
+                state: currentState,
+                events: events,
+                pendingDecision: PendingKnightWound(deadKnightId: player.id),
                 remainingQueue: q,
               );
             }

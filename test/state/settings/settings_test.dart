@@ -126,6 +126,18 @@ void main() {
     });
   });
 
+  group('the Knight disease timing', () {
+    test('is the start of the next night by default, and the choice persists', () async {
+      final container = await containerWith({});
+      expect((await container.read(settingsProvider.future)).knightDiseaseAtNightEnd, isFalse);
+
+      await container.read(settingsProvider.notifier).setKnightDiseaseAtNightEnd(true);
+
+      expect(container.read(settingsProvider).value!.knightDiseaseAtNightEnd, isTrue);
+      expect((await SharedPreferences.getInstance()).getBool('knight_disease_night_end'), isTrue);
+    });
+  });
+
   group('the White Werewolf parity', () {
     test('is the even nights by default, and the choice persists', () async {
       final container = await containerWith({});
