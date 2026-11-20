@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:rules_engine/rules_engine.dart';
 
 import '../../../data/models/game_winner.dart';
+import '../../../state/session/day_plan.dart';
 import '../../../state/session/game_session.dart';
 import '../../../state/session/session_cursor.dart';
 import '../../theme/app_colors.dart';
@@ -976,6 +977,7 @@ class _DayBody extends ConsumerWidget {
 
     final body = switch (session.day.stage) {
       DayStage.recap => _DayRecapBody(session: session, onAdvance: n.advanceFromRecap),
+      DayStage.growl => _BearGrowlBody(session: session, notifier: n),
       DayStage.captain => _CaptainElectionBody(session: session, notifier: n),
       DayStage.vote => _VoteBody(session: session, notifier: n),
       DayStage.done => _NextNightPrompt(
@@ -1068,6 +1070,87 @@ List<({String roleId, int remaining})> unassignedRoles(GameSessionState session)
   ];
 }
 
+/// The Bear Tamer's growl, right after the victims are named. The app says whether it expects
+/// one from the roles it knows; the MJ, who knows the table, does what is right.
+class _BearGrowlBody extends StatelessWidget {
+  const _BearGrowlBody({required this.session, required this.notifier});
+
+  final GameSessionState session;
+  final GameSession notifier;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final typography = context.typography;
+    final bear = session.bearTamer;
+    if (bear == null) {
+      // He died since: nothing to growl, on with the day.
+      WidgetsBinding.instance.addPostFrameCallback((_) => notifier.bearGrowlDone(growled: false));
+      return const SizedBox.shrink();
+    }
+    final around = session.engine.aliveNeighbours(bear.id);
+    final neighbours = joinNames(context.l10n, [
+      for (final p in {?around.left, ?around.right}) p.name,
+    ]);
+    final expected = session.bearShouldGrowl;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 18, AppSpacing.screen, 8),
+          child: Text(
+            context.l10n.scriptGrowlTitle,
+            style: typography.rowLabel.copyWith(color: colors.textPrimary),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 8),
+          child: NarrationBlock(lines: growlNarration(context.l10n)),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 6),
+          child: Text(
+            context.l10n.scriptGrowlWho(bear.name, neighbours),
+            style: typography.body.copyWith(color: colors.textSecondary, height: 1.5),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 0),
+          child: Text(
+            expected ? context.l10n.scriptGrowlExpected : context.l10n.scriptGrowlNotExpected,
+            style: typography.meta.copyWith(color: colors.textTertiary, height: 1.5),
+          ),
+        ),
+        const Spacer(),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screen,
+            0,
+            AppSpacing.screen,
+            AppSpacing.screen,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: 8,
+            children: [
+              AppButton(
+                label: expected ? context.l10n.scriptGrowlDo : context.l10n.scriptGrowlNone,
+                onPressed: () => notifier.bearGrowlDone(growled: expected),
+              ),
+              AppButton(
+                label: expected ? context.l10n.scriptGrowlNone : context.l10n.scriptGrowlDo,
+                variant: AppButtonVariant.secondary,
+                onPressed: () => notifier.bearGrowlDone(growled: !expected),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 /// The day recap - what the MJ reads aloud when the village wakes.
 class _DayRecapBody extends StatelessWidget {
   const _DayRecapBody({required this.session, required this.onAdvance});
@@ -1086,9 +1169,11 @@ class _DayRecapBody extends StatelessWidget {
     final wolvesAlive = engine.aliveWolves(RoleRegistry.all);
     final villageAlive = engine.alivePlayers.length - wolvesAlive;
 
-    final ctaLabel = engine.nightIndex == 1 && engine.captainPlayerId == null
-        ? context.l10n.scriptElectCaptain
-        : context.l10n.scriptOpenVote;
+    final ctaLabel = switch (nextDayStage(DayStage.recap, engine)) {
+      DayStage.growl => context.l10n.scriptOpenGrowl,
+      DayStage.captain => context.l10n.scriptElectCaptain,
+      _ => context.l10n.scriptOpenVote,
+    };
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(

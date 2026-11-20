@@ -66,6 +66,16 @@ class GameSessionState {
     return kind == null ? null : winnerFor(kind);
   }
 
+  /// The living Bear Tamer, once the MJ has noted who he is.
+  Player? get bearTamer =>
+      engine.players.where((p) => p.alive && p.roleId == 'montreur_d_ours').firstOrNull;
+
+  /// Whether he growls this morning, from the roles the app knows.
+  bool get bearShouldGrowl {
+    final bear = bearTamer;
+    return bear != null && engine.bearGrowls(bear.id, RoleRegistry.all);
+  }
+
   /// A drawn reserve the MJ has yet to note: asked for at the Voleur's step.
   bool get reserveToEnter => reserveDrawn && reserveRoleIds.isEmpty;
 
@@ -455,6 +465,29 @@ class GameSession extends _$GameSession {
     final s = state.value;
     if (s == null) return;
     final next = nextDayStage(DayStage.recap, s.engine);
+    await _updateDay((d) => d.copyWith(stage: next));
+  }
+
+  // --- day: the Bear Tamer's growl ---
+
+  /// The morning's growl is done: [growled] says whether the MJ growled (journalled), then the day
+  /// goes on.
+  Future<void> bearGrowlDone({required bool growled}) async {
+    final s = state.value;
+    if (s == null) return;
+    if (growled) {
+      await ref.read(gameRepositoryProvider).appendNightLog(
+        gameId: gameId,
+        entries: [
+          NightLogEntry(
+            phase: _journalPhase(s.engine),
+            phaseIndex: s.engine.nightIndex,
+            kind: JournalKind.bearGrowls,
+          ),
+        ],
+      );
+    }
+    final next = nextDayStage(DayStage.growl, s.engine);
     await _updateDay((d) => d.copyWith(stage: next));
   }
 

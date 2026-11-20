@@ -46,6 +46,11 @@ List<NarrationLine> captainNarration(AppLocalizations l10n) => [
   NarrationLine(l10n.narrCaptainHead, l10n.narrCaptainBody),
 ];
 
+/// What the MJ says for the Bear Tamer's growl.
+List<NarrationLine> growlNarration(AppLocalizations l10n) => [
+  NarrationLine(l10n.narrGrowlHead, l10n.narrGrowlBody),
+];
+
 List<NarrationLine> voteNarration(AppLocalizations l10n) => [
   NarrationLine(l10n.narrVoteHead, l10n.narrVoteBody),
 ];
