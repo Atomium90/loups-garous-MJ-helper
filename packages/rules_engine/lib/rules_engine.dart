@@ -13,6 +13,7 @@ export 'src/composition_advisor/composition_suggestion.dart';
 
 export 'src/models/action_type.dart';
 export 'src/models/death_effect.dart';
+export 'src/models/night_context.dart';
 export 'src/models/order_constraint.dart';
 export 'src/models/role.dart';
 export 'src/models/team.dart';
@@ -31,5 +32,7 @@ export 'src/game_state/game_state.dart';
 export 'src/game_state/game_state_machine.dart';
 export 'src/game_state/pending_decision.dart';
 export 'src/game_state/player.dart';
+export 'src/game_state/sides.dart';
+export 'src/game_state/victory.dart';
 
 export 'src/serialization/game_state_json.dart';

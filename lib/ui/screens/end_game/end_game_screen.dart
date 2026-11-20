@@ -57,13 +57,9 @@ class _EndGameScreenState extends ConsumerState<EndGameScreen> {
     final game = ref.watch(gameProvider(widget.gameId)).value;
     final session = ref.watch(gameSessionProvider(widget.gameId)).value;
 
-    var village = 0;
-    var wolves = 0;
-    if (session != null) {
-      for (final p in session.engine.players.where((p) => p.alive)) {
-        RoleRegistry.all.byIdOrNull(p.roleId)?.team == Team.werewolves ? wolves++ : village++;
-      }
-    }
+    // The two counters the MJ weighs the end on: the wolves' side, and everyone else.
+    final wolves = session?.engine.aliveWolves(RoleRegistry.all) ?? 0;
+    final village = (session?.engine.alivePlayers.length ?? 0) - wolves;
 
     return Scaffold(
       body: SafeArea(
@@ -134,7 +130,9 @@ class _EndGameScreenState extends ConsumerState<EndGameScreen> {
                     style: typography.meta.copyWith(color: colors.textTertiary),
                   ),
                   const SizedBox(height: 10),
-                  for (final w in GameWinner.values)
+                  for (final w in GameWinner.values.where(
+                    (w) => w.requiredRoleId == null || (session?.composition[w.requiredRoleId] ?? 0) > 0,
+                  ))
                     _WinnerRow(
                       winner: w,
                       selected: w == _winner,

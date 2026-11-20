@@ -38,6 +38,20 @@ void main() {
     expect(find.text('bientôt'), findsOneWidget);
   });
 
+  testWidgets('says the list is the seating order around the table', (tester) async {
+    final repository = FakeGameRepository();
+    final id = await _gameWithBlankRoster(repository, 3);
+
+    await pumpScreen(
+      tester,
+      PlayersScreen(gameId: id),
+      overrides: [gameRepositoryProvider.overrideWithValue(repository)],
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining("dans l'ordre où ils sont assis autour de la table"), findsOneWidget);
+  });
+
   testWidgets('the counter tracks filled fields; Continuer is inert until all are named', (
     tester,
   ) async {

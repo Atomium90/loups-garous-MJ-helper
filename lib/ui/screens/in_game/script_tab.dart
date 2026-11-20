@@ -1,7 +1,9 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:rules_engine/rules_engine.dart';
 
+import '../../../data/models/game_winner.dart';
 import '../../../state/session/game_session.dart';
 import '../../../state/session/session_cursor.dart';
 import '../../theme/app_colors.dart';
@@ -938,7 +940,7 @@ class _DayBody extends ConsumerWidget {
         break;
     }
 
-    return switch (session.day.stage) {
+    final body = switch (session.day.stage) {
       DayStage.recap => _DayRecapBody(session: session, onAdvance: n.advanceFromRecap),
       DayStage.captain => _CaptainElectionBody(session: session, notifier: n),
       DayStage.vote => _VoteBody(session: session, notifier: n),
@@ -947,6 +949,60 @@ class _DayBody extends ConsumerWidget {
         onStart: n.startNextNight,
       ),
     };
+    final proposed = session.proposedWinner;
+    if (proposed == null) return body;
+    return Column(
+      children: [
+        _VictoryProposalBanner(
+          winner: proposed,
+          onEnd: () => context.push('/games/$gameId/end'),
+        ),
+        Expanded(child: body),
+      ],
+    );
+  }
+}
+
+/// The table looks decided: says so and offers to end the game. Never ends it by itself, and
+/// the game can be played on.
+class _VictoryProposalBanner extends StatelessWidget {
+  const _VictoryProposalBanner({required this.winner, required this.onEnd});
+
+  final GameWinner winner;
+  final VoidCallback onEnd;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final typography = context.typography;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(AppSpacing.screen, 8, AppSpacing.screen, 0),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.accentBg,
+        borderRadius: BorderRadius.circular(AppRadii.button),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 10,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 10,
+            children: [
+              Icon(AppIcons.endGame, size: 18, color: colors.accentText),
+              Expanded(
+                child: Text(
+                  context.l10n.victoryProposal(winner.name),
+                  style: typography.meta.copyWith(color: colors.accentText, height: 1.5),
+                ),
+              ),
+            ],
+          ),
+          AppButton(label: context.l10n.endGameTitle, compact: true, onPressed: onEnd),
+        ],
+      ),
+    );
   }
 }
 
@@ -993,11 +1049,8 @@ class _DayRecapBody extends StatelessWidget {
     final deaths = session.recapDeaths;
     final saved = session.day.savedFromWolvesName;
 
-    final aliveByTeam = <Team, int>{};
-    for (final p in engine.alivePlayers) {
-      final team = RoleRegistry.all.byIdOrNull(p.roleId)?.team ?? Team.village;
-      aliveByTeam[team] = (aliveByTeam[team] ?? 0) + 1;
-    }
+    final wolvesAlive = engine.aliveWolves(RoleRegistry.all);
+    final villageAlive = engine.alivePlayers.length - wolvesAlive;
 
     final ctaLabel = engine.nightIndex == 1 && engine.captainPlayerId == null
         ? context.l10n.scriptElectCaptain
@@ -1063,13 +1116,13 @@ class _DayRecapBody extends StatelessWidget {
             Expanded(
               child: _StatCell(
                 label: context.l10n.compositionVillage,
-                value: aliveByTeam[Team.village] ?? 0,
+                value: villageAlive,
               ),
             ),
             Expanded(
               child: _StatCell(
                 label: context.l10n.compositionWolves,
-                value: aliveByTeam[Team.werewolves] ?? 0,
+                value: wolvesAlive,
               ),
             ),
           ],
