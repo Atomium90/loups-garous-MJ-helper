@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rules_engine/rules_engine.dart';
 
 import '../../../state/providers/game_repository_provider.dart';
 import '../../../state/settings/settings.dart';
@@ -48,6 +49,7 @@ class _SettingsBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final typography = context.typography;
+    final pool = CardPool(registry: RoleRegistry.all, ownedBoxIds: settings.ownedBoxes);
 
     return Column(
       children: [
@@ -60,7 +62,7 @@ class _SettingsBody extends StatelessWidget {
               _NavRow(
                 icon: AppIcons.boxes,
                 label: context.l10n.settingsMyBoxes,
-                sublabel: context.l10n.settingsBaseBoxRoles(8),
+                sublabel: context.l10n.settingsOwnedBoxes(pool.ownedBoxIds.length, pool.availableRoleCount),
                 onTap: () => context.pushNamed('boxes'),
               ),
               _ComingSoonRow(icon: AppIcons.regulars, label: context.l10n.regularsBook),

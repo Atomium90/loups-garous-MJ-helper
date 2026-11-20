@@ -9,6 +9,7 @@ import 'package:loup_garou_mj/ui/screens/home/home_screen.dart';
 import 'package:loup_garou_mj/ui/screens/settings/boxes_screen.dart';
 import 'package:loup_garou_mj/ui/screens/settings/settings_screen.dart';
 import 'package:loup_garou_mj/ui/theme/app_icons.dart';
+import 'package:loup_garou_mj/ui/widgets/app_toggle.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../support/fake_game_repository.dart';
@@ -220,18 +221,81 @@ void main() {
     });
   });
 
-  testWidgets('Mes boîtes opens from Réglages and is informational', (tester) async {
-    await pumpAppRouter(
-      tester,
-      overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
-      initialLocation: '/settings',
-    );
-    await tester.pumpAndSettle();
+  group('Mes boîtes', () {
+    Future<void> openBoxes(WidgetTester tester) async {
+      // Tall enough for the six boxes to be on screen at once.
+      await tester.binding.setSurfaceSize(const Size(800, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await pumpAppRouter(
+        tester,
+        overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
+        initialLocation: '/settings',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Mes boîtes'));
+      await tester.pumpAndSettle();
+    }
 
-    await tester.tap(find.text('Mes boîtes'));
-    await tester.pumpAndSettle();
-    expect(find.byType(BoxesScreen), findsOneWidget);
-    expect(find.text('Nouvelle Lune'), findsOneWidget);
-    expect(find.text('bientôt'), findsWidgets);
+    testWidgets('opens from Réglages and lists the six boxes', (tester) async {
+      await openBoxes(tester);
+
+      expect(find.byType(BoxesScreen), findsOneWidget);
+      for (final name in [
+        'Loups-Garous de Thiercelieux',
+        'Nouvelle Lune',
+        'Le Village',
+        'Personnages',
+        'Le Pacte',
+        'Best Of',
+      ]) {
+        expect(find.text(name), findsOneWidget, reason: name);
+      }
+      expect(find.byType(AppToggle), findsNWidgets(6));
+    });
+
+    testWidgets('only the base box is owned at first, and it cannot be unticked', (tester) async {
+      await openBoxes(tester);
+
+      expect(find.text('8 rôles disponibles pour vos parties'), findsOneWidget);
+      final toggles = tester.widgetList<AppToggle>(find.byType(AppToggle)).toList();
+      expect(toggles.map((t) => t.value), [true, false, false, false, false, false]);
+      expect(toggles.first.onChanged, isNull);
+    });
+
+    testWidgets('ticking a box owns it and remembers it', (tester) async {
+      await openBoxes(tester);
+
+      await tester.tap(find.byType(AppToggle).at(5)); // Best Of
+      await tester.pumpAndSettle();
+
+      final toggles = tester.widgetList<AppToggle>(find.byType(AppToggle)).toList();
+      expect(toggles.map((t) => t.value), [true, false, false, false, false, true]);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getStringList('owned_boxes'), unorderedEquals(['base', 'best_of']));
+    });
+
+    testWidgets('a box ticked earlier is still ticked when the screen opens', (tester) async {
+      SharedPreferences.setMockInitialValues({
+        'owned_boxes': ['base', 'characters'],
+      });
+      await openBoxes(tester);
+
+      final toggles = tester.widgetList<AppToggle>(find.byType(AppToggle)).toList();
+      expect(toggles.map((t) => t.value), [true, false, false, true, false, false]);
+    });
+
+    testWidgets('the Réglages row sums up the owned boxes', (tester) async {
+      SharedPreferences.setMockInitialValues({
+        'owned_boxes': ['base', 'best_of'],
+      });
+      await pumpAppRouter(
+        tester,
+        overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
+        initialLocation: '/settings',
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('2 boîtes · 8 rôles'), findsOneWidget);
+    });
   });
 }
