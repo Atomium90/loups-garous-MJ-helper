@@ -30,6 +30,45 @@ void main() {
     });
   });
 
+  group('with a Bear Tamer', () {
+    GameState withBear({bool alive = true}) => GameState.initial(
+      players: [
+        const Player(id: 'a', name: 'A', roleId: 'villageois'),
+        Player(id: 'b', name: 'B', roleId: 'montreur_d_ours', alive: alive),
+      ],
+    ).copyWith(phase: GamePhase.day, nightIndex: 2);
+
+    test('the morning has a growl right after the recap', () {
+      expect(dayStagesFor(withBear()), [
+        DayStage.recap,
+        DayStage.growl,
+        DayStage.vote,
+        DayStage.done,
+      ]);
+      expect(nextDayStage(DayStage.recap, withBear()), DayStage.growl);
+      expect(nextDayStage(DayStage.growl, withBear()), DayStage.vote);
+    });
+
+    test('the first day goes growl, then the election', () {
+      final first = withBear().copyWith(nightIndex: 1);
+      expect(dayStagesFor(first), [
+        DayStage.recap,
+        DayStage.growl,
+        DayStage.captain,
+        DayStage.vote,
+        DayStage.done,
+      ]);
+    });
+
+    test('a dead Bear Tamer growls no more', () {
+      expect(dayStagesFor(withBear(alive: false)), [
+        DayStage.recap,
+        DayStage.vote,
+        DayStage.done,
+      ]);
+    });
+  });
+
   test('later days have no election, with a Capitaine or without one', () {
     expect(dayStagesFor(_day(2)), [DayStage.recap, DayStage.vote, DayStage.done]);
     expect(dayStagesFor(_day(3, captain: 'b')), [DayStage.recap, DayStage.vote, DayStage.done]);

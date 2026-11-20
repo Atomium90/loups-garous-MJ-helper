@@ -12,7 +12,7 @@
   "@languageSystem": {
     "description": "Language choice that follows the phone's language."
   },
-  "roleName": "{roleId, select, voleur{Voleur} cupidon{Cupidon} voyante{Voyante} loup_garou{Loup-Garou} sorciere{Sorcière} villageois{Simple Villageois} petite_fille{Petite Fille} chasseur{Chasseur} other{Rôle inconnu}}",
+  "roleName": "{roleId, select, voleur{Voleur} cupidon{Cupidon} voyante{Voyante} loup_garou{Loup-Garou} sorciere{Sorcière} villageois{Simple Villageois} petite_fille{Petite Fille} chasseur{Chasseur} renard{Renard} deux_soeurs{Deux Sœurs} montreur_d_ours{Montreur d'Ours} other{Rôle inconnu}}",
   "@roleName": {
     "description": "The name of a role card, from its id (singular, no article).",
     "placeholders": {
@@ -21,7 +21,7 @@
       }
     }
   },
-  "rolePlural": "{roleId, select, voleur{Voleurs} cupidon{Cupidons} voyante{Voyantes} loup_garou{Loups-Garous} sorciere{Sorcières} villageois{Simples Villageois} petite_fille{Petites Filles} chasseur{Chasseurs} other{Rôles inconnus}}",
+  "rolePlural": "{roleId, select, voleur{Voleurs} cupidon{Cupidons} voyante{Voyantes} loup_garou{Loups-Garous} sorciere{Sorcières} villageois{Simples Villageois} petite_fille{Petites Filles} chasseur{Chasseurs} renard{Renards} deux_soeurs{Deux Sœurs} montreur_d_ours{Montreurs d'Ours} other{Rôles inconnus}}",
   "@rolePlural": {
     "description": "The plural name of a role card, from its id.",
     "placeholders": {
@@ -30,7 +30,7 @@
       }
     }
   },
-  "roleWithArticle": "{roleId, select, voleur{le Voleur} cupidon{le Cupidon} voyante{la Voyante} loup_garou{le Loup-Garou} sorciere{la Sorcière} villageois{le Simple Villageois} petite_fille{la Petite Fille} chasseur{le Chasseur} other{Rôle inconnu}}",
+  "roleWithArticle": "{roleId, select, voleur{le Voleur} cupidon{le Cupidon} voyante{la Voyante} loup_garou{le Loup-Garou} sorciere{la Sorcière} villageois{le Simple Villageois} petite_fille{la Petite Fille} chasseur{le Chasseur} renard{le Renard} deux_soeurs{les Deux Sœurs} montreur_d_ours{le Montreur d'Ours} other{Rôle inconnu}}",
   "@roleWithArticle": {
     "description": "A role with its article, e.g. \"le Chasseur\", \"la Voyante\", \"the Hunter\".",
     "placeholders": {
@@ -39,7 +39,7 @@
       }
     }
   },
-  "roleRuleText": "{roleId, select, voleur{Réveillez le Voleur. Il peut échanger sa carte avec l'une des deux cartes non distribuées, ou garder la sienne.} cupidon{Réveillez Cupidon. Il désigne deux joueurs qui tombent amoureux, puis les deux amoureux ouvrent les yeux pour se reconnaître avant de se rendormir.} voyante{Réveillez la Voyante. Elle désigne un joueur dont vous lui révélez le rôle.} loup_garou{Réveillez les Loups-Garous. Ils désignent ensemble leur victime.} sorciere{Réveillez la Sorcière. Montrez-lui la victime des Loups. Elle peut utiliser sa potion de vie et/ou sa potion de mort.} villageois{Aucune action de nuit.} petite_fille{Aucun appel : elle peut risquer un œil pendant l'appel des Loups-Garous, à ses risques.} chasseur{Aucune action de nuit : à sa mort (jour ou nuit), il élimine immédiatement un joueur de son choix.} other{}}",
+  "roleRuleText": "{roleId, select, voleur{Réveillez le Voleur. Il peut échanger sa carte avec l'une des deux cartes non distribuées, ou garder la sienne.} cupidon{Réveillez Cupidon. Il désigne deux joueurs qui tombent amoureux, puis les deux amoureux ouvrent les yeux pour se reconnaître avant de se rendormir.} voyante{Réveillez la Voyante. Elle désigne un joueur dont vous lui révélez le rôle.} loup_garou{Réveillez les Loups-Garous. Ils désignent ensemble leur victime.} sorciere{Réveillez la Sorcière. Montrez-lui la victime des Loups. Elle peut utiliser sa potion de vie et/ou sa potion de mort.} villageois{Aucune action de nuit.} petite_fille{Aucun appel : elle peut risquer un œil pendant l'appel des Loups-Garous, à ses risques.} chasseur{Aucune action de nuit : à sa mort (jour ou nuit), il élimine immédiatement un joueur de son choix.} renard{Réveillez le Renard (facultatif). Il désigne un joueur : vous lui dites si un Loup se trouve parmi ce joueur et ses deux voisins vivants. S'il n'y en a aucun, il perd son pouvoir pour de bon.} deux_soeurs{Réveillez les Deux Sœurs : elles se reconnaissent, puis se rendorment. Appel facultatif après la nuit 1, une nuit sur deux.} montreur_d_ours{Réveillez le Montreur d'Ours la nuit 1 pour savoir qui il est. Chaque matin, après les victimes, vous grognez si l'un de ses deux voisins vivants est un Loup.} other{}}",
   "@roleRuleText": {
     "description": "The instruction the game master follows when this role is called, from the role id.",
     "placeholders": {
@@ -249,6 +249,32 @@
       }
     }
   },
+  "journalFoxFindsWolf": "Le Renard flaire autour de {player} : un Loup",
+  "@journalFoxFindsWolf": {
+    "description": "Journal: the Fox's sniff found a wolf; player is the middle player.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalFoxFindsNone": "Le Renard flaire autour de {player} : aucun Loup, il perd son pouvoir",
+  "@journalFoxFindsNone": {
+    "description": "Journal: the Fox's sniff found no wolf and he loses his power.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalSistersMeet": "Les Deux Sœurs se reconnaissent",
+  "@journalSistersMeet": {
+    "description": "Journal: the Two Sisters woke and met."
+  },
+  "journalBearGrowls": "Le Montreur d'Ours grogne",
+  "@journalBearGrowls": {
+    "description": "Journal: the Bear Tamer growls at dawn."
+  },
   "journalHeartbreakDeath": "{player} meurt de chagrin",
   "@journalHeartbreakDeath": {
     "description": "Journal: a lover dies with the other.",
@@ -277,6 +303,10 @@
   "summaryStepRecap": "récap",
   "@summaryStepRecap": {
     "description": "Resume line: the day's recap of the night."
+  },
+  "summaryStepBearGrowl": "grognement de l'ours",
+  "@summaryStepBearGrowl": {
+    "description": "Resume line: the Bear Tamer's growl."
   },
   "summaryStepCaptainElection": "élection du Capitaine",
   "@summaryStepCaptainElection": {
@@ -717,6 +747,14 @@
   "@settingsThiefReserveHint": {
     "description": "Explains the Thief reserve setting."
   },
+  "settingsFoxAfterWitch": "Renard appelé après la Sorcière",
+  "@settingsFoxAfterWitch": {
+    "description": "Toggle: the Fox is called after the Witch instead of after the Seer."
+  },
+  "settingsFoxAfterWitchHint": "Les livrets se contredisent : le Pacte appelle le Renard après la Voyante (par défaut), le Best Of après la Sorcière. Pris en compte à chaque nouvelle partie.",
+  "@settingsFoxAfterWitchHint": {
+    "description": "Explains the Fox position setting."
+  },
   "settingsKeepScreenOn": "Garder l'écran allumé",
   "@settingsKeepScreenOn": {
     "description": "Toggle: stop the screen from sleeping during a game."
@@ -1050,6 +1088,57 @@
   "@scriptThiefMustSwap": {
     "description": "Said when the Thief cannot keep his card because both reserve cards are Werewolves."
   },
+  "scriptFoxQuestion": "Qui le Renard désigne-t-il ?",
+  "@scriptFoxQuestion": {
+    "description": "Question on the Fox's turn: the middle player of the three he sniffs."
+  },
+  "scriptFoxSniff": "Flairer autour de {name}",
+  "@scriptFoxSniff": {
+    "description": "Button that confirms the Fox's middle player.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptFoxTrio": "Le Renard flaire {names}.",
+  "@scriptFoxTrio": {
+    "description": "The three players the Fox sniffs; names is a list.",
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptFoxAsk": "Y a-t-il au moins un Loup parmi eux ?",
+  "@scriptFoxAsk": {
+    "description": "Question to the MJ after the Fox's sniff."
+  },
+  "scriptFoxHint": "{wolf, select, true{D'après les rôles notés : au moins un Loup.} other{D'après les rôles notés : aucun Loup.}}",
+  "@scriptFoxHint": {
+    "description": "What the app knows of the three the Fox sniffed; wolf is true or false.",
+    "placeholders": {
+      "wolf": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptFoxYes": "Oui, il y a un Loup",
+  "@scriptFoxYes": {
+    "description": "The MJ confirms a wolf is among the Fox's three."
+  },
+  "scriptFoxNo": "Non, aucun Loup",
+  "@scriptFoxNo": {
+    "description": "The MJ says no wolf is among the Fox's three."
+  },
+  "scriptFoxLoses": "Sans Loup, le Renard perd son pouvoir pour de bon.",
+  "@scriptFoxLoses": {
+    "description": "Warning that a sniff with no wolf ends the Fox's power."
+  },
+  "scriptSistersDone": "Elles se sont reconnues",
+  "@scriptSistersDone": {
+    "description": "Button once the Two Sisters have met."
+  },
   "scriptThiefExtra": "Le Voleur a volé une carte de {role} : il compte en plus.",
   "@scriptThiefExtra": {
     "description": "Note on the identify step when the Thief holds a stolen card of this role.",
@@ -1213,6 +1302,50 @@
   "scriptAliveUnit": "vivants",
   "@scriptAliveUnit": {
     "description": "Unit under the number of living players of a side."
+  },
+  "scriptOpenGrowl": "Le grognement du Montreur d'Ours",
+  "@scriptOpenGrowl": {
+    "description": "Day recap button that goes to the Bear Tamer's growl."
+  },
+  "scriptGrowlTitle": "Le Montreur d'Ours",
+  "@scriptGrowlTitle": {
+    "description": "Title of the Bear Tamer's growl screen."
+  },
+  "scriptGrowlWho": "{name} est le Montreur d'Ours. Ses voisins vivants : {neighbours}.",
+  "@scriptGrowlWho": {
+    "description": "Who the Bear Tamer is and who sits next to him.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "neighbours": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptGrowlExpected": "D'après les rôles notés, un de ses voisins est un Loup : il grogne.",
+  "@scriptGrowlExpected": {
+    "description": "The app expects the Bear Tamer to growl."
+  },
+  "scriptGrowlNotExpected": "D'après les rôles notés, aucun de ses voisins n'est un Loup : pas de grognement.",
+  "@scriptGrowlNotExpected": {
+    "description": "The app expects no growl."
+  },
+  "scriptGrowlDo": "Je grogne",
+  "@scriptGrowlDo": {
+    "description": "The MJ growls."
+  },
+  "scriptGrowlNone": "Pas de grognement",
+  "@scriptGrowlNone": {
+    "description": "The MJ does not growl."
+  },
+  "narrGrowlHead": "Le Montreur d'Ours tend l'oreille.",
+  "@narrGrowlHead": {
+    "description": "Said before the Bear Tamer's growl."
+  },
+  "narrGrowlBody": "Si l'un de ses voisins est un Loup-Garou, grognez ; sinon, restez silencieux.",
+  "@narrGrowlBody": {
+    "description": "What the MJ does for the growl."
   },
   "scriptElectCaptain": "Élire le Capitaine",
   "@scriptElectCaptain": {
@@ -1485,7 +1618,7 @@
   "@narrNightStart": {
     "description": "Said when the night begins."
   },
-  "narrCallHead": "{roleId, select, voleur{Voleur, ouvre les yeux.} cupidon{Cupidon, ouvre les yeux.} voyante{Voyante, ouvre les yeux.} loup_garou{Loups-Garous, ouvrez les yeux.} sorciere{Sorcière, ouvre les yeux.} other{}}",
+  "narrCallHead": "{roleId, select, voleur{Voleur, ouvre les yeux.} cupidon{Cupidon, ouvre les yeux.} voyante{Voyante, ouvre les yeux.} loup_garou{Loups-Garous, ouvrez les yeux.} sorciere{Sorcière, ouvre les yeux.} renard{Renard, ouvre les yeux.} deux_soeurs{Sœurs, ouvrez les yeux.} montreur_d_ours{Montreur d'Ours, ouvre les yeux.} other{}}",
   "@narrCallHead": {
     "description": "Said to wake a role; roleId is the role.",
     "placeholders": {
@@ -1494,7 +1627,7 @@
       }
     }
   },
-  "narrCallBody": "{roleId, select, voleur{Deux cartes sont posées au centre : échange la tienne contre l'une d'elles, ou garde-la.} cupidon{Désigne les deux joueurs qui tomberont amoureux.} voyante{Désigne le joueur dont tu veux connaître le rôle.} loup_garou{Désignez ensemble votre victime.} sorciere{Voici la victime des Loups. Veux-tu la sauver ? Veux-tu empoisonner quelqu'un ?} other{}}",
+  "narrCallBody": "{roleId, select, voleur{Deux cartes sont posées au centre : échange la tienne contre l'une d'elles, ou garde-la.} cupidon{Désigne les deux joueurs qui tomberont amoureux.} voyante{Désigne le joueur dont tu veux connaître le rôle.} loup_garou{Désignez ensemble votre victime.} sorciere{Voici la victime des Loups. Veux-tu la sauver ? Veux-tu empoisonner quelqu'un ?} renard{Désigne un joueur : tu sauras si un Loup se trouve parmi lui et ses deux voisins.} deux_soeurs{Reconnaissez-vous en silence.} montreur_d_ours{Je sais maintenant qui tu es : chaque matin, je grognerai si l'un de tes voisins est un Loup.} other{}}",
   "@narrCallBody": {
     "description": "Said to tell the awake role what to do.",
     "placeholders": {
@@ -1503,7 +1636,7 @@
       }
     }
   },
-  "narrClose": "{roleId, select, voleur{Voleur, rendors-toi.} cupidon{Cupidon, rendors-toi. Amoureux, ouvrez les yeux, reconnaissez-vous, puis rendormez-vous.} voyante{Voyante, rendors-toi.} loup_garou{Loups-Garous, rendormez-vous.} sorciere{Sorcière, rendors-toi.} other{}}",
+  "narrClose": "{roleId, select, voleur{Voleur, rendors-toi.} cupidon{Cupidon, rendors-toi. Amoureux, ouvrez les yeux, reconnaissez-vous, puis rendormez-vous.} voyante{Voyante, rendors-toi.} loup_garou{Loups-Garous, rendormez-vous.} sorciere{Sorcière, rendors-toi.} renard{Renard, rendors-toi.} deux_soeurs{Sœurs, rendormez-vous.} montreur_d_ours{Montreur d'Ours, rendors-toi.} other{}}",
   "@narrClose": {
     "description": "Said to put a role back to sleep.",
     "placeholders": {

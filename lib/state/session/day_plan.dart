@@ -8,6 +8,8 @@ import 'session_cursor.dart';
 /// here, and every screen that moves on goes through [nextDayStage].
 List<DayStage> dayStagesFor(GameState engine) => [
   DayStage.recap,
+  // After the victims are named, a living Bear Tamer growls if a neighbour is a wolf.
+  if (engine.players.any((p) => p.alive && p.roleId == 'montreur_d_ours')) DayStage.growl,
   // The first morning, the village elects its Capitaine if it has none yet.
   if (engine.nightIndex == 1 && engine.captainPlayerId == null) DayStage.captain,
   DayStage.vote,

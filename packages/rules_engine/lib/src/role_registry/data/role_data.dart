@@ -5,12 +5,13 @@ import '../../models/role.dart';
 import '../../models/team.dart';
 import '../../models/wake_condition.dart';
 
-/// The 8 dealt roles of the base "Les Loups-Garous de Thiercelieux" box, in
-/// their official night-call order. Only rules data: the names and the rule texts are the
-/// app's, in each language it speaks. Capitaine is deliberately not here: it's
-/// an elected status any player can hold on top of their real role (see
-/// GameState.captainPlayerId), not a role card dealt at setup.
-const baseGameRoles = <Role>[
+/// Every role the app implements, in the official night-call order (the Pacte booklet's, p.24),
+/// which is also the order of the registry: a role is added here as it is implemented, at its
+/// place in the call order. Only rules data: the names and the rule texts are the app's, in
+/// each language it speaks. Capitaine is deliberately not here: it's an elected status any
+/// player can hold on top of their real role (see GameState.captainPlayerId), not a role card
+/// dealt at setup.
+const allRoles = <Role>[
   Role(
     id: 'voleur',
     team: Team.ambiguous, // settled only once he steals a card
@@ -35,6 +36,37 @@ const baseGameRoles = <Role>[
     wakeCondition: WakeCondition.everyNight,
     orderConstraints: [OrderConstraint.after('cupidon')],
     actionType: ActionType.selectOne,
+  ),
+  // The Fox looks at three neighbours; the call is optional, and ends for good once he is wrong.
+  // His place (after the Voyante) is the Pacte's; the settings can move him after the Sorcière.
+  Role(
+    id: 'renard',
+    team: Team.village,
+    suggestionTier: 3,
+    hasNightCall: true,
+    wakeCondition: WakeCondition.conditional,
+    wakeGuard: WakeGuard.powerUnspent,
+    optionalCall: true,
+    orderConstraints: [OrderConstraint.after('voyante')],
+    actionType: ActionType.selectOne,
+  ),
+  // A group of two: they wake together to know each other, on the first night and then every
+  // other night if the MJ wants.
+  Role(
+    id: 'deux_soeurs',
+    team: Team.village,
+    groupSize: 2,
+    hasNightCall: true,
+    wakeCondition: WakeCondition.everyOtherNight,
+    optionalCall: true,
+  ),
+  // He only identifies himself on the first night; his power plays in the morning.
+  Role(
+    id: 'montreur_d_ours',
+    team: Team.village,
+    suggestionTier: 3,
+    hasNightCall: true,
+    wakeCondition: WakeCondition.firstNightOnly,
   ),
   Role(
     id: 'loup_garou',

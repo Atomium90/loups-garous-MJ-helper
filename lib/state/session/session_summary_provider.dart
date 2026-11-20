@@ -17,6 +17,7 @@ enum SummaryStep {
   role,
   nightEnd,
   recap,
+  bearGrowl,
   captainElection,
   villageVote,
   dayDone,
@@ -78,6 +79,7 @@ SessionSummary _summarize(Game game, String blob) {
         ? SummaryStep.chainEffect
         : switch (stage) {
             DayStage.recap => SummaryStep.recap,
+            DayStage.growl => SummaryStep.bearGrowl,
             DayStage.captain => SummaryStep.captainElection,
             DayStage.vote => SummaryStep.villageVote,
             DayStage.done => SummaryStep.dayDone,
@@ -96,6 +98,7 @@ SessionSummary _summarize(Game game, String blob) {
     engine: engine,
     composition: composition,
     dealtComposition: dealtCompositionOf(composition, reserve, reserveDrawn: reserveDrawn),
+    foxAfterWitch: decoded['foxAfterWitch'] == true,
   );
   final inRoleTurn = cursor.stepIndex < script.steps.length;
   return SessionSummary(

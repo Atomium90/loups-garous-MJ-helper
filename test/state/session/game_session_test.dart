@@ -7,6 +7,8 @@ import 'package:loup_garou_mj/data/repositories/drift_game_repository.dart';
 import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
 import 'package:loup_garou_mj/state/session/game_session.dart';
 import 'package:loup_garou_mj/state/session/session_cursor.dart';
+import 'package:loup_garou_mj/state/settings/settings_providers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:loup_garou_mj/ui/screens/in_game/script_tab.dart' show unassignedRoles;
 import 'package:rules_engine/rules_engine.dart';
 
@@ -442,6 +444,105 @@ void main() {
       expect(s.voleurSwapInsFor('loup_garou'), isEmpty); // she's not the Voleur
       expect(s.currentStepNeedsIdentify, isTrue); // one wolf still unknown
     });
+  });
+
+  group('the place of the Fox in the order', () {
+    const comp = {'renard': 1, 'voyante': 1, 'sorciere': 1, 'loup_garou': 2, 'villageois': 1};
+
+    ProviderContainer containerWith({required bool foxAfterWitch}) {
+      SharedPreferences.setMockInitialValues({'fox_after_witch': foxAfterWitch});
+      return ProviderContainer(
+        overrides: [
+          gameRepositoryProvider.overrideWithValue(repo),
+          sharedPreferencesProvider.overrideWith((ref) async => SharedPreferences.getInstance()),
+        ],
+      );
+    }
+
+    test('follows the setting when the game starts, and keeps it afterwards', () async {
+      final game = await _startedGame(repo, composition: comp);
+      final first = containerWith(foxAfterWitch: true);
+      addTearDown(first.dispose);
+      await first.read(settingsProvider.future);
+      var s = await first.read(gameSessionProvider(game.gameId).future);
+      expect(s.tonight.steps.map((st) => st.role.id), ['voyante', 'loup_garou', 'sorciere', 'renard']);
+
+      // The MJ flips the setting back: this game keeps its order.
+      final later = containerWith(foxAfterWitch: false);
+      addTearDown(later.dispose);
+      await later.read(settingsProvider.future);
+      s = await later.read(gameSessionProvider(game.gameId).future);
+      expect(s.tonight.steps.map((st) => st.role.id), ['voyante', 'loup_garou', 'sorciere', 'renard']);
+    });
+
+    test('is after the Voyante by default', () async {
+      final game = await _startedGame(repo, composition: comp);
+      final s = await container.read(gameSessionProvider(game.gameId).future);
+      expect(s.tonight.steps.map((st) => st.role.id), ['voyante', 'renard', 'loup_garou', 'sorciere']);
+    });
+  });
+
+  group('the Fox', () {
+    // 6 players: Ana the Fox, Bo and Cy wolves, the rest villagers; seats in roster order.
+    const comp = {'renard': 1, 'loup_garou': 2, 'villageois': 3};
+
+    Future<({int gameId, List<int> ids, GameSession n})> startedAsFox() async {
+      final game = await _startedGame(repo, composition: comp);
+      final n = await notifierFor(game.gameId);
+      await n.identifyRole('renard', [game.seatRowIds[0]]); // Ana
+      return (gameId: game.gameId, ids: game.seatRowIds, n: n);
+    }
+
+    test('a sniff that finds a wolf keeps his power, and journals it', () async {
+      final f = await startedAsFox();
+
+      await f.n.foxSniff(middleEngineId: '${f.ids[2]}', wolfFound: true);
+
+      final s = stateOf(f.gameId);
+      expect(s.engine.spentPowers, isEmpty);
+      expect(s.currentStep!.role.id, 'loup_garou'); // moved on
+      final log = frenchJournal(await repo.watchNightLog(f.gameId).first);
+      expect(log, contains('Le Renard flaire autour de Cy : un Loup'));
+    });
+
+    test('a sniff that finds none ends his power for the rest of the game', () async {
+      final f = await startedAsFox();
+
+      await f.n.foxSniff(middleEngineId: '${f.ids[4]}', wolfFound: false);
+
+      final s = stateOf(f.gameId);
+      expect(s.engine.spentPowers, {'renard': 1});
+      final log = frenchJournal(await repo.watchNightLog(f.gameId).first);
+      expect(log, contains('Le Renard flaire autour de Ed : aucun Loup, il perd son pouvoir'));
+    });
+
+    test('the lost power survives a force-quit', () async {
+      final f = await startedAsFox();
+      await f.n.foxSniff(middleEngineId: '${f.ids[4]}', wolfFound: false);
+
+      final resumed = ProviderContainer(
+        overrides: [gameRepositoryProvider.overrideWithValue(repo)],
+      );
+      addTearDown(resumed.dispose);
+      final s = await resumed.read(gameSessionProvider(f.gameId).future);
+
+      expect(s.engine.spentPowers, {'renard': 1});
+    });
+  });
+
+  test('the Two Sisters meeting is journalled and moves on', () async {
+    final game = await _startedGame(
+      repo,
+      composition: const {'deux_soeurs': 2, 'loup_garou': 2, 'villageois': 2},
+    );
+    final n = await notifierFor(game.gameId);
+    await n.identifyRole('deux_soeurs', [game.seatRowIds[0], game.seatRowIds[1]]);
+
+    await n.sistersMet();
+
+    expect(stateOf(game.gameId).currentStep!.role.id, 'loup_garou');
+    final log = frenchJournal(await repo.watchNightLog(game.gameId).first);
+    expect(log, contains('Les Deux Sœurs se reconnaissent'));
   });
 
   group('a drawn Voleur reserve', () {

@@ -8,6 +8,7 @@ import '../../data/models/game_winner.dart';
 import '../../data/models/night_log_entry.dart';
 import '../../data/repositories/game_not_found_exception.dart';
 import '../providers/game_repository_provider.dart';
+import '../settings/settings_providers.dart';
 import 'night_log_entry.dart';
 import 'day_plan.dart';
 import 'night_script.dart';
@@ -39,6 +40,10 @@ class GameSessionState {
   /// The reserve is whatever two cards were left after the deal (the booklets' rule), noted by
   /// the MJ on night 1, rather than picked at the composition.
   final bool reserveDrawn;
+
+  /// Whether the Fox is called after the Witch in this game. Fixed when the game starts, so the
+  /// order never changes under the MJ's feet.
+  final bool foxAfterWitch;
   final List<PlayerRow> roster;
 
   /// Set once the Voleur has taken a reserve card: which player he is and
@@ -55,6 +60,7 @@ class GameSessionState {
     required this.composition,
     required this.reserveRoleIds,
     this.reserveDrawn = false,
+    this.foxAfterWitch = false,
     required this.roster,
     this.voleurSwapIn,
   });
@@ -64,6 +70,16 @@ class GameSessionState {
   GameWinner? get proposedWinner {
     final kind = proposeVictory(engine, RoleRegistry.all);
     return kind == null ? null : winnerFor(kind);
+  }
+
+  /// The living Bear Tamer, once the MJ has noted who he is.
+  Player? get bearTamer =>
+      engine.players.where((p) => p.alive && p.roleId == 'montreur_d_ours').firstOrNull;
+
+  /// Whether he growls this morning, from the roles the app knows.
+  bool get bearShouldGrowl {
+    final bear = bearTamer;
+    return bear != null && engine.bearGrowls(bear.id, RoleRegistry.all);
   }
 
   /// A drawn reserve the MJ has yet to note: asked for at the Voleur's step.
@@ -205,6 +221,10 @@ class GameSession extends _$GameSession {
   /// session blob (the game's own reserve column is only for a reserve picked at composition).
   List<String> _drawnReserve = const [];
 
+  /// The Fox's place in the call order for this game, taken from the settings when the game's
+  /// session is created and kept in the snapshot.
+  bool _foxAfterWitch = false;
+
   @override
   Future<GameSessionState> build(int gameId) async {
     final repo = ref.read(gameRepositoryProvider);
@@ -229,6 +249,7 @@ class GameSession extends _$GameSession {
       );
       cursor = SessionCursor.nightStart;
       day = DaySnapshot.fresh;
+      _foxAfterWitch = ref.read(settingsProvider).value?.foxAfterWitch ?? false;
       await _persist(engine, cursor, day);
     } else {
       final decoded = jsonDecode(existing) as Map<String, dynamic>;
@@ -247,6 +268,7 @@ class GameSession extends _$GameSession {
       _drawnReserve = [
         for (final id in decoded['drawnReserve'] as List<dynamic>? ?? const []) id as String,
       ];
+      _foxAfterWitch = decoded['foxAfterWitch'] == true;
     }
     final reserveRoleIds = reserveDrawn ? _drawnReserve : pickedReserve;
 
@@ -258,6 +280,7 @@ class GameSession extends _$GameSession {
         reserveRoleIds,
         reserveDrawn: reserveDrawn,
       ),
+      foxAfterWitch: _foxAfterWitch,
     );
     return GameSessionState(
       engine: engine,
@@ -267,6 +290,7 @@ class GameSession extends _$GameSession {
       composition: composition,
       reserveRoleIds: reserveRoleIds,
       reserveDrawn: reserveDrawn,
+      foxAfterWitch: _foxAfterWitch,
       roster: roster,
       voleurSwapIn: _voleurSwapIn,
     );
@@ -280,6 +304,7 @@ class GameSession extends _$GameSession {
       if (_voleurSwapIn case final v?)
         'voleurSwapIn': {'playerId': v.playerId, 'roleId': v.roleId},
       if (_drawnReserve.isNotEmpty) 'drawnReserve': _drawnReserve,
+      if (_foxAfterWitch) 'foxAfterWitch': true,
     });
     return ref.read(gameRepositoryProvider).saveSession(gameId: gameId, sessionJson: blob);
   }
@@ -416,6 +441,32 @@ class GameSession extends _$GameSession {
     );
   }
 
+  // --- night: Renard ---
+
+  /// The Fox sniffs around [middleEngineId]: the MJ says whether a wolf is among the three.
+  /// With none his power is gone for good, which the script reads from the engine.
+  Future<void> foxSniff({required String middleEngineId, required bool wolfFound}) =>
+      applyAction(FoxSniff(middlePlayerId: middleEngineId, wolfFound: wolfFound));
+
+  // --- night: Deux Sœurs ---
+
+  /// The Two Sisters woke and met: a journal line, then on to the next call.
+  Future<void> sistersMet() async {
+    final s = state.value;
+    if (s == null) return;
+    await ref.read(gameRepositoryProvider).appendNightLog(
+      gameId: gameId,
+      entries: [
+        NightLogEntry(
+          phase: _journalPhase(s.engine),
+          phaseIndex: s.engine.nightIndex,
+          kind: JournalKind.sistersMeet,
+        ),
+      ],
+    );
+    await skipStep();
+  }
+
   // --- night: Cupidon ---
 
   Future<void> pairLovers(String engineIdA, String engineIdB) =>
@@ -429,6 +480,29 @@ class GameSession extends _$GameSession {
     final s = state.value;
     if (s == null) return;
     final next = nextDayStage(DayStage.recap, s.engine);
+    await _updateDay((d) => d.copyWith(stage: next));
+  }
+
+  // --- day: the Bear Tamer's growl ---
+
+  /// The morning's growl is done: [growled] says whether the MJ growled (journalled), then the day
+  /// goes on.
+  Future<void> bearGrowlDone({required bool growled}) async {
+    final s = state.value;
+    if (s == null) return;
+    if (growled) {
+      await ref.read(gameRepositoryProvider).appendNightLog(
+        gameId: gameId,
+        entries: [
+          NightLogEntry(
+            phase: _journalPhase(s.engine),
+            phaseIndex: s.engine.nightIndex,
+            kind: JournalKind.bearGrowls,
+          ),
+        ],
+      );
+    }
+    final next = nextDayStage(DayStage.growl, s.engine);
     await _updateDay((d) => d.copyWith(stage: next));
   }
 
@@ -573,7 +647,7 @@ class GameSession extends _$GameSession {
 
   SessionCursor _cursorAfter(GameAction action, SessionCursor c) => switch (action) {
     // These complete a night role's turn -> advance to the next step.
-    WolvesTarget() || CupidonPair() || VoleurSwap() => SessionCursor(
+    WolvesTarget() || CupidonPair() || VoleurSwap() || FoxSniff() => SessionCursor(
       stepIndex: c.stepIndex + 1,
       subStep: NightSubStep.identify,
     ),
@@ -613,10 +687,12 @@ class GameSession extends _$GameSession {
             nextReserve,
             reserveDrawn: prev.reserveDrawn,
           ),
+          foxAfterWitch: prev.foxAfterWitch,
         ),
         composition: prev.composition,
         reserveRoleIds: nextReserve,
         reserveDrawn: prev.reserveDrawn,
+        foxAfterWitch: prev.foxAfterWitch,
         roster: roster ?? prev.roster,
         voleurSwapIn: _voleurSwapIn,
       ),

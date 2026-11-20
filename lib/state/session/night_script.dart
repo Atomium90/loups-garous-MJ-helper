@@ -24,6 +24,7 @@ NightScript buildNightScript({
   required GameState engine,
   required Map<String, int> composition,
   Map<String, int>? dealtComposition,
+  bool foxAfterWitch = false,
   RoleRegistry registry = RoleRegistry.all,
 }) {
   final nightIndex = engine.nightIndex;
@@ -45,7 +46,11 @@ NightScript buildNightScript({
         if (entry.value > 0) entry.key,
       ...heldRoleIds,
     };
-    final roles = _inCallOrder([for (final id in ids) registry.byId(id)], registry);
+    final roles = _inCallOrder(
+      [for (final id in ids) registry.byId(id)],
+      registry,
+      foxAfterWitch: foxAfterWitch,
+    );
     return _builder.build(
       compositionRoles: roles,
       aliveRoleIds: {
@@ -53,6 +58,7 @@ NightScript buildNightScript({
           if (r.hasNightCall) r.id,
       },
       nightIndex: nightIndex,
+      context: _contextFor(engine),
     );
   }
 
@@ -65,9 +71,12 @@ NightScript buildNightScript({
   void consider(Role role) {
     if (!role.hasNightCall || !seen.add(role.id)) return;
     final known = engine.players.where((p) => p.roleId == role.id).toList();
-    final anyAlive = known.any((p) => p.alive);
+    final aliveKnown = known.where((p) => p.alive).length;
     final expected = (dealtComposition ?? composition)[role.id] ?? 0;
-    if (anyAlive || known.length < expected) callable.add(role);
+    // A group (the Two Sisters) only has someone to wake while all of it is alive: one sister
+    // left alone has nobody to recognise.
+    final holderLeft = aliveKnown >= role.groupSize;
+    if (holderLeft || known.length < expected) callable.add(role);
   }
 
   for (final entry in composition.entries) {
@@ -77,13 +86,18 @@ NightScript buildNightScript({
     consider(registry.byId(id));
   }
 
-  final inOrder = _inCallOrder(callable, registry);
+  final inOrder = _inCallOrder(callable, registry, foxAfterWitch: foxAfterWitch);
   return _builder.build(
     compositionRoles: inOrder,
     aliveRoleIds: {for (final r in inOrder) r.id},
     nightIndex: nightIndex,
+    context: _contextFor(engine),
   );
 }
+
+/// What the game says about tonight's calls beyond the roles themselves.
+NightContext _contextFor(GameState engine) =>
+    NightContext(nightIndex: engine.nightIndex, spentPowers: engine.spentPowersBeforeTonight);
 
 /// [roles] in the registry's declaration order, which is the official wake order.
 ///
@@ -91,9 +105,19 @@ NightScript buildNightScript({
 /// constraints only name its neighbours in the chain (Loups come after the Voyante, which comes
 /// after Cupidon). With the Voyante absent nothing ties the Loups to Cupidon any more, so the
 /// order the caller lists them in decides: the composition's own key order must not.
-List<Role> _inCallOrder(List<Role> roles, RoleRegistry registry) {
+///
+/// With [foxAfterWitch] the Fox is called right after the Sorcière (the Best Of booklet's order)
+/// instead of after the Voyante (the Pacte's, the registry's).
+List<Role> _inCallOrder(List<Role> roles, RoleRegistry registry, {bool foxAfterWitch = false}) {
   final position = {for (final (i, r) in registry.roles.indexed) r.id: i};
-  return [...roles]..sort((a, b) => position[a.id]!.compareTo(position[b.id]!));
+  final ordered = [...roles]..sort((a, b) => position[a.id]!.compareTo(position[b.id]!));
+  if (!foxAfterWitch) return ordered;
+  final fox = ordered.where((r) => r.id == 'renard').firstOrNull;
+  final witch = ordered.indexWhere((r) => r.id == 'sorciere');
+  if (fox == null || witch < 0) return ordered;
+  ordered.remove(fox);
+  ordered.insert(ordered.indexWhere((r) => r.id == 'sorciere') + 1, fox);
+  return ordered;
 }
 
 /// The composition less the cards a drawn Voleur reserve left in the middle, plus the two

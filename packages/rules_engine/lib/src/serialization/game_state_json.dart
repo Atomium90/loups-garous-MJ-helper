@@ -38,6 +38,7 @@ abstract final class GameStateJson {
       'pendingWolfVictimId': ?state.pendingWolfVictimId,
       'pendingWitchDeathTargetId': ?state.pendingWitchDeathTargetId,
       'cascade': ?_encodeCascade(state.cascade),
+      if (state.spentPowers.isNotEmpty) 'spentPowers': state.spentPowers,
     };
   }
 
@@ -81,6 +82,10 @@ abstract final class GameStateJson {
       pendingWolfVictimId: json['pendingWolfVictimId'] as String?,
       pendingWitchDeathTargetId: json['pendingWitchDeathTargetId'] as String?,
       cascade: _decodeCascade(json['cascade'] as Map<String, dynamic>?),
+      spentPowers: {
+        for (final entry in ((json['spentPowers'] as Map<String, dynamic>?) ?? const {}).entries)
+          entry.key: entry.value as int,
+      },
     );
   }
 
