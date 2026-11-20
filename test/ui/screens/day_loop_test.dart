@@ -64,6 +64,71 @@ void main() {
     await tap(tester, 'Résoudre la nuit');
   }
 
+  group('the growl of the Bear Tamer', () {
+    const comp = {'montreur_d_ours': 1, 'loup_garou': 2, 'villageois': 3};
+
+    /// Night 1: Bear Tamer = Cy (between Bo and Di), wolves = Bo + Ed, they eat Fi.
+    Future<void> nightWithBear(WidgetTester tester, {required List<String> wolves}) async {
+      await identify(tester, ['Cy']);
+      await tap(tester, 'Continuer');
+      await identify(tester, wolves);
+      await tester.tap(find.text('Fi'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Les Loups désignent Fi');
+      await tap(tester, 'Résoudre la nuit');
+      while (find.text('Je ne note pas').evaluate().isNotEmpty) {
+        await tap(tester, 'Je ne note pas');
+      }
+    }
+
+    testWidgets('comes after the recap and is journalled when he growls', (tester) async {
+      final id = await _startedGame(repo, comp);
+      await pump(tester, id);
+      await nightWithBear(tester, wolves: ['Bo', 'Ed']);
+
+      await tap(tester, "Le grognement du Montreur d'Ours");
+      expect(
+        find.text("Cy est le Montreur d'Ours. Ses voisins vivants : Bo et Di."),
+        findsOneWidget,
+      );
+      expect(find.textContaining('un de ses voisins est un Loup : il grogne'), findsOneWidget);
+
+      await tap(tester, 'Je grogne');
+      expect(find.text('Qui est élu ?'), findsOneWidget); // on to the Capitaine
+
+      await tap(tester, 'Journal');
+      expect(find.text("Le Montreur d'Ours grogne"), findsOneWidget);
+    });
+
+    testWidgets('says there is none when no neighbour is a wolf, and writes nothing', (
+      tester,
+    ) async {
+      final id = await _startedGame(repo, comp);
+      await pump(tester, id);
+      await nightWithBear(tester, wolves: ['Ana', 'Ed']);
+
+      await tap(tester, "Le grognement du Montreur d'Ours");
+      expect(find.textContaining("aucun de ses voisins n'est un Loup"), findsOneWidget);
+
+      await tap(tester, 'Pas de grognement');
+      expect(find.text('Qui est élu ?'), findsOneWidget);
+      await tap(tester, 'Journal');
+      expect(find.text("Le Montreur d'Ours grogne"), findsNothing);
+    });
+
+    testWidgets('lets the MJ growl against what the app knows', (tester) async {
+      final id = await _startedGame(repo, comp);
+      await pump(tester, id);
+      await nightWithBear(tester, wolves: ['Ana', 'Ed']);
+
+      await tap(tester, "Le grognement du Montreur d'Ours");
+      await tap(tester, 'Je grogne');
+
+      await tap(tester, 'Journal');
+      expect(find.text("Le Montreur d'Ours grogne"), findsOneWidget);
+    });
+  });
+
   testWidgets('recap CTA -> captain election -> vote -> next night', (tester) async {
     final id = await _startedGame(repo, const {
       'loup_garou': 2,

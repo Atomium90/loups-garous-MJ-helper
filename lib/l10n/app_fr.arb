@@ -304,6 +304,10 @@
   "@summaryStepRecap": {
     "description": "Resume line: the day's recap of the night."
   },
+  "summaryStepBearGrowl": "grognement de l'ours",
+  "@summaryStepBearGrowl": {
+    "description": "Resume line: the Bear Tamer's growl."
+  },
   "summaryStepCaptainElection": "élection du Capitaine",
   "@summaryStepCaptainElection": {
     "description": "Resume line: the village elects its Captain."
@@ -1290,6 +1294,50 @@
   "scriptAliveUnit": "vivants",
   "@scriptAliveUnit": {
     "description": "Unit under the number of living players of a side."
+  },
+  "scriptOpenGrowl": "Le grognement du Montreur d'Ours",
+  "@scriptOpenGrowl": {
+    "description": "Day recap button that goes to the Bear Tamer's growl."
+  },
+  "scriptGrowlTitle": "Le Montreur d'Ours",
+  "@scriptGrowlTitle": {
+    "description": "Title of the Bear Tamer's growl screen."
+  },
+  "scriptGrowlWho": "{name} est le Montreur d'Ours. Ses voisins vivants : {neighbours}.",
+  "@scriptGrowlWho": {
+    "description": "Who the Bear Tamer is and who sits next to him.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "neighbours": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptGrowlExpected": "D'après les rôles notés, un de ses voisins est un Loup : il grogne.",
+  "@scriptGrowlExpected": {
+    "description": "The app expects the Bear Tamer to growl."
+  },
+  "scriptGrowlNotExpected": "D'après les rôles notés, aucun de ses voisins n'est un Loup : pas de grognement.",
+  "@scriptGrowlNotExpected": {
+    "description": "The app expects no growl."
+  },
+  "scriptGrowlDo": "Je grogne",
+  "@scriptGrowlDo": {
+    "description": "The MJ growls."
+  },
+  "scriptGrowlNone": "Pas de grognement",
+  "@scriptGrowlNone": {
+    "description": "The MJ does not growl."
+  },
+  "narrGrowlHead": "Le Montreur d'Ours tend l'oreille.",
+  "@narrGrowlHead": {
+    "description": "Said before the Bear Tamer's growl."
+  },
+  "narrGrowlBody": "Si l'un de ses voisins est un Loup-Garou, grognez ; sinon, restez silencieux.",
+  "@narrGrowlBody": {
+    "description": "What the MJ does for the growl."
   },
   "scriptElectCaptain": "Élire le Capitaine",
   "@scriptElectCaptain": {

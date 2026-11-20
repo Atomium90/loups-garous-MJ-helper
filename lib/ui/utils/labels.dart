@@ -99,6 +99,7 @@ String sessionSummaryLine(AppLocalizations l10n, SessionSummary summary) {
     SummaryStep.role => l10n.roleName(summary.roleId ?? ''),
     SummaryStep.nightEnd => l10n.summaryStepNightEnd,
     SummaryStep.recap => l10n.summaryStepRecap,
+    SummaryStep.bearGrowl => l10n.summaryStepBearGrowl,
     SummaryStep.captainElection => l10n.summaryStepCaptainElection,
     SummaryStep.villageVote => l10n.summaryStepVillageVote,
     SummaryStep.dayDone => l10n.summaryStepDayDone,
