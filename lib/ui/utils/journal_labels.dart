@@ -33,5 +33,9 @@ String journalLine(AppLocalizations l10n, NightLogRow row) {
     JournalKind.hunterShoots => l10n.journalHunterShoots(player),
     JournalKind.seerObserves => l10n.journalSeerObserves(player),
     JournalKind.heartbreakDeath => l10n.journalHeartbreakDeath(player),
+    JournalKind.foxFindsWolf => l10n.journalFoxFindsWolf(player),
+    JournalKind.foxFindsNone => l10n.journalFoxFindsNone(player),
+    JournalKind.sistersMeet => l10n.journalSistersMeet,
+    JournalKind.bearGrowls => l10n.journalBearGrowls,
   };
 }

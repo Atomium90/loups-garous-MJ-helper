@@ -11,6 +11,15 @@ class VoleurSwap implements GameAction {
   const VoleurSwap({required this.voleurPlayerId, this.stolenRoleId});
 }
 
+/// The Fox's sniff: he picked [middlePlayerId] (the middle of three neighbours) and the MJ
+/// says whether a wolf is among the three. With none, his power is gone for good.
+class FoxSniff implements GameAction {
+  final String middlePlayerId;
+  final bool wolfFound;
+
+  const FoxSniff({required this.middlePlayerId, required this.wolfFound});
+}
+
 class CupidonPair implements GameAction {
   final String playerAId;
   final String playerBId;

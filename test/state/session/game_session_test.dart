@@ -444,6 +444,69 @@ void main() {
     });
   });
 
+  group('the Fox', () {
+    // 6 players: Ana the Fox, Bo and Cy wolves, the rest villagers; seats in roster order.
+    const comp = {'renard': 1, 'loup_garou': 2, 'villageois': 3};
+
+    Future<({int gameId, List<int> ids, GameSession n})> startedAsFox() async {
+      final game = await _startedGame(repo, composition: comp);
+      final n = await notifierFor(game.gameId);
+      await n.identifyRole('renard', [game.seatRowIds[0]]); // Ana
+      return (gameId: game.gameId, ids: game.seatRowIds, n: n);
+    }
+
+    test('a sniff that finds a wolf keeps his power, and journals it', () async {
+      final f = await startedAsFox();
+
+      await f.n.foxSniff(middleEngineId: '${f.ids[2]}', wolfFound: true);
+
+      final s = stateOf(f.gameId);
+      expect(s.engine.spentPowers, isEmpty);
+      expect(s.currentStep!.role.id, 'loup_garou'); // moved on
+      final log = frenchJournal(await repo.watchNightLog(f.gameId).first);
+      expect(log, contains('Le Renard flaire autour de Cy : un Loup'));
+    });
+
+    test('a sniff that finds none ends his power for the rest of the game', () async {
+      final f = await startedAsFox();
+
+      await f.n.foxSniff(middleEngineId: '${f.ids[4]}', wolfFound: false);
+
+      final s = stateOf(f.gameId);
+      expect(s.engine.spentPowers, {'renard': 1});
+      final log = frenchJournal(await repo.watchNightLog(f.gameId).first);
+      expect(log, contains('Le Renard flaire autour de Ed : aucun Loup, il perd son pouvoir'));
+    });
+
+    test('the lost power survives a force-quit', () async {
+      final f = await startedAsFox();
+      await f.n.foxSniff(middleEngineId: '${f.ids[4]}', wolfFound: false);
+
+      final resumed = ProviderContainer(
+        overrides: [gameRepositoryProvider.overrideWithValue(repo)],
+      );
+      addTearDown(resumed.dispose);
+      final s = await resumed.read(gameSessionProvider(f.gameId).future);
+
+      expect(s.engine.spentPowers, {'renard': 1});
+    });
+  });
+
+  test('the Two Sisters meeting is journalled and moves on', () async {
+    final game = await _startedGame(
+      repo,
+      composition: const {'deux_soeurs': 2, 'loup_garou': 2, 'villageois': 2},
+    );
+    final n = await notifierFor(game.gameId);
+    await n.identifyRole('deux_soeurs', [game.seatRowIds[0], game.seatRowIds[1]]);
+
+    await n.sistersMet();
+
+    expect(stateOf(game.gameId).currentStep!.role.id, 'loup_garou');
+    final log = frenchJournal(await repo.watchNightLog(game.gameId).first);
+    expect(log, contains('Les Deux Sœurs se reconnaissent'));
+  });
+
   group('a drawn Voleur reserve', () {
     // 6 players; the pack holds 2 more Simples Villageois than that.
     const comp = {'voleur': 1, 'loup_garou': 2, 'sorciere': 1, 'villageois': 2};

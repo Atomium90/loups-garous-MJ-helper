@@ -60,6 +60,11 @@ class GameState {
   /// choice only the MJ can make.
   final CascadeState? cascade;
 
+  /// Roles whose power is gone for good (the Fox who sniffed out no wolf), with the night they
+  /// lost it. The night script stops calling such a role from the night after: tonight's script
+  /// must not change under the MJ's feet. See [spentPowersBeforeTonight].
+  final Map<String, int> spentPowers;
+
   const GameState({
     required this.players,
     required this.nightIndex,
@@ -70,7 +75,14 @@ class GameState {
     this.pendingWolfVictimId,
     this.pendingWitchDeathTargetId,
     this.cascade,
+    this.spentPowers = const {},
   });
+
+  /// The roles whose power was already gone when tonight began.
+  Set<String> get spentPowersBeforeTonight => {
+    for (final entry in spentPowers.entries)
+      if (entry.value < nightIndex) entry.key,
+  };
 
   factory GameState.initial({required List<Player> players}) =>
       GameState(players: players, nightIndex: 1, phase: GamePhase.night);
@@ -111,6 +123,7 @@ class GameState {
     Object? pendingWolfVictimId = _unset,
     Object? pendingWitchDeathTargetId = _unset,
     Object? cascade = _unset,
+    Map<String, int>? spentPowers,
   }) => GameState(
     players: players ?? this.players,
     nightIndex: nightIndex ?? this.nightIndex,
@@ -127,5 +140,6 @@ class GameState {
         ? this.pendingWitchDeathTargetId
         : pendingWitchDeathTargetId as String?,
     cascade: identical(cascade, _unset) ? this.cascade : cascade as CascadeState?,
+    spentPowers: spentPowers ?? this.spentPowers,
   );
 }

@@ -16,6 +16,7 @@ import '../../widgets/app_button.dart';
 import '../../widgets/narration_block.dart';
 import '../../widgets/avatar_pick_cell.dart';
 import '../../widgets/player_avatar.dart';
+import 'widgets/fox_act.dart';
 import 'widgets/identify_step.dart';
 import 'widgets/reserve_entry.dart';
 import 'widgets/simple_act.dart';
@@ -180,6 +181,36 @@ class _NightBody extends ConsumerWidget {
           onInspect: (rowId, notedRoleId) =>
               notifier.seerInspect(targetRowId: rowId, notedRoleId: notedRoleId),
           onSkip: notifier.skipStep,
+        );
+
+      case 'renard':
+        return FoxAct(
+          candidates: [for (final p in alive) cand(p)],
+          trioFor: (middleId) => [
+            for (final p in session.engine.foxTrio(middleId)) p.name,
+          ],
+          appKnowsWolf: (middleId) => session.engine.wolfAmong(
+            session.engine.foxTrio(middleId),
+            RoleRegistry.all,
+          ),
+          onAnswer: (middleId, wolfFound) =>
+              notifier.foxSniff(middleEngineId: middleId, wolfFound: wolfFound),
+          onSkip: notifier.skipStep,
+        );
+
+      case 'deux_soeurs':
+        return SimpleAct(
+          primaryLabel: context.l10n.scriptSistersDone,
+          onPrimary: notifier.sistersMet,
+          secondaryLabel: context.l10n.scriptSkipRole,
+          onSecondary: notifier.skipStep,
+        );
+
+      case 'montreur_d_ours':
+        // He only makes himself known tonight; his power plays in the morning.
+        return SimpleAct(
+          primaryLabel: context.l10n.commonContinue,
+          onPrimary: notifier.skipStep,
         );
 
       case 'cupidon':
@@ -912,6 +943,9 @@ IconData _roleIcon(String roleId) => switch (roleId) {
   'cupidon' => AppIcons.cupid,
   'voleur' => AppIcons.thief,
   'chasseur' => AppIcons.hunter,
+  'renard' => AppIcons.fox,
+  'deux_soeurs' => AppIcons.sisters,
+  'montreur_d_ours' => AppIcons.bearTamer,
   'capitaine' => AppIcons.captain,
   _ => AppIcons.village,
 };

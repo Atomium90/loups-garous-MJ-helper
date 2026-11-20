@@ -15,7 +15,19 @@ Role _scriptRole(
 
 void main() {
   const builder = NightScriptBuilder();
-  final baseRoles = RoleRegistry.all.roles;
+  // The base box's roles only: these tests pin the base game's script, whatever roles the
+  // registry holds besides.
+  const baseIds = {
+    'voleur',
+    'cupidon',
+    'voyante',
+    'loup_garou',
+    'sorciere',
+    'villageois',
+    'petite_fille',
+    'chasseur',
+  };
+  final baseRoles = [for (final r in RoleRegistry.all.roles) if (baseIds.contains(r.id)) r];
   final allBaseIds = baseRoles.map((r) => r.id).toSet();
 
   group('NightScriptBuilder with real base game data', () {

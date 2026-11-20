@@ -56,6 +56,15 @@ void main() {
       );
     });
 
+    test('names a group as it is instead of counting it', () {
+      const withSisters = {'deux_soeurs': 2, 'loup_garou': 2, 'villageois': 4};
+      expect(
+        deckLine(fr, withSisters, registry),
+        '2 Loups-Garous · Deux Sœurs · 4 Simples Villageois',
+      );
+      expect(deckLine(en, withSisters, registry), '2 Werewolves · Two Sisters · 4 Simple Villagers');
+    });
+
     test('drops zero-count entries', () {
       final line = deckLine(fr, const {'loup_garou': 2, 'voyante': 0, 'villageois': 6}, registry);
 

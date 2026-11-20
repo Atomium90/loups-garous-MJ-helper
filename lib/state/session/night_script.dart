@@ -53,6 +53,7 @@ NightScript buildNightScript({
           if (r.hasNightCall) r.id,
       },
       nightIndex: nightIndex,
+      context: _contextFor(engine),
     );
   }
 
@@ -65,9 +66,12 @@ NightScript buildNightScript({
   void consider(Role role) {
     if (!role.hasNightCall || !seen.add(role.id)) return;
     final known = engine.players.where((p) => p.roleId == role.id).toList();
-    final anyAlive = known.any((p) => p.alive);
+    final aliveKnown = known.where((p) => p.alive).length;
     final expected = (dealtComposition ?? composition)[role.id] ?? 0;
-    if (anyAlive || known.length < expected) callable.add(role);
+    // A group (the Two Sisters) only has someone to wake while all of it is alive: one sister
+    // left alone has nobody to recognise.
+    final holderLeft = aliveKnown >= role.groupSize;
+    if (holderLeft || known.length < expected) callable.add(role);
   }
 
   for (final entry in composition.entries) {
@@ -82,8 +86,13 @@ NightScript buildNightScript({
     compositionRoles: inOrder,
     aliveRoleIds: {for (final r in inOrder) r.id},
     nightIndex: nightIndex,
+    context: _contextFor(engine),
   );
 }
+
+/// What the game says about tonight's calls beyond the roles themselves.
+NightContext _contextFor(GameState engine) =>
+    NightContext(nightIndex: engine.nightIndex, spentPowers: engine.spentPowersBeforeTonight);
 
 /// [roles] in the registry's declaration order, which is the official wake order.
 ///
