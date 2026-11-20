@@ -61,10 +61,24 @@ void main() {
   });
 
   group('night scripts', () {
+    // Only these roles: the script of the Fox, the Sisters and the Bear Tamer among the base roles,
+    // whatever other roles the registry holds.
+    const ids = {
+      'voleur',
+      'cupidon',
+      'voyante',
+      'renard',
+      'deux_soeurs',
+      'montreur_d_ours',
+      'loup_garou',
+      'sorciere',
+    };
+    final roles = [for (final r in registry.roles) if (ids.contains(r.id)) r];
+
     List<String> script(int night, {Set<String> spent = const {}}) => builder
         .build(
-          compositionRoles: registry.roles,
-          aliveRoleIds: {for (final r in registry.roles) r.id},
+          compositionRoles: roles,
+          aliveRoleIds: {for (final r in roles) r.id},
           nightIndex: night,
           context: NightContext(nightIndex: night, spentPowers: spent),
         )

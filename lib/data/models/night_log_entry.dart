@@ -25,7 +25,13 @@ enum JournalKind {
   foxFindsWolf('fox'),
   foxFindsNone('fox'),
   sistersMeet('sisters'),
-  bearGrowls('bear');
+  bearGrowls('bear'),
+  wildChildModel('wildChild'),
+  chienLoupWolf('dog'),
+  chienLoupVillage('dog'),
+  infection('infect'),
+  bigBadWolfTarget('wolves'),
+  whiteWolfEats('wolves');
 
   const JournalKind(this.iconName);
 

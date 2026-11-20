@@ -121,8 +121,12 @@ void main() {
       expect(registry.byIdOrNull('nonexistent'), isNull);
     });
 
-    test('byTeam(werewolves) returns exactly loup_garou', () {
-      expect(registry.byTeam(Team.werewolves).map((r) => r.id), ['loup_garou']);
+    test('byTeam(werewolves) returns the wolf pack, the plain wolf first', () {
+      expect(registry.byTeam(Team.werewolves).map((r) => r.id), [
+        'loup_garou',
+        'infect_pere_des_loups',
+        'grand_mechant_loup',
+      ]);
     });
   });
 }

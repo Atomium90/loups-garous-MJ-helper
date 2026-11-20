@@ -58,6 +58,10 @@ AppButton _launchButton(WidgetTester tester) =>
     tester.widget<AppButton>(find.widgetWithText(AppButton, 'Lancer la partie'));
 
 void main() {
+  // Each test starts with the default settings: a box ticked or a reserve rule set by an earlier
+  // test must not leak into the next.
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   testWidgets(
     "player-count stepper updates the footer, inert at the box's 8-18 bounds",
     (tester) async {

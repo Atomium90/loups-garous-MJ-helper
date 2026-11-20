@@ -46,6 +46,10 @@ class Role {
   /// What a [WakeCondition.conditional] role waits on; [WakeGuard.none] for the others.
   final WakeGuard wakeGuard;
 
+  /// The role is also called on the first night, just to be identified, even when its power only
+  /// starts later (the White Werewolf wakes with the wolves that night, and alone from the second).
+  final bool knownOnFirstNight;
+
   /// The call may be skipped by the MJ without any consequence: the role has no obligation to
   /// act (the Fox, the Sisters, the Brothers). The script offers it as a step to pass.
   final bool optionalCall;
@@ -67,6 +71,7 @@ class Role {
     this.firstWakeNight = 1,
     this.wakeGuard = WakeGuard.none,
     this.optionalCall = false,
+    this.knownOnFirstNight = false,
     this.orderConstraints = const [],
     this.actionType = ActionType.none,
     this.onDeath = DeathEffect.none,

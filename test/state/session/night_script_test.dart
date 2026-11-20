@@ -225,4 +225,32 @@ void main() {
       expect(stepIds(script), contains('deux_soeurs'));
     });
   });
+
+  group('the Big Bad Wolf', () {
+    const composition = {'grand_mechant_loup': 1, 'loup_garou': 2, 'villageois': 3};
+
+    test('is called while no wolf is dead', () {
+      final script = buildNightScript(
+        engine: _state(
+          nightIndex: 2,
+          roles: {0: 'grand_mechant_loup', 1: 'loup_garou', 2: 'loup_garou'},
+          dead: {5},
+        ),
+        composition: composition,
+      );
+      expect(stepIds(script), ['loup_garou', 'grand_mechant_loup']);
+    });
+
+    test('stops being called from the night after a wolf died', () {
+      final script = buildNightScript(
+        engine: _state(
+          nightIndex: 3,
+          roles: {0: 'grand_mechant_loup', 1: 'loup_garou', 2: 'loup_garou'},
+          dead: {2},
+        ),
+        composition: composition,
+      );
+      expect(stepIds(script), ['loup_garou']);
+    });
+  });
 }

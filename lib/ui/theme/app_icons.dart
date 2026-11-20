@@ -113,6 +113,10 @@ abstract final class AppIcons {
   static const fox = TablerIcons.eyeSearch;
   static const sisters = TablerIcons.heartHandshake;
   static const bearTamer = TablerIcons.pawFilled;
+  static const wildChild = TablerIcons.leaf;
+  static const chienLoup = TablerIcons.dog;
+  static const infect = TablerIcons.virus;
+  static const bigBadWolf = TablerIcons.pig;
 
   /// The Witch's "Elle sauve X" button.
   static const witchSave = TablerIcons.heartPlus;
@@ -164,6 +168,9 @@ abstract final class AppIcons {
     'fox' => fox,
     'sisters' => sisters,
     'bear' => bearTamer,
+    'wildChild' => wildChild,
+    'dog' => chienLoup,
+    'infect' => infect,
     'crown' => captain,
     'vote' => vote,
     'scale' => scale,
