@@ -13,6 +13,7 @@ export 'src/composition_advisor/composition_suggestion.dart';
 
 export 'src/models/action_type.dart';
 export 'src/models/death_effect.dart';
+export 'src/models/night_context.dart';
 export 'src/models/order_constraint.dart';
 export 'src/models/role.dart';
 export 'src/models/team.dart';

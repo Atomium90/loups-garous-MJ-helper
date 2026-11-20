@@ -38,6 +38,17 @@ class Role {
 
   /// Null iff [hasNightCall] is false.
   final WakeCondition? wakeCondition;
+
+  /// The first night the role is woken (1 unless its power only starts later: the White Werewolf
+  /// from night 2). Ignored when [hasNightCall] is false.
+  final int firstWakeNight;
+
+  /// What a [WakeCondition.conditional] role waits on; [WakeGuard.none] for the others.
+  final WakeGuard wakeGuard;
+
+  /// The call may be skipped by the MJ without any consequence: the role has no obligation to
+  /// act (the Fox, the Sisters, the Brothers). The script offers it as a step to pass.
+  final bool optionalCall;
   final List<OrderConstraint> orderConstraints;
   final ActionType actionType;
 
@@ -53,6 +64,9 @@ class Role {
     this.suggestionTier,
     required this.hasNightCall,
     this.wakeCondition,
+    this.firstWakeNight = 1,
+    this.wakeGuard = WakeGuard.none,
+    this.optionalCall = false,
     this.orderConstraints = const [],
     this.actionType = ActionType.none,
     this.onDeath = DeathEffect.none,
