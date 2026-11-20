@@ -469,6 +469,10 @@
   "@playersTitle": {
     "description": "Title of the screen where the players are named."
   },
+  "playersSeatingHint": "Notez les joueurs dans l'ordre où ils sont assis autour de la table : certains rôles regardent leurs voisins.",
+  "@playersSeatingHint": {
+    "description": "Hint above the player list: the order is the seating order."
+  },
   "playersNamedCount": "{named} sur {total} nommés",
   "@playersNamedCount": {
     "description": "How many players have a name so far.",
