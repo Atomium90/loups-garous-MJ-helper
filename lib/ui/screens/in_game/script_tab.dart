@@ -15,6 +15,7 @@ import '../../widgets/narration_block.dart';
 import '../../widgets/avatar_pick_cell.dart';
 import '../../widgets/player_avatar.dart';
 import 'widgets/identify_step.dart';
+import 'widgets/reserve_entry.dart';
 import 'widgets/simple_act.dart';
 import 'widgets/target_pick.dart';
 import 'widgets/unreadable_game_notice.dart';
@@ -101,6 +102,15 @@ class _NightBody extends ConsumerWidget {
     if (step == null) {
       return _FinalizePrompt(onResolve: () => notifier.applyAction(const FinalizeNight()));
     }
+    if (step.role.id == 'voleur' &&
+        session.reserveToEnter &&
+        session.cursor.subStep != NightSubStep.act) {
+      return ReserveEntry(
+        pack: session.pack,
+        onConfirm: notifier.enterReserve,
+        onDefer: notifier.skipStep,
+      );
+    }
     if (session.currentStepNeedsIdentify) {
       final roleId = step.role.id;
       // Holders already on record (the Voyante noted one, the Voleur stole the
@@ -118,7 +128,7 @@ class _NightBody extends ConsumerWidget {
       };
       return IdentifyStep(
         role: step.role,
-        count: (session.composition[roleId] ?? 1) - session.dealtHoldersKnown(roleId),
+        count: session.expectedHolders(roleId) - session.dealtHoldersKnown(roleId),
         candidates: [
           for (final p in session.engine.alivePlayers)
             if (!taken.contains(int.parse(p.id))) (rowId: int.parse(p.id), name: p.name),
@@ -139,6 +149,16 @@ class _NightBody extends ConsumerWidget {
   Widget _actBody(BuildContext context, GameSession notifier, Role role) {
     final alive = session.engine.alivePlayers;
     Candidate cand(Player p) => (id: p.id, name: p.name);
+
+    // Every card of this role is in the Voleur's reserve: nobody holds it, but the MJ still
+    // calls it so the table cannot tell. Nothing to act.
+    if (session.reserveDrawn &&
+        session.reserveRoleIds.isNotEmpty &&
+        !alive.any((p) => p.roleId == role.id) &&
+        session.expectedHolders(role.id) == 0 &&
+        role.id != 'voleur') {
+      return SimpleAct(primaryLabel: context.l10n.scriptSkipRole, onPrimary: notifier.skipStep);
+    }
 
     switch (role.id) {
       case 'voyante':
@@ -195,6 +215,7 @@ class _NightBody extends ConsumerWidget {
         }
         return _VoleurAct(
           reserveRoleIds: session.reserveRoleIds,
+          mustSwap: session.reserveForcesSwap,
           onConfirm: (stolenRoleId) => notifier.voleurSwap(
             voleurEngineId: voleur.id,
             stolenRoleId: stolenRoleId,
@@ -211,9 +232,16 @@ class _NightBody extends ConsumerWidget {
 /// his own. The two reserve cards double as the reminder of what's on the
 /// table - no separate collapsible needed. A stolen night role gets a nudge.
 class _VoleurAct extends StatefulWidget {
-  const _VoleurAct({required this.reserveRoleIds, required this.onConfirm});
+  const _VoleurAct({
+    required this.reserveRoleIds,
+    required this.onConfirm,
+    this.mustSwap = false,
+  });
 
   final List<String> reserveRoleIds;
+
+  /// Both reserve cards are wolves: he cannot keep his own card.
+  final bool mustSwap;
 
   /// null = he keeps his card.
   final void Function(String? stolenRoleId) onConfirm;
@@ -247,6 +275,14 @@ class _VoleurActState extends State<_VoleurAct> {
             style: typography.rowLabel.copyWith(color: colors.textPrimary),
           ),
         ),
+        if (widget.mustSwap)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 8),
+            child: Text(
+              context.l10n.scriptThiefMustSwap,
+              style: typography.meta.copyWith(color: colors.warnText, height: 1.5),
+            ),
+          ),
         Expanded(
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screen),
@@ -258,10 +294,11 @@ class _VoleurActState extends State<_VoleurAct> {
                   selected: _choice == id,
                   onTap: () => setState(() => _choice = id),
                 ),
-              _KeepCardOption(
-                selected: keeps,
-                onTap: () => setState(() => _choice = ''),
-              ),
+              if (!widget.mustSwap)
+                _KeepCardOption(
+                  selected: keeps,
+                  onTap: () => setState(() => _choice = ''),
+                ),
             ],
           ),
         ),
@@ -935,7 +972,7 @@ List<({String roleId, int remaining})> unassignedRoles(GameSessionState session)
     assigned['voleur'] = (assigned['voleur'] ?? 0) + 1;
   }
   return [
-    for (final e in session.composition.entries)
+    for (final e in session.dealtComposition.entries)
       if (e.value - (assigned[e.key] ?? 0) > 0)
         (roleId: e.key, remaining: e.value - (assigned[e.key] ?? 0)),
   ];

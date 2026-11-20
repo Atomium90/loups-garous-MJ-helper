@@ -15,9 +15,15 @@ const kPlaceholderRoleId = 'villageois';
 /// for one of the reserve cards, that stolen role may not be in the
 /// composition at all (the MJ set it aside) - deriving from the live player
 /// roles is what lets the script still call, say, a stolen Voyante.
+///
+/// [dealtComposition] is how many holders each role really has, when that differs from
+/// [composition]: with a drawn Voleur reserve some cards of the composition sit in the middle.
+/// It only decides, from night 2, which roles still have a holder to wake; night 1 keeps calling
+/// every role of the composition (the MJ bluffs for a card that is in the reserve).
 NightScript buildNightScript({
   required GameState engine,
   required Map<String, int> composition,
+  Map<String, int>? dealtComposition,
   RoleRegistry registry = RoleRegistry.all,
 }) {
   final nightIndex = engine.nightIndex;
@@ -60,7 +66,7 @@ NightScript buildNightScript({
     if (!role.hasNightCall || !seen.add(role.id)) return;
     final known = engine.players.where((p) => p.roleId == role.id).toList();
     final anyAlive = known.any((p) => p.alive);
-    final expected = composition[role.id] ?? 0;
+    final expected = (dealtComposition ?? composition)[role.id] ?? 0;
     if (anyAlive || known.length < expected) callable.add(role);
   }
 

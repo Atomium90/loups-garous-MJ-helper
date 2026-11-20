@@ -1021,6 +1021,22 @@
   "@scriptLoadError": {
     "description": "The script tab failed to load."
   },
+  "reserveEntryTitle": "Les 2 cartes restantes",
+  "@reserveEntryTitle": {
+    "description": "Title of the panel where the MJ notes the Thief's two leftover cards."
+  },
+  "reserveEntryBody": "Regardez les 2 cartes posées au centre et indiquez-les : l'app en a besoin pour savoir qui peut porter quoi.",
+  "@reserveEntryBody": {
+    "description": "Explains why the leftover cards are noted."
+  },
+  "reserveEntryConfirm": "Valider ces 2 cartes",
+  "@reserveEntryConfirm": {
+    "description": "Button that confirms the Thief's two leftover cards."
+  },
+  "scriptThiefMustSwap": "Les deux cartes sont des Loups-Garous : le Voleur doit en prendre une.",
+  "@scriptThiefMustSwap": {
+    "description": "Said when the Thief cannot keep his card because both reserve cards are Werewolves."
+  },
   "scriptThiefExtra": "Le Voleur a volé une carte de {role} : il compte en plus.",
   "@scriptThiefExtra": {
     "description": "Note on the identify step when the Thief holds a stolen card of this role.",
