@@ -126,6 +126,18 @@ void main() {
     });
   });
 
+  group('the Fox position', () {
+    test('is after the Seer by default, and the choice persists', () async {
+      final container = await containerWith({});
+      expect((await container.read(settingsProvider.future)).foxAfterWitch, isFalse);
+
+      await container.read(settingsProvider.notifier).setFoxAfterWitch(true);
+
+      expect(container.read(settingsProvider).value!.foxAfterWitch, isTrue);
+      expect((await SharedPreferences.getInstance()).getBool('fox_after_witch'), isTrue);
+    });
+  });
+
   group('the Thief reserve', () {
     test('is drawn at random by default', () async {
       final container = await containerWith({});

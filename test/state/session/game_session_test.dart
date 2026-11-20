@@ -7,6 +7,8 @@ import 'package:loup_garou_mj/data/repositories/drift_game_repository.dart';
 import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
 import 'package:loup_garou_mj/state/session/game_session.dart';
 import 'package:loup_garou_mj/state/session/session_cursor.dart';
+import 'package:loup_garou_mj/state/settings/settings_providers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:loup_garou_mj/ui/screens/in_game/script_tab.dart' show unassignedRoles;
 import 'package:rules_engine/rules_engine.dart';
 
@@ -441,6 +443,42 @@ void main() {
       expect(s.dealtHoldersKnown('loup_garou'), 1);
       expect(s.voleurSwapInsFor('loup_garou'), isEmpty); // she's not the Voleur
       expect(s.currentStepNeedsIdentify, isTrue); // one wolf still unknown
+    });
+  });
+
+  group('the place of the Fox in the order', () {
+    const comp = {'renard': 1, 'voyante': 1, 'sorciere': 1, 'loup_garou': 2, 'villageois': 1};
+
+    ProviderContainer containerWith({required bool foxAfterWitch}) {
+      SharedPreferences.setMockInitialValues({'fox_after_witch': foxAfterWitch});
+      return ProviderContainer(
+        overrides: [
+          gameRepositoryProvider.overrideWithValue(repo),
+          sharedPreferencesProvider.overrideWith((ref) async => SharedPreferences.getInstance()),
+        ],
+      );
+    }
+
+    test('follows the setting when the game starts, and keeps it afterwards', () async {
+      final game = await _startedGame(repo, composition: comp);
+      final first = containerWith(foxAfterWitch: true);
+      addTearDown(first.dispose);
+      await first.read(settingsProvider.future);
+      var s = await first.read(gameSessionProvider(game.gameId).future);
+      expect(s.tonight.steps.map((st) => st.role.id), ['voyante', 'loup_garou', 'sorciere', 'renard']);
+
+      // The MJ flips the setting back: this game keeps its order.
+      final later = containerWith(foxAfterWitch: false);
+      addTearDown(later.dispose);
+      await later.read(settingsProvider.future);
+      s = await later.read(gameSessionProvider(game.gameId).future);
+      expect(s.tonight.steps.map((st) => st.role.id), ['voyante', 'loup_garou', 'sorciere', 'renard']);
+    });
+
+    test('is after the Voyante by default', () async {
+      final game = await _startedGame(repo, composition: comp);
+      final s = await container.read(gameSessionProvider(game.gameId).future);
+      expect(s.tonight.steps.map((st) => st.role.id), ['voyante', 'renard', 'loup_garou', 'sorciere']);
     });
   });
 

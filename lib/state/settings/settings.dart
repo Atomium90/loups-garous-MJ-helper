@@ -61,6 +61,10 @@ class AppSettings {
   /// booklet's rule): the reserve is whatever two cards are left after the deal, noted on night 1.
   final bool thiefReserveChosen;
 
+  /// The Fox is called after the Witch (the Best Of booklet) instead of after the Seer (the Pact
+  /// booklet, the default). The booklets disagree.
+  final bool foxAfterWitch;
+
   const AppSettings({
     required this.themeMode,
     required this.keepScreenOn,
@@ -70,6 +74,7 @@ class AppSettings {
     required this.narrationHintSeen,
     required this.ownedBoxes,
     required this.thiefReserveChosen,
+    required this.foxAfterWitch,
   });
 
   static const defaults = AppSettings(
@@ -81,6 +86,7 @@ class AppSettings {
     narrationHintSeen: false,
     ownedBoxes: {baseBoxId},
     thiefReserveChosen: false,
+    foxAfterWitch: false,
   );
 
   AppSettings copyWith({
@@ -92,6 +98,7 @@ class AppSettings {
     bool? narrationHintSeen,
     Set<String>? ownedBoxes,
     bool? thiefReserveChosen,
+    bool? foxAfterWitch,
   }) => AppSettings(
     themeMode: themeMode ?? this.themeMode,
     keepScreenOn: keepScreenOn ?? this.keepScreenOn,
@@ -101,5 +108,6 @@ class AppSettings {
     narrationHintSeen: narrationHintSeen ?? this.narrationHintSeen,
     ownedBoxes: ownedBoxes ?? this.ownedBoxes,
     thiefReserveChosen: thiefReserveChosen ?? this.thiefReserveChosen,
+    foxAfterWitch: foxAfterWitch ?? this.foxAfterWitch,
   );
 }

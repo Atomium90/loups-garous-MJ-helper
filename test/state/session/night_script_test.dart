@@ -153,6 +153,31 @@ void main() {
       expect(stepIds(script), ['renard', 'deux_soeurs', 'montreur_d_ours', 'loup_garou']);
     });
 
+    test('the Fox can be called after the Witch instead (the Best Of order)', () {
+      final script = buildNightScript(
+        engine: _state(count: 8),
+        composition: {...composition, 'voyante': 1, 'sorciere': 1},
+        foxAfterWitch: true,
+      );
+      expect(stepIds(script), [
+        'voyante',
+        'deux_soeurs',
+        'montreur_d_ours',
+        'loup_garou',
+        'sorciere',
+        'renard',
+      ]);
+    });
+
+    test('with no Witch the Fox keeps his place whatever the setting', () {
+      final script = buildNightScript(
+        engine: _state(count: 8),
+        composition: composition,
+        foxAfterWitch: true,
+      );
+      expect(stepIds(script), ['renard', 'deux_soeurs', 'montreur_d_ours', 'loup_garou']);
+    });
+
     test('night 2 keeps the Fox and drops the Sisters and the Bear Tamer', () {
       final script = buildNightScript(
         engine: _state(

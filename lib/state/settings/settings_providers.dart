@@ -15,6 +15,7 @@ const _kNarrationLevel = 'narration_level';
 const _kNarrationHintSeen = 'narration_hint_seen';
 const _kOwnedBoxes = 'owned_boxes';
 const _kThiefReserveChosen = 'thief_reserve_chosen';
+const _kFoxAfterWitch = 'fox_after_witch';
 
 /// The one `SharedPreferences` handle. Override in tests with an instance from
 /// `SharedPreferences.setMockInitialValues({})`.
@@ -42,7 +43,14 @@ class Settings extends _$Settings {
       narrationHintSeen: prefs.getBool(_kNarrationHintSeen) ?? false,
       ownedBoxes: _readOwnedBoxes(prefs.getStringList(_kOwnedBoxes)),
       thiefReserveChosen: prefs.getBool(_kThiefReserveChosen) ?? false,
+      foxAfterWitch: prefs.getBool(_kFoxAfterWitch) ?? false,
     );
+  }
+
+  Future<void> setFoxAfterWitch(bool value) async {
+    final prefs = await ref.read(sharedPreferencesProvider.future);
+    await prefs.setBool(_kFoxAfterWitch, value);
+    state = AsyncData((state.value ?? AppSettings.defaults).copyWith(foxAfterWitch: value));
   }
 
   Future<void> setThiefReserveChosen(bool value) async {
