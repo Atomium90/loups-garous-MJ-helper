@@ -66,7 +66,7 @@
       }
     }
   },
-  "victoryProposal": "{winner, select, village{Il ne reste que des villageois : le village semble avoir gagné.} wolves{Il ne reste que des Loups-Garous : ils semblent avoir gagné.} lovers{Il ne reste que les deux Amoureux, de camps opposés : ils semblent avoir gagné.} none{Plus personne n'est en vie : personne ne gagne.} other{La partie semble terminée.}}",
+  "victoryProposal": "{winner, select, village{Il ne reste que des villageois : le village semble avoir gagné.} wolves{Il ne reste que des Loups-Garous : ils semblent avoir gagné.} lovers{Il ne reste que les deux Amoureux, de camps opposés : ils semblent avoir gagné.} whiteWolf{Le Loup-Garou Blanc est le dernier en vie : il semble avoir gagné.} none{Plus personne n'est en vie : personne ne gagne.} other{La partie semble terminée.}}",
   "@victoryProposal": {
     "description": "Banner offering to end the game when the table looks decided; winner is the GameWinner name.",
     "placeholders": {
@@ -84,7 +84,7 @@
       }
     }
   },
-  "deathCauseLabel": "{cause, select, wolves{Victime des Loups} witchPoison{Potion de mort de la Sorcière} dayVote{Vote du village} hunterShot{Tir du Chasseur} other{Mort de chagrin}}",
+  "deathCauseLabel": "{cause, select, wolves{Victime des Loups} witchPoison{Potion de mort de la Sorcière} whiteWolf{Dévoré par le Loup-Garou Blanc} dayVote{Vote du village} hunterShot{Tir du Chasseur} other{Mort de chagrin}}",
   "@deathCauseLabel": {
     "description": "A death's cause in the day recap, from the cause key (wolves, witchPoison, dayVote, hunterShot, loversGrief).",
     "placeholders": {
@@ -93,7 +93,7 @@
       }
     }
   },
-  "deathCauseShort": "{cause, select, wolves{Loups} witchPoison{potion de mort} dayVote{vote du village} hunterShot{tir du Chasseur} other{mort de chagrin}}",
+  "deathCauseShort": "{cause, select, wolves{Loups} witchPoison{potion de mort} whiteWolf{Loup-Garou Blanc} dayVote{vote du village} hunterShot{tir du Chasseur} other{mort de chagrin}}",
   "@deathCauseShort": {
     "description": "Terse death cause shown after the phase in the Village tab.",
     "placeholders": {
