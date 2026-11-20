@@ -747,6 +747,14 @@
   "@settingsThiefReserveHint": {
     "description": "Explains the Thief reserve setting."
   },
+  "settingsFoxAfterWitch": "Renard appelé après la Sorcière",
+  "@settingsFoxAfterWitch": {
+    "description": "Toggle: the Fox is called after the Witch instead of after the Seer."
+  },
+  "settingsFoxAfterWitchHint": "Les livrets se contredisent : le Pacte appelle le Renard après la Voyante (par défaut), le Best Of après la Sorcière. Pris en compte à chaque nouvelle partie.",
+  "@settingsFoxAfterWitchHint": {
+    "description": "Explains the Fox position setting."
+  },
   "settingsKeepScreenOn": "Garder l'écran allumé",
   "@settingsKeepScreenOn": {
     "description": "Toggle: stop the screen from sleeping during a game."

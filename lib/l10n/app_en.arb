@@ -122,6 +122,8 @@
   "settingsDuringGame": "During the game",
   "settingsThiefReserve": "Thief reserve picked by the MJ",
   "settingsThiefReserveHint": "Off: the reserve is drawn at random, as in the rules, and you note the 2 leftover cards during night 1.",
+  "settingsFoxAfterWitch": "Call the Fox after the Witch",
+  "settingsFoxAfterWitchHint": "The booklets disagree: the Pact calls the Fox after the Seer (the default), the Best Of after the Witch. Applies to each new game.",
   "settingsKeepScreenOn": "Keep the screen on",
   "settingsAideMemoire": "Quick reference in the script",
   "settingsData": "Data",

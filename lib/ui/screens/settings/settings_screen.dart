@@ -78,6 +78,19 @@ class _SettingsBody extends StatelessWidget {
                   style: typography.counter.copyWith(color: colors.textTertiary, height: 1.55),
                 ),
               ),
+              _ToggleRow(
+                icon: AppIcons.fox,
+                label: context.l10n.settingsFoxAfterWitch,
+                value: settings.foxAfterWitch,
+                onChanged: (v) => notifier?.setFoxAfterWitch(v),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  context.l10n.settingsFoxAfterWitchHint,
+                  style: typography.counter.copyWith(color: colors.textTertiary, height: 1.55),
+                ),
+              ),
               _ComingSoonRow(icon: AppIcons.regulars, label: context.l10n.regularsBook),
               const SizedBox(height: 22),
               SectionLabel(context.l10n.settingsAppearance),

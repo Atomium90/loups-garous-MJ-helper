@@ -98,6 +98,7 @@ SessionSummary _summarize(Game game, String blob) {
     engine: engine,
     composition: composition,
     dealtComposition: dealtCompositionOf(composition, reserve, reserveDrawn: reserveDrawn),
+    foxAfterWitch: decoded['foxAfterWitch'] == true,
   );
   final inRoleTurn = cursor.stepIndex < script.steps.length;
   return SessionSummary(

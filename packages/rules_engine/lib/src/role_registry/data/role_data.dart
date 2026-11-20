@@ -59,7 +59,6 @@ const allRoles = <Role>[
     hasNightCall: true,
     wakeCondition: WakeCondition.everyOtherNight,
     optionalCall: true,
-    orderConstraints: [OrderConstraint.after('renard')],
   ),
   // He only identifies himself on the first night; his power plays in the morning.
   Role(
@@ -68,7 +67,6 @@ const allRoles = <Role>[
     suggestionTier: 3,
     hasNightCall: true,
     wakeCondition: WakeCondition.firstNightOnly,
-    orderConstraints: [OrderConstraint.after('deux_soeurs')],
   ),
   Role(
     id: 'loup_garou',

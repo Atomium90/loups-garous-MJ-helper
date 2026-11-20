@@ -23,6 +23,9 @@ Future<void> _openSettingsInApp(
   Locale device = const Locale('fr', 'FR'),
 }) async {
   SharedPreferences.setMockInitialValues({'language': ?stored});
+  // Réglages is long: tall enough to see the language section without scrolling.
+  await tester.binding.setSurfaceSize(const Size(400, 2000));
+  addTearDown(() => tester.binding.setSurfaceSize(null));
   tester.platformDispatcher.localesTestValue = [device];
   addTearDown(tester.platformDispatcher.clearLocalesTestValue);
   await tester.pumpWidget(
@@ -103,6 +106,8 @@ void main() {
 
   group('the language', () {
     testWidgets('can be forced from Réglages and is remembered', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(400, 2000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
       await pumpAppRouter(
         tester,
         overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
@@ -143,7 +148,7 @@ void main() {
 
   testWidgets('the aide-mémoire toggle flips and persists', (tester) async {
     // Réglages is longer than the default test screen since the language section was added.
-    await tester.binding.setSurfaceSize(const Size(400, 1200));
+    await tester.binding.setSurfaceSize(const Size(400, 2000));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAppRouter(
       tester,
@@ -162,7 +167,7 @@ void main() {
   testWidgets('the Thief reserve toggle is off by default and persists once flipped', (
     tester,
   ) async {
-    await tester.binding.setSurfaceSize(const Size(400, 1200));
+    await tester.binding.setSurfaceSize(const Size(400, 2000));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAppRouter(
       tester,
@@ -176,6 +181,22 @@ void main() {
     await tester.pumpAndSettle();
 
     expect((await SharedPreferences.getInstance()).getBool('thief_reserve_chosen'), isTrue);
+  });
+
+  testWidgets('the Fox position toggle persists once flipped', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
+      initialLocation: '/settings',
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Renard appelé après la Sorcière'));
+    await tester.pumpAndSettle();
+
+    expect((await SharedPreferences.getInstance()).getBool('fox_after_witch'), isTrue);
   });
 
   group('deleting every game', () {
@@ -200,7 +221,7 @@ void main() {
     }
 
     Future<void> openSettings(WidgetTester tester, FakeGameRepository repository) async {
-      await tester.binding.setSurfaceSize(const Size(400, 1200));
+      await tester.binding.setSurfaceSize(const Size(400, 2000));
       addTearDown(() => tester.binding.setSurfaceSize(null));
       await pumpAppRouter(
         tester,
