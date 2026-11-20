@@ -1,4 +1,5 @@
 import '../game_state/death_cause.dart';
+import '../models/team.dart';
 import '../game_state/game_state.dart';
 import '../game_state/pending_decision.dart';
 import '../game_state/player.dart';
@@ -21,6 +22,8 @@ abstract final class GameStateJson {
             'causeOfDeath': ?_encodeCause(p.causeOfDeath),
             'diedOnNight': ?p.diedOnNight,
             'diedOnPhase': ?p.diedOnPhase?.name,
+            'teamOverride': ?p.teamOverride?.name,
+            if (p.statuses.isNotEmpty) 'statuses': [for (final s in p.statuses) s.name],
           },
       ],
       'nightIndex': state.nightIndex,
@@ -54,6 +57,14 @@ abstract final class GameStateJson {
             diedOnPhase: switch (p['diedOnPhase'] as String?) {
               null => null,
               final name => GamePhase.values.byName(name),
+            },
+            teamOverride: switch (p['teamOverride'] as String?) {
+              null => null,
+              final name => Team.values.byName(name),
+            },
+            statuses: {
+              for (final name in (p['statuses'] as List<dynamic>?) ?? const [])
+                PlayerStatus.values.byName(name as String),
             },
           ),
       ],

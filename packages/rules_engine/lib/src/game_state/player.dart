@@ -1,5 +1,18 @@
+import '../models/team.dart';
 import 'death_cause.dart';
 import 'game_phase.dart';
+
+/// A condition a player carries on top of their role. Stored by name: append new ones, never
+/// rename.
+enum PlayerStatus {
+  /// Turned into a werewolf by the Infect Père des Loups: keeps their power, plays with the wolves.
+  infected,
+
+  /// Charmed by the Joueur de Flûte.
+  charmed,
+}
+
+const _unset = Object();
 
 class Player {
   final String id;
@@ -16,6 +29,13 @@ class Player {
   final int? diedOnNight;
   final GamePhase? diedOnPhase;
 
+  /// The side the player plays for now when it is not their role's own (an infected villager, a
+  /// Wild Child whose model died, a Wolf-Hound who chose...). Null: the role's team applies.
+  final Team? teamOverride;
+
+  /// What the player is subject to besides their role.
+  final Set<PlayerStatus> statuses;
+
   const Player({
     required this.id,
     required this.name,
@@ -24,14 +44,19 @@ class Player {
     this.causeOfDeath,
     this.diedOnNight,
     this.diedOnPhase,
+    this.teamOverride,
+    this.statuses = const {},
   });
 
+  /// [teamOverride] takes `null` to put the player back on their role's own side.
   Player copyWith({
     String? roleId,
     bool? alive,
     DeathCause? causeOfDeath,
     int? diedOnNight,
     GamePhase? diedOnPhase,
+    Object? teamOverride = _unset,
+    Set<PlayerStatus>? statuses,
   }) => Player(
     id: id,
     name: name,
@@ -40,7 +65,11 @@ class Player {
     causeOfDeath: causeOfDeath ?? this.causeOfDeath,
     diedOnNight: diedOnNight ?? this.diedOnNight,
     diedOnPhase: diedOnPhase ?? this.diedOnPhase,
+    teamOverride: identical(teamOverride, _unset) ? this.teamOverride : teamOverride as Team?,
+    statuses: statuses ?? this.statuses,
   );
+
+  bool hasStatus(PlayerStatus status) => statuses.contains(status);
 
   @override
   String toString() => 'Player($id, roleId: $roleId, alive: $alive)';

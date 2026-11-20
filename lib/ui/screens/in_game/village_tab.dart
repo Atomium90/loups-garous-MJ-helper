@@ -61,15 +61,8 @@ class _VillageBody extends StatelessWidget {
     final dead = players.where((p) => !p.alive).toList(growable: false);
     final captainId = session.engine.captainPlayerId;
 
-    var villageAlive = 0;
-    var wolvesAlive = 0;
-    for (final p in alive) {
-      final roleId = _confirmedRole(p.id);
-      final team = roleId == null
-          ? Team.village
-          : (RoleRegistry.all.byIdOrNull(roleId)?.team ?? Team.village);
-      team == Team.werewolves ? wolvesAlive++ : villageAlive++;
-    }
+    final wolvesAlive = session.engine.aliveWolves(RoleRegistry.all);
+    final villageAlive = alive.length - wolvesAlive;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 16, AppSpacing.screen, AppSpacing.screen),
