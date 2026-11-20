@@ -1,5 +1,6 @@
 import 'package:collection/collection.dart';
 
+import '../models/team.dart';
 import 'death_cause.dart';
 import 'game_phase.dart';
 import 'pending_decision.dart';
@@ -17,6 +18,15 @@ class WitchState {
     lifePotionUsed: lifePotionUsed ?? this.lifePotionUsed,
     deathPotionUsed: deathPotionUsed ?? this.deathPotionUsed,
   );
+}
+
+/// The Wild Child and the player he picked as his role model. When the model is eliminated he
+/// becomes a werewolf (see [GameState.killPlayer]).
+class WildChildState {
+  final String childId;
+  final String modelId;
+
+  const WildChildState({required this.childId, required this.modelId});
 }
 
 class LoversPair {
@@ -56,6 +66,16 @@ class GameState {
   /// Set by WitchDeathPotion, cleared by FinalizeNight.
   final String? pendingWitchDeathTargetId;
 
+  /// The Big Bad Wolf's second victim, set by BigBadWolfTarget, cleared by FinalizeNight.
+  final String? pendingBigBadWolfVictimId;
+
+  /// The wolf the White Werewolf ate on his solo night, set by WhiteWolfEat, cleared by
+  /// FinalizeNight.
+  final String? pendingWhiteWolfVictimId;
+
+  /// Null until the Wild Child picks his role model.
+  final WildChildState? wildChild;
+
   /// Non-null exactly while a death cascade is paused on a Hunter/Captain
   /// choice only the MJ can make.
   final CascadeState? cascade;
@@ -74,6 +94,9 @@ class GameState {
     this.captainPlayerId,
     this.pendingWolfVictimId,
     this.pendingWitchDeathTargetId,
+    this.pendingBigBadWolfVictimId,
+    this.pendingWhiteWolfVictimId,
+    this.wildChild,
     this.cascade,
     this.spentPowers = const {},
   });
@@ -97,6 +120,8 @@ class GameState {
   /// the death cascade's job (see death_cascade.dart).
   GameState killPlayer(String playerId, {required DeathCause cause}) {
     playerById(playerId); // validates existence
+    // The Wild Child becomes a werewolf the moment his role model is eliminated, whatever the way.
+    final turnsWildChild = wildChild != null && wildChild!.modelId == playerId;
     return copyWith(
       players: [
         for (final p in players)
@@ -107,6 +132,8 @@ class GameState {
               diedOnNight: nightIndex,
               diedOnPhase: phase,
             )
+          else if (turnsWildChild && p.id == wildChild!.childId && p.alive)
+            p.copyWith(teamOverride: Team.werewolves)
           else
             p,
       ],
@@ -122,6 +149,9 @@ class GameState {
     Object? captainPlayerId = _unset,
     Object? pendingWolfVictimId = _unset,
     Object? pendingWitchDeathTargetId = _unset,
+    Object? pendingBigBadWolfVictimId = _unset,
+    Object? pendingWhiteWolfVictimId = _unset,
+    Object? wildChild = _unset,
     Object? cascade = _unset,
     Map<String, int>? spentPowers,
   }) => GameState(
@@ -139,6 +169,13 @@ class GameState {
     pendingWitchDeathTargetId: identical(pendingWitchDeathTargetId, _unset)
         ? this.pendingWitchDeathTargetId
         : pendingWitchDeathTargetId as String?,
+    pendingBigBadWolfVictimId: identical(pendingBigBadWolfVictimId, _unset)
+        ? this.pendingBigBadWolfVictimId
+        : pendingBigBadWolfVictimId as String?,
+    pendingWhiteWolfVictimId: identical(pendingWhiteWolfVictimId, _unset)
+        ? this.pendingWhiteWolfVictimId
+        : pendingWhiteWolfVictimId as String?,
+    wildChild: identical(wildChild, _unset) ? this.wildChild : wildChild as WildChildState?,
     cascade: identical(cascade, _unset) ? this.cascade : cascade as CascadeState?,
     spentPowers: spentPowers ?? this.spentPowers,
   );

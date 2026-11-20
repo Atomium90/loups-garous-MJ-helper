@@ -79,6 +79,7 @@ IconData winnerIcon(GameWinner winner) => switch (winner) {
 String _causeKey(DeathCause cause) => switch (cause) {
   WolvesKill() => 'wolves',
   WitchDeathPotionKill() => 'witchPoison',
+  WhiteWolfKill() => 'whiteWolf',
   DayVoteKill() => 'dayVote',
   HunterShotKill() => 'hunterShot',
   LoversCascadeKill() => 'loversGrief',

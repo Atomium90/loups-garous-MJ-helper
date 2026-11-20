@@ -11,6 +11,9 @@ enum VictoryKind {
   /// Only the wolf side is left.
   werewolves,
 
+  /// The White Werewolf is the only one left.
+  whiteWolf,
+
   /// The two lovers, from opposite sides, are the last ones standing.
   lovers,
 
@@ -35,6 +38,10 @@ VictoryKind? proposeVictory(GameState state, RoleRegistry registry) {
       final withSolo = sides.contains(Team.solo);
       if (wolfAndOther || withSolo) return VictoryKind.lovers;
     }
+  }
+
+  if (alive.length == 1 && alive.single.roleId == 'loup_garou_blanc') {
+    return VictoryKind.whiteWolf;
   }
 
   final sides = alive.map((p) => p.sideIn(registry)).toSet();

@@ -63,4 +63,19 @@ extension GameStateSides on GameState {
     final around = aliveNeighbours(bearPlayerId);
     return wolfAmong([?around.left, ?around.right], registry);
   }
+
+  /// Whether [player] wakes with the wolves: the wolf side, and the White Werewolf who plays
+  /// for himself but feasts with them. The wolves never choose one of these as their victim.
+  bool wakesWithWolves(Player player, RoleRegistry registry) =>
+      player.sideIn(registry) == Team.werewolves || player.roleId == 'loup_garou_blanc';
+
+  /// Whether a wolf, the Wild Child or the Wolf-Hound has been eliminated: the Big Bad Wolf's
+  /// second victim stops from then on.
+  bool wolfSideLost(RoleRegistry registry) => players.any(
+    (p) =>
+        !p.alive &&
+        (wakesWithWolves(p, registry) ||
+            p.roleId == 'enfant_sauvage' ||
+            p.roleId == 'chien_loup'),
+  );
 }

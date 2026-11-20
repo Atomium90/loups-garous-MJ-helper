@@ -1,4 +1,5 @@
 import '../models/death_effect.dart';
+import '../models/team.dart';
 import '../role_registry/role_registry.dart';
 import 'death_cascade.dart';
 import 'death_cause.dart';
@@ -31,6 +32,7 @@ class GameStateMachine {
   const GameStateMachine();
 
   static const _foxRoleId = 'renard';
+  static const _infectRoleId = 'infect_pere_des_loups';
 
   ActionResult apply({
     required GameState state,
@@ -50,6 +52,16 @@ class GameStateMachine {
         return _applyCupidonPair(state, action);
       case FoxSniff():
         return _applyFoxSniff(state, action);
+      case WildChildChooseModel():
+        return _applyWildChildChooseModel(state, action);
+      case ChienLoupChoose():
+        return _applyChienLoupChoose(state, action);
+      case InfectVictim():
+        return _applyInfectVictim(state);
+      case BigBadWolfTarget():
+        return _applyBigBadWolfTarget(state, action);
+      case WhiteWolfEat():
+        return _applyWhiteWolfEat(state, action);
       case WolvesTarget():
         return _applyWolvesTarget(state, action);
       case WitchLifePotion():
@@ -136,6 +148,97 @@ class GameStateMachine {
     );
   }
 
+  ActionResult _applyWildChildChooseModel(GameState state, WildChildChooseModel action) {
+    _requireNightPhase(state, 'The Wild Child picks his role model');
+    _requireAlive(state.playerById(action.childPlayerId), 'the Wild Child');
+    _requireAlive(state.playerById(action.modelPlayerId), 'the role model');
+    if (action.childPlayerId == action.modelPlayerId) {
+      throw InvalidActionError('The Wild Child cannot be his own role model');
+    }
+    return ActionResult(
+      state: state.copyWith(
+        wildChild: WildChildState(
+          childId: action.childPlayerId,
+          modelId: action.modelPlayerId,
+        ),
+      ),
+      events: [
+        WildChildModelChosen(
+          childPlayerId: action.childPlayerId,
+          modelPlayerId: action.modelPlayerId,
+        ),
+      ],
+    );
+  }
+
+  ActionResult _applyChienLoupChoose(GameState state, ChienLoupChoose action) {
+    _requireNightPhase(state, 'The Wolf-Hound chooses at night');
+    final dog = state.playerById(action.playerId);
+    _requireAlive(dog, 'the Wolf-Hound');
+    if (dog.teamOverride != null) {
+      throw InvalidActionError('The Wolf-Hound has already chosen: the choice is final');
+    }
+    return ActionResult(
+      state: state.copyWith(
+        players: [
+          for (final p in state.players)
+            if (p.id == dog.id)
+              p.copyWith(teamOverride: action.wolf ? Team.werewolves : Team.village)
+            else
+              p,
+        ],
+      ),
+      events: [ChienLoupChose(playerId: dog.id, wolf: action.wolf)],
+    );
+  }
+
+  ActionResult _applyInfectVictim(GameState state) {
+    _requireNightPhase(state, 'The Cursed Wolf-Father infects at night');
+    if (state.spentPowers.containsKey(_infectRoleId)) {
+      throw InvalidActionError('The Cursed Wolf-Father has already infected someone');
+    }
+    final victimId = state.pendingWolfVictimId;
+    if (victimId == null) {
+      throw InvalidActionError('No wolf victim to infect');
+    }
+    _requireAlive(state.playerById(victimId), 'the infected player');
+    return ActionResult(
+      state: state.copyWith(
+        pendingWolfVictimId: null,
+        players: [
+          for (final p in state.players)
+            if (p.id == victimId)
+              p.copyWith(
+                teamOverride: Team.werewolves,
+                statuses: {...p.statuses, PlayerStatus.infected},
+              )
+            else
+              p,
+        ],
+        spentPowers: {...state.spentPowers, _infectRoleId: state.nightIndex},
+      ),
+      events: [VictimInfected(playerId: victimId)],
+    );
+  }
+
+  ActionResult _applyBigBadWolfTarget(GameState state, BigBadWolfTarget action) {
+    _requireNightPhase(state, 'The Big Bad Wolf eats at night');
+    _requireAlive(state.playerById(action.targetPlayerId), 'the Big Bad Wolf\'s target');
+    return ActionResult(
+      state: state.copyWith(pendingBigBadWolfVictimId: action.targetPlayerId),
+      events: const [],
+    );
+  }
+
+  ActionResult _applyWhiteWolfEat(GameState state, WhiteWolfEat action) {
+    _requireNightPhase(state, 'The White Werewolf eats at night');
+    _requireAlive(state.playerById(action.targetPlayerId), 'the White Werewolf\'s target');
+    return ActionResult(
+      state: state.copyWith(pendingWhiteWolfVictimId: action.targetPlayerId),
+      events: const [],
+    );
+  }
+
   ActionResult _applyWolvesTarget(GameState state, WolvesTarget action) {
     _requireAlive(state.playerById(action.targetPlayerId), 'wolves target');
     return ActionResult(
@@ -200,6 +303,10 @@ class GameStateMachine {
 
     final pendingKills = <(String, DeathCause)>[
       if (state.pendingWolfVictimId != null) (state.pendingWolfVictimId!, const WolvesKill()),
+      if (state.pendingBigBadWolfVictimId != null)
+        (state.pendingBigBadWolfVictimId!, const WolvesKill()),
+      if (state.pendingWhiteWolfVictimId != null)
+        (state.pendingWhiteWolfVictimId!, const WhiteWolfKill()),
       if (state.pendingWitchDeathTargetId != null)
         (state.pendingWitchDeathTargetId!, const WitchDeathPotionKill()),
     ];
@@ -222,6 +329,8 @@ class GameStateMachine {
         phase: GamePhase.day,
         pendingWolfVictimId: null,
         pendingWitchDeathTargetId: null,
+        pendingBigBadWolfVictimId: null,
+        pendingWhiteWolfVictimId: null,
         cascade: drained.pendingDecision == null
             ? null
             : CascadeState(decision: drained.pendingDecision!, remainingQueue: drained.remainingQueue),
@@ -400,6 +509,12 @@ class GameStateMachine {
       );
     }
     throw InvalidActionError('No pending Captain succession to resolve');
+  }
+
+  void _requireNightPhase(GameState state, String what) {
+    if (state.phase != GamePhase.night) {
+      throw InvalidActionError('$what only during the night');
+    }
   }
 
   void _requireAlive(Player player, String label) {

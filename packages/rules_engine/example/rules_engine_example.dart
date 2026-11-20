@@ -123,11 +123,17 @@ String _describeEvent(GameEvent event) => switch (event) {
     'la Sorcière utilise sa potion de mort sur $targetPlayerId',
   FoxSniffed(:final middlePlayerId, :final wolfFound) =>
     'le Renard flaire autour de $middlePlayerId : ${wolfFound ? 'un loup' : 'aucun loup'}',
+  WildChildModelChosen(:final childPlayerId, :final modelPlayerId) =>
+    '$childPlayerId prend $modelPlayerId pour modèle',
+  ChienLoupChose(:final playerId, :final wolf) =>
+    '$playerId choisit ${wolf ? 'les Loups' : 'le village'}',
+  VictimInfected(:final playerId) => '$playerId est infecté',
 };
 
 String _describeCause(DeathCause cause) => switch (cause) {
   WolvesKill() => 'tué par les Loups',
   WitchDeathPotionKill() => 'tué par la potion de mort',
+  WhiteWolfKill() => 'dévoré par le Loup-Garou Blanc',
   DayVoteKill() => 'éliminé par le village',
   HunterShotKill(:final shooterPlayerId) => 'abattu par $shooterPlayerId',
   LoversCascadeKill(:final causingPlayerId) => 'meurt de chagrin après $causingPlayerId',

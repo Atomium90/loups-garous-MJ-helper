@@ -64,6 +64,26 @@ class FoxSniffed implements GameEvent {
   const FoxSniffed({required this.middlePlayerId, required this.wolfFound});
 }
 
+class WildChildModelChosen implements GameEvent {
+  final String childPlayerId;
+  final String modelPlayerId;
+
+  const WildChildModelChosen({required this.childPlayerId, required this.modelPlayerId});
+}
+
+class ChienLoupChose implements GameEvent {
+  final String playerId;
+  final bool wolf;
+
+  const ChienLoupChose({required this.playerId, required this.wolf});
+}
+
+class VictimInfected implements GameEvent {
+  final String playerId;
+
+  const VictimInfected({required this.playerId});
+}
+
 class LoversPaired implements GameEvent {
   final String playerAId;
   final String playerBId;
