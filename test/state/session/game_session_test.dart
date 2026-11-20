@@ -7,6 +7,7 @@ import 'package:loup_garou_mj/data/repositories/drift_game_repository.dart';
 import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
 import 'package:loup_garou_mj/state/session/game_session.dart';
 import 'package:loup_garou_mj/state/session/session_cursor.dart';
+import 'package:loup_garou_mj/ui/screens/in_game/script_tab.dart' show unassignedRoles;
 import 'package:rules_engine/rules_engine.dart';
 
 import '../../support/journal_text.dart';
@@ -440,6 +441,155 @@ void main() {
       expect(s.dealtHoldersKnown('loup_garou'), 1);
       expect(s.voleurSwapInsFor('loup_garou'), isEmpty); // she's not the Voleur
       expect(s.currentStepNeedsIdentify, isTrue); // one wolf still unknown
+    });
+  });
+
+  group('a drawn Voleur reserve', () {
+    // 6 players; the pack holds 2 more Simples Villageois than that.
+    const comp = {'voleur': 1, 'loup_garou': 2, 'sorciere': 1, 'villageois': 2};
+
+    test('is asked for at the Voleur step, and calls every role of the composition', () async {
+      final game = await _startedGame(repo, composition: comp);
+      final s = (await container.read(gameSessionProvider(game.gameId).future));
+
+      expect(s.reserveDrawn, isTrue);
+      expect(s.reserveToEnter, isTrue);
+      expect(s.reserveRoleIds, isEmpty);
+      expect(s.tonight.steps.map((st) => st.role.id), ['voleur', 'loup_garou', 'sorciere']);
+      // The pack: the composition plus two Simples Villageois.
+      expect({for (final c in s.pack) c.roleId: c.count}, {
+        'voleur': 1,
+        'loup_garou': 2,
+        'sorciere': 1,
+        'villageois': 4,
+      });
+    });
+
+    test('a reserve picked at composition is not drawn', () async {
+      final game = await _startedGame(
+        repo,
+        composition: comp,
+        reserveRoleIds: const ['voyante', 'chasseur'],
+      );
+      final s = await container.read(gameSessionProvider(game.gameId).future);
+
+      expect(s.reserveDrawn, isFalse);
+      expect(s.reserveToEnter, isFalse);
+      expect(s.dealtComposition, comp);
+      expect(s.expectedHolders('loup_garou'), 2);
+    });
+
+    test('a game with no Voleur has no reserve to draw', () async {
+      final game = await _startedGame(repo, composition: composition);
+      final s = await container.read(gameSessionProvider(game.gameId).future);
+
+      expect(s.reserveDrawn, isFalse);
+    });
+
+    test('noting the two cards takes them out of the roles that can have a holder', () async {
+      final game = await _startedGame(repo, composition: comp);
+      final n = await notifierFor(game.gameId);
+
+      await n.enterReserve(const ['sorciere', 'villageois']);
+
+      final s = stateOf(game.gameId);
+      expect(s.reserveRoleIds, ['sorciere', 'villageois']);
+      expect(s.reserveToEnter, isFalse);
+      expect(s.dealtComposition, {'voleur': 1, 'loup_garou': 2, 'villageois': 3});
+      expect(s.expectedHolders('sorciere'), 0);
+      // The script still calls the Sorcière: her card is in the middle, the MJ bluffs.
+      expect(s.tonight.steps.map((st) => st.role.id), ['voleur', 'loup_garou', 'sorciere']);
+    });
+
+    test('is remembered across a force-quit', () async {
+      final game = await _startedGame(repo, composition: comp);
+      final n = await notifierFor(game.gameId);
+      await n.enterReserve(const ['sorciere', 'villageois']);
+
+      final resumed = ProviderContainer(
+        overrides: [gameRepositoryProvider.overrideWithValue(repo)],
+      );
+      addTearDown(resumed.dispose);
+      final s = await resumed.read(gameSessionProvider(game.gameId).future);
+
+      expect(s.reserveRoleIds, ['sorciere', 'villageois']);
+      expect(s.reserveToEnter, isFalse);
+      // It lives in the session, not in the game's own reserve column.
+      expect((await repo.getGame(game.gameId))!.reserveRolesJson, isNull);
+    });
+
+    test('refuses a reserve that is not two cards, or noted twice', () async {
+      final game = await _startedGame(repo, composition: comp);
+      final n = await notifierFor(game.gameId);
+
+      await n.enterReserve(const ['sorciere']);
+      expect(stateOf(game.gameId).reserveToEnter, isTrue);
+
+      await n.enterReserve(const ['sorciere', 'villageois']);
+      await n.enterReserve(const ['loup_garou', 'loup_garou']);
+      expect(stateOf(game.gameId).reserveRoleIds, ['sorciere', 'villageois']);
+    });
+
+    test('a Voleur card left in the middle means nobody holds the Voleur', () async {
+      final game = await _startedGame(repo, composition: comp);
+      final n = await notifierFor(game.gameId);
+
+      await n.enterReserve(const ['voleur', 'villageois']);
+
+      final s = stateOf(game.gameId);
+      expect(s.expectedHolders('voleur'), 0);
+      expect(s.currentStepNeedsIdentify, isFalse); // straight to the (empty) act
+    });
+
+    test('stealing a card whose role has no other holder needs no identification', () async {
+      final game = await _startedGame(repo, composition: comp);
+      final ids = game.seatRowIds;
+      final n = await notifierFor(game.gameId);
+      await n.enterReserve(const ['sorciere', 'villageois']);
+
+      await n.identifyRole('voleur', [ids[0]]); // Voleur = Ana
+      await n.voleurSwap(voleurEngineId: '${ids[0]}', stolenRoleId: 'sorciere');
+
+      final s = stateOf(game.gameId);
+      expect(s.engine.playerById('${ids[0]}').roleId, 'sorciere');
+      expect(s.dealtHoldersKnown('sorciere'), 0); // the stolen card is a bonus
+      expect(s.currentStep!.role.id, 'loup_garou');
+    });
+
+    test('two wolves in the reserve force the swap: keeping his card is refused', () async {
+      final game = await _startedGame(repo, composition: comp);
+      final ids = game.seatRowIds;
+      final n = await notifierFor(game.gameId);
+      await n.enterReserve(const ['loup_garou', 'loup_garou']);
+      await n.identifyRole('voleur', [ids[0]]);
+
+      expect(stateOf(game.gameId).reserveForcesSwap, isTrue);
+      await n.voleurSwap(voleurEngineId: '${ids[0]}', stolenRoleId: null);
+      expect(stateOf(game.gameId).cursor.stepIndex, 0); // still on the Voleur's step
+      expect(stateOf(game.gameId).engine.playerById('${ids[0]}').roleId, 'voleur');
+
+      await n.voleurSwap(voleurEngineId: '${ids[0]}', stolenRoleId: 'loup_garou');
+      expect(stateOf(game.gameId).engine.playerById('${ids[0]}').roleId, 'loup_garou');
+    });
+
+    test('one wolf and another card leave the choice open', () async {
+      final game = await _startedGame(repo, composition: comp);
+      final n = await notifierFor(game.gameId);
+
+      await n.enterReserve(const ['loup_garou', 'villageois']);
+
+      expect(stateOf(game.gameId).reserveForcesSwap, isFalse);
+    });
+
+    test('the roles a reveal can name are the cards that were really dealt', () async {
+      final game = await _startedGame(repo, composition: comp);
+      final n = await notifierFor(game.gameId);
+      await n.enterReserve(const ['sorciere', 'villageois']);
+
+      expect(
+        {for (final r in unassignedRoles(stateOf(game.gameId))) r.roleId: r.remaining},
+        {'voleur': 1, 'loup_garou': 2, 'villageois': 3},
+      );
     });
   });
 

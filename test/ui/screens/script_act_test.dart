@@ -1,9 +1,11 @@
 import 'package:drift/native.dart';
+import 'package:material_ui/material_ui.dart' show ListTile;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:loup_garou_mj/data/database/app_database.dart';
 import 'package:loup_garou_mj/data/repositories/drift_game_repository.dart';
 import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
+import 'package:loup_garou_mj/ui/widgets/app_button.dart';
 import 'package:loup_garou_mj/ui/widgets/player_avatar.dart';
 
 import '../../support/pump_app.dart';
@@ -250,6 +252,111 @@ void main() {
     await tester.tap(find.text('Journal'));
     await tester.pumpAndSettle();
     expect(find.text('Le Voleur échange sa carte contre Voyante'), findsOneWidget);
+  });
+
+  group('a drawn Voleur reserve', () {
+    const comp = {'voleur': 1, 'loup_garou': 2, 'sorciere': 1, 'villageois': 2};
+
+    /// Notes the two leftover cards through the picker sheet.
+    Future<void> noteReserve(WidgetTester tester, String first, String second) async {
+      for (final role in [first, second]) {
+        await tester.tap(find.text('Choisir une carte').first);
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(ListTile, role));
+        await tester.pumpAndSettle();
+      }
+      await tester.tap(find.text('Valider ces 2 cartes'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('is asked for first, and the leftover cards are offered to the Voleur', (
+      tester,
+    ) async {
+      final id = await _startedGame(repo, composition: comp);
+      await pump(tester, id);
+
+      expect(find.text('Les 2 cartes restantes'), findsOneWidget);
+      expect(find.text('Valider ces 2 cartes'), findsOneWidget);
+      // Nothing to confirm until both cards are noted.
+      expect(
+        tester.widget<AppButton>(find.widgetWithText(AppButton, 'Valider ces 2 cartes')).onPressed,
+        isNull,
+      );
+
+      await noteReserve(tester, 'Sorcière', 'Loup-Garou');
+
+      // Noted: on to who the Voleur is, then his choice between exactly those two cards.
+      expect(find.text('Les 2 cartes restantes'), findsNothing);
+      await identify(tester, ['Ana']);
+      expect(find.text('Sorcière'), findsOneWidget);
+      expect(find.text('Loup-Garou'), findsOneWidget);
+      expect(find.text('Simple Villageois'), findsNothing);
+    });
+
+    testWidgets('then the Voleur is identified and picks one of the noted cards', (tester) async {
+      final id = await _startedGame(repo, composition: comp);
+      await pump(tester, id);
+
+      await noteReserve(tester, 'Sorcière', 'Simple Villageois');
+      await identify(tester, ['Ana']); // Voleur = Ana
+
+      expect(find.text('Les deux cartes de la pioche'), findsOneWidget);
+      expect(find.text('Il garde sa carte'), findsOneWidget);
+      await tester.tap(find.text('Sorcière'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Le Voleur prend la Sorcière'));
+      await tester.pumpAndSettle();
+
+      // The Sorcière's card was in the middle: no one else to find, straight to the wolves.
+      expect(find.textContaining('Qui sont'), findsWidgets);
+      expect(find.text('Qui est la Sorcière ?'), findsNothing);
+    });
+
+    testWidgets('two wolves leave the Voleur no choice but to take one', (tester) async {
+      final id = await _startedGame(repo, composition: comp);
+      await pump(tester, id);
+
+      await noteReserve(tester, 'Loup-Garou', 'Loup-Garou');
+      await identify(tester, ['Ana']);
+
+      expect(find.textContaining('Les deux cartes sont des Loups-Garous'), findsOneWidget);
+      expect(find.text('Il garde sa carte'), findsNothing);
+    });
+
+    testWidgets('a role whose only card is in the middle is called with nobody to act', (
+      tester,
+    ) async {
+      final id = await _startedGame(
+        repo,
+        composition: const {'voleur': 1, 'loup_garou': 2, 'sorciere': 1, 'villageois': 2},
+      );
+      await pump(tester, id);
+
+      await noteReserve(tester, 'Sorcière', 'Simple Villageois');
+      await identify(tester, ['Ana']); // Voleur = Ana
+      await tester.tap(find.text('Il garde sa carte'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Le Voleur garde sa carte'));
+      await tester.pumpAndSettle();
+      await identify(tester, ['Bo', 'Cy']); // the wolves
+      await tapName(tester, 'Di');
+      await tester.tap(find.text('Les Loups désignent Di'));
+      await tester.pumpAndSettle();
+
+      // The Sorcière step is there to be called, but no one is asked who she is.
+      expect(find.text('Qui est la Sorcière ?'), findsNothing);
+      expect(find.text('Passer ce rôle'), findsOneWidget);
+    });
+
+    testWidgets('the reserve can be noted later', (tester) async {
+      final id = await _startedGame(repo, composition: comp);
+      await pump(tester, id);
+
+      await tester.tap(find.text('Je noterai plus tard'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Les 2 cartes restantes'), findsNothing);
+    });
   });
 
   testWidgets('a Voleur who steals a Loup is a locked extra on the wolves grid', (tester) async {
