@@ -76,8 +76,13 @@ class _Body extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final composition = game.compositionJson ?? const <String, int>{};
-    final deck = deckLine(context.l10n, composition, RoleRegistry.all);
     final reserve = game.reserveRolesJson ?? const <String>[];
+    // A Voleur with no reserve picked: the reserve is drawn, from a pack of two more cards.
+    final drawnReserve = composition.containsKey('voleur') && reserve.isEmpty;
+    final deck = deckLine(context.l10n, {
+      ...composition,
+      if (drawnReserve) 'villageois': (composition['villageois'] ?? 0) + 2,
+    }, RoleRegistry.all);
 
     return Column(
       children: [
@@ -117,7 +122,10 @@ class _Body extends ConsumerWidget {
                 ),
                 if (reserve.isNotEmpty) ...[
                   const SizedBox(height: 16),
-                  _ReserveCallout(line: reserveLine(context.l10n, reserve)),
+                  _ReserveCallout(hint: context.l10n.beforeNightReserveHint(reserveLine(context.l10n, reserve))),
+                ] else if (drawnReserve) ...[
+                  const SizedBox(height: 16),
+                  _ReserveCallout(hint: context.l10n.beforeNightPackHint(game.playerCount + 2)),
                 ],
               ],
             ),
@@ -187,12 +195,12 @@ class _DealCallout extends StatelessWidget {
   }
 }
 
-/// The Voleur's two reserve cards. The MJ must set aside exactly these on the
-/// table, or the physical game and the app diverge.
+/// The Voleur's two reserve cards: which ones to set aside, or how they come about when they are
+/// drawn. The MJ must do it as written, or the physical game and the app diverge.
 class _ReserveCallout extends StatelessWidget {
-  const _ReserveCallout({required this.line});
+  const _ReserveCallout({required this.hint});
 
-  final String line;
+  final String hint;
 
   @override
   Widget build(BuildContext context) {
@@ -222,7 +230,7 @@ class _ReserveCallout extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  context.l10n.beforeNightReserveHint(line),
+                  hint,
                   style: typography.meta.copyWith(color: colors.textSecondary, height: 1.55),
                 ),
               ],

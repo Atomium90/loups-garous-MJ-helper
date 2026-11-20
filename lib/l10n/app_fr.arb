@@ -564,6 +564,15 @@
   "@reserveWhichCard": {
     "description": "Title of the sheet where a reserve card is chosen."
   },
+  "reserveRandomNote": "Le Voleur ajoute 2 Simples Villageois au paquet ({count} cartes). La réserve est ce qu'il reste après la distribution : vous noterez ces 2 cartes pendant la nuit 1.",
+  "@reserveRandomNote": {
+    "description": "Composition note when the Thief's reserve is drawn; count is the pack size.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "compositionRoleCount": "{assigned, plural, =0{0 rôles} =1{1 rôle} other{{assigned} rôles}} pour {players, plural, =1{1 joueur} other{{players} joueurs}}",
   "@compositionRoleCount": {
     "description": "How many roles are picked for how many players.",
@@ -616,6 +625,15 @@
   "beforeNightDealHint": "Mélangez et distribuez à l'aveugle. L'app note les rôles au fil de la nuit 1, quand chacun se réveille.",
   "@beforeNightDealHint": {
     "description": "How the cards are dealt."
+  },
+  "beforeNightPackHint": "Ajoutez 2 Simples Villageois au paquet ({count} cartes), mélangez et distribuez. Posez les 2 cartes restantes au centre, face cachée : vous les noterez pendant la nuit 1.",
+  "@beforeNightPackHint": {
+    "description": "How to deal when the Thief's reserve is drawn; count is the pack size.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "beforeNightReserveHint": "Posez ces 2 cartes au centre, face cachée : {cards}.",
   "@beforeNightReserveHint": {
