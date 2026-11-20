@@ -107,6 +107,25 @@ void main() {
       expect(stepIds(script), ['voyante', 'loup_garou']);
     });
 
+    test('does not wake a role whose cards all sit in a drawn reserve, with no holder', () {
+      // The Sorcière was left in the middle by the deal: nobody holds her.
+      final script = buildNightScript(
+        engine: _state(nightIndex: 2, roles: {0: 'loup_garou', 1: 'loup_garou'}),
+        composition: const {'loup_garou': 2, 'sorciere': 1, 'villageois': 3},
+        dealtComposition: const {'loup_garou': 2, 'villageois': 5},
+      );
+      expect(stepIds(script), ['loup_garou']);
+    });
+
+    test('night 1 still calls a role whose cards are in the reserve, to keep the table guessing', () {
+      final script = buildNightScript(
+        engine: _state(),
+        composition: const {'loup_garou': 2, 'sorciere': 1, 'villageois': 3},
+        dealtComposition: const {'loup_garou': 2, 'villageois': 5},
+      );
+      expect(stepIds(script), ['loup_garou', 'sorciere']);
+    });
+
     test('a stolen Voyante drops out once the Voleur holding her dies', () {
       final script = buildNightScript(
         engine: _state(

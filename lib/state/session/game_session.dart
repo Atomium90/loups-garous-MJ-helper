@@ -29,8 +29,13 @@ class GameSessionState {
   final Map<String, int> composition;
 
   /// The Voleur's two undealt reserve cards (empty when the composition has no
-  /// Voleur). His act offers these as the swap choices.
+  /// Voleur, or while a drawn reserve is not noted yet). His act offers these as the swap
+  /// choices.
   final List<String> reserveRoleIds;
+
+  /// The reserve is whatever two cards were left after the deal (the booklets' rule), noted by
+  /// the MJ on night 1, rather than picked at the composition.
+  final bool reserveDrawn;
   final List<PlayerRow> roster;
 
   /// Set once the Voleur has taken a reserve card: which player he is and
@@ -46,9 +51,44 @@ class GameSessionState {
     required this.tonight,
     required this.composition,
     required this.reserveRoleIds,
+    this.reserveDrawn = false,
     required this.roster,
     this.voleurSwapIn,
   });
+
+  /// A drawn reserve the MJ has yet to note: asked for at the Voleur's step.
+  bool get reserveToEnter => reserveDrawn && reserveRoleIds.isEmpty;
+
+  /// Both reserve cards are wolves: the booklets force the Voleur to swap.
+  bool get reserveForcesSwap =>
+      reserveRoleIds.length == 2 &&
+      reserveRoleIds.every(
+        (id) => RoleRegistry.all.byIdOrNull(id)?.team == Team.werewolves,
+      );
+
+  /// The cards in the pack: the composition, plus the two Simples Villageois a drawn reserve
+  /// adds. Empty unless the reserve is drawn.
+  List<({String roleId, int count})> get pack {
+    if (!reserveDrawn) return const [];
+    final counts = {...composition};
+    counts.update(kPlaceholderRoleId, (n) => n + 2, ifAbsent: () => 2);
+    return [
+      for (final role in RoleRegistry.all.roles)
+        if ((counts[role.id] ?? 0) > 0) (roleId: role.id, count: counts[role.id]!),
+    ];
+  }
+
+  /// How many holders each role really has among the players: the [composition], less the cards
+  /// a drawn reserve took out of the deal.
+  Map<String, int> get dealtComposition =>
+      dealtCompositionOf(composition, reserveRoleIds, reserveDrawn: reserveDrawn);
+
+  /// How many dealt holders [roleId] is expected to have. A drawn reserve that is noted makes
+  /// this exact (a card in the middle has no holder); otherwise a role the composition does not
+  /// list is assumed to have one.
+  int expectedHolders(String roleId) => reserveDrawn && reserveRoleIds.isNotEmpty
+      ? dealtComposition[roleId] ?? 0
+      : composition[roleId] ?? 1;
 
   /// The step the cursor points at, or null once every step is done (the
   /// "ready to resolve the night" state).
@@ -64,7 +104,7 @@ class GameSessionState {
   bool get currentStepNeedsIdentify {
     final step = currentStep;
     if (step == null || cursor.subStep == NightSubStep.act) return false;
-    return dealtHoldersKnown(step.role.id) < (composition[step.role.id] ?? 1);
+    return dealtHoldersKnown(step.role.id) < expectedHolders(step.role.id);
   }
 
   /// How many confirmed holders of [roleId] are one of its *dealt* cards - the
@@ -131,6 +171,26 @@ class GameSessionState {
   }
 }
 
+/// The composition less the cards a drawn Voleur reserve left in the middle, plus the two
+/// Simples Villageois it added to the pack. [composition] itself when the reserve is not drawn
+/// or not noted yet.
+Map<String, int> dealtCompositionOf(
+  Map<String, int> composition,
+  List<String> reserveRoleIds, {
+  required bool reserveDrawn,
+}) {
+  if (!reserveDrawn || reserveRoleIds.isEmpty) return composition;
+  final counts = {...composition};
+  counts.update(kPlaceholderRoleId, (n) => n + 2, ifAbsent: () => 2);
+  for (final id in reserveRoleIds) {
+    counts.update(id, (n) => n - 1, ifAbsent: () => -1);
+  }
+  return {
+    for (final entry in counts.entries)
+      if (entry.value > 0) entry.key: entry.value,
+  };
+}
+
 /// The orchestrator: loads-or-seeds a game's `GameState`, applies MJ-reported
 /// facts through the pure `GameStateMachine`, and persists a snapshot after
 /// every change so a force-quit resumes on the exact step - including mid
@@ -151,13 +211,19 @@ class GameSession extends _$GameSession {
   /// card he took. Null until he swaps (or if he keeps his own card).
   ({String playerId, String roleId})? _voleurSwapIn;
 
+  /// The two leftover cards of a drawn reserve, once the MJ has noted them. Persisted in the
+  /// session blob (the game's own reserve column is only for a reserve picked at composition).
+  List<String> _drawnReserve = const [];
+
   @override
   Future<GameSessionState> build(int gameId) async {
     final repo = ref.read(gameRepositoryProvider);
     final game = await repo.getGame(gameId);
     if (game == null) throw GameNotFoundException(gameId);
     final composition = game.compositionJson ?? const <String, int>{};
-    final reserveRoleIds = game.reserveRolesJson ?? const <String>[];
+    final pickedReserve = game.reserveRolesJson ?? const <String>[];
+    // A Voleur whose reserve was not picked at composition has it drawn.
+    final reserveDrawn = composition.containsKey('voleur') && pickedReserve.isEmpty;
     final roster = await repo.getRoster(gameId);
 
     final GameState engine;
@@ -188,9 +254,21 @@ class GameSession extends _$GameSession {
           roleId: voleur['roleId'] as String,
         );
       }
+      _drawnReserve = [
+        for (final id in decoded['drawnReserve'] as List<dynamic>? ?? const []) id as String,
+      ];
     }
+    final reserveRoleIds = reserveDrawn ? _drawnReserve : pickedReserve;
 
-    final tonight = buildNightScript(engine: engine, composition: composition);
+    final tonight = buildNightScript(
+      engine: engine,
+      composition: composition,
+      dealtComposition: dealtCompositionOf(
+        composition,
+        reserveRoleIds,
+        reserveDrawn: reserveDrawn,
+      ),
+    );
     return GameSessionState(
       engine: engine,
       cursor: _clamp(cursor, tonight),
@@ -198,6 +276,7 @@ class GameSession extends _$GameSession {
       tonight: tonight,
       composition: composition,
       reserveRoleIds: reserveRoleIds,
+      reserveDrawn: reserveDrawn,
       roster: roster,
       voleurSwapIn: _voleurSwapIn,
     );
@@ -210,6 +289,7 @@ class GameSession extends _$GameSession {
       'day': day.toJson(),
       if (_voleurSwapIn case final v?)
         'voleurSwapIn': {'playerId': v.playerId, 'roleId': v.roleId},
+      if (_drawnReserve.isNotEmpty) 'drawnReserve': _drawnReserve,
     });
     return ref.read(gameRepositoryProvider).saveSession(gameId: gameId, sessionJson: blob);
   }
@@ -310,6 +390,16 @@ class GameSession extends _$GameSession {
 
   // --- night: Voleur ---
 
+  /// Notes the two cards left in the middle after the deal (a drawn reserve): from now on the
+  /// roles that sit there have no holder to look for, and his act offers these two cards.
+  Future<void> enterReserve(List<String> roleIds) async {
+    final s = state.value;
+    if (s == null || !s.reserveToEnter || roleIds.length != 2) return;
+    _drawnReserve = List.unmodifiable(roleIds);
+    await _persist(s.engine, s.cursor, s.day);
+    _emit(s, reserveRoleIds: _drawnReserve);
+  }
+
   /// The Voleur's turn: swap his card for one of the two reserve cards, or
   /// ([stolenRoleId] null) keep his own. A stolen role is written onto the
   /// roster too, so it counts as known. Refuses a [stolenRoleId] that isn't
@@ -319,6 +409,8 @@ class GameSession extends _$GameSession {
     final s = state.value;
     if (s == null) return;
     if (stolenRoleId != null && !s.reserveRoleIds.contains(stolenRoleId)) return;
+    // Two wolves in the reserve: keeping his own card is not an option.
+    if (stolenRoleId == null && s.reserveForcesSwap) return;
     if (stolenRoleId != null) {
       await ref.read(gameRepositoryProvider).assignRoles(
         playerRowIds: [int.parse(voleurEngineId)],
@@ -508,16 +600,27 @@ class GameSession extends _$GameSession {
     SessionCursor? cursor,
     DaySnapshot? day,
     List<PlayerRow>? roster,
+    List<String>? reserveRoleIds,
   }) {
     final nextEngine = engine ?? prev.engine;
+    final nextReserve = reserveRoleIds ?? prev.reserveRoleIds;
     state = AsyncData(
       GameSessionState(
         engine: nextEngine,
         cursor: cursor ?? prev.cursor,
         day: day ?? prev.day,
-        tonight: buildNightScript(engine: nextEngine, composition: prev.composition),
+        tonight: buildNightScript(
+          engine: nextEngine,
+          composition: prev.composition,
+          dealtComposition: dealtCompositionOf(
+            prev.composition,
+            nextReserve,
+            reserveDrawn: prev.reserveDrawn,
+          ),
+        ),
         composition: prev.composition,
-        reserveRoleIds: prev.reserveRoleIds,
+        reserveRoleIds: nextReserve,
+        reserveDrawn: prev.reserveDrawn,
         roster: roster ?? prev.roster,
         voleurSwapIn: _voleurSwapIn,
       ),

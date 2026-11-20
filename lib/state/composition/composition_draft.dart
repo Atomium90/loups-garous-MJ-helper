@@ -21,6 +21,11 @@ abstract class CompositionDraft with _$CompositionDraft {
     /// be valid.
     @Default(<String>[]) List<String> reserveRoleIds,
 
+    /// Whether the MJ picks the Voleur's reserve here (the house-rule setting). Otherwise the
+    /// reserve is whatever two cards are left after the deal, noted on night 1: the draft has
+    /// no reserve to pick, and the pack just holds two more Simples Villageois.
+    @Default(false) bool reserveChosen,
+
     /// The CompositionAdvisor's current pick for [playerCount] - not persisted (absent from
     /// [fromGame], filled in by CompositionEditor.build right after). Recomputed only when
     /// the player count changes or the MJ asks for another suggestion, never by editing
@@ -29,11 +34,12 @@ abstract class CompositionDraft with _$CompositionDraft {
     CompositionSuggestion? suggestion,
   }) = _CompositionDraft;
 
-  factory CompositionDraft.fromGame(Game game) => CompositionDraft(
+  factory CompositionDraft.fromGame(Game game, {bool reserveChosen = false}) => CompositionDraft(
     gameId: game.id,
     playerCount: game.playerCount,
     roleCounts: game.compositionJson ?? const {},
-    reserveRoleIds: game.reserveRolesJson ?? const [],
+    reserveRoleIds: reserveChosen ? game.reserveRolesJson ?? const [] : const [],
+    reserveChosen: reserveChosen,
   );
 
   int get assignedCount => roleCounts.values.fold(0, (a, b) => a + b);
@@ -42,19 +48,24 @@ abstract class CompositionDraft with _$CompositionDraft {
   /// The Voleur brings the two-card reserve into play.
   bool get hasVoleur => roleCounts.containsKey('voleur');
 
-  /// The reserve is fully specified: not needed without the Voleur, exactly
-  /// two cards with it.
-  bool get reserveComplete => !hasVoleur || reserveRoleIds.length == 2;
+  /// The Voleur's pack holds two more cards than there are players, drawn at random.
+  bool get reserveDrawn => hasVoleur && !reserveChosen;
+
+  /// The reserve is fully specified: not needed without the Voleur, nor when it is left to
+  /// the draw, exactly two cards otherwise.
+  bool get reserveComplete => !reserveChosen || !hasVoleur || reserveRoleIds.length == 2;
 
   bool get isValid => remaining >= 0 && reserveComplete;
 
-  /// [isValid], the cards exist in [pool] (a box may have been unticked since the draft was
-  /// made), and the seats left over can be filled with the Simples Villageois it still has -
-  /// the deal is completed with them at launch.
-  bool isValidFor(CardPool pool) =>
-      isValid &&
-      pool.fits(_claimed()) &&
-      (remaining == 0 || remaining <= cardsLeft('villageois', pool));
+  /// [isValid], and the deal as it will be launched exists in [pool]: the seats left over filled
+  /// with Simples Villageois, the two extra ones of a drawn reserve, the reserve cards the MJ
+  /// picked. A box may have been unticked since the draft was made.
+  bool isValidFor(CardPool pool) {
+    if (!isValid) return false;
+    final deal = _claimed();
+    if (remaining > 0) deal.update('villageois', (n) => n + remaining, ifAbsent: () => remaining);
+    return pool.fits(deal);
+  }
 
   /// True once the displayed composition exactly matches [suggestion] - the "Suggestion" card
   /// hides at that point (nothing left to apply). Compared by hand rather than pulling in
@@ -77,6 +88,7 @@ abstract class CompositionDraft with _$CompositionDraft {
   /// Role id -> cards the deal and the reserve claim.
   Map<String, int> _claimed({int? ignoreReserveSlot}) {
     final claimed = Map<String, int>.from(roleCounts);
+    if (reserveDrawn) claimed.update('villageois', (n) => n + 2, ifAbsent: () => 2);
     for (var i = 0; i < reserveRoleIds.length; i++) {
       if (i == ignoreReserveSlot) continue;
       claimed.update(reserveRoleIds[i], (n) => n + 1, ifAbsent: () => 1);

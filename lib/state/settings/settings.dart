@@ -57,6 +57,10 @@ class AppSettings {
   /// Ids of the boxes the MJ owns. Always holds the base box.
   final Set<String> ownedBoxes;
 
+  /// House rule: the MJ picks the Thief's two reserve cards at the composition. Off (the
+  /// booklet's rule): the reserve is whatever two cards are left after the deal, noted on night 1.
+  final bool thiefReserveChosen;
+
   const AppSettings({
     required this.themeMode,
     required this.keepScreenOn,
@@ -65,6 +69,7 @@ class AppSettings {
     required this.narrationLevel,
     required this.narrationHintSeen,
     required this.ownedBoxes,
+    required this.thiefReserveChosen,
   });
 
   static const defaults = AppSettings(
@@ -75,6 +80,7 @@ class AppSettings {
     narrationLevel: NarrationLevel.defaults,
     narrationHintSeen: false,
     ownedBoxes: {baseBoxId},
+    thiefReserveChosen: false,
   );
 
   AppSettings copyWith({
@@ -85,6 +91,7 @@ class AppSettings {
     NarrationLevel? narrationLevel,
     bool? narrationHintSeen,
     Set<String>? ownedBoxes,
+    bool? thiefReserveChosen,
   }) => AppSettings(
     themeMode: themeMode ?? this.themeMode,
     keepScreenOn: keepScreenOn ?? this.keepScreenOn,
@@ -93,5 +100,6 @@ class AppSettings {
     narrationLevel: narrationLevel ?? this.narrationLevel,
     narrationHintSeen: narrationHintSeen ?? this.narrationHintSeen,
     ownedBoxes: ownedBoxes ?? this.ownedBoxes,
+    thiefReserveChosen: thiefReserveChosen ?? this.thiefReserveChosen,
   );
 }

@@ -205,6 +205,7 @@ void main() {
   testWidgets('the Voleur reveals the reserve section and gates "Lancer la partie"', (
     tester,
   ) async {
+    SharedPreferences.setMockInitialValues({'thief_reserve_chosen': true});
     final repository = FakeGameRepository(initialGames: [_draftGame(id: 1, playerCount: 8)]);
     await pumpScreen(
       tester,
@@ -239,6 +240,7 @@ void main() {
   testWidgets('a role fully claimed by the reserve is disabled with an "en réserve" note', (
     tester,
   ) async {
+    SharedPreferences.setMockInitialValues({'thief_reserve_chosen': true});
     final repository = FakeGameRepository(initialGames: [_draftGame(id: 1, playerCount: 8)]);
     await pumpScreen(
       tester,
@@ -269,6 +271,7 @@ void main() {
   testWidgets('the reserve picker hides the Voleur and cards already spent by the deal', (
     tester,
   ) async {
+    SharedPreferences.setMockInitialValues({'thief_reserve_chosen': true});
     final repository = FakeGameRepository(initialGames: [_draftGame(id: 1, playerCount: 8)]);
     await pumpScreen(
       tester,
@@ -353,6 +356,25 @@ void main() {
       }
       expect(find.text('7 rôles pour 12 joueurs'), findsOneWidget);
     });
+  });
+
+  testWidgets('with the reserve left to the draw the Voleur asks for no reserve cards', (
+    tester,
+  ) async {
+    final repository = FakeGameRepository(initialGames: [_draftGame(id: 1, playerCount: 8)]);
+    await pumpScreen(
+      tester,
+      const CompositionScreen(gameId: 1),
+      overrides: [gameRepositoryProvider.overrideWithValue(repository)],
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Voleur'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Réserve du Voleur'), findsNothing);
+    expect(find.textContaining('Le Voleur ajoute 2 Simples Villageois au paquet (10 cartes)'), findsOneWidget);
+    expect(_launchButton(tester).onPressed, isNotNull);
   });
 
   testWidgets('back chevron keeps the game as a draft and returns home', (tester) async {

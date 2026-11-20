@@ -65,6 +65,19 @@ class _SettingsBody extends StatelessWidget {
                 sublabel: context.l10n.settingsOwnedBoxes(pool.ownedBoxIds.length, pool.availableRoleCount),
                 onTap: () => context.pushNamed('boxes'),
               ),
+              _ToggleRow(
+                icon: AppIcons.thief,
+                label: context.l10n.settingsThiefReserve,
+                value: settings.thiefReserveChosen,
+                onChanged: (v) => notifier?.setThiefReserveChosen(v),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  context.l10n.settingsThiefReserveHint,
+                  style: typography.counter.copyWith(color: colors.textTertiary, height: 1.55),
+                ),
+              ),
               _ComingSoonRow(icon: AppIcons.regulars, label: context.l10n.regularsBook),
               const SizedBox(height: 22),
               SectionLabel(context.l10n.settingsAppearance),

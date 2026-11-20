@@ -564,6 +564,15 @@
   "@reserveWhichCard": {
     "description": "Title of the sheet where a reserve card is chosen."
   },
+  "reserveRandomNote": "Le Voleur ajoute 2 Simples Villageois au paquet ({count} cartes). La réserve est ce qu'il reste après la distribution : vous noterez ces 2 cartes pendant la nuit 1.",
+  "@reserveRandomNote": {
+    "description": "Composition note when the Thief's reserve is drawn; count is the pack size.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "compositionRoleCount": "{assigned, plural, =0{0 rôles} =1{1 rôle} other{{assigned} rôles}} pour {players, plural, =1{1 joueur} other{{players} joueurs}}",
   "@compositionRoleCount": {
     "description": "How many roles are picked for how many players.",
@@ -616,6 +625,15 @@
   "beforeNightDealHint": "Mélangez et distribuez à l'aveugle. L'app note les rôles au fil de la nuit 1, quand chacun se réveille.",
   "@beforeNightDealHint": {
     "description": "How the cards are dealt."
+  },
+  "beforeNightPackHint": "Ajoutez 2 Simples Villageois au paquet ({count} cartes), mélangez et distribuez. Posez les 2 cartes restantes au centre, face cachée : vous les noterez pendant la nuit 1.",
+  "@beforeNightPackHint": {
+    "description": "How to deal when the Thief's reserve is drawn; count is the pack size.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "beforeNightReserveHint": "Posez ces 2 cartes au centre, face cachée : {cards}.",
   "@beforeNightReserveHint": {
@@ -677,6 +695,14 @@
   "settingsDuringGame": "Pendant la partie",
   "@settingsDuringGame": {
     "description": "Settings section: in-game behaviour."
+  },
+  "settingsThiefReserve": "Réserve du Voleur choisie par le MJ",
+  "@settingsThiefReserve": {
+    "description": "Toggle: the MJ picks the Thief's two reserve cards instead of leaving them to the draw."
+  },
+  "settingsThiefReserveHint": "Désactivé : la réserve est tirée au hasard, comme dans les règles, et vous notez les 2 cartes restantes pendant la nuit 1.",
+  "@settingsThiefReserveHint": {
+    "description": "Explains the Thief reserve setting."
   },
   "settingsKeepScreenOn": "Garder l'écran allumé",
   "@settingsKeepScreenOn": {
@@ -994,6 +1020,22 @@
   "scriptLoadError": "Impossible de charger la partie.",
   "@scriptLoadError": {
     "description": "The script tab failed to load."
+  },
+  "reserveEntryTitle": "Les 2 cartes restantes",
+  "@reserveEntryTitle": {
+    "description": "Title of the panel where the MJ notes the Thief's two leftover cards."
+  },
+  "reserveEntryBody": "Regardez les 2 cartes posées au centre et indiquez-les : l'app en a besoin pour savoir qui peut porter quoi.",
+  "@reserveEntryBody": {
+    "description": "Explains why the leftover cards are noted."
+  },
+  "reserveEntryConfirm": "Valider ces 2 cartes",
+  "@reserveEntryConfirm": {
+    "description": "Button that confirms the Thief's two leftover cards."
+  },
+  "scriptThiefMustSwap": "Les deux cartes sont des Loups-Garous : le Voleur doit en prendre une.",
+  "@scriptThiefMustSwap": {
+    "description": "Said when the Thief cannot keep his card because both reserve cards are Werewolves."
   },
   "scriptThiefExtra": "Le Voleur a volé une carte de {role} : il compte en plus.",
   "@scriptThiefExtra": {

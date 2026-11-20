@@ -159,6 +159,25 @@ void main() {
     expect(prefs.getBool('aide_memoire'), isFalse);
   });
 
+  testWidgets('the Thief reserve toggle is off by default and persists once flipped', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(400, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
+      initialLocation: '/settings',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Désactivé : la réserve est tirée au hasard'), findsOneWidget);
+    await tester.tap(find.text('Réserve du Voleur choisie par le MJ'));
+    await tester.pumpAndSettle();
+
+    expect((await SharedPreferences.getInstance()).getBool('thief_reserve_chosen'), isTrue);
+  });
+
   group('deleting every game', () {
     FakeGameRepository repositoryWithGames() {
       final now = DateTime.now();

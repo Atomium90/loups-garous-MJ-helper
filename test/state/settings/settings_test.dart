@@ -126,6 +126,22 @@ void main() {
     });
   });
 
+  group('the Thief reserve', () {
+    test('is drawn at random by default', () async {
+      final container = await containerWith({});
+      expect((await container.read(settingsProvider.future)).thiefReserveChosen, isFalse);
+    });
+
+    test('the choice persists', () async {
+      final container = await containerWith({});
+      await container.read(settingsProvider.future);
+      await container.read(settingsProvider.notifier).setThiefReserveChosen(true);
+
+      expect(container.read(settingsProvider).value!.thiefReserveChosen, isTrue);
+      expect((await SharedPreferences.getInstance()).getBool('thief_reserve_chosen'), isTrue);
+    });
+  });
+
   group('the owned boxes', () {
     test('default to the base box alone', () async {
       final container = await containerWith({});
