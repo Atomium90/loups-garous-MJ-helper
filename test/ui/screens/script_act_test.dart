@@ -254,6 +254,121 @@ void main() {
     expect(find.text('Le Voleur échange sa carte contre Voyante'), findsOneWidget);
   });
 
+  group('the Piper', () {
+    const comp = {'joueur_de_flute': 1, 'loup_garou': 2, 'villageois': 3};
+
+    Future<void> toPiper(WidgetTester tester) async {
+      await identify(tester, ['Bo', 'Cy']); // the wolves
+      await tapName(tester, 'Fi');
+      await tester.tap(find.text('Les Loups désignent Fi'));
+      await tester.pumpAndSettle();
+      await identify(tester, ['Ana']); // the Piper
+    }
+
+    testWidgets('charms two players, then the charmed meet', (tester) async {
+      final id = await _startedGame(repo, composition: comp);
+      await pump(tester, id);
+      await toPiper(tester);
+
+      expect(find.text('Qui le Joueur de Flûte charme-t-il ?'), findsOneWidget);
+      await tapName(tester, 'Di');
+      await tapName(tester, 'Ed');
+      await tester.tap(find.text('Le Joueur de Flûte charme Di et Ed'));
+      await tester.pumpAndSettle();
+
+      // the charmed wake: the card names them
+      expect(find.text('Ils se sont reconnus'), findsOneWidget);
+      await tester.tap(find.text('Ils se sont reconnus'));
+      await tester.pumpAndSettle();
+      expect(find.text('Résoudre la nuit'), findsOneWidget);
+
+      await tester.tap(find.text('Journal'));
+      await tester.pumpAndSettle();
+      expect(find.text('Le Joueur de Flûte charme Di et Ed'), findsOneWidget);
+    });
+
+    testWidgets('does not offer himself', (tester) async {
+      final id = await _startedGame(repo, composition: comp);
+      await pump(tester, id);
+      await toPiper(tester);
+
+      // Ana is the Piper: she is not among the players to charm (4 are: Bo, Cy, Di, Ed)
+      expect(find.text('0 / 2'), findsNothing);
+      await tapName(tester, 'Bo');
+      await tapName(tester, 'Cy');
+      expect(find.text('Le Joueur de Flûte charme Bo et Cy'), findsOneWidget);
+    });
+
+    testWidgets('the call can be passed', (tester) async {
+      final id = await _startedGame(repo, composition: comp);
+      await pump(tester, id);
+      await toPiper(tester);
+
+      await tester.tap(find.text('Passer ce rôle'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Résoudre la nuit'), findsOneWidget);
+    });
+  });
+
+  group('the Elder', () {
+    const comp = {'ancien': 1, 'loup_garou': 2, 'villageois': 3};
+
+    testWidgets('is asked about when the wolves pick someone, and a "yes" spares the first bite', (
+      tester,
+    ) async {
+      final id = await _startedGame(repo, composition: comp);
+      await pump(tester, id);
+
+      await identify(tester, ['Bo', 'Cy']);
+      await tapName(tester, 'Ana');
+      await tester.tap(find.text('Les Loups désignent Ana'));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Est-ce l'Ancien ?"), findsOneWidget);
+      await tester.tap(find.text("Oui, c'est l'Ancien"));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Résoudre la nuit'));
+      await tester.pumpAndSettle();
+      expect(find.text("Personne n'est mort cette nuit"), findsOneWidget);
+      await tester.tap(find.text('Journal'));
+      await tester.pumpAndSettle();
+      expect(find.text("Ana, l'Ancien, survit à la morsure"), findsOneWidget);
+    });
+
+    testWidgets('a "no" lets the victim die as usual', (tester) async {
+      final id = await _startedGame(repo, composition: comp);
+      await pump(tester, id);
+
+      await identify(tester, ['Bo', 'Cy']);
+      await tapName(tester, 'Ana');
+      await tester.tap(find.text('Les Loups désignent Ana'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Non'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Résoudre la nuit'));
+      await tester.pumpAndSettle();
+      expect(find.text("Personne n'est mort cette nuit"), findsNothing);
+    });
+
+    testWidgets('is not asked about when there is no Elder in the game', (tester) async {
+      final id = await _startedGame(
+        repo,
+        composition: const {'loup_garou': 2, 'villageois': 4},
+      );
+      await pump(tester, id);
+
+      await identify(tester, ['Bo', 'Cy']);
+      await tapName(tester, 'Ana');
+      await tester.tap(find.text('Les Loups désignent Ana'));
+      await tester.pumpAndSettle();
+
+      expect(find.text("Est-ce l'Ancien ?"), findsNothing);
+    });
+  });
+
   group('the wolf camp', () {
     testWidgets('the Wolf-Hound chooses his side, and the wolves step follows', (tester) async {
       final id = await _startedGame(

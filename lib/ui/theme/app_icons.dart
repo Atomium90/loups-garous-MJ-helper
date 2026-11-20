@@ -176,6 +176,7 @@ abstract final class AppIcons {
     'infect' => infect,
     'elder' => elder,
     'sword' => knight,
+    'piper' => piperRole,
     'crown' => captain,
     'vote' => vote,
     'scale' => scale,

@@ -47,5 +47,9 @@ String journalLine(AppLocalizations l10n, NightLogRow row) {
     JournalKind.villagersLosePowers => l10n.journalVillagersLosePowers(player),
     JournalKind.knightContaminates => l10n.journalKnightContaminates(player),
     JournalKind.diseaseDeath => l10n.journalDiseaseDeath(player),
+    JournalKind.piperCharms =>
+      (args['other'] ?? '').isEmpty
+          ? l10n.journalPiperCharmsOne(player)
+          : l10n.journalPiperCharms(player, args['other']!),
   };
 }

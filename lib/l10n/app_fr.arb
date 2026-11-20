@@ -368,6 +368,27 @@
       }
     }
   },
+  "journalPiperCharms": "Le Joueur de Flûte charme {player} et {other}",
+  "@journalPiperCharms": {
+    "description": "Journal: the Piper charms two players.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      },
+      "other": {
+        "type": "String"
+      }
+    }
+  },
+  "journalPiperCharmsOne": "Le Joueur de Flûte charme {player}",
+  "@journalPiperCharmsOne": {
+    "description": "Journal: the Piper charms the last player left to charm.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
   "journalHeartbreakDeath": "{player} meurt de chagrin",
   "@journalHeartbreakDeath": {
     "description": "Journal: a lover dies with the other.",
@@ -1362,6 +1383,60 @@
   "scriptKnightNone": "Aucun Loup à atteindre",
   "@scriptKnightNone": {
     "description": "Button: no wolf is left diseased."
+  },
+  "scriptPiperQuestion": "Qui le Joueur de Flûte charme-t-il ?",
+  "@scriptPiperQuestion": {
+    "description": "Question on the Piper's turn."
+  },
+  "scriptPiperCharm": "Le Joueur de Flûte charme {first} et {second}",
+  "@scriptPiperCharm": {
+    "description": "Button that confirms the two players the Piper charms.",
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "second": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptPiperCharmOne": "Le Joueur de Flûte charme {name}",
+  "@scriptPiperCharmOne": {
+    "description": "Button that confirms the one player left for the Piper to charm.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptCharmedDone": "Ils se sont reconnus",
+  "@scriptCharmedDone": {
+    "description": "Button once the charmed players have met."
+  },
+  "scriptElderAskTitle": "Est-ce l'Ancien ?",
+  "@scriptElderAskTitle": {
+    "description": "Title of the question asked when the wolves pick a player who may be the Elder."
+  },
+  "scriptElderAskBody": "{name} est visé par les Loups. Si c'est l'Ancien, il survit à cette première morsure, sans que personne le sache.",
+  "@scriptElderAskBody": {
+    "description": "Explains why the MJ is asked whether the victim is the Elder.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptElderYes": "Oui, c'est l'Ancien",
+  "@scriptElderYes": {
+    "description": "The victim is the Elder."
+  },
+  "scriptElderNo": "Non",
+  "@scriptElderNo": {
+    "description": "The victim is not the Elder."
+  },
+  "scriptPowerless": "Les villageois ont perdu leurs pouvoirs : le script ne les appelle plus.",
+  "@scriptPowerless": {
+    "description": "Banner shown once the Elder's elimination cost the villagers their powers."
   },
   "scriptThiefExtra": "Le Voleur a volé une carte de {role} : il compte en plus.",
   "@scriptThiefExtra": {
