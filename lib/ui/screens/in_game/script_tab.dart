@@ -19,6 +19,7 @@ import '../../widgets/avatar_pick_cell.dart';
 import '../../widgets/player_avatar.dart';
 import 'widgets/fox_act.dart';
 import 'widgets/identify_step.dart';
+import 'widgets/two_choice_act.dart';
 import 'widgets/reserve_entry.dart';
 import 'widgets/simple_act.dart';
 import 'widgets/target_pick.dart';
@@ -147,10 +148,11 @@ class _NightBody extends ConsumerWidget {
         onDefer: notifier.skipStep,
       );
     }
-    return _actBody(context, notifier, step.role);
+    return _actBody(context, notifier, step);
   }
 
-  Widget _actBody(BuildContext context, GameSession notifier, Role role) {
+  Widget _actBody(BuildContext context, GameSession notifier, NightScriptStep step) {
+    final role = step.role;
     final alive = session.engine.alivePlayers;
     Candidate cand(Player p) => (id: p.id, name: p.name);
 
@@ -199,6 +201,86 @@ class _NightBody extends ConsumerWidget {
           onSkip: notifier.skipStep,
         );
 
+      case 'enfant_sauvage':
+        final child = session.engine.players.where((p) => p.alive && p.roleId == role.id).firstOrNull;
+        if (child == null) {
+          return SimpleAct(primaryLabel: context.l10n.scriptSkipRole, onPrimary: notifier.skipStep);
+        }
+        return TargetPick(
+          question: context.l10n.scriptWildChildQuestion,
+          candidates: [for (final p in alive) if (p.id != child.id) cand(p)],
+          confirmLabel: context.l10n.scriptWildChildModel,
+          onConfirm: (id) => notifier.wildChildChoose(childEngineId: child.id, modelEngineId: id),
+          secondaryLabel: context.l10n.scriptSkipRole,
+          onSecondary: notifier.skipStep,
+        );
+
+      case 'chien_loup':
+        final dog = session.engine.players.where((p) => p.alive && p.roleId == role.id).firstOrNull;
+        if (dog == null) {
+          return SimpleAct(primaryLabel: context.l10n.scriptSkipRole, onPrimary: notifier.skipStep);
+        }
+        return TwoChoiceAct(
+          question: context.l10n.scriptChienLoupQuestion,
+          firstLabel: context.l10n.scriptChienLoupWolf,
+          onFirst: () => notifier.chienLoupChoose(engineId: dog.id, wolf: true),
+          secondLabel: context.l10n.scriptChienLoupVillager,
+          onSecond: () => notifier.chienLoupChoose(engineId: dog.id, wolf: false),
+        );
+
+      case 'infect_pere_des_loups':
+        final victimId = session.engine.pendingWolfVictimId;
+        if (victimId == null) {
+          return SimpleAct(
+            primaryLabel: context.l10n.commonContinue,
+            onPrimary: notifier.skipStep,
+          );
+        }
+        final victim = session.engine.playerById(victimId).name;
+        return TwoChoiceAct(
+          question: context.l10n.scriptInfectAsk(victim),
+          firstLabel: context.l10n.scriptInfectNo,
+          onFirst: notifier.skipStep,
+          secondLabel: context.l10n.scriptInfectYes(victim),
+          onSecond: notifier.infectVictim,
+        );
+
+      case 'grand_mechant_loup':
+        return TargetPick(
+          question: context.l10n.scriptBigBadWolfQuestion,
+          candidates: [
+            for (final p in alive)
+              if (!session.engine.wakesWithWolves(p, RoleRegistry.all) &&
+                  p.id != session.engine.pendingWolfVictimId)
+                cand(p),
+          ],
+          confirmLabel: context.l10n.scriptBigBadWolfPick,
+          onConfirm: notifier.bigBadWolfTarget,
+          secondaryLabel: context.l10n.scriptSkipRole,
+          onSecondary: notifier.skipStep,
+        );
+
+      case 'loup_garou_blanc':
+        // The first night he only wakes with the wolves: nothing to act, just to be known.
+        if (step.identifyOnly) {
+          return SimpleAct(
+            primaryLabel: context.l10n.commonContinue,
+            onPrimary: notifier.skipStep,
+          );
+        }
+        return TargetPick(
+          question: context.l10n.scriptWhiteWolfQuestion,
+          candidates: [
+            for (final p in alive)
+              if (session.engine.wakesWithWolves(p, RoleRegistry.all) && p.roleId != role.id)
+                cand(p),
+          ],
+          confirmLabel: context.l10n.scriptWhiteWolfPick,
+          onConfirm: notifier.whiteWolfEat,
+          secondaryLabel: context.l10n.scriptSkipRole,
+          onSecondary: notifier.skipStep,
+        );
+
       case 'deux_soeurs':
         return SimpleAct(
           primaryLabel: context.l10n.scriptSistersDone,
@@ -224,7 +306,10 @@ class _NightBody extends ConsumerWidget {
       case 'loup_garou':
         return TargetPick(
           question: context.l10n.scriptWolvesQuestion,
-          candidates: [for (final p in alive) if (p.roleId != 'loup_garou') cand(p)],
+          candidates: [
+            for (final p in alive)
+              if (!session.engine.wakesWithWolves(p, RoleRegistry.all)) cand(p),
+          ],
           confirmLabel: context.l10n.scriptWolvesPick,
           onConfirm: (id) => notifier.applyAction(WolvesTarget(targetPlayerId: id)),
           secondaryLabel: context.l10n.scriptSkipRole,
@@ -947,6 +1032,11 @@ IconData _roleIcon(String roleId) => switch (roleId) {
   'renard' => AppIcons.fox,
   'deux_soeurs' => AppIcons.sisters,
   'montreur_d_ours' => AppIcons.bearTamer,
+  'enfant_sauvage' => AppIcons.wildChild,
+  'chien_loup' => AppIcons.chienLoup,
+  'loup_garou_blanc' => AppIcons.whiteWolf,
+  'infect_pere_des_loups' => AppIcons.infect,
+  'grand_mechant_loup' => AppIcons.bigBadWolf,
   'capitaine' => AppIcons.captain,
   _ => AppIcons.village,
 };

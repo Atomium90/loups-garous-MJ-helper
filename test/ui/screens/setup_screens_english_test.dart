@@ -108,9 +108,9 @@ void main() {
     expect(find.text('Base box · 8 roles supported'), findsOneWidget);
     // The compilations and Characters already hold base roles the app runs (Characters:
     // extra Werewolves); the sticker boxes hold none yet.
-    expect(find.text('Compilation · 11 roles supported'), findsOneWidget);
-    expect(find.text('Compilation · 10 roles supported'), findsOneWidget);
-    expect(find.text('Expansion · 4 roles supported'), findsOneWidget);
+    expect(find.text('Compilation · 16 roles supported'), findsOneWidget);
+    expect(find.text('Compilation · 15 roles supported'), findsOneWidget);
+    expect(find.text('Expansion · 9 roles supported'), findsOneWidget);
     expect(find.text('Stickers · roles coming soon'), findsNWidgets(2));
   });
 }

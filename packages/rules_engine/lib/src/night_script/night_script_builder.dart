@@ -46,6 +46,7 @@ class NightScriptBuilder {
       );
     }
 
+    final introOnly = <String>{};
     final eligible = compositionRoles.where((role) {
       if (!role.hasNightCall) return false;
       if (!aliveRoleIds.contains(role.id)) return false;
@@ -56,7 +57,13 @@ class NightScriptBuilder {
         );
       }
       if (losesNightCall(role, night)) return false;
-      return wakeCondition.isActiveFor(role, night);
+      if (wakeCondition.isActiveFor(role, night)) return true;
+      // Not its night of power, but it wakes with the wolves tonight and must be identified.
+      if (nightIndex == 1 && role.knownOnFirstNight) {
+        introOnly.add(role.id);
+        return true;
+      }
+      return false;
     }).toList();
 
     final ordered = _topoSort(eligible);
@@ -65,7 +72,11 @@ class NightScriptBuilder {
       nightIndex: nightIndex,
       steps: [
         for (var i = 0; i < ordered.length; i++)
-          NightScriptStep(role: ordered[i], stepIndex: i + 1),
+          NightScriptStep(
+            role: ordered[i],
+            stepIndex: i + 1,
+            identifyOnly: introOnly.contains(ordered[i].id),
+          ),
       ],
     );
   }

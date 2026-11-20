@@ -448,6 +448,22 @@ class GameSession extends _$GameSession {
   Future<void> foxSniff({required String middleEngineId, required bool wolfFound}) =>
       applyAction(FoxSniff(middlePlayerId: middleEngineId, wolfFound: wolfFound));
 
+  // --- night: the wolf camp ---
+
+  Future<void> wildChildChoose({required String childEngineId, required String modelEngineId}) =>
+      applyAction(WildChildChooseModel(childPlayerId: childEngineId, modelPlayerId: modelEngineId));
+
+  Future<void> chienLoupChoose({required String engineId, required bool wolf}) =>
+      applyAction(ChienLoupChoose(playerId: engineId, wolf: wolf));
+
+  Future<void> infectVictim() => applyAction(const InfectVictim());
+
+  Future<void> bigBadWolfTarget(String engineId) =>
+      applyAction(BigBadWolfTarget(targetPlayerId: engineId));
+
+  Future<void> whiteWolfEat(String engineId) =>
+      applyAction(WhiteWolfEat(targetPlayerId: engineId));
+
   // --- night: Deux Sœurs ---
 
   /// The Two Sisters woke and met: a journal line, then on to the next call.
@@ -647,7 +663,15 @@ class GameSession extends _$GameSession {
 
   SessionCursor _cursorAfter(GameAction action, SessionCursor c) => switch (action) {
     // These complete a night role's turn -> advance to the next step.
-    WolvesTarget() || CupidonPair() || VoleurSwap() || FoxSniff() => SessionCursor(
+    WolvesTarget() ||
+    CupidonPair() ||
+    VoleurSwap() ||
+    FoxSniff() ||
+    WildChildChooseModel() ||
+    ChienLoupChoose() ||
+    InfectVictim() ||
+    BigBadWolfTarget() ||
+    WhiteWolfEat() => SessionCursor(
       stepIndex: c.stepIndex + 1,
       subStep: NightSubStep.identify,
     ),

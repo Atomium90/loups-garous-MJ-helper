@@ -135,7 +135,8 @@ void main() {
 
     test('an infected player counts as a wolf and wakes with them', () {
       final infected = apply(table, const InfectVictim()).state;
-      expect(infected.aliveWolves(registry), 1);
+      // the Cursed Wolf-Father himself, and the villager he infected
+      expect(infected.aliveWolves(registry), 2);
       expect(infected.wakesWithWolves(infected.playerById('a'), registry), isTrue);
     });
 

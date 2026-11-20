@@ -42,6 +42,33 @@ List<NightLogEntry> nightLogEntriesFor(GameAction action, GameState before) {
         ),
       ];
 
+    case WildChildChooseModel(:final childPlayerId, :final modelPlayerId):
+      return [
+        entry(JournalKind.wildChildModel, {
+          'player': name(childPlayerId),
+          'other': name(modelPlayerId),
+        }),
+      ];
+
+    case ChienLoupChoose(:final playerId, :final wolf):
+      return [
+        entry(
+          wolf ? JournalKind.chienLoupWolf : JournalKind.chienLoupVillage,
+          {'player': name(playerId)},
+        ),
+      ];
+
+    case InfectVictim():
+      final victimId = before.pendingWolfVictimId;
+      if (victimId == null) return const [];
+      return [entry(JournalKind.infection, {'player': name(victimId)})];
+
+    case BigBadWolfTarget(:final targetPlayerId):
+      return [entry(JournalKind.bigBadWolfTarget, {'player': name(targetPlayerId)})];
+
+    case WhiteWolfEat(:final targetPlayerId):
+      return [entry(JournalKind.whiteWolfEats, {'player': name(targetPlayerId)})];
+
     case VoleurSwap(:final stolenRoleId):
       return [
         stolenRoleId == null

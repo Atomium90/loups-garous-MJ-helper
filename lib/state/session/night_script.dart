@@ -96,8 +96,11 @@ NightScript buildNightScript({
 }
 
 /// What the game says about tonight's calls beyond the roles themselves.
-NightContext _contextFor(GameState engine) =>
-    NightContext(nightIndex: engine.nightIndex, spentPowers: engine.spentPowersBeforeTonight);
+NightContext _contextFor(GameState engine) => NightContext(
+  nightIndex: engine.nightIndex,
+  spentPowers: engine.spentPowersBeforeTonight,
+  wolfSideLost: engine.wolfSideLost(RoleRegistry.all),
+);
 
 /// [roles] in the registry's declaration order, which is the official wake order.
 ///
