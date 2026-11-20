@@ -31,5 +31,6 @@ export 'src/game_state/game_state.dart';
 export 'src/game_state/game_state_machine.dart';
 export 'src/game_state/pending_decision.dart';
 export 'src/game_state/player.dart';
+export 'src/game_state/sides.dart';
 
 export 'src/serialization/game_state_json.dart';

@@ -993,11 +993,8 @@ class _DayRecapBody extends StatelessWidget {
     final deaths = session.recapDeaths;
     final saved = session.day.savedFromWolvesName;
 
-    final aliveByTeam = <Team, int>{};
-    for (final p in engine.alivePlayers) {
-      final team = RoleRegistry.all.byIdOrNull(p.roleId)?.team ?? Team.village;
-      aliveByTeam[team] = (aliveByTeam[team] ?? 0) + 1;
-    }
+    final wolvesAlive = engine.aliveWolves(RoleRegistry.all);
+    final villageAlive = engine.alivePlayers.length - wolvesAlive;
 
     final ctaLabel = engine.nightIndex == 1 && engine.captainPlayerId == null
         ? context.l10n.scriptElectCaptain
@@ -1063,13 +1060,13 @@ class _DayRecapBody extends StatelessWidget {
             Expanded(
               child: _StatCell(
                 label: context.l10n.compositionVillage,
-                value: aliveByTeam[Team.village] ?? 0,
+                value: villageAlive,
               ),
             ),
             Expanded(
               child: _StatCell(
                 label: context.l10n.compositionWolves,
-                value: aliveByTeam[Team.werewolves] ?? 0,
+                value: wolvesAlive,
               ),
             ),
           ],

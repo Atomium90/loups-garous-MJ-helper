@@ -52,6 +52,37 @@ void main() {
     _expectSameState(state, roundTrip(state));
   });
 
+  test('round-trips the side override and the statuses of a player', () {
+    final state = GameState.initial(players: _players({'a': 'voyante', 'b': 'villageois'})).copyWith(
+      players: [
+        const Player(
+          id: 'a',
+          name: 'A',
+          roleId: 'voyante',
+          teamOverride: Team.werewolves,
+          statuses: {PlayerStatus.infected, PlayerStatus.charmed},
+        ),
+        const Player(id: 'b', name: 'B', roleId: 'villageois'),
+      ],
+    );
+    final back = roundTrip(state);
+    expect(back.players[0].teamOverride, Team.werewolves);
+    expect(back.players[0].statuses, {PlayerStatus.infected, PlayerStatus.charmed});
+    expect(back.players[1].teamOverride, isNull);
+    expect(back.players[1].statuses, isEmpty);
+  });
+
+  test('a save written before sides and statuses existed still decodes', () {
+    final json = GameStateJson.encode(
+      GameState.initial(players: _players({'a': 'loup_garou'})),
+    );
+    expect((json['players'] as List).single, isNot(contains('teamOverride')));
+    expect((json['players'] as List).single, isNot(contains('statuses')));
+    final back = GameStateJson.decode(json);
+    expect(back.players.single.teamOverride, isNull);
+    expect(back.players.single.statuses, isEmpty);
+  });
+
   test('round-trips a death: cause, night and phase survive', () {
     const machine = GameStateMachine();
     var state = GameState.initial(
