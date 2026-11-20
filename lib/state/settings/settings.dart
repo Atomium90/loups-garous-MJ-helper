@@ -65,6 +65,10 @@ class AppSettings {
   /// booklet, the default). The booklets disagree.
   final bool foxAfterWitch;
 
+  /// The White Werewolf's solo night falls on the odd nights (1, 3, 5...) instead of the even ones
+  /// (2, 4, 6..., the default). The booklets do not say which.
+  final bool whiteWolfOddNights;
+
   const AppSettings({
     required this.themeMode,
     required this.keepScreenOn,
@@ -75,6 +79,7 @@ class AppSettings {
     required this.ownedBoxes,
     required this.thiefReserveChosen,
     required this.foxAfterWitch,
+    required this.whiteWolfOddNights,
   });
 
   static const defaults = AppSettings(
@@ -87,6 +92,7 @@ class AppSettings {
     ownedBoxes: {baseBoxId},
     thiefReserveChosen: false,
     foxAfterWitch: false,
+    whiteWolfOddNights: false,
   );
 
   AppSettings copyWith({
@@ -99,6 +105,7 @@ class AppSettings {
     Set<String>? ownedBoxes,
     bool? thiefReserveChosen,
     bool? foxAfterWitch,
+    bool? whiteWolfOddNights,
   }) => AppSettings(
     themeMode: themeMode ?? this.themeMode,
     keepScreenOn: keepScreenOn ?? this.keepScreenOn,
@@ -109,5 +116,6 @@ class AppSettings {
     ownedBoxes: ownedBoxes ?? this.ownedBoxes,
     thiefReserveChosen: thiefReserveChosen ?? this.thiefReserveChosen,
     foxAfterWitch: foxAfterWitch ?? this.foxAfterWitch,
+    whiteWolfOddNights: whiteWolfOddNights ?? this.whiteWolfOddNights,
   );
 }

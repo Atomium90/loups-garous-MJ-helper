@@ -7,5 +7,6 @@ GameWinner winnerFor(VictoryKind kind) => switch (kind) {
   VictoryKind.village => GameWinner.village,
   VictoryKind.werewolves => GameWinner.wolves,
   VictoryKind.lovers => GameWinner.lovers,
+  VictoryKind.whiteWolf => GameWinner.whiteWolf,
   VictoryKind.nobody => GameWinner.none,
 };

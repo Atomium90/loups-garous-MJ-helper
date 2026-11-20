@@ -159,6 +159,7 @@ void main() {
     const causes = <DeathCause>[
       WolvesKill(),
       WitchDeathPotionKill(),
+      WhiteWolfKill(),
       DayVoteKill(),
       HunterShotKill(shooterPlayerId: 'a'),
       LoversCascadeKill(causingPlayerId: 'a'),
@@ -175,6 +176,7 @@ void main() {
       expect(deathCauseLabel(fr, const WolvesKill()), 'Victime des Loups');
       expect(deathCauseShort(fr, const WitchDeathPotionKill()), 'potion de mort');
       expect(deathCauseLabel(en, const HunterShotKill(shooterPlayerId: 'a')), "Hunter's shot");
+      expect(deathCauseLabel(fr, const WhiteWolfKill()), 'Dévoré par le Loup-Garou Blanc');
     });
   });
 

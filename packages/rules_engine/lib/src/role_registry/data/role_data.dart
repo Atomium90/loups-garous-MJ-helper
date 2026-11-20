@@ -60,6 +60,14 @@ const allRoles = <Role>[
     wakeCondition: WakeCondition.everyOtherNight,
     optionalCall: true,
   ),
+  // He picks a role model on the first night; if the model is eliminated he turns into a wolf.
+  Role(
+    id: 'enfant_sauvage',
+    team: Team.ambiguous,
+    hasNightCall: true,
+    wakeCondition: WakeCondition.firstNightOnly,
+    actionType: ActionType.selectOne,
+  ),
   // He only identifies himself on the first night; his power plays in the morning.
   Role(
     id: 'montreur_d_ours',
@@ -68,6 +76,15 @@ const allRoles = <Role>[
     hasNightCall: true,
     wakeCondition: WakeCondition.firstNightOnly,
   ),
+  // No call of his own in the booklets: on the first night, just before the wolves, the MJ asks
+  // him whether he is a villager or a wolf, for good.
+  Role(
+    id: 'chien_loup',
+    team: Team.ambiguous,
+    hasNightCall: true,
+    wakeCondition: WakeCondition.firstNightOnly,
+    actionType: ActionType.binaryChoice,
+  ),
   Role(
     id: 'loup_garou',
     team: Team.werewolves,
@@ -75,6 +92,39 @@ const allRoles = <Role>[
     hasNightCall: true,
     wakeCondition: WakeCondition.everyNight,
     orderConstraints: [OrderConstraint.after('voyante')],
+    actionType: ActionType.selectOne,
+  ),
+  // The wolves' pack also holds these three, who each have their own turn right after them
+  // (the booklets' order: the White Werewolf, the Cursed Wolf-Father, the Big Bad Wolf).
+  Role(
+    id: 'loup_garou_blanc',
+    team: Team.solo,
+    hasNightCall: true,
+    wakeCondition: WakeCondition.everyOtherNight,
+    firstWakeNight: 2,
+    knownOnFirstNight: true,
+    optionalCall: true,
+    orderConstraints: [OrderConstraint.after('loup_garou')],
+    actionType: ActionType.selectOne,
+  ),
+  Role(
+    id: 'infect_pere_des_loups',
+    team: Team.werewolves,
+    hasNightCall: true,
+    wakeCondition: WakeCondition.conditional,
+    wakeGuard: WakeGuard.powerUnspent,
+    optionalCall: true,
+    orderConstraints: [OrderConstraint.after('loup_garou')],
+    actionType: ActionType.binaryChoice,
+  ),
+  Role(
+    id: 'grand_mechant_loup',
+    team: Team.werewolves,
+    hasNightCall: true,
+    wakeCondition: WakeCondition.conditional,
+    wakeGuard: WakeGuard.noWolfDeathYet,
+    optionalCall: true,
+    orderConstraints: [OrderConstraint.after('loup_garou')],
     actionType: ActionType.selectOne,
   ),
   Role(

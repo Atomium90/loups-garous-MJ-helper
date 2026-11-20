@@ -5,6 +5,11 @@ class WolvesKill implements DeathCause {
   const WolvesKill();
 }
 
+/// The White Werewolf ate one of the other wolves, on his solo night.
+class WhiteWolfKill implements DeathCause {
+  const WhiteWolfKill();
+}
+
 class WitchDeathPotionKill implements DeathCause {
   const WitchDeathPotionKill();
 }

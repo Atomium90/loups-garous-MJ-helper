@@ -254,6 +254,146 @@ void main() {
     expect(find.text('Le Voleur échange sa carte contre Voyante'), findsOneWidget);
   });
 
+  group('the wolf camp', () {
+    testWidgets('the Wolf-Hound chooses his side, and the wolves step follows', (tester) async {
+      final id = await _startedGame(
+        repo,
+        composition: const {'chien_loup': 1, 'loup_garou': 2, 'villageois': 3},
+      );
+      await pump(tester, id);
+
+      await identify(tester, ['Ana']);
+      expect(find.text('Que choisit le Chien-Loup ? Ce choix est définitif.'), findsOneWidget);
+      await tester.tap(find.text('Il rejoint les Loups'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Qui sont les Loups-Garous ?'), findsOneWidget);
+      await tester.tap(find.text('Journal'));
+      await tester.pumpAndSettle();
+      expect(find.text('Ana, Chien-Loup, rejoint les Loups'), findsOneWidget);
+    });
+
+    testWidgets('the Wild Child picks a model', (tester) async {
+      final id = await _startedGame(
+        repo,
+        composition: const {'enfant_sauvage': 1, 'loup_garou': 2, 'villageois': 3},
+      );
+      await pump(tester, id);
+
+      await identify(tester, ['Ana']);
+      await tapName(tester, 'Cy');
+      await tester.tap(find.text('Son modèle : Cy'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Qui sont les Loups-Garous ?'), findsOneWidget);
+    });
+
+    testWidgets('the Cursed Wolf-Father can infect the wolves\' victim', (tester) async {
+      final id = await _startedGame(
+        repo,
+        composition: const {'infect_pere_des_loups': 1, 'loup_garou': 2, 'villageois': 3},
+      );
+      await pump(tester, id);
+
+      await identify(tester, ['Bo', 'Cy']); // the wolves
+      await tapName(tester, 'Di');
+      await tester.tap(find.text('Les Loups désignent Di'));
+      await tester.pumpAndSettle();
+      await identify(tester, ['Ana']); // the Cursed Wolf-Father
+
+      expect(
+        find.text("Les Loups ont désigné Di. L'Infect Père des Loups lève-t-il la main ?"),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Infecter Di'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Journal'));
+      await tester.pumpAndSettle();
+      expect(find.text("Di est infecté par l'Infect Père des Loups"), findsOneWidget);
+    });
+
+    testWidgets('the Cursed Wolf-Father can let the victim be eaten', (tester) async {
+      final id = await _startedGame(
+        repo,
+        composition: const {'infect_pere_des_loups': 1, 'loup_garou': 2, 'villageois': 3},
+      );
+      await pump(tester, id);
+
+      await identify(tester, ['Bo', 'Cy']);
+      await tapName(tester, 'Di');
+      await tester.tap(find.text('Les Loups désignent Di'));
+      await tester.pumpAndSettle();
+      await identify(tester, ['Ana']);
+      await tester.tap(find.text("Il n'infecte pas"));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Résoudre la nuit'), findsOneWidget);
+    });
+
+    testWidgets('the Big Bad Wolf picks a second victim who is not a wolf', (tester) async {
+      final id = await _startedGame(
+        repo,
+        composition: const {'grand_mechant_loup': 1, 'loup_garou': 2, 'villageois': 3},
+      );
+      await pump(tester, id);
+
+      await identify(tester, ['Bo', 'Cy']);
+      await tapName(tester, 'Di');
+      await tester.tap(find.text('Les Loups désignent Di'));
+      await tester.pumpAndSettle();
+      await identify(tester, ['Ana']); // the Big Bad Wolf
+
+      expect(find.text('Quelle est la 2e victime du Grand-Méchant-Loup ?'), findsOneWidget);
+      expect(find.text('Bo'), findsNothing); // a wolf
+      expect(find.text('Di'), findsNothing); // already the first victim
+      await tapName(tester, 'Ed');
+      await tester.tap(find.text('Le Grand-Méchant-Loup dévore Ed'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Journal'));
+      await tester.pumpAndSettle();
+      expect(find.text('Le Grand-Méchant-Loup dévore aussi Ed'), findsOneWidget);
+    });
+
+    testWidgets('the White Werewolf is only identified on night 1', (tester) async {
+      final id = await _startedGame(
+        repo,
+        composition: const {'loup_garou_blanc': 1, 'loup_garou': 2, 'villageois': 3},
+      );
+      await pump(tester, id);
+
+      await identify(tester, ['Bo', 'Cy']);
+      await tapName(tester, 'Di');
+      await tester.tap(find.text('Les Loups désignent Di'));
+      await tester.pumpAndSettle();
+      await identify(tester, ['Ana']); // the White Werewolf
+
+      expect(find.text('Quel Loup le Loup-Garou Blanc élimine-t-il ?'), findsNothing);
+      await tester.tap(find.text('Continuer'));
+      await tester.pumpAndSettle();
+      expect(find.text('Résoudre la nuit'), findsOneWidget);
+    });
+
+    testWidgets('the wolves cannot pick a player already known as one of the pack', (tester) async {
+      final id = await _startedGame(
+        repo,
+        composition: const {'chien_loup': 1, 'loup_garou': 2, 'villageois': 3},
+      );
+      await pump(tester, id);
+
+      await identify(tester, ['Ana']); // the Wolf-Hound
+      await tester.tap(find.text('Il rejoint les Loups'));
+      await tester.pumpAndSettle();
+      await identify(tester, ['Bo', 'Cy']);
+
+      expect(find.text('Qui les Loups dévorent-ils ?'), findsOneWidget);
+      expect(find.text('Ana'), findsNothing); // the Wolf-Hound who joined them
+      expect(find.text('Bo'), findsNothing);
+      expect(find.text('Di'), findsOneWidget);
+    });
+  });
+
   group('the Fox', () {
     const comp = {'renard': 1, 'loup_garou': 2, 'villageois': 3};
 

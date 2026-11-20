@@ -20,6 +20,41 @@ class FoxSniff implements GameAction {
   const FoxSniff({required this.middlePlayerId, required this.wolfFound});
 }
 
+/// The Wild Child picks his role model (night 1).
+class WildChildChooseModel implements GameAction {
+  final String childPlayerId;
+  final String modelPlayerId;
+
+  const WildChildChooseModel({required this.childPlayerId, required this.modelPlayerId});
+}
+
+/// The Wolf-Hound's final choice: [wolf] true joins the wolves, false stays a villager.
+class ChienLoupChoose implements GameAction {
+  final String playerId;
+  final bool wolf;
+
+  const ChienLoupChoose({required this.playerId, required this.wolf});
+}
+
+/// The Cursed Wolf-Father infects the wolves' victim instead of letting it be eaten. Once per game.
+class InfectVictim implements GameAction {
+  const InfectVictim();
+}
+
+/// The Big Bad Wolf's second victim.
+class BigBadWolfTarget implements GameAction {
+  final String targetPlayerId;
+
+  const BigBadWolfTarget({required this.targetPlayerId});
+}
+
+/// The White Werewolf eats one of the other wolves.
+class WhiteWolfEat implements GameAction {
+  final String targetPlayerId;
+
+  const WhiteWolfEat({required this.targetPlayerId});
+}
+
 class CupidonPair implements GameAction {
   final String playerAId;
   final String playerBId;

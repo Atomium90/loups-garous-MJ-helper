@@ -37,6 +37,9 @@ abstract final class GameStateJson {
       'captainPlayerId': ?state.captainPlayerId,
       'pendingWolfVictimId': ?state.pendingWolfVictimId,
       'pendingWitchDeathTargetId': ?state.pendingWitchDeathTargetId,
+      'pendingBigBadWolfVictimId': ?state.pendingBigBadWolfVictimId,
+      'pendingWhiteWolfVictimId': ?state.pendingWhiteWolfVictimId,
+      if (state.wildChild case final w?) 'wildChild': {'child': w.childId, 'model': w.modelId},
       'cascade': ?_encodeCascade(state.cascade),
       if (state.spentPowers.isNotEmpty) 'spentPowers': state.spentPowers,
     };
@@ -81,6 +84,12 @@ abstract final class GameStateJson {
       captainPlayerId: json['captainPlayerId'] as String?,
       pendingWolfVictimId: json['pendingWolfVictimId'] as String?,
       pendingWitchDeathTargetId: json['pendingWitchDeathTargetId'] as String?,
+      pendingBigBadWolfVictimId: json['pendingBigBadWolfVictimId'] as String?,
+      pendingWhiteWolfVictimId: json['pendingWhiteWolfVictimId'] as String?,
+      wildChild: switch (json['wildChild'] as Map<String, dynamic>?) {
+        null => null,
+        final w => WildChildState(childId: w['child'] as String, modelId: w['model'] as String),
+      },
       cascade: _decodeCascade(json['cascade'] as Map<String, dynamic>?),
       spentPowers: {
         for (final entry in ((json['spentPowers'] as Map<String, dynamic>?) ?? const {}).entries)
@@ -145,6 +154,7 @@ abstract final class GameStateJson {
     null => null,
     WolvesKill() => {'type': 'wolves'},
     WitchDeathPotionKill() => {'type': 'witchPotion'},
+    WhiteWolfKill() => {'type': 'whiteWolf'},
     DayVoteKill() => {'type': 'dayVote'},
     HunterShotKill(:final shooterPlayerId) => {
       'type': 'hunterShot',
@@ -160,6 +170,7 @@ abstract final class GameStateJson {
     null => null,
     'wolves' => const WolvesKill(),
     'witchPotion' => const WitchDeathPotionKill(),
+    'whiteWolf' => const WhiteWolfKill(),
     'dayVote' => const DayVoteKill(),
     'hunterShot' => HunterShotKill(shooterPlayerId: json!['shooterPlayerId'] as String),
     'loversCascade' => LoversCascadeKill(causingPlayerId: json!['causingPlayerId'] as String),

@@ -446,6 +446,103 @@ void main() {
     });
   });
 
+  group('the wolf camp', () {
+    Future<({int gameId, List<int> ids, GameSession n})> start(Map<String, int> comp) async {
+      final game = await _startedGame(repo, composition: comp);
+      final n = await notifierFor(game.gameId);
+      return (gameId: game.gameId, ids: game.seatRowIds, n: n);
+    }
+
+    test('the Cursed Wolf-Father infects the victim, who lives on as a wolf', () async {
+      final g = await start({'infect_pere_des_loups': 1, 'loup_garou': 2, 'villageois': 3});
+      await g.n.identifyRole('loup_garou', [g.ids[0], g.ids[1]]);
+      await g.n.applyAction(WolvesTarget(targetPlayerId: '${g.ids[3]}'));
+      await g.n.identifyRole('infect_pere_des_loups', [g.ids[2]]);
+
+      await g.n.infectVictim();
+      await g.n.applyAction(const FinalizeNight());
+
+      final s = stateOf(g.gameId);
+      final di = s.engine.playerById('${g.ids[3]}');
+      expect(di.alive, isTrue);
+      expect(di.teamOverride, Team.werewolves);
+      expect(s.engine.spentPowers, {'infect_pere_des_loups': 1});
+      final log = frenchJournal(await repo.watchNightLog(g.gameId).first);
+      expect(log, contains("Di est infecté par l'Infect Père des Loups"));
+    });
+
+    test('the next night no longer calls him, once he has infected', () async {
+      final g = await start({'infect_pere_des_loups': 1, 'loup_garou': 2, 'villageois': 3});
+      await g.n.identifyRole('loup_garou', [g.ids[0], g.ids[1]]);
+      await g.n.applyAction(WolvesTarget(targetPlayerId: '${g.ids[3]}'));
+      await g.n.identifyRole('infect_pere_des_loups', [g.ids[2]]);
+      await g.n.infectVictim();
+      await g.n.applyAction(const FinalizeNight());
+      await g.n.startNextNight();
+
+      expect(stateOf(g.gameId).tonight.steps.map((st) => st.role.id), ['loup_garou']);
+    });
+
+    test('the Big Bad Wolf\'s second victim dies with the first, and he stops once a wolf dies', () async {
+      final g = await start({'grand_mechant_loup': 1, 'loup_garou': 2, 'villageois': 3});
+      await g.n.identifyRole('loup_garou', [g.ids[0], g.ids[1]]);
+      await g.n.applyAction(WolvesTarget(targetPlayerId: '${g.ids[3]}'));
+      await g.n.identifyRole('grand_mechant_loup', [g.ids[2]]);
+      await g.n.bigBadWolfTarget('${g.ids[4]}');
+      await g.n.applyAction(const FinalizeNight());
+
+      final s = stateOf(g.gameId);
+      expect(s.engine.playerById('${g.ids[3]}').alive, isFalse);
+      expect(s.engine.playerById('${g.ids[4]}').alive, isFalse);
+      final log = frenchJournal(await repo.watchNightLog(g.gameId).first);
+      expect(log, contains('Le Grand-Méchant-Loup dévore aussi Ed'));
+    });
+
+    test('a Wolf-Hound who chooses the wolves is on their side, and it is journalled', () async {
+      final g = await start({'chien_loup': 1, 'loup_garou': 2, 'villageois': 3});
+      await g.n.identifyRole('chien_loup', [g.ids[0]]);
+
+      await g.n.chienLoupChoose(engineId: '${g.ids[0]}', wolf: true);
+
+      final s = stateOf(g.gameId);
+      expect(s.engine.playerById('${g.ids[0]}').teamOverride, Team.werewolves);
+      expect(s.currentStep!.role.id, 'loup_garou');
+      final log = frenchJournal(await repo.watchNightLog(g.gameId).first);
+      expect(log, contains('Ana, Chien-Loup, rejoint les Loups'));
+    });
+
+    test('the Wild Child\'s model is kept and journalled', () async {
+      final g = await start({'enfant_sauvage': 1, 'loup_garou': 2, 'villageois': 3});
+      await g.n.identifyRole('enfant_sauvage', [g.ids[0]]);
+
+      await g.n.wildChildChoose(childEngineId: '${g.ids[0]}', modelEngineId: '${g.ids[2]}');
+
+      expect(stateOf(g.gameId).engine.wildChild?.modelId, '${g.ids[2]}');
+      final log = frenchJournal(await repo.watchNightLog(g.gameId).first);
+      expect(log, contains('Ana prend Cy pour modèle'));
+    });
+
+    test('the White Werewolf is identified on night 1 and used from night 2', () async {
+      final g = await start({'loup_garou_blanc': 1, 'loup_garou': 2, 'villageois': 3});
+      expect(stateOf(g.gameId).tonight.steps.map((st) => (st.role.id, st.identifyOnly)), [
+        ('loup_garou', false),
+        ('loup_garou_blanc', true),
+      ]);
+
+      await g.n.identifyRole('loup_garou', [g.ids[0], g.ids[1]]);
+      await g.n.applyAction(WolvesTarget(targetPlayerId: '${g.ids[3]}'));
+      await g.n.identifyRole('loup_garou_blanc', [g.ids[2]]);
+      await g.n.skipStep();
+      await g.n.applyAction(const FinalizeNight());
+      await g.n.startNextNight();
+
+      expect(
+        stateOf(g.gameId).tonight.steps.map((st) => (st.role.id, st.identifyOnly)),
+        [('loup_garou', false), ('loup_garou_blanc', false)],
+      );
+    });
+  });
+
   group('the place of the Fox in the order', () {
     const comp = {'renard': 1, 'voyante': 1, 'sorciere': 1, 'loup_garou': 2, 'villageois': 1};
 
@@ -480,6 +577,34 @@ void main() {
       final s = await container.read(gameSessionProvider(game.gameId).future);
       expect(s.tonight.steps.map((st) => st.role.id), ['voyante', 'renard', 'loup_garou', 'sorciere']);
     });
+  });
+
+  test('the White Werewolf parity follows the setting when the game starts and is kept', () async {
+    const comp = {'loup_garou_blanc': 1, 'loup_garou': 2, 'villageois': 3};
+    final game = await _startedGame(repo, composition: comp);
+    SharedPreferences.setMockInitialValues({'white_wolf_odd_nights': true});
+    final odd = ProviderContainer(
+      overrides: [
+        gameRepositoryProvider.overrideWithValue(repo),
+        sharedPreferencesProvider.overrideWith((ref) async => SharedPreferences.getInstance()),
+      ],
+    );
+    addTearDown(odd.dispose);
+    await odd.read(settingsProvider.future);
+
+    var s = await odd.read(gameSessionProvider(game.gameId).future);
+    // On night 1 his solo power is on: no longer a step that only identifies him.
+    expect(s.tonight.steps.map((st) => (st.role.id, st.identifyOnly)), [
+      ('loup_garou', false),
+      ('loup_garou_blanc', false),
+    ]);
+
+    // Another session of the same game, with the setting back off: the game keeps its parity.
+    SharedPreferences.setMockInitialValues({});
+    final later = ProviderContainer(overrides: [gameRepositoryProvider.overrideWithValue(repo)]);
+    addTearDown(later.dispose);
+    s = await later.read(gameSessionProvider(game.gameId).future);
+    expect(s.whiteWolfOddNights, isTrue);
   });
 
   group('the Fox', () {

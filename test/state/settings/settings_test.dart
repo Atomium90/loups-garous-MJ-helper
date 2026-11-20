@@ -126,6 +126,18 @@ void main() {
     });
   });
 
+  group('the White Werewolf parity', () {
+    test('is the even nights by default, and the choice persists', () async {
+      final container = await containerWith({});
+      expect((await container.read(settingsProvider.future)).whiteWolfOddNights, isFalse);
+
+      await container.read(settingsProvider.notifier).setWhiteWolfOddNights(true);
+
+      expect(container.read(settingsProvider).value!.whiteWolfOddNights, isTrue);
+      expect((await SharedPreferences.getInstance()).getBool('white_wolf_odd_nights'), isTrue);
+    });
+  });
+
   group('the Fox position', () {
     test('is after the Seer by default, and the choice persists', () async {
       final container = await containerWith({});
