@@ -314,7 +314,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('2 boîtes · 8 rôles'), findsOneWidget);
+      expect(find.text('2 boîtes · 11 rôles'), findsOneWidget);
     });
   });
 }

@@ -34,6 +34,14 @@ List<NightLogEntry> nightLogEntriesFor(GameAction action, GameState before) {
         entry(JournalKind.cupidPair, {'player': name(playerAId), 'other': name(playerBId)}),
       ];
 
+    case FoxSniff(:final middlePlayerId, :final wolfFound):
+      return [
+        entry(
+          wolfFound ? JournalKind.foxFindsWolf : JournalKind.foxFindsNone,
+          {'player': name(middlePlayerId)},
+        ),
+      ];
+
     case VoleurSwap(:final stolenRoleId):
       return [
         stolenRoleId == null

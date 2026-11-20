@@ -416,6 +416,32 @@ class GameSession extends _$GameSession {
     );
   }
 
+  // --- night: Renard ---
+
+  /// The Fox sniffs around [middleEngineId]: the MJ says whether a wolf is among the three.
+  /// With none his power is gone for good, which the script reads from the engine.
+  Future<void> foxSniff({required String middleEngineId, required bool wolfFound}) =>
+      applyAction(FoxSniff(middlePlayerId: middleEngineId, wolfFound: wolfFound));
+
+  // --- night: Deux Sœurs ---
+
+  /// The Two Sisters woke and met: a journal line, then on to the next call.
+  Future<void> sistersMet() async {
+    final s = state.value;
+    if (s == null) return;
+    await ref.read(gameRepositoryProvider).appendNightLog(
+      gameId: gameId,
+      entries: [
+        NightLogEntry(
+          phase: _journalPhase(s.engine),
+          phaseIndex: s.engine.nightIndex,
+          kind: JournalKind.sistersMeet,
+        ),
+      ],
+    );
+    await skipStep();
+  }
+
   // --- night: Cupidon ---
 
   Future<void> pairLovers(String engineIdA, String engineIdB) =>
@@ -573,7 +599,7 @@ class GameSession extends _$GameSession {
 
   SessionCursor _cursorAfter(GameAction action, SessionCursor c) => switch (action) {
     // These complete a night role's turn -> advance to the next step.
-    WolvesTarget() || CupidonPair() || VoleurSwap() => SessionCursor(
+    WolvesTarget() || CupidonPair() || VoleurSwap() || FoxSniff() => SessionCursor(
       stepIndex: c.stepIndex + 1,
       subStep: NightSubStep.identify,
     ),

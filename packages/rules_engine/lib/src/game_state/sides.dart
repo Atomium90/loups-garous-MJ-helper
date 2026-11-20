@@ -37,4 +37,30 @@ extension GameStateSides on GameState {
 
     return (left: next(-1), right: next(1));
   }
+
+  /// The three players the Fox looks at when he picks [middlePlayerId]: the living neighbours on
+  /// either side, and the middle player. Fewer than three when the table is nearly empty.
+  List<Player> foxTrio(String middlePlayerId) {
+    final around = aliveNeighbours(middlePlayerId);
+    final trio = <Player>[];
+    for (final p in [around.left, playerById(middlePlayerId), around.right]) {
+      if (p != null && p.alive && !trio.any((q) => q.id == p.id)) trio.add(p);
+    }
+    return trio;
+  }
+
+  /// Whether at least one of [group] plays with the wolves, as far as the app knows: a player
+  /// whose card was never noted counts for the village.
+  bool wolfAmong(Iterable<Player> group, RoleRegistry registry) =>
+      group.any((p) => p.sideIn(registry) == Team.werewolves);
+
+  /// Whether the Bear Tamer [bearPlayerId] growls this morning: a living neighbour plays with
+  /// the wolves, or he does himself (infected, he growls every day). A dead Bear Tamer is silent.
+  bool bearGrowls(String bearPlayerId, RoleRegistry registry) {
+    final bear = playerById(bearPlayerId);
+    if (!bear.alive) return false;
+    if (bear.sideIn(registry) == Team.werewolves) return true;
+    final around = aliveNeighbours(bearPlayerId);
+    return wolfAmong([?around.left, ?around.right], registry);
+  }
 }

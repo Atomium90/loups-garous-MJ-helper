@@ -10,11 +10,17 @@ class SimpleAct extends StatelessWidget {
   const SimpleAct({
     required this.primaryLabel,
     required this.onPrimary,
+    this.secondaryLabel,
+    this.onSecondary,
     super.key,
   });
 
   final String primaryLabel;
   final VoidCallback onPrimary;
+
+  /// A way to pass the call without acting, for the optional ones (the Two Sisters).
+  final String? secondaryLabel;
+  final VoidCallback? onSecondary;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +35,19 @@ class SimpleAct extends StatelessWidget {
             AppSpacing.screen,
             AppSpacing.screen,
           ),
-          child: AppButton(label: primaryLabel, onPressed: onPrimary),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: 8,
+            children: [
+              AppButton(label: primaryLabel, onPressed: onPrimary),
+              if (secondaryLabel != null)
+                AppButton(
+                  label: secondaryLabel!,
+                  variant: AppButtonVariant.secondary,
+                  onPressed: onSecondary,
+                ),
+            ],
+          ),
         ),
       ],
     );

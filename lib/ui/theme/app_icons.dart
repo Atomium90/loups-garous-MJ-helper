@@ -110,6 +110,9 @@ abstract final class AppIcons {
   static const whiteWolf = TablerIcons.paw;
   static const angel = TablerIcons.feather;
   static const sectarian = TablerIcons.flame;
+  static const fox = TablerIcons.eyeSearch;
+  static const sisters = TablerIcons.heartHandshake;
+  static const bearTamer = TablerIcons.pawFilled;
 
   /// The Witch's "Elle sauve X" button.
   static const witchSave = TablerIcons.heartPlus;
@@ -158,6 +161,9 @@ abstract final class AppIcons {
     'thief' => thief,
     'skull' => skull,
     'hunter' => hunter,
+    'fox' => fox,
+    'sisters' => sisters,
+    'bear' => bearTamer,
     'crown' => captain,
     'vote' => vote,
     'scale' => scale,

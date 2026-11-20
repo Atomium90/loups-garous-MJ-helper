@@ -57,6 +57,13 @@ class RoleRevealed implements GameEvent {
   const RoleRevealed({required this.playerId, required this.roleId});
 }
 
+class FoxSniffed implements GameEvent {
+  final String middlePlayerId;
+  final bool wolfFound;
+
+  const FoxSniffed({required this.middlePlayerId, required this.wolfFound});
+}
+
 class LoversPaired implements GameEvent {
   final String playerAId;
   final String playerBId;

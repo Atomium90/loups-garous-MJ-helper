@@ -30,6 +30,8 @@ class InvalidActionError implements Exception {
 class GameStateMachine {
   const GameStateMachine();
 
+  static const _foxRoleId = 'renard';
+
   ActionResult apply({
     required GameState state,
     required GameAction action,
@@ -46,6 +48,8 @@ class GameStateMachine {
         return _applyVoleurSwap(state, action, roleRegistry);
       case CupidonPair():
         return _applyCupidonPair(state, action);
+      case FoxSniff():
+        return _applyFoxSniff(state, action);
       case WolvesTarget():
         return _applyWolvesTarget(state, action);
       case WitchLifePotion():
@@ -108,6 +112,27 @@ class GameStateMachine {
     return ActionResult(
       state: state.copyWith(lovers: LoversPair(action.playerAId, action.playerBId)),
       events: [LoversPaired(playerAId: action.playerAId, playerBId: action.playerBId)],
+    );
+  }
+
+  ActionResult _applyFoxSniff(GameState state, FoxSniff action) {
+    if (state.phase != GamePhase.night) {
+      throw InvalidActionError('The Fox can only sniff during the night');
+    }
+    if (state.spentPowers.containsKey(_foxRoleId)) {
+      throw InvalidActionError('The Fox has lost his power');
+    }
+    _requireAlive(state.playerById(action.middlePlayerId), 'the Fox\'s middle player');
+
+    return ActionResult(
+      state: action.wolfFound
+          ? state
+          : state.copyWith(
+              spentPowers: {...state.spentPowers, _foxRoleId: state.nightIndex},
+            ),
+      events: [
+        FoxSniffed(middlePlayerId: action.middlePlayerId, wolfFound: action.wolfFound),
+      ],
     );
   }
 

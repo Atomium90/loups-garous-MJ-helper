@@ -33,7 +33,15 @@ String deckLine(AppLocalizations l10n, Map<String, int> composition, RoleRegistr
         .compareTo(registry.roles.indexWhere((r) => r.id == b.key));
   });
 
-  return entries.map((e) => roleCountLabel(l10n, e.key, e.value)).join(' · ');
+  // A group is named as it is ("Deux Sœurs"), not counted: its size is part of its name.
+  String label(MapEntry<String, int> e) {
+    final group = registry.byIdOrNull(e.key)?.groupSize ?? 1;
+    return group > 1 && e.value == group
+        ? l10n.roleName(e.key)
+        : roleCountLabel(l10n, e.key, e.value);
+  }
+
+  return entries.map(label).join(' · ');
 }
 
 /// The Voleur's two reserve cards, spelled out with articles so the MJ sets

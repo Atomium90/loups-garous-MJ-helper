@@ -121,6 +121,8 @@ String _describeEvent(GameEvent event) => switch (event) {
   WitchLifePotionUsed() => 'la Sorcière utilise sa potion de vie',
   WitchDeathPotionUsed(:final targetPlayerId) =>
     'la Sorcière utilise sa potion de mort sur $targetPlayerId',
+  FoxSniffed(:final middlePlayerId, :final wolfFound) =>
+    'le Renard flaire autour de $middlePlayerId : ${wolfFound ? 'un loup' : 'aucun loup'}',
 };
 
 String _describeCause(DeathCause cause) => switch (cause) {

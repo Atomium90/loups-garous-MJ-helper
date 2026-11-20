@@ -21,7 +21,11 @@ enum JournalKind {
   hunterNoShot('hunter'),
   hunterShoots('hunter'),
   seerObserves('seer'),
-  heartbreakDeath('skull');
+  heartbreakDeath('skull'),
+  foxFindsWolf('fox'),
+  foxFindsNone('fox'),
+  sistersMeet('sisters'),
+  bearGrowls('bear');
 
   const JournalKind(this.iconName);
 
