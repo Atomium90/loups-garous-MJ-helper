@@ -69,6 +69,10 @@ class AppSettings {
   /// (2, 4, 6..., the default). The booklets do not say which.
   final bool whiteWolfOddNights;
 
+  /// The Knight's disease strikes at the end of the next night (the Characters booklet) instead of
+  /// its beginning (the Best Of booklet, the default). Same effect for the players.
+  final bool knightDiseaseAtNightEnd;
+
   const AppSettings({
     required this.themeMode,
     required this.keepScreenOn,
@@ -80,6 +84,7 @@ class AppSettings {
     required this.thiefReserveChosen,
     required this.foxAfterWitch,
     required this.whiteWolfOddNights,
+    required this.knightDiseaseAtNightEnd,
   });
 
   static const defaults = AppSettings(
@@ -93,6 +98,7 @@ class AppSettings {
     thiefReserveChosen: false,
     foxAfterWitch: false,
     whiteWolfOddNights: false,
+    knightDiseaseAtNightEnd: false,
   );
 
   AppSettings copyWith({
@@ -106,6 +112,7 @@ class AppSettings {
     bool? thiefReserveChosen,
     bool? foxAfterWitch,
     bool? whiteWolfOddNights,
+    bool? knightDiseaseAtNightEnd,
   }) => AppSettings(
     themeMode: themeMode ?? this.themeMode,
     keepScreenOn: keepScreenOn ?? this.keepScreenOn,
@@ -117,5 +124,6 @@ class AppSettings {
     thiefReserveChosen: thiefReserveChosen ?? this.thiefReserveChosen,
     foxAfterWitch: foxAfterWitch ?? this.foxAfterWitch,
     whiteWolfOddNights: whiteWolfOddNights ?? this.whiteWolfOddNights,
+    knightDiseaseAtNightEnd: knightDiseaseAtNightEnd ?? this.knightDiseaseAtNightEnd,
   );
 }

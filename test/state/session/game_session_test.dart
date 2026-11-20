@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:loup_garou_mj/data/database/app_database.dart';
 import 'package:loup_garou_mj/data/models/game_status.dart';
+import 'package:loup_garou_mj/data/models/game_winner.dart';
 import 'package:loup_garou_mj/data/repositories/drift_game_repository.dart';
 import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
 import 'package:loup_garou_mj/state/session/game_session.dart';
@@ -443,6 +444,147 @@ void main() {
       expect(s.dealtHoldersKnown('loup_garou'), 1);
       expect(s.voleurSwapInsFor('loup_garou'), isEmpty); // she's not the Voleur
       expect(s.currentStepNeedsIdentify, isTrue); // one wolf still unknown
+    });
+  });
+
+  group('the Piper', () {
+    test('charms two players, the charmed wake right after him, and it is journalled', () async {
+      final game = await _startedGame(
+        repo,
+        composition: {'joueur_de_flute': 1, 'loup_garou': 2, 'villageois': 3},
+      );
+      final ids = game.seatRowIds;
+      final n = await notifierFor(game.gameId);
+      await n.identifyRole('loup_garou', [ids[1], ids[2]]);
+      await n.applyAction(WolvesTarget(targetPlayerId: '${ids[5]}'));
+      await n.identifyRole('joueur_de_flute', [ids[0]]);
+
+      await n.piperCharm(['${ids[3]}', '${ids[4]}']);
+
+      final s = stateOf(game.gameId);
+      expect(s.engine.playerById('${ids[3]}').hasStatus(PlayerStatus.charmed), isTrue);
+      expect(s.tonight.steps.map((st) => st.role.id), ['loup_garou', 'joueur_de_flute', 'joueurs_charmes']);
+      expect(s.currentStep!.role.id, 'joueurs_charmes');
+      expect(s.currentStepNeedsIdentify, isFalse);
+      final log = frenchJournal(await repo.watchNightLog(game.gameId).first);
+      expect(log, contains('Le Joueur de Flûte charme Di et Ed'));
+    });
+
+    test('the charmed stay charmed after a force-quit, and wake the next night too', () async {
+      final game = await _startedGame(
+        repo,
+        composition: {'joueur_de_flute': 1, 'loup_garou': 2, 'villageois': 3},
+      );
+      final ids = game.seatRowIds;
+      final n = await notifierFor(game.gameId);
+      await n.identifyRole('loup_garou', [ids[1], ids[2]]);
+      await n.applyAction(WolvesTarget(targetPlayerId: '${ids[5]}'));
+      await n.identifyRole('joueur_de_flute', [ids[0]]);
+      await n.piperCharm(['${ids[3]}', '${ids[4]}']);
+      await n.skipStep();
+      await n.applyAction(const FinalizeNight());
+      await n.revealRole(ids[5], 'villageois');
+      await n.eliminateByVote(null);
+      await n.startNextNight();
+
+      final resumed = ProviderContainer(overrides: [gameRepositoryProvider.overrideWithValue(repo)]);
+      addTearDown(resumed.dispose);
+      final s = await resumed.read(gameSessionProvider(game.gameId).future);
+
+      expect(s.engine.playerById('${ids[4]}').hasStatus(PlayerStatus.charmed), isTrue);
+      expect(s.tonight.steps.map((st) => st.role.id), ['loup_garou', 'joueur_de_flute', 'joueurs_charmes']);
+    });
+
+    test('everyone alive charmed: the Piper is proposed as the winner', () async {
+      final game = await _startedGame(
+        repo,
+        composition: {'joueur_de_flute': 1, 'loup_garou': 2, 'villageois': 3},
+      );
+      final ids = game.seatRowIds;
+      final n = await notifierFor(game.gameId);
+      await n.identifyRole('joueur_de_flute', [ids[0]]);
+      await n.applyAction(PiperCharm(playerIds: ['${ids[1]}', '${ids[2]}']));
+      await n.applyAction(PiperCharm(playerIds: ['${ids[3]}', '${ids[4]}']));
+      expect(stateOf(game.gameId).proposedWinner, isNull);
+
+      await n.applyAction(PiperCharm(playerIds: ['${ids[5]}']));
+
+      expect(stateOf(game.gameId).proposedWinner, GameWinner.piper);
+    });
+  });
+
+  group('the Elder and the Knight', () {
+    Future<({int gameId, List<int> ids, GameSession n})> start(Map<String, int> comp) async {
+      final game = await _startedGame(repo, composition: comp);
+      final n = await notifierFor(game.gameId);
+      return (gameId: game.gameId, ids: game.seatRowIds, n: n);
+    }
+
+    test('the Elder survives a first bite and the journal says so', () async {
+      final g = await start({'ancien': 1, 'loup_garou': 2, 'villageois': 3});
+      await g.n.identifyRole('ancien', [g.ids[0]]); // Ana, noted when the wolves picked her
+      await g.n.identifyRole('loup_garou', [g.ids[1], g.ids[2]]);
+      await g.n.applyAction(WolvesTarget(targetPlayerId: '${g.ids[0]}'));
+      await g.n.applyAction(const FinalizeNight());
+
+      final s = stateOf(g.gameId);
+      expect(s.engine.playerById('${g.ids[0]}').alive, isTrue);
+      expect(s.recapDeaths, isEmpty);
+      final log = frenchJournal(await repo.watchNightLog(g.gameId).first);
+      expect(log, contains("Ana, l'Ancien, survit à la morsure"));
+    });
+
+    test('the Elder voted out costs the villagers their powers: the next night skips them', () async {
+      final g = await start({'ancien': 1, 'voyante': 1, 'loup_garou': 2, 'villageois': 2});
+      await g.n.identifyRole('ancien', [g.ids[0]]);
+      await g.n.identifyRole('voyante', [g.ids[1]]);
+      await g.n.skipStep();
+      await g.n.identifyRole('loup_garou', [g.ids[2], g.ids[3]]);
+      await g.n.applyAction(WolvesTarget(targetPlayerId: '${g.ids[4]}'));
+      await g.n.applyAction(const FinalizeNight());
+      await g.n.revealRole(g.ids[4], 'villageois');
+      await g.n.eliminateByVote('${g.ids[0]}');
+
+      expect(stateOf(g.gameId).engine.villagersPowerless, isTrue);
+      final log = frenchJournal(await repo.watchNightLog(g.gameId).first);
+      expect(log, contains("Ana, l'Ancien, est éliminé : les villageois perdent leurs pouvoirs"));
+
+      await g.n.startNextNight();
+      expect(stateOf(g.gameId).tonight.steps.map((st) => st.role.id), ['loup_garou']);
+    });
+
+    test('a devoured Knight asks which wolf is diseased, and that wolf dies as the night begins', () async {
+      final g = await start({'chevalier': 1, 'loup_garou': 2, 'villageois': 3});
+      await g.n.identifyRole('loup_garou', [g.ids[2], g.ids[4]]); // Cy and Ed
+      await g.n.applyAction(WolvesTarget(targetPlayerId: '${g.ids[0]}')); // Ana, the Knight
+      await g.n.applyAction(const FinalizeNight());
+      await g.n.revealRole(g.ids[0], 'chevalier');
+
+      expect(stateOf(g.gameId).engine.cascade?.decision, isA<PendingKnightWound>());
+      await g.n.knightContaminate('${g.ids[4]}'); // Ed
+      expect(stateOf(g.gameId).engine.cascade, isNull);
+      expect(stateOf(g.gameId).engine.knightWound?.wolfId, '${g.ids[4]}');
+
+      await g.n.eliminateByVote(null);
+      await g.n.startNextNight();
+
+      final s = stateOf(g.gameId);
+      expect(s.engine.playerById('${g.ids[4]}').alive, isFalse);
+      expect(s.engine.playerById('${g.ids[4]}').causeOfDeath, isA<DiseaseKill>());
+      final log = frenchJournal(await repo.watchNightLog(g.gameId).first);
+      expect(log, containsAll(['Le Chevalier laisse Ed malade', 'Ed meurt de la maladie du Chevalier']));
+    });
+
+    test('the wolf is spared when the MJ finds none to wound', () async {
+      final g = await start({'chevalier': 1, 'loup_garou': 2, 'villageois': 3});
+      await g.n.identifyRole('loup_garou', [g.ids[2], g.ids[4]]);
+      await g.n.applyAction(WolvesTarget(targetPlayerId: '${g.ids[0]}'));
+      await g.n.applyAction(const FinalizeNight());
+      await g.n.revealRole(g.ids[0], 'chevalier');
+
+      await g.n.knightContaminate(null);
+
+      expect(stateOf(g.gameId).engine.knightWound, isNull);
     });
   });
 

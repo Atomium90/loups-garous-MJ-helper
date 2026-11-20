@@ -8,6 +8,7 @@ import 'game_event.dart';
 import 'game_state.dart';
 import 'pending_decision.dart';
 import 'player.dart';
+import 'sides.dart';
 
 class ActionResult {
   final GameState state;
@@ -39,10 +40,29 @@ class GameStateMachine {
     required GameAction action,
     required RoleRegistry roleRegistry,
   }) {
-    if (state.cascade != null && action is! HunterShoot && action is! CaptainNameSuccessor) {
+    final result = _dispatch(state, action, roleRegistry);
+    // The Elder's elimination, whichever way it happened, costs the villagers their powers.
+    if (!state.villagersPowerless && result.state.villagersPowerless) {
+      final elder = result.state.players.firstWhere(
+        (p) => p.roleId == 'ancien' && !p.alive,
+        orElse: () => result.state.players.first,
+      );
+      return ActionResult(
+        state: result.state,
+        events: [...result.events, VillagersLostPowers(elderPlayerId: elder.id)],
+      );
+    }
+    return result;
+  }
+
+  ActionResult _dispatch(GameState state, GameAction action, RoleRegistry roleRegistry) {
+    if (state.cascade != null &&
+        action is! HunterShoot &&
+        action is! CaptainNameSuccessor &&
+        action is! KnightContaminate) {
       throw InvalidActionError(
         'A death cascade is pending a decision (${state.cascade.runtimeType}); '
-        'only HunterShoot or CaptainNameSuccessor can be applied until it resolves',
+        'only HunterShoot, CaptainNameSuccessor or KnightContaminate can be applied until it resolves',
       );
     }
     switch (action) {
@@ -71,7 +91,11 @@ class GameStateMachine {
       case ElectCaptain():
         return _applyElectCaptain(state, action);
       case StartNextNight():
-        return _applyStartNextNight(state);
+        return _applyStartNextNight(state, roleRegistry);
+      case PiperCharm():
+        return _applyPiperCharm(state, action);
+      case KnightContaminate():
+        return _applyKnightContaminate(state, action, roleRegistry);
       case FinalizeNight():
         return _applyFinalizeNight(state, roleRegistry);
       case DayVoteElimination():
@@ -201,7 +225,19 @@ class GameStateMachine {
     if (victimId == null) {
       throw InvalidActionError('No wolf victim to infect');
     }
-    _requireAlive(state.playerById(victimId), 'the infected player');
+    final bitten = state.playerById(victimId);
+    _requireAlive(bitten, 'the infected player');
+    // The Elder is not affected by the first bite: it is spent, and he keeps his other life.
+    if (bitten.roleId == 'ancien' && !state.woundedElders.contains(victimId)) {
+      return ActionResult(
+        state: state.copyWith(
+          pendingWolfVictimId: null,
+          woundedElders: {...state.woundedElders, victimId},
+          spentPowers: {...state.spentPowers, _infectRoleId: state.nightIndex},
+        ),
+        events: [ElderSurvived(playerId: victimId)],
+      );
+    }
     return ActionResult(
       state: state.copyWith(
         pendingWolfVictimId: null,
@@ -301,14 +337,39 @@ class GameStateMachine {
     final events = <GameEvent>[];
     final queue = <CascadeTask>[];
 
+    // The Elder survives the first time the wolves devour him (the table is not told).
+    String? spareElder(String? victimId) {
+      if (victimId == null) return null;
+      final victim = currentState.playerById(victimId);
+      if (victim.alive &&
+          victim.roleId == 'ancien' &&
+          !currentState.woundedElders.contains(victimId)) {
+        currentState = currentState.copyWith(
+          woundedElders: {...currentState.woundedElders, victimId},
+        );
+        events.add(ElderSurvived(playerId: victimId));
+        return null;
+      }
+      return victimId;
+    }
+
+    final wolfVictim = spareElder(state.pendingWolfVictimId);
+    final bigBadVictim = spareElder(state.pendingBigBadWolfVictimId);
+
+    // The wolf the Knight's sword wounded, when the disease strikes at the end of the night.
+    final wound = state.knightWound;
+    final diseased = wound != null && wound.atNightEnd && wound.dueNight <= state.nightIndex
+        ? wound.wolfId
+        : null;
+
     final pendingKills = <(String, DeathCause)>[
-      if (state.pendingWolfVictimId != null) (state.pendingWolfVictimId!, const WolvesKill()),
-      if (state.pendingBigBadWolfVictimId != null)
-        (state.pendingBigBadWolfVictimId!, const WolvesKill()),
+      if (wolfVictim != null) (wolfVictim, const WolvesKill()),
+      if (bigBadVictim != null) (bigBadVictim, const WolvesKill()),
       if (state.pendingWhiteWolfVictimId != null)
         (state.pendingWhiteWolfVictimId!, const WhiteWolfKill()),
       if (state.pendingWitchDeathTargetId != null)
         (state.pendingWitchDeathTargetId!, const WitchDeathPotionKill()),
+      if (diseased != null) (diseased, const DiseaseKill()),
     ];
     for (final (playerId, cause) in pendingKills) {
       if (!currentState.playerById(playerId).alive) {
@@ -331,6 +392,7 @@ class GameStateMachine {
         pendingWitchDeathTargetId: null,
         pendingBigBadWolfVictimId: null,
         pendingWhiteWolfVictimId: null,
+        knightWound: diseased != null ? null : drained.state.knightWound,
         cascade: drained.pendingDecision == null
             ? null
             : CascadeState(decision: drained.pendingDecision!, remainingQueue: drained.remainingQueue),
@@ -378,7 +440,15 @@ class GameStateMachine {
     final player = state.playerById(action.playerId);
     final role = roleRegistry.byId(action.roleId); // throws if the role id is unknown
 
+    // An Elder eliminated by the village, the poison or the Hunter's shot whose card is only now
+    // known: the villagers lose their powers now.
+    final cause = player.causeOfDeath;
+    final eldersLoss =
+        !player.alive &&
+        action.roleId == 'ancien' &&
+        (cause is DayVoteKill || cause is WitchDeathPotionKill || cause is HunterShotKill);
     final revealed = state.copyWith(
+      villagersPowerless: state.villagersPowerless || eldersLoss,
       players: [
         for (final p in state.players)
           if (p.id == player.id) p.copyWith(roleId: action.roleId) else p,
@@ -414,13 +484,115 @@ class GameStateMachine {
     return ActionResult(state: revealed, events: events);
   }
 
-  ActionResult _applyStartNextNight(GameState state) {
+  ActionResult _applyStartNextNight(GameState state, RoleRegistry roleRegistry) {
     if (state.phase != GamePhase.day) {
       throw InvalidActionError('Can only start the next night from the day phase');
     }
+    final night = state.copyWith(nightIndex: state.nightIndex + 1, phase: GamePhase.night);
+
+    // The wolf the Knight's sword wounded dies as the night begins (unless the setting puts it
+    // at the end, see FinalizeNight).
+    final wound = night.knightWound;
+    if (wound == null || wound.atNightEnd || wound.dueNight > night.nightIndex) {
+      return ActionResult(state: night, events: const []);
+    }
+    final cleared = night.copyWith(knightWound: null);
+    if (!cleared.playerById(wound.wolfId).alive) {
+      return ActionResult(state: cleared, events: const []);
+    }
+    const cause = DiseaseKill();
+    final killed = cleared.killPlayer(wound.wolfId, cause: cause);
+    final drained = drainCascade(
+      state: killed,
+      queue: deathCascadeTasks(wound.wolfId),
+      roleRegistry: roleRegistry,
+    );
     return ActionResult(
-      state: state.copyWith(nightIndex: state.nightIndex + 1, phase: GamePhase.night),
-      events: const [],
+      state: drained.state.copyWith(
+        cascade: drained.pendingDecision == null
+            ? null
+            : CascadeState(
+                decision: drained.pendingDecision!,
+                remainingQueue: drained.remainingQueue,
+              ),
+      ),
+      events: [PlayerDied(playerId: wound.wolfId, cause: cause), ...drained.events],
+    );
+  }
+
+  ActionResult _applyPiperCharm(GameState state, PiperCharm action) {
+    _requireNightPhase(state, 'The Piper charms at night');
+    final ids = action.playerIds;
+    if (ids.isEmpty || ids.length > 2 || ids.toSet().length != ids.length) {
+      throw InvalidActionError('The Piper charms one or two different players');
+    }
+    for (final id in ids) {
+      final player = state.playerById(id);
+      _requireAlive(player, 'a charmed player');
+      if (player.roleId == 'joueur_de_flute') {
+        throw InvalidActionError('The Piper cannot charm himself');
+      }
+      if (player.hasStatus(PlayerStatus.charmed)) {
+        throw InvalidActionError('${player.id} is already charmed');
+      }
+    }
+    return ActionResult(
+      state: state.copyWith(
+        players: [
+          for (final p in state.players)
+            if (ids.contains(p.id))
+              p.copyWith(statuses: {...p.statuses, PlayerStatus.charmed})
+            else
+              p,
+        ],
+      ),
+      events: [PlayersCharmed(playerIds: ids)],
+    );
+  }
+
+  ActionResult _applyKnightContaminate(
+    GameState state,
+    KnightContaminate action,
+    RoleRegistry roleRegistry,
+  ) {
+    final cascade = state.cascade;
+    if (cascade == null || cascade.decision is! PendingKnightWound) {
+      throw InvalidActionError('No pending Knight wound to resolve');
+    }
+    final events = <GameEvent>[];
+    var next = state.copyWith(cascade: null);
+    final wolfId = action.wolfPlayerId;
+    if (wolfId != null) {
+      final wolf = state.playerById(wolfId);
+      _requireAlive(wolf, 'the diseased wolf');
+      if (!wolf.wakesWithWolvesIn(roleRegistry)) {
+        throw InvalidActionError('The Knight\'s sword wounds a wolf, not $wolfId');
+      }
+      next = next.copyWith(
+        knightWound: KnightWound(
+          wolfId: wolfId,
+          dueNight: state.nightIndex + 1,
+          atNightEnd: action.atNightEnd,
+        ),
+      );
+      events.add(KnightContaminated(wolfPlayerId: wolfId));
+    }
+    final drained = drainCascade(
+      state: next,
+      queue: cascade.remainingQueue,
+      roleRegistry: roleRegistry,
+    );
+    events.addAll(drained.events);
+    return ActionResult(
+      state: drained.state.copyWith(
+        cascade: drained.pendingDecision == null
+            ? null
+            : CascadeState(
+                decision: drained.pendingDecision!,
+                remainingQueue: drained.remainingQueue,
+              ),
+      ),
+      events: events,
     );
   }
 

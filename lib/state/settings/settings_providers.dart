@@ -17,6 +17,7 @@ const _kOwnedBoxes = 'owned_boxes';
 const _kThiefReserveChosen = 'thief_reserve_chosen';
 const _kFoxAfterWitch = 'fox_after_witch';
 const _kWhiteWolfOdd = 'white_wolf_odd_nights';
+const _kKnightAtNightEnd = 'knight_disease_night_end';
 
 /// The one `SharedPreferences` handle. Override in tests with an instance from
 /// `SharedPreferences.setMockInitialValues({})`.
@@ -46,6 +47,15 @@ class Settings extends _$Settings {
       thiefReserveChosen: prefs.getBool(_kThiefReserveChosen) ?? false,
       foxAfterWitch: prefs.getBool(_kFoxAfterWitch) ?? false,
       whiteWolfOddNights: prefs.getBool(_kWhiteWolfOdd) ?? false,
+      knightDiseaseAtNightEnd: prefs.getBool(_kKnightAtNightEnd) ?? false,
+    );
+  }
+
+  Future<void> setKnightDiseaseAtNightEnd(bool value) async {
+    final prefs = await ref.read(sharedPreferencesProvider.future);
+    await prefs.setBool(_kKnightAtNightEnd, value);
+    state = AsyncData(
+      (state.value ?? AppSettings.defaults).copyWith(knightDiseaseAtNightEnd: value),
     );
   }
 

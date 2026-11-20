@@ -10,6 +10,11 @@ class WhiteWolfKill implements DeathCause {
   const WhiteWolfKill();
 }
 
+/// The wolf the Knight's rusty sword wounded, dead of the disease.
+class DiseaseKill implements DeathCause {
+  const DiseaseKill();
+}
+
 class WitchDeathPotionKill implements DeathCause {
   const WitchDeathPotionKill();
 }

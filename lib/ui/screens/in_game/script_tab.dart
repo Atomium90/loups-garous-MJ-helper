@@ -6,7 +6,9 @@ import 'package:rules_engine/rules_engine.dart';
 import '../../../data/models/game_winner.dart';
 import '../../../state/session/day_plan.dart';
 import '../../../state/session/game_session.dart';
+import '../../../state/session/night_script.dart' show kCharmedStepRole;
 import '../../../state/session/session_cursor.dart';
+import '../../../state/settings/settings_providers.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
@@ -17,6 +19,7 @@ import '../../widgets/app_button.dart';
 import '../../widgets/narration_block.dart';
 import '../../widgets/avatar_pick_cell.dart';
 import '../../widgets/player_avatar.dart';
+import 'widgets/elder_question.dart';
 import 'widgets/fox_act.dart';
 import 'widgets/identify_step.dart';
 import 'widgets/two_choice_act.dart';
@@ -59,7 +62,10 @@ class _NightBody extends ConsumerWidget {
 
   List<String> _holderNames(String roleId) => [
     for (final p in session.engine.players)
-      if (p.roleId == roleId) p.name,
+      if (roleId == kCharmedStepRole.id
+          ? p.alive && p.hasStatus(PlayerStatus.charmed)
+          : p.roleId == roleId)
+        p.name,
   ];
 
   @override
@@ -103,7 +109,19 @@ class _NightBody extends ConsumerWidget {
     );
   }
 
+  /// The Elder has no call of his own, so the app learns he is one when the wolves pick him: asks,
+  /// and notes the card, so his first bite is spared.
+  Future<void> _askIfElder(BuildContext context, GameSession notifier, String victimId) async {
+    if (!session.mayBeElder(victimId)) return;
+    final name = session.engine.playerById(victimId).name;
+    final isElder = await showElderQuestion(context, name: name);
+    if (isElder == true) await notifier.identifyRole('ancien', [int.parse(victimId)]);
+  }
+
   Widget _body(BuildContext context, GameSession notifier, NightScriptStep? step) {
+    if (session.engine.cascade != null) {
+      return _ChainPanel(session: session, notifier: notifier);
+    }
     if (step == null) {
       return _FinalizePrompt(onResolve: () => notifier.applyAction(const FinalizeNight()));
     }
@@ -255,7 +273,10 @@ class _NightBody extends ConsumerWidget {
                 cand(p),
           ],
           confirmLabel: context.l10n.scriptBigBadWolfPick,
-          onConfirm: notifier.bigBadWolfTarget,
+          onConfirm: (id) async {
+            await _askIfElder(context, notifier, id);
+            await notifier.bigBadWolfTarget(id);
+          },
           secondaryLabel: context.l10n.scriptSkipRole,
           onSecondary: notifier.skipStep,
         );
@@ -301,6 +322,34 @@ class _NightBody extends ConsumerWidget {
           candidates: [for (final p in alive) cand(p)],
           onConfirm: (a, b) => notifier.pairLovers(a, b),
           onSkip: notifier.skipStep,
+          question: context.l10n.scriptLoversQuestion,
+          pairLabel: context.l10n.scriptLoversPair,
+          pickLabel: context.l10n.scriptLoversPick,
+          icon: AppIcons.cupid,
+        );
+
+      case 'joueur_de_flute':
+        return _LoversPick(
+          candidates: [
+            for (final p in alive)
+              if (p.roleId != role.id && !p.hasStatus(PlayerStatus.charmed)) cand(p),
+          ],
+          onConfirm: (a, b) => notifier.piperCharm([a, b]),
+          onSkip: notifier.skipStep,
+          question: context.l10n.scriptPiperQuestion,
+          pairLabel: context.l10n.scriptPiperCharm,
+          pickLabel: context.l10n.scriptLoversPick,
+          icon: AppIcons.piperRole,
+          single: (
+            label: context.l10n.scriptPiperCharmOne,
+            onConfirm: (id) => notifier.piperCharm([id]),
+          ),
+        );
+
+      case 'joueurs_charmes':
+        return SimpleAct(
+          primaryLabel: context.l10n.scriptCharmedDone,
+          onPrimary: notifier.skipStep,
         );
 
       case 'loup_garou':
@@ -311,7 +360,10 @@ class _NightBody extends ConsumerWidget {
               if (!session.engine.wakesWithWolves(p, RoleRegistry.all)) cand(p),
           ],
           confirmLabel: context.l10n.scriptWolvesPick,
-          onConfirm: (id) => notifier.applyAction(WolvesTarget(targetPlayerId: id)),
+          onConfirm: (id) async {
+            await _askIfElder(context, notifier, id);
+            await notifier.applyAction(WolvesTarget(targetPlayerId: id));
+          },
           secondaryLabel: context.l10n.scriptSkipRole,
           onSecondary: notifier.skipStep,
         );
@@ -726,11 +778,25 @@ class _LoversPick extends StatefulWidget {
     required this.candidates,
     required this.onConfirm,
     required this.onSkip,
+    required this.question,
+    required this.pairLabel,
+    required this.pickLabel,
+    required this.icon,
+    this.single,
   });
 
   final List<Candidate> candidates;
   final void Function(String a, String b) onConfirm;
   final VoidCallback onSkip;
+  final String question;
+
+  /// The button once two are picked: "Cupidon unit A et B".
+  final String Function(String a, String b) pairLabel;
+  final String pickLabel;
+  final IconData icon;
+
+  /// With a single player left to pick, the button and what it does (the Piper may charm just one).
+  final ({String Function(String name) label, void Function(String id) onConfirm})? single;
 
   @override
   State<_LoversPick> createState() => _LoversPickState();
@@ -753,7 +819,9 @@ class _LoversPickState extends State<_LoversPick> {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final typography = context.typography;
-    final complete = _selected.length == 2;
+    // Two to pick, or the one that is left when only one can be (the Piper's last charm).
+    final needed = widget.candidates.length == 1 && widget.single != null ? 1 : 2;
+    final complete = _selected.length == needed;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -764,12 +832,12 @@ class _LoversPickState extends State<_LoversPick> {
             children: [
               Expanded(
                 child: Text(
-                  context.l10n.scriptLoversQuestion,
+                  widget.question,
                   style: typography.rowLabel.copyWith(color: colors.textPrimary),
                 ),
               ),
               Text(
-                context.l10n.identifyProgress(_selected.length, 2),
+                context.l10n.identifyProgress(_selected.length, needed),
                 style: typography.counter.copyWith(color: colors.accentText),
               ),
             ],
@@ -804,13 +872,17 @@ class _LoversPickState extends State<_LoversPick> {
             spacing: 8,
             children: [
               AppButton(
-                label: complete
-                    ? context.l10n.scriptLoversPair(_name(_selected[0]), _name(_selected[1]))
-                    : context.l10n.scriptLoversPick,
-                leadingIcon: complete ? AppIcons.cupid : null,
-                onPressed: complete
-                    ? () => widget.onConfirm(_selected[0], _selected[1])
-                    : null,
+                label: !complete
+                    ? widget.pickLabel
+                    : needed == 1
+                    ? widget.single!.label(_name(_selected[0]))
+                    : widget.pairLabel(_name(_selected[0]), _name(_selected[1])),
+                leadingIcon: complete ? widget.icon : null,
+                onPressed: !complete
+                    ? null
+                    : needed == 1
+                    ? () => widget.single!.onConfirm(_selected[0])
+                    : () => widget.onConfirm(_selected[0], _selected[1]),
               ),
               AppButton(
                 label: context.l10n.scriptSkipRole,
@@ -1029,6 +1101,10 @@ IconData _roleIcon(String roleId) => switch (roleId) {
   'cupidon' => AppIcons.cupid,
   'voleur' => AppIcons.thief,
   'chasseur' => AppIcons.hunter,
+  'ancien' => AppIcons.elder,
+  'chevalier' => AppIcons.knight,
+  'joueur_de_flute' => AppIcons.piperRole,
+  'joueurs_charmes' => AppIcons.piperRole,
   'renard' => AppIcons.fox,
   'deux_soeurs' => AppIcons.sisters,
   'montreur_d_ours' => AppIcons.bearTamer,
@@ -1076,15 +1152,48 @@ class _DayBody extends ConsumerWidget {
       ),
     };
     final proposed = session.proposedWinner;
-    if (proposed == null) return body;
+    final powerless = session.engine.villagersPowerless;
+    if (proposed == null && !powerless) return body;
     return Column(
       children: [
-        _VictoryProposalBanner(
-          winner: proposed,
-          onEnd: () => context.push('/games/$gameId/end'),
-        ),
+        if (proposed != null)
+          _VictoryProposalBanner(
+            winner: proposed,
+            onEnd: () => context.push('/games/$gameId/end'),
+          ),
+        if (powerless) const _PowerlessBanner(),
         Expanded(child: body),
       ],
+    );
+  }
+}
+
+/// A reminder that the villagers lost their powers: the script stops calling them.
+class _PowerlessBanner extends StatelessWidget {
+  const _PowerlessBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(AppSpacing.screen, 8, AppSpacing.screen, 0),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.warnBg,
+        borderRadius: BorderRadius.circular(AppRadii.button),
+      ),
+      child: Row(
+        spacing: 10,
+        children: [
+          Icon(AppIcons.elder, size: 18, color: colors.warnText),
+          Expanded(
+            child: Text(
+              context.l10n.scriptPowerless,
+              style: context.typography.meta.copyWith(color: colors.warnText, height: 1.5),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1722,6 +1831,11 @@ class _ChainPanel extends StatelessWidget {
         notifier: notifier,
         deadCaptainId: deadCaptainId,
       ),
+      PendingKnightWound(:final deadKnightId) => _KnightWoundPanel(
+        session: session,
+        notifier: notifier,
+        deadKnightId: deadKnightId,
+      ),
     };
   }
 }
@@ -1850,6 +1964,63 @@ class _SuccessionPanel extends StatelessWidget {
             confirmIcon: AppIcons.captain,
             confirmLabel: context.l10n.scriptCaptainBecomes,
             onConfirm: (id) => notifier.nameCaptainSuccessor(id),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The Knight was devoured: which wolf does his rusty sword leave diseased? The app suggests the
+/// first wolf to his left among the cards it knows; the MJ, who knows the table, decides.
+class _KnightWoundPanel extends ConsumerWidget {
+  const _KnightWoundPanel({
+    required this.session,
+    required this.notifier,
+    required this.deadKnightId,
+  });
+
+  final GameSessionState session;
+  final GameSession notifier;
+  final String deadKnightId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final knight = session.engine.playerById(deadKnightId);
+    final suggested = session.engine.firstWolfToLeftOf(deadKnightId, RoleRegistry.all);
+    final atEnd = ref.watch(settingsProvider).value?.knightDiseaseAtNightEnd ?? false;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _SheetHandle(),
+        _DeadHeader(name: knight.name, subtitle: context.l10n.scriptKnightDead),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 16, AppSpacing.screen, 12),
+          child: _RoleBanner(
+            icon: AppIcons.knight,
+            title: context.l10n.scriptKnightTitle,
+            body: atEnd ? context.l10n.scriptKnightBodyEnd : context.l10n.scriptKnightBodyStart,
+          ),
+        ),
+        if (suggested != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 8),
+            child: Text(
+              context.l10n.scriptKnightSuggested(suggested.name),
+              style: context.typography.meta.copyWith(
+                color: context.colors.textTertiary,
+                height: 1.5,
+              ),
+            ),
+          ),
+        Expanded(
+          child: TargetPick(
+            question: context.l10n.scriptKnightQuestion,
+            candidates: _alive(session.engine),
+            confirmLabel: context.l10n.scriptKnightWounds,
+            onConfirm: notifier.knightContaminate,
+            secondaryLabel: context.l10n.scriptKnightNone,
+            onSecondary: () => notifier.knightContaminate(null),
           ),
         ),
       ],

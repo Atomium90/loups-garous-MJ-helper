@@ -60,6 +60,14 @@ void main() {
       ]);
     });
 
+    test('the Bear Tamer does not growl once the villagers lost their powers', () {
+      expect(dayStagesFor(withBear().copyWith(villagersPowerless: true)), [
+        DayStage.recap,
+        DayStage.vote,
+        DayStage.done,
+      ]);
+    });
+
     test('a dead Bear Tamer growls no more', () {
       expect(dayStagesFor(withBear(alive: false)), [
         DayStage.recap,

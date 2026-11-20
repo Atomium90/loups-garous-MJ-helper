@@ -185,6 +185,22 @@ void main() {
     expect((await SharedPreferences.getInstance()).getBool('thief_reserve_chosen'), isTrue);
   });
 
+  testWidgets('the Knight disease toggle persists once flipped', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
+      initialLocation: '/settings',
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Maladie du Chevalier en fin de nuit'));
+    await tester.pumpAndSettle();
+
+    expect((await SharedPreferences.getInstance()).getBool('knight_disease_night_end'), isTrue);
+  });
+
   testWidgets('the White Werewolf parity toggle persists once flipped', (tester) async {
     await tester.binding.setSurfaceSize(const Size(400, 2000));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -353,7 +369,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('2 boîtes · 16 rôles'), findsOneWidget);
+      expect(find.text('2 boîtes · 19 rôles'), findsOneWidget);
     });
   });
 }

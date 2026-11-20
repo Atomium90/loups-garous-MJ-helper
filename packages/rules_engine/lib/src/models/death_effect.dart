@@ -9,4 +9,7 @@ enum DeathEffect {
 
   /// Chasseur: immediately eliminates another living player of their choice.
   hunterShot,
+
+  /// Chevalier a l'Epee Rouillee: devoured by the wolves, he leaves one of them diseased.
+  knightDisease,
 }

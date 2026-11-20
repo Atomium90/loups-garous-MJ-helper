@@ -47,6 +47,7 @@ class GameSessionState {
 
   /// Whether the White Werewolf's solo nights are the odd ones in this game; fixed at its start.
   final bool whiteWolfOddNights;
+
   final List<PlayerRow> roster;
 
   /// Set once the Voleur has taken a reserve card: which player he is and
@@ -84,6 +85,16 @@ class GameSessionState {
   bool get bearShouldGrowl {
     final bear = bearTamer;
     return bear != null && engine.bearGrowls(bear.id, RoleRegistry.all);
+  }
+
+  /// Whether the player [playerId], about to be devoured, may be the Elder: the composition has
+  /// one whose card has not been noted yet, and this player's card is still unknown. The MJ is
+  /// asked, since the Elder's first bite is spared and he has no call of his own to be known by.
+  bool mayBeElder(String playerId) {
+    final elders = dealtComposition['ancien'] ?? 0;
+    if (elders == 0) return false;
+    if (engine.playerById(playerId).roleId != kPlaceholderRoleId) return false;
+    return engine.players.where((p) => p.roleId == 'ancien').length < elders;
   }
 
   /// A drawn reserve the MJ has yet to note: asked for at the Voleur's step.
@@ -134,6 +145,8 @@ class GameSessionState {
   bool get currentStepNeedsIdentify {
     final step = currentStep;
     if (step == null || cursor.subStep == NightSubStep.act) return false;
+    // The charmed players' call is made of whoever was charmed: nobody to identify.
+    if (step.role.id == kCharmedStepRole.id) return false;
     return dealtHoldersKnown(step.role.id) < expectedHolders(step.role.id);
   }
 
@@ -477,6 +490,12 @@ class GameSession extends _$GameSession {
   Future<void> whiteWolfEat(String engineId) =>
       applyAction(WhiteWolfEat(targetPlayerId: engineId));
 
+  // --- night: the Piper ---
+
+  /// The Piper charms [engineIds] (one or two players).
+  Future<void> piperCharm(List<String> engineIds) =>
+      applyAction(PiperCharm(playerIds: engineIds));
+
   // --- night: Deux Sœurs ---
 
   /// The Two Sisters woke and met: a journal line, then on to the next call.
@@ -588,6 +607,15 @@ class GameSession extends _$GameSession {
     return _updateDay((d) => d.copyWith(revealSkipped: [...d.revealSkipped, engineId]));
   }
 
+  /// The MJ says which wolf the dead Knight's sword left diseased (null: none). The setting says
+  /// whether it dies as the next night begins or ends.
+  Future<void> knightContaminate(String? wolfEngineId) => applyAction(
+    KnightContaminate(
+      wolfPlayerId: wolfEngineId,
+      atNightEnd: ref.read(settingsProvider).value?.knightDiseaseAtNightEnd ?? false,
+    ),
+  );
+
   Future<void> hunterShoot(String? engineId) =>
       applyAction(HunterShoot(targetPlayerId: engineId));
 
@@ -607,6 +635,14 @@ class GameSession extends _$GameSession {
       action: const StartNextNight(),
       roleRegistry: _registry,
     );
+    final lines = nightLogEntriesForEvents(
+      result.events,
+      result.state,
+      phase: JournalPhase.night,
+    );
+    if (lines.isNotEmpty) {
+      await ref.read(gameRepositoryProvider).appendNightLog(gameId: gameId, entries: lines);
+    }
     const cursor = SessionCursor.nightStart;
     const day = DaySnapshot.fresh;
     await _persist(result.state, cursor, day);
@@ -624,6 +660,11 @@ class GameSession extends _$GameSession {
 
     final lines = <NightLogEntry>[
       ...nightLogEntriesFor(action, s.engine),
+      ...nightLogEntriesForEvents(
+        result.events,
+        result.state,
+        phase: _journalPhase(result.state),
+      ),
       for (final e in result.events)
         if (e is PlayerDied && e.cause is LoversCascadeKill)
           NightLogEntry(
@@ -684,7 +725,8 @@ class GameSession extends _$GameSession {
     ChienLoupChoose() ||
     InfectVictim() ||
     BigBadWolfTarget() ||
-    WhiteWolfEat() => SessionCursor(
+    WhiteWolfEat() ||
+    PiperCharm() => SessionCursor(
       stepIndex: c.stepIndex + 1,
       subStep: NightSubStep.identify,
     ),

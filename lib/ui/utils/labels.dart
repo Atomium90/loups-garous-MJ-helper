@@ -80,6 +80,7 @@ String _causeKey(DeathCause cause) => switch (cause) {
   WolvesKill() => 'wolves',
   WitchDeathPotionKill() => 'witchPoison',
   WhiteWolfKill() => 'whiteWolf',
+  DiseaseKill() => 'disease',
   DayVoteKill() => 'dayVote',
   HunterShotKill() => 'hunterShot',
   LoversCascadeKill() => 'loversGrief',

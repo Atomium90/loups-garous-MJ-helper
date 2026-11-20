@@ -64,6 +64,79 @@ void main() {
     await tap(tester, 'Résoudre la nuit');
   }
 
+  testWidgets('the Elder voted out: a banner says the villagers lost their powers', (tester) async {
+    final id = await _startedGame(repo, const {'ancien': 1, 'loup_garou': 2, 'villageois': 3});
+    await pump(tester, id);
+
+    await identify(tester, ['Bo', 'Cy']); // the wolves
+    await tester.tap(find.text('Ed'));
+    await tester.pumpAndSettle();
+    await tap(tester, 'Les Loups désignent Ed');
+    await tap(tester, 'Non'); // not the Elder
+    await tap(tester, 'Résoudre la nuit');
+    await tap(tester, 'Simple Villageois');
+    await tap(tester, 'Ed était le Simple Villageois');
+    expect(find.textContaining('ont perdu leurs pouvoirs'), findsNothing);
+
+    await tap(tester, 'Élire le Capitaine');
+    await tap(tester, 'Pas de Capitaine cette partie');
+    await tester.tap(find.text('Ana'));
+    await tester.pumpAndSettle();
+    await tap(tester, 'Le village élimine Ana');
+    await tap(tester, "L'Ancien");
+    await tap(tester, "Ana était l'Ancien");
+
+    expect(
+      find.text('Les villageois ont perdu leurs pouvoirs : le script ne les appelle plus.'),
+      findsOneWidget,
+    );
+  });
+
+  group('the Knight with the Rusty Sword', () {
+    const comp = {'chevalier': 1, 'loup_garou': 2, 'villageois': 3};
+
+    Future<void> knightEaten(WidgetTester tester) async {
+      await identify(tester, ['Cy', 'Ed']); // the wolves
+      await tester.tap(find.text('Ana'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Les Loups désignent Ana');
+      await tap(tester, 'Résoudre la nuit');
+      // Ana's card is turned over: the Knight.
+      await tap(tester, "Chevalier à l'Épée Rouillée");
+      await tap(tester, "Ana était le Chevalier à l'Épée Rouillée");
+    }
+
+    testWidgets('asks which wolf is diseased, suggesting the first one to his left', (tester) async {
+      final id = await _startedGame(repo, comp);
+      await pump(tester, id);
+      await knightEaten(tester);
+
+      expect(find.text('Le Chevalier est dévoré'), findsOneWidget);
+      // Ana is seat 1: her left, going back round the table, meets Ed (seat 5) before Cy (seat 3).
+      expect(find.text("D'après les rôles notés : Ed."), findsOneWidget);
+      expect(find.textContaining('au début de la nuit prochaine'), findsOneWidget);
+
+      await tester.tap(find.text('Ed'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Ed est malade');
+
+      // back to the day, the sickness is written down
+      expect(find.text('Quel Loup est malade ?'), findsNothing);
+      await tap(tester, 'Journal');
+      expect(find.text('Le Chevalier laisse Ed malade'), findsOneWidget);
+    });
+
+    testWidgets('can be told there is no wolf to wound', (tester) async {
+      final id = await _startedGame(repo, comp);
+      await pump(tester, id);
+      await knightEaten(tester);
+
+      await tap(tester, 'Aucun Loup à atteindre');
+
+      expect(find.text('Quel Loup est malade ?'), findsNothing);
+    });
+  });
+
   group('the growl of the Bear Tamer', () {
     const comp = {'montreur_d_ours': 1, 'loup_garou': 2, 'villageois': 3};
 
