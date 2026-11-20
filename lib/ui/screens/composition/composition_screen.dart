@@ -111,9 +111,12 @@ class _CompositionBody extends StatelessWidget {
               children: [
                 _SuggestionCard(draft: draft, notifier: notifier, registry: pool.available),
                 for (final (label, team) in sections) ..._section(context, label, team),
-                if (draft.hasVoleur) ...[
+                if (draft.reserveChosen && draft.hasVoleur) ...[
                   const SizedBox(height: 18),
                   _ReserveSection(draft: draft, notifier: notifier, pool: pool),
+                ] else if (draft.reserveDrawn) ...[
+                  const SizedBox(height: 4),
+                  _DrawnReserveNote(packSize: draft.playerCount + 2),
                 ],
               ],
             ),
@@ -430,6 +433,38 @@ class _ReserveSection extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// What the Voleur adds to the pack when his reserve is left to the draw.
+class _DrawnReserveNote extends StatelessWidget {
+  const _DrawnReserveNote({required this.packSize});
+
+  final int packSize;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.bgInset,
+        borderRadius: BorderRadius.circular(AppRadii.button),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 10,
+        children: [
+          Icon(AppIcons.thief, size: 18, color: colors.textSecondary),
+          Expanded(
+            child: Text(
+              context.l10n.reserveRandomNote(packSize),
+              style: context.typography.meta.copyWith(color: colors.textSecondary, height: 1.55),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
