@@ -62,6 +62,10 @@ IconData winnerIcon(GameWinner winner) => switch (winner) {
   GameWinner.wolves => AppIcons.wolves,
   GameWinner.lovers => AppIcons.cupid,
   GameWinner.none => AppIcons.cancelled,
+  GameWinner.piper => AppIcons.piper,
+  GameWinner.whiteWolf => AppIcons.whiteWolf,
+  GameWinner.angel => AppIcons.angel,
+  GameWinner.sectarian => AppIcons.sectarian,
 };
 
 String _causeKey(DeathCause cause) => switch (cause) {

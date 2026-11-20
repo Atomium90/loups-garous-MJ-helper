@@ -4,11 +4,13 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rules_engine/rules_engine.dart';
 
 import '../../data/database/app_database.dart';
+import '../../data/models/game_winner.dart';
 import '../../data/models/night_log_entry.dart';
 import '../../data/repositories/game_not_found_exception.dart';
 import '../providers/game_repository_provider.dart';
 import 'night_log_entry.dart';
 import 'night_script.dart';
+import 'victory_proposal.dart';
 import 'session_cursor.dart';
 
 part 'game_session.g.dart';
@@ -55,6 +57,13 @@ class GameSessionState {
     required this.roster,
     this.voleurSwapIn,
   });
+
+  /// The winner the table looks to have, or null while the game plainly goes on. Offered to the
+  /// MJ, never applied: only they end the game.
+  GameWinner? get proposedWinner {
+    final kind = proposeVictory(engine, RoleRegistry.all);
+    return kind == null ? null : winnerFor(kind);
+  }
 
   /// A drawn reserve the MJ has yet to note: asked for at the Voleur's step.
   bool get reserveToEnter => reserveDrawn && reserveRoleIds.isEmpty;

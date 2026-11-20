@@ -115,6 +115,35 @@ void main() {
         expect(winnerIcon(winner), isNotNull);
       }
     });
+
+    test('every winner has a label of its own, none silently reads "Annulée"', () {
+      // An unknown winner falls back to the "cancelled" wording: a missing entry would make two
+      // winners share a label.
+      for (final l10n in [fr, en]) {
+        final full = {for (final w in GameWinner.values) winnerLabel(l10n, w)};
+        final short = {for (final w in GameWinner.values) winnerShort(l10n, w)};
+        expect(full, hasLength(GameWinner.values.length), reason: l10n.localeName);
+        expect(short, hasLength(GameWinner.values.length), reason: l10n.localeName);
+      }
+    });
+
+    test('the stored order of the winners never changes: new ones come last', () {
+      expect(GameWinner.values.take(4), [
+        GameWinner.village,
+        GameWinner.wolves,
+        GameWinner.lovers,
+        GameWinner.none,
+      ]);
+    });
+
+    test('a solo winner needs its role in the game, the others none', () {
+      expect(GameWinner.village.requiredRoleId, isNull);
+      expect(GameWinner.none.requiredRoleId, isNull);
+      expect(GameWinner.piper.requiredRoleId, 'joueur_de_flute');
+      expect(GameWinner.whiteWolf.requiredRoleId, 'loup_garou_blanc');
+      expect(GameWinner.angel.requiredRoleId, 'ange');
+      expect(GameWinner.sectarian.requiredRoleId, 'abominable_sectaire');
+    });
   });
 
   group('death causes', () {
