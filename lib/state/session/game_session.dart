@@ -44,6 +44,9 @@ class GameSessionState {
   /// Whether the Fox is called after the Witch in this game. Fixed when the game starts, so the
   /// order never changes under the MJ's feet.
   final bool foxAfterWitch;
+
+  /// Whether the White Werewolf's solo nights are the odd ones in this game; fixed at its start.
+  final bool whiteWolfOddNights;
   final List<PlayerRow> roster;
 
   /// Set once the Voleur has taken a reserve card: which player he is and
@@ -61,6 +64,7 @@ class GameSessionState {
     required this.reserveRoleIds,
     this.reserveDrawn = false,
     this.foxAfterWitch = false,
+    this.whiteWolfOddNights = false,
     required this.roster,
     this.voleurSwapIn,
   });
@@ -225,6 +229,9 @@ class GameSession extends _$GameSession {
   /// session is created and kept in the snapshot.
   bool _foxAfterWitch = false;
 
+  /// The White Werewolf's parity for this game, fixed like the Fox's place.
+  bool _whiteWolfOdd = false;
+
   @override
   Future<GameSessionState> build(int gameId) async {
     final repo = ref.read(gameRepositoryProvider);
@@ -249,7 +256,9 @@ class GameSession extends _$GameSession {
       );
       cursor = SessionCursor.nightStart;
       day = DaySnapshot.fresh;
-      _foxAfterWitch = ref.read(settingsProvider).value?.foxAfterWitch ?? false;
+      final settings = ref.read(settingsProvider).value;
+      _foxAfterWitch = settings?.foxAfterWitch ?? false;
+      _whiteWolfOdd = settings?.whiteWolfOddNights ?? false;
       await _persist(engine, cursor, day);
     } else {
       final decoded = jsonDecode(existing) as Map<String, dynamic>;
@@ -269,6 +278,7 @@ class GameSession extends _$GameSession {
         for (final id in decoded['drawnReserve'] as List<dynamic>? ?? const []) id as String,
       ];
       _foxAfterWitch = decoded['foxAfterWitch'] == true;
+      _whiteWolfOdd = decoded['whiteWolfOdd'] == true;
     }
     final reserveRoleIds = reserveDrawn ? _drawnReserve : pickedReserve;
 
@@ -281,6 +291,7 @@ class GameSession extends _$GameSession {
         reserveDrawn: reserveDrawn,
       ),
       foxAfterWitch: _foxAfterWitch,
+      whiteWolfOddNights: _whiteWolfOdd,
     );
     return GameSessionState(
       engine: engine,
@@ -291,6 +302,7 @@ class GameSession extends _$GameSession {
       reserveRoleIds: reserveRoleIds,
       reserveDrawn: reserveDrawn,
       foxAfterWitch: _foxAfterWitch,
+      whiteWolfOddNights: _whiteWolfOdd,
       roster: roster,
       voleurSwapIn: _voleurSwapIn,
     );
@@ -305,6 +317,7 @@ class GameSession extends _$GameSession {
         'voleurSwapIn': {'playerId': v.playerId, 'roleId': v.roleId},
       if (_drawnReserve.isNotEmpty) 'drawnReserve': _drawnReserve,
       if (_foxAfterWitch) 'foxAfterWitch': true,
+      if (_whiteWolfOdd) 'whiteWolfOdd': true,
     });
     return ref.read(gameRepositoryProvider).saveSession(gameId: gameId, sessionJson: blob);
   }
@@ -712,11 +725,13 @@ class GameSession extends _$GameSession {
             reserveDrawn: prev.reserveDrawn,
           ),
           foxAfterWitch: prev.foxAfterWitch,
+          whiteWolfOddNights: prev.whiteWolfOddNights,
         ),
         composition: prev.composition,
         reserveRoleIds: nextReserve,
         reserveDrawn: prev.reserveDrawn,
         foxAfterWitch: prev.foxAfterWitch,
+        whiteWolfOddNights: prev.whiteWolfOddNights,
         roster: roster ?? prev.roster,
         voleurSwapIn: _voleurSwapIn,
       ),

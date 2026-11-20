@@ -812,6 +812,14 @@
   "@settingsFoxAfterWitchHint": {
     "description": "Explains the Fox position setting."
   },
+  "settingsWhiteWolfOdd": "Loup-Garou Blanc seul les nuits impaires",
+  "@settingsWhiteWolfOdd": {
+    "description": "Toggle: the White Werewolf's solo night falls on odd nights instead of even ones."
+  },
+  "settingsWhiteWolfOddHint": "Les livrets ne disent pas par quelle nuit commencer. Par défaut, il est seul les nuits 2, 4, 6… ; activé, les nuits 1, 3, 5… Pris en compte à chaque nouvelle partie.",
+  "@settingsWhiteWolfOddHint": {
+    "description": "Explains the White Werewolf parity setting."
+  },
   "settingsKeepScreenOn": "Garder l'écran allumé",
   "@settingsKeepScreenOn": {
     "description": "Toggle: stop the screen from sleeping during a game."

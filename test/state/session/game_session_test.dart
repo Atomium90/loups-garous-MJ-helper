@@ -579,6 +579,34 @@ void main() {
     });
   });
 
+  test('the White Werewolf parity follows the setting when the game starts and is kept', () async {
+    const comp = {'loup_garou_blanc': 1, 'loup_garou': 2, 'villageois': 3};
+    final game = await _startedGame(repo, composition: comp);
+    SharedPreferences.setMockInitialValues({'white_wolf_odd_nights': true});
+    final odd = ProviderContainer(
+      overrides: [
+        gameRepositoryProvider.overrideWithValue(repo),
+        sharedPreferencesProvider.overrideWith((ref) async => SharedPreferences.getInstance()),
+      ],
+    );
+    addTearDown(odd.dispose);
+    await odd.read(settingsProvider.future);
+
+    var s = await odd.read(gameSessionProvider(game.gameId).future);
+    // On night 1 his solo power is on: no longer a step that only identifies him.
+    expect(s.tonight.steps.map((st) => (st.role.id, st.identifyOnly)), [
+      ('loup_garou', false),
+      ('loup_garou_blanc', false),
+    ]);
+
+    // Another session of the same game, with the setting back off: the game keeps its parity.
+    SharedPreferences.setMockInitialValues({});
+    final later = ProviderContainer(overrides: [gameRepositoryProvider.overrideWithValue(repo)]);
+    addTearDown(later.dispose);
+    s = await later.read(gameSessionProvider(game.gameId).future);
+    expect(s.whiteWolfOddNights, isTrue);
+  });
+
   group('the Fox', () {
     // 6 players: Ana the Fox, Bo and Cy wolves, the rest villagers; seats in roster order.
     const comp = {'renard': 1, 'loup_garou': 2, 'villageois': 3};

@@ -72,6 +72,8 @@ void main() {
   });
 
   testWidgets('switching the theme segment persists the choice', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAppRouter(
       tester,
       overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
@@ -87,7 +89,7 @@ void main() {
   });
 
   testWidgets('the narration level can be changed and is remembered', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(400, 1600));
+    await tester.binding.setSurfaceSize(const Size(400, 2000));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAppRouter(
       tester,
@@ -181,6 +183,22 @@ void main() {
     await tester.pumpAndSettle();
 
     expect((await SharedPreferences.getInstance()).getBool('thief_reserve_chosen'), isTrue);
+  });
+
+  testWidgets('the White Werewolf parity toggle persists once flipped', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
+      initialLocation: '/settings',
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Loup-Garou Blanc seul les nuits impaires'));
+    await tester.pumpAndSettle();
+
+    expect((await SharedPreferences.getInstance()).getBool('white_wolf_odd_nights'), isTrue);
   });
 
   testWidgets('the Fox position toggle persists once flipped', (tester) async {
