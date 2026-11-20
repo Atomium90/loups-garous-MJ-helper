@@ -2,6 +2,39 @@ import 'package:rules_engine/rules_engine.dart';
 
 const _builder = NightScriptBuilder();
 
+/// The call that wakes the players the Piper charmed so they recognise each other. Not a role
+/// anyone holds - no card, no composition - so it lives here and not in the registry.
+const kCharmedStepRole = Role(
+  id: 'joueurs_charmes',
+  team: Team.village,
+  hasNightCall: true,
+  wakeCondition: WakeCondition.everyNight,
+);
+
+/// [script] with the charmed players' call right after the Piper's, when a living player has been
+/// charmed. Built from the game as it is now: the night the Piper charms for the first time, the
+/// script grows this step once he has acted, and the cursor already sits on it.
+NightScript _withCharmedStep(NightScript script, GameState engine) {
+  final piperAt = script.steps.indexWhere((s) => s.role.id == 'joueur_de_flute');
+  if (piperAt < 0) return script;
+  final anyCharmed = engine.alivePlayers.any((p) => p.hasStatus(PlayerStatus.charmed));
+  if (!anyCharmed) return script;
+  final roles = [for (final s in script.steps) s.role]..insert(piperAt + 1, kCharmedStepRole);
+  return NightScript(
+    nightIndex: script.nightIndex,
+    steps: [
+      for (final (i, role) in roles.indexed)
+        NightScriptStep(
+          role: role,
+          stepIndex: i + 1,
+          identifyOnly: script.steps
+              .where((s) => s.role.id == role.id)
+              .any((s) => s.identifyOnly),
+        ),
+    ],
+  );
+}
+
 /// The role id an un-identified player carries in the engine until the MJ
 /// records who really holds a card. Only ever `villageois` (which has no night
 /// call), so "a player whose roleId isn't this" is exactly "a confirmed
@@ -52,14 +85,17 @@ NightScript buildNightScript({
       registry,
       foxAfterWitch: foxAfterWitch,
     );
-    return _builder.build(
-      compositionRoles: roles,
-      aliveRoleIds: {
-        for (final r in roles)
-          if (r.hasNightCall) r.id,
-      },
-      nightIndex: nightIndex,
-      context: _contextFor(engine, whiteWolfOddNights: whiteWolfOddNights),
+    return _withCharmedStep(
+      _builder.build(
+        compositionRoles: roles,
+        aliveRoleIds: {
+          for (final r in roles)
+            if (r.hasNightCall) r.id,
+        },
+        nightIndex: nightIndex,
+        context: _contextFor(engine, whiteWolfOddNights: whiteWolfOddNights),
+      ),
+      engine,
     );
   }
 
@@ -72,7 +108,12 @@ NightScript buildNightScript({
   void consider(Role role) {
     if (!role.hasNightCall || !seen.add(role.id)) return;
     final known = engine.players.where((p) => p.roleId == role.id).toList();
-    final aliveKnown = known.where((p) => p.alive).length;
+    // A Piper infected by the Cursed Wolf-Father is a plain wolf: he is no longer called.
+    final aliveKnown = known
+        .where(
+          (p) => p.alive && !(role.id == 'joueur_de_flute' && p.teamOverride == Team.werewolves),
+        )
+        .length;
     final expected = (dealtComposition ?? composition)[role.id] ?? 0;
     // A group (the Two Sisters) only has someone to wake while all of it is alive: one sister
     // left alone has nobody to recognise.
@@ -88,11 +129,14 @@ NightScript buildNightScript({
   }
 
   final inOrder = _inCallOrder(callable, registry, foxAfterWitch: foxAfterWitch);
-  return _builder.build(
-    compositionRoles: inOrder,
-    aliveRoleIds: {for (final r in inOrder) r.id},
-    nightIndex: nightIndex,
-    context: _contextFor(engine, whiteWolfOddNights: whiteWolfOddNights),
+  return _withCharmedStep(
+    _builder.build(
+      compositionRoles: inOrder,
+      aliveRoleIds: {for (final r in inOrder) r.id},
+      nightIndex: nightIndex,
+      context: _contextFor(engine, whiteWolfOddNights: whiteWolfOddNights),
+    ),
+    engine,
   );
 }
 

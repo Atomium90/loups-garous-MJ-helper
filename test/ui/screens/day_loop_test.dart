@@ -64,6 +64,34 @@ void main() {
     await tap(tester, 'Résoudre la nuit');
   }
 
+  testWidgets('the Elder voted out: a banner says the villagers lost their powers', (tester) async {
+    final id = await _startedGame(repo, const {'ancien': 1, 'loup_garou': 2, 'villageois': 3});
+    await pump(tester, id);
+
+    await identify(tester, ['Bo', 'Cy']); // the wolves
+    await tester.tap(find.text('Ed'));
+    await tester.pumpAndSettle();
+    await tap(tester, 'Les Loups désignent Ed');
+    await tap(tester, 'Non'); // not the Elder
+    await tap(tester, 'Résoudre la nuit');
+    await tap(tester, 'Simple Villageois');
+    await tap(tester, 'Ed était le Simple Villageois');
+    expect(find.textContaining('ont perdu leurs pouvoirs'), findsNothing);
+
+    await tap(tester, 'Élire le Capitaine');
+    await tap(tester, 'Pas de Capitaine cette partie');
+    await tester.tap(find.text('Ana'));
+    await tester.pumpAndSettle();
+    await tap(tester, 'Le village élimine Ana');
+    await tap(tester, "L'Ancien");
+    await tap(tester, "Ana était l'Ancien");
+
+    expect(
+      find.text('Les villageois ont perdu leurs pouvoirs : le script ne les appelle plus.'),
+      findsOneWidget,
+    );
+  });
+
   group('the Knight with the Rusty Sword', () {
     const comp = {'chevalier': 1, 'loup_garou': 2, 'villageois': 3};
 

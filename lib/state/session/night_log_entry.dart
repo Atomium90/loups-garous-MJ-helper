@@ -73,6 +73,14 @@ List<NightLogEntry> nightLogEntriesFor(GameAction action, GameState before) {
       if (wolfPlayerId == null) return const [];
       return [entry(JournalKind.knightContaminates, {'player': name(wolfPlayerId)})];
 
+    case PiperCharm(:final playerIds):
+      return [
+        entry(JournalKind.piperCharms, {
+          'player': name(playerIds.first),
+          if (playerIds.length > 1) 'other': name(playerIds[1]),
+        }),
+      ];
+
     case VoleurSwap(:final stolenRoleId):
       return [
         stolenRoleId == null

@@ -253,4 +253,52 @@ void main() {
       expect(stepIds(script), ['loup_garou']);
     });
   });
+
+  group('the Piper', () {
+    const composition = {'joueur_de_flute': 1, 'loup_garou': 2, 'sorciere': 1, 'villageois': 2};
+    final roles = {0: 'joueur_de_flute', 1: 'loup_garou', 2: 'loup_garou', 3: 'sorciere'};
+
+    GameState engineWith({Set<int> charmed = const {}, bool infected = false, int night = 2}) {
+      final base = _state(nightIndex: night, roles: roles);
+      return base.copyWith(
+        players: [
+          for (final (i, p) in base.players.indexed)
+            p.copyWith(
+              statuses: charmed.contains(i) ? {PlayerStatus.charmed} : const {},
+              teamOverride: infected && i == 0 ? Team.werewolves : null,
+            ),
+        ],
+      );
+    }
+
+    test('is called after the Witch every night', () {
+      final script = buildNightScript(engine: engineWith(), composition: composition);
+      expect(stepIds(script), ['loup_garou', 'sorciere', 'joueur_de_flute']);
+    });
+
+    test('wakes the charmed right after him, once someone is charmed', () {
+      final script = buildNightScript(
+        engine: engineWith(charmed: {4, 5}),
+        composition: composition,
+      );
+      expect(stepIds(script), ['loup_garou', 'sorciere', 'joueur_de_flute', 'joueurs_charmes']);
+      expect([for (final s in script.steps) s.stepIndex], [1, 2, 3, 4]);
+    });
+
+    test('has nobody to wake once the charmed are all dead', () {
+      final script = buildNightScript(
+        engine: engineWith(charmed: {4, 5}).killPlayer('4', cause: const DayVoteKill()).killPlayer('5', cause: const DayVoteKill()),
+        composition: composition,
+      );
+      expect(stepIds(script), isNot(contains('joueurs_charmes')));
+    });
+
+    test('is no longer called once he is infected, and neither are the charmed', () {
+      final script = buildNightScript(
+        engine: engineWith(charmed: {4}, infected: true),
+        composition: composition,
+      );
+      expect(stepIds(script), ['loup_garou', 'sorciere']);
+    });
+  });
 }

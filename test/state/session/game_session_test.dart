@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:loup_garou_mj/data/database/app_database.dart';
 import 'package:loup_garou_mj/data/models/game_status.dart';
+import 'package:loup_garou_mj/data/models/game_winner.dart';
 import 'package:loup_garou_mj/data/repositories/drift_game_repository.dart';
 import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
 import 'package:loup_garou_mj/state/session/game_session.dart';
@@ -443,6 +444,72 @@ void main() {
       expect(s.dealtHoldersKnown('loup_garou'), 1);
       expect(s.voleurSwapInsFor('loup_garou'), isEmpty); // she's not the Voleur
       expect(s.currentStepNeedsIdentify, isTrue); // one wolf still unknown
+    });
+  });
+
+  group('the Piper', () {
+    test('charms two players, the charmed wake right after him, and it is journalled', () async {
+      final game = await _startedGame(
+        repo,
+        composition: {'joueur_de_flute': 1, 'loup_garou': 2, 'villageois': 3},
+      );
+      final ids = game.seatRowIds;
+      final n = await notifierFor(game.gameId);
+      await n.identifyRole('loup_garou', [ids[1], ids[2]]);
+      await n.applyAction(WolvesTarget(targetPlayerId: '${ids[5]}'));
+      await n.identifyRole('joueur_de_flute', [ids[0]]);
+
+      await n.piperCharm(['${ids[3]}', '${ids[4]}']);
+
+      final s = stateOf(game.gameId);
+      expect(s.engine.playerById('${ids[3]}').hasStatus(PlayerStatus.charmed), isTrue);
+      expect(s.tonight.steps.map((st) => st.role.id), ['loup_garou', 'joueur_de_flute', 'joueurs_charmes']);
+      expect(s.currentStep!.role.id, 'joueurs_charmes');
+      expect(s.currentStepNeedsIdentify, isFalse);
+      final log = frenchJournal(await repo.watchNightLog(game.gameId).first);
+      expect(log, contains('Le Joueur de Flûte charme Di et Ed'));
+    });
+
+    test('the charmed stay charmed after a force-quit, and wake the next night too', () async {
+      final game = await _startedGame(
+        repo,
+        composition: {'joueur_de_flute': 1, 'loup_garou': 2, 'villageois': 3},
+      );
+      final ids = game.seatRowIds;
+      final n = await notifierFor(game.gameId);
+      await n.identifyRole('loup_garou', [ids[1], ids[2]]);
+      await n.applyAction(WolvesTarget(targetPlayerId: '${ids[5]}'));
+      await n.identifyRole('joueur_de_flute', [ids[0]]);
+      await n.piperCharm(['${ids[3]}', '${ids[4]}']);
+      await n.skipStep();
+      await n.applyAction(const FinalizeNight());
+      await n.revealRole(ids[5], 'villageois');
+      await n.eliminateByVote(null);
+      await n.startNextNight();
+
+      final resumed = ProviderContainer(overrides: [gameRepositoryProvider.overrideWithValue(repo)]);
+      addTearDown(resumed.dispose);
+      final s = await resumed.read(gameSessionProvider(game.gameId).future);
+
+      expect(s.engine.playerById('${ids[4]}').hasStatus(PlayerStatus.charmed), isTrue);
+      expect(s.tonight.steps.map((st) => st.role.id), ['loup_garou', 'joueur_de_flute', 'joueurs_charmes']);
+    });
+
+    test('everyone alive charmed: the Piper is proposed as the winner', () async {
+      final game = await _startedGame(
+        repo,
+        composition: {'joueur_de_flute': 1, 'loup_garou': 2, 'villageois': 3},
+      );
+      final ids = game.seatRowIds;
+      final n = await notifierFor(game.gameId);
+      await n.identifyRole('joueur_de_flute', [ids[0]]);
+      await n.applyAction(PiperCharm(playerIds: ['${ids[1]}', '${ids[2]}']));
+      await n.applyAction(PiperCharm(playerIds: ['${ids[3]}', '${ids[4]}']));
+      expect(stateOf(game.gameId).proposedWinner, isNull);
+
+      await n.applyAction(PiperCharm(playerIds: ['${ids[5]}']));
+
+      expect(stateOf(game.gameId).proposedWinner, GameWinner.piper);
     });
   });
 

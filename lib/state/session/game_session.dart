@@ -87,6 +87,16 @@ class GameSessionState {
     return bear != null && engine.bearGrowls(bear.id, RoleRegistry.all);
   }
 
+  /// Whether the player [playerId], about to be devoured, may be the Elder: the composition has
+  /// one whose card has not been noted yet, and this player's card is still unknown. The MJ is
+  /// asked, since the Elder's first bite is spared and he has no call of his own to be known by.
+  bool mayBeElder(String playerId) {
+    final elders = dealtComposition['ancien'] ?? 0;
+    if (elders == 0) return false;
+    if (engine.playerById(playerId).roleId != kPlaceholderRoleId) return false;
+    return engine.players.where((p) => p.roleId == 'ancien').length < elders;
+  }
+
   /// A drawn reserve the MJ has yet to note: asked for at the Voleur's step.
   bool get reserveToEnter => reserveDrawn && reserveRoleIds.isEmpty;
 
@@ -135,6 +145,8 @@ class GameSessionState {
   bool get currentStepNeedsIdentify {
     final step = currentStep;
     if (step == null || cursor.subStep == NightSubStep.act) return false;
+    // The charmed players' call is made of whoever was charmed: nobody to identify.
+    if (step.role.id == kCharmedStepRole.id) return false;
     return dealtHoldersKnown(step.role.id) < expectedHolders(step.role.id);
   }
 
@@ -478,6 +490,12 @@ class GameSession extends _$GameSession {
   Future<void> whiteWolfEat(String engineId) =>
       applyAction(WhiteWolfEat(targetPlayerId: engineId));
 
+  // --- night: the Piper ---
+
+  /// The Piper charms [engineIds] (one or two players).
+  Future<void> piperCharm(List<String> engineIds) =>
+      applyAction(PiperCharm(playerIds: engineIds));
+
   // --- night: Deux Sœurs ---
 
   /// The Two Sisters woke and met: a journal line, then on to the next call.
@@ -707,7 +725,8 @@ class GameSession extends _$GameSession {
     ChienLoupChoose() ||
     InfectVictim() ||
     BigBadWolfTarget() ||
-    WhiteWolfEat() => SessionCursor(
+    WhiteWolfEat() ||
+    PiperCharm() => SessionCursor(
       stepIndex: c.stepIndex + 1,
       subStep: NightSubStep.identify,
     ),
