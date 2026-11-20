@@ -95,3 +95,23 @@ List<Role> _inCallOrder(List<Role> roles, RoleRegistry registry) {
   final position = {for (final (i, r) in registry.roles.indexed) r.id: i};
   return [...roles]..sort((a, b) => position[a.id]!.compareTo(position[b.id]!));
 }
+
+/// The composition less the cards a drawn Voleur reserve left in the middle, plus the two
+/// Simples Villageois it added to the pack. [composition] itself when the reserve is not drawn
+/// or not noted yet.
+Map<String, int> dealtCompositionOf(
+  Map<String, int> composition,
+  List<String> reserveRoleIds, {
+  required bool reserveDrawn,
+}) {
+  if (!reserveDrawn || reserveRoleIds.isEmpty) return composition;
+  final counts = {...composition};
+  counts.update(kPlaceholderRoleId, (n) => n + 2, ifAbsent: () => 2);
+  for (final id in reserveRoleIds) {
+    counts.update(id, (n) => n - 1, ifAbsent: () => -1);
+  }
+  return {
+    for (final entry in counts.entries)
+      if (entry.value > 0) entry.key: entry.value,
+  };
+}
