@@ -9,6 +9,7 @@ import '../../data/models/night_log_entry.dart';
 import '../../data/repositories/game_not_found_exception.dart';
 import '../providers/game_repository_provider.dart';
 import 'night_log_entry.dart';
+import 'day_plan.dart';
 import 'night_script.dart';
 import 'victory_proposal.dart';
 import 'session_cursor.dart';
@@ -178,26 +179,6 @@ class GameSessionState {
     if (day.loversAck.isNotEmpty) return DayInterrupt.loversAck;
     return null;
   }
-}
-
-/// The composition less the cards a drawn Voleur reserve left in the middle, plus the two
-/// Simples Villageois it added to the pack. [composition] itself when the reserve is not drawn
-/// or not noted yet.
-Map<String, int> dealtCompositionOf(
-  Map<String, int> composition,
-  List<String> reserveRoleIds, {
-  required bool reserveDrawn,
-}) {
-  if (!reserveDrawn || reserveRoleIds.isEmpty) return composition;
-  final counts = {...composition};
-  counts.update(kPlaceholderRoleId, (n) => n + 2, ifAbsent: () => 2);
-  for (final id in reserveRoleIds) {
-    counts.update(id, (n) => n - 1, ifAbsent: () => -1);
-  }
-  return {
-    for (final entry in counts.entries)
-      if (entry.value > 0) entry.key: entry.value,
-  };
 }
 
 /// The orchestrator: loads-or-seeds a game's `GameState`, applies MJ-reported
@@ -447,9 +428,7 @@ class GameSession extends _$GameSession {
   Future<void> advanceFromRecap() async {
     final s = state.value;
     if (s == null) return;
-    final next = s.engine.nightIndex == 1 && s.engine.captainPlayerId == null
-        ? DayStage.captain
-        : DayStage.vote;
+    final next = nextDayStage(DayStage.recap, s.engine);
     await _updateDay((d) => d.copyWith(stage: next));
   }
 
@@ -459,7 +438,10 @@ class GameSession extends _$GameSession {
     if (engineId != null) {
       await applyAction(ElectCaptain(playerId: engineId));
     } else {
-      await _updateDay((d) => d.copyWith(stage: DayStage.vote));
+      final s = state.value;
+      if (s == null) return;
+      final next = nextDayStage(DayStage.captain, s.engine);
+      await _updateDay((d) => d.copyWith(stage: next));
     }
   }
 
@@ -482,7 +464,8 @@ class GameSession extends _$GameSession {
         ),
       ],
     );
-    await _updateDay((d) => d.copyWith(stage: DayStage.done));
+    final next = nextDayStage(DayStage.vote, s.engine);
+    await _updateDay((d) => d.copyWith(stage: next));
   }
 
   // --- day: the interrupts (reveal / chain / grief) ---
@@ -578,8 +561,12 @@ class GameSession extends _$GameSession {
       day = day.copyWith(loversAck: [...day.loversAck, ...griefDeaths]);
     }
 
-    if (action is ElectCaptain) day = day.copyWith(stage: DayStage.vote);
-    if (action is DayVoteElimination) day = day.copyWith(stage: DayStage.done);
+    if (action is ElectCaptain) {
+      day = day.copyWith(stage: nextDayStage(DayStage.captain, result.state));
+    }
+    if (action is DayVoteElimination) {
+      day = day.copyWith(stage: nextDayStage(DayStage.vote, result.state));
+    }
 
     return day;
   }
