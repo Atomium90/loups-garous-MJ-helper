@@ -71,6 +71,7 @@
   "commonContinue": "Continue",
   "gameLoadError": "Couldn't load this game.",
   "playersTitle": "Players",
+  "playersSeatingHint": "List the players in the order they sit around the table: some roles look at their neighbours.",
   "playersNamedCount": "{named} of {total} named",
   "playerHint": "Player {number}",
   "regularsBook": "Regulars list",
