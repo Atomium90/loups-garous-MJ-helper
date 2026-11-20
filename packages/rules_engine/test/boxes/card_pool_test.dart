@@ -118,6 +118,28 @@ void main() {
     });
   });
 
+  group('fits', () {
+    test('accepts a composition within the cards', () {
+      expect(_pool().fits(const {'loup_garou': 4, 'villageois': 13, 'voyante': 1}), isTrue);
+      expect(_pool().fits(const {}), isTrue);
+    });
+
+    test('refuses more cards than the boxes hold', () {
+      expect(_pool().fits(const {'loup_garou': 5}), isFalse);
+      expect(_pool(['best_of']).fits(const {'loup_garou': 5}), isTrue);
+    });
+
+    test('refuses a role the owned boxes cannot supply', () {
+      expect(_pool().fits(const {'ange': 1}), isFalse);
+      expect(_pool(['best_of']).fits(const {'ange': 1}), isTrue);
+    });
+
+    test('refuses more sticker roles than Simples Villageois cards to put them on', () {
+      expect(_pool(['new_moon']).fits(const {'villageois': 12, 'ancien': 1}), isTrue);
+      expect(_pool(['new_moon']).fits(const {'villageois': 13, 'ancien': 1}), isFalse);
+    });
+  });
+
   group('maxPlayers', () {
     test('is 18 with the base box alone, as the booklet says', () {
       expect(_pool().maxPlayers, 18);

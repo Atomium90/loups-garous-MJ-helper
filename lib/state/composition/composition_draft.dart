@@ -48,10 +48,13 @@ abstract class CompositionDraft with _$CompositionDraft {
 
   bool get isValid => remaining >= 0 && reserveComplete;
 
-  /// [isValid], and the seats left over can be filled with the Simples Villageois [pool] still
-  /// has - the deal is completed with them at launch.
+  /// [isValid], the cards exist in [pool] (a box may have been unticked since the draft was
+  /// made), and the seats left over can be filled with the Simples Villageois it still has -
+  /// the deal is completed with them at launch.
   bool isValidFor(CardPool pool) =>
-      isValid && (remaining == 0 || remaining <= cardsLeft('villageois', pool));
+      isValid &&
+      pool.fits(_claimed()) &&
+      (remaining == 0 || remaining <= cardsLeft('villageois', pool));
 
   /// True once the displayed composition exactly matches [suggestion] - the "Suggestion" card
   /// hides at that point (nothing left to apply). Compared by hand rather than pulling in
@@ -68,13 +71,17 @@ abstract class CompositionDraft with _$CompositionDraft {
   /// Cards of [roleId] still free in [pool], given what the deal and the reserve already claim.
   /// [ignoreReserveSlot] excludes one reserve slot from the tally - the slot currently being
   /// (re)picked.
-  int cardsLeft(String roleId, CardPool pool, {int? ignoreReserveSlot}) {
+  int cardsLeft(String roleId, CardPool pool, {int? ignoreReserveSlot}) =>
+      pool.cardsLeft(roleId, _claimed(ignoreReserveSlot: ignoreReserveSlot));
+
+  /// Role id -> cards the deal and the reserve claim.
+  Map<String, int> _claimed({int? ignoreReserveSlot}) {
     final claimed = Map<String, int>.from(roleCounts);
     for (var i = 0; i < reserveRoleIds.length; i++) {
       if (i == ignoreReserveSlot) continue;
       claimed.update(reserveRoleIds[i], (n) => n + 1, ifAbsent: () => 1);
     }
-    return pool.cardsLeft(roleId, claimed);
+    return claimed;
   }
 
   /// The roles the MJ may still put in reserve slot [slot]: anything but the

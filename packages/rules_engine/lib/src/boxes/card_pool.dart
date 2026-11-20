@@ -81,6 +81,17 @@ class CardPool {
     return max(0, left);
   }
 
+  /// Whether [counts] (role id -> holders, the Voleur's reserve included) can be dealt from the
+  /// owned boxes: no role beyond its cards, no role the boxes cannot supply (a box unticked
+  /// after the composition was drafted), no more sticker roles than Simples Villageois cards
+  /// to put them on.
+  bool fits(Map<String, int> counts) {
+    for (final entry in counts.entries) {
+      if (entry.value > maxCopies(entry.key)) return false;
+    }
+    return _stickerSlack(counts) >= 0;
+  }
+
   int _stickerSlack(Map<String, int> counts) {
     final stickers = counts.entries
         .where((e) => isStickerOnly(e.key))

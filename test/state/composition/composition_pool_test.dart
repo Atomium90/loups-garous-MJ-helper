@@ -54,6 +54,21 @@ void main() {
       expect(_draft(counts: const {'loup_garou': 1}).isValidFor(_pool()), isFalse);
     });
 
+    test('cards the pool does not hold are refused', () {
+      // 5 wolves for 8 players, but the pool has 4 (a box unticked since the draft was made).
+      expect(_draft(counts: const {'loup_garou': 5}).isValidFor(_pool()), isFalse);
+    });
+
+    test('the Voleur reserve counts against the cards too', () {
+      final draft = CompositionDraft(
+        gameId: 1,
+        playerCount: 8,
+        roleCounts: const {'voyante': 1},
+        reserveRoleIds: const ['voyante', 'villageois'],
+      );
+      expect(draft.isValidFor(_pool()), isFalse);
+    });
+
     test('too many roles for the table is still invalid', () {
       expect(_draft(playerCount: 2, counts: const {'loup_garou': 3}).isValidFor(_pool()), isFalse);
     });
