@@ -25,6 +25,7 @@ NightScript buildNightScript({
   required Map<String, int> composition,
   Map<String, int>? dealtComposition,
   bool foxAfterWitch = false,
+  bool whiteWolfOddNights = false,
   RoleRegistry registry = RoleRegistry.all,
 }) {
   final nightIndex = engine.nightIndex;
@@ -58,7 +59,7 @@ NightScript buildNightScript({
           if (r.hasNightCall) r.id,
       },
       nightIndex: nightIndex,
-      context: _contextFor(engine),
+      context: _contextFor(engine, whiteWolfOddNights: whiteWolfOddNights),
     );
   }
 
@@ -91,13 +92,16 @@ NightScript buildNightScript({
     compositionRoles: inOrder,
     aliveRoleIds: {for (final r in inOrder) r.id},
     nightIndex: nightIndex,
-    context: _contextFor(engine),
+    context: _contextFor(engine, whiteWolfOddNights: whiteWolfOddNights),
   );
 }
 
 /// What the game says about tonight's calls beyond the roles themselves.
-NightContext _contextFor(GameState engine) => NightContext(
+///
+/// With [whiteWolfOddNights] the White Werewolf's solo power starts on night 1: the odd nights.
+NightContext _contextFor(GameState engine, {required bool whiteWolfOddNights}) => NightContext(
   nightIndex: engine.nightIndex,
+  firstNightOf: {if (whiteWolfOddNights) 'loup_garou_blanc': 1},
   spentPowers: engine.spentPowersBeforeTonight,
   wolfSideLost: engine.wolfSideLost(RoleRegistry.all),
 );

@@ -130,6 +130,8 @@
   "settingsThiefReserveHint": "Off: the reserve is drawn at random, as in the rules, and you note the 2 leftover cards during night 1.",
   "settingsFoxAfterWitch": "Call the Fox after the Witch",
   "settingsFoxAfterWitchHint": "The booklets disagree: the Pact calls the Fox after the Seer (the default), the Best Of after the Witch. Applies to each new game.",
+  "settingsWhiteWolfOdd": "White Werewolf alone on odd nights",
+  "settingsWhiteWolfOddHint": "The booklets do not say which night to start on. By default he is alone on nights 2, 4, 6…; on, nights 1, 3, 5… Applies to each new game.",
   "settingsKeepScreenOn": "Keep the screen on",
   "settingsAideMemoire": "Quick reference in the script",
   "settingsData": "Data",
