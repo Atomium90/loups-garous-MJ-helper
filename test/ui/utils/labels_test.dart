@@ -14,7 +14,7 @@ import 'package:rules_engine/rules_engine.dart';
 void main() {
   setUpAll(initializeDateFormatting);
 
-  final registry = RoleRegistry.base;
+  final registry = RoleRegistry.all;
   final fr = lookupAppLocalizations(const Locale('fr'));
   final en = lookupAppLocalizations(const Locale('en'));
 

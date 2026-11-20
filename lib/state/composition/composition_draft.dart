@@ -48,6 +48,11 @@ abstract class CompositionDraft with _$CompositionDraft {
 
   bool get isValid => remaining >= 0 && reserveComplete;
 
+  /// [isValid], and the seats left over can be filled with the Simples Villageois [pool] still
+  /// has - the deal is completed with them at launch.
+  bool isValidFor(CardPool pool) =>
+      isValid && (remaining == 0 || remaining <= cardsLeft('villageois', pool));
+
   /// True once the displayed composition exactly matches [suggestion] - the "Suggestion" card
   /// hides at that point (nothing left to apply). Compared by hand rather than pulling in
   /// `package:collection` just for a map equality check the app doesn't otherwise need.
@@ -60,25 +65,22 @@ abstract class CompositionDraft with _$CompositionDraft {
     return true;
   }
 
-  /// Cards of [roleId] still free against the box's `copies`, given what the
-  /// deal and the reserve already claim. [ignoreReserveSlot] excludes one
-  /// reserve slot from the tally - the slot currently being (re)picked.
-  int cardsLeft(String roleId, RoleRegistry registry, {int? ignoreReserveSlot}) {
-    final box = registry.byIdOrNull(roleId)?.copies ?? 1;
-    final inDeal = roleCounts[roleId] ?? 0;
-    var inReserve = 0;
+  /// Cards of [roleId] still free in [pool], given what the deal and the reserve already claim.
+  /// [ignoreReserveSlot] excludes one reserve slot from the tally - the slot currently being
+  /// (re)picked.
+  int cardsLeft(String roleId, CardPool pool, {int? ignoreReserveSlot}) {
+    final claimed = Map<String, int>.from(roleCounts);
     for (var i = 0; i < reserveRoleIds.length; i++) {
       if (i == ignoreReserveSlot) continue;
-      if (reserveRoleIds[i] == roleId) inReserve++;
+      claimed.update(reserveRoleIds[i], (n) => n + 1, ifAbsent: () => 1);
     }
-    return box - inDeal - inReserve;
+    return pool.cardsLeft(roleId, claimed);
   }
 
   /// The roles the MJ may still put in reserve slot [slot]: anything but the
-  /// Voleur that has a spare card left in the box.
-  List<Role> availableReserveRoles(int slot, RoleRegistry registry) => [
-    for (final role in registry.roles)
-      if (role.id != 'voleur' && cardsLeft(role.id, registry, ignoreReserveSlot: slot) > 0)
-        role,
+  /// Voleur that has a spare card left in [pool].
+  List<Role> availableReserveRoles(int slot, CardPool pool) => [
+    for (final role in pool.available.roles)
+      if (role.id != 'voleur' && cardsLeft(role.id, pool, ignoreReserveSlot: slot) > 0) role,
   ];
 }

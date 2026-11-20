@@ -9,9 +9,10 @@ class RoleRegistry {
 
   final List<Role> roles;
 
-  static const RoleRegistry base = RoleRegistry(baseGameRoles);
-  // Future extensions plug in here, e.g.:
-  // static const withNouvelleLune = RoleRegistry([...baseGameRoles, ...nouvelleLuneRoles]);
+  /// Every role the app implements, in night-call order (registry order is wake order). Resolves
+  /// any role id a game can hold, whatever boxes are owned today: to offer only what a set of
+  /// boxes can supply, ask a `CardPool` for its `available` view.
+  static const RoleRegistry all = RoleRegistry(baseGameRoles);
 
   Role byId(String id) =>
       roles.firstWhereOrNull((r) => r.id == id) ?? (throw RoleNotFoundException(id));

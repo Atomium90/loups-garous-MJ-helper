@@ -510,6 +510,14 @@
   "@compositionWolves": {
     "description": "Heading above the werewolf-side roles."
   },
+  "compositionSolo": "Solitaires",
+  "@compositionSolo": {
+    "description": "Heading above the roles that play for their own goal."
+  },
+  "compositionAmbiguous": "Ambigus",
+  "@compositionAmbiguous": {
+    "description": "Heading above the roles that can change side or role during the game."
+  },
   "compositionPlayers": "Joueurs",
   "@compositionPlayers": {
     "description": "Label of the player count stepper."

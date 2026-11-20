@@ -145,7 +145,7 @@ class GameSessionState {
 class GameSession extends _$GameSession {
   static const _placeholderRole = kPlaceholderRoleId;
   static const _machine = GameStateMachine();
-  final _registry = RoleRegistry.base;
+  final _registry = RoleRegistry.all;
 
   /// Persisted in the session blob: which player the Voleur is and the reserve
   /// card he took. Null until he swaps (or if he keeps his own card).

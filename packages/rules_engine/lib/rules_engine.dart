@@ -4,6 +4,10 @@
 /// `dart test`, independently of the UI.
 library;
 
+export 'src/boxes/card_pool.dart';
+export 'src/boxes/game_box.dart';
+export 'src/boxes/game_boxes.dart';
+
 export 'src/composition_advisor/composition_advisor.dart';
 export 'src/composition_advisor/composition_suggestion.dart';
 

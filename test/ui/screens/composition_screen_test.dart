@@ -25,7 +25,7 @@ import '../../support/pump_app.dart';
 /// moot for the base registry anyway (see composition_advisor_test.dart: it never has a
 /// surplus tier to shuffle within the 8-18 player range), but explicit is cheap.
 Override _seededAdvisorOverride() => compositionAdvisorProvider.overrideWithValue(
-  CompositionAdvisor(RoleRegistry.base, random: Random(1)),
+  CompositionAdvisor(CardPool(registry: RoleRegistry.all), random: Random(1)),
 );
 
 /// A fresh draft game (status setup, no composition chosen yet).
@@ -43,7 +43,7 @@ Game _draftGame({required int id, required int playerCount}) {
 /// [CompositionScreen] always renders exactly 3 [AppStepper]s in this fixed order: the
 /// player-count stepper, then (within the role list) villageois's, then loup_garou's - both
 /// scaling roles always render their stepper regardless of current count. This mirrors
-/// `RoleRegistry.base.roles`' declared order filtered by team, not layout happenstance.
+/// `RoleRegistry.all.roles`' declared order filtered by team, not layout happenstance.
 Finder _stepperPlusAt(int index) =>
     find.descendant(of: find.byType(AppStepper).at(index), matching: find.text('+'));
 Finder _stepperMinusAt(int index) =>

@@ -126,6 +126,49 @@ void main() {
     });
   });
 
+  group('the owned boxes', () {
+    test('default to the base box alone', () async {
+      final container = await containerWith({});
+      final settings = await container.read(settingsProvider.future);
+      expect(settings.ownedBoxes, {'base'});
+      expect(container.read(cardPoolProvider).ownedBoxIds, {'base'});
+    });
+
+    test('read the stored ids, drop unknown ones and always keep the base box', () async {
+      final container = await containerWith({
+        'owned_boxes': ['best_of', 'nope'],
+      });
+      final settings = await container.read(settingsProvider.future);
+      expect(settings.ownedBoxes, {'base', 'best_of'});
+    });
+
+    test('ticking and unticking a box persists and moves the card pool', () async {
+      final container = await containerWith({});
+      await container.read(settingsProvider.future);
+      final notifier = container.read(settingsProvider.notifier);
+      final prefs = await SharedPreferences.getInstance();
+
+      await notifier.setBoxOwned('best_of', true);
+      expect(container.read(settingsProvider).value!.ownedBoxes, {'base', 'best_of'});
+      expect(prefs.getStringList('owned_boxes'), unorderedEquals(['base', 'best_of']));
+      expect(container.read(cardPoolProvider).ownedBoxIds, {'base', 'best_of'});
+
+      await notifier.setBoxOwned('best_of', false);
+      expect(container.read(settingsProvider).value!.ownedBoxes, {'base'});
+    });
+
+    test('the base box cannot be unticked and an unknown box cannot be ticked', () async {
+      final container = await containerWith({});
+      await container.read(settingsProvider.future);
+      final notifier = container.read(settingsProvider.notifier);
+
+      await notifier.setBoxOwned('base', false);
+      await notifier.setBoxOwned('nope', true);
+
+      expect(container.read(settingsProvider).value!.ownedBoxes, {'base'});
+    });
+  });
+
   test('AppSettings.copyWith leaves other fields intact', () {
     const s = AppSettings.defaults;
     expect(s.copyWith(keepScreenOn: false).themeMode, ThemeMode.system);

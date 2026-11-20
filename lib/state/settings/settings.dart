@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart' show Locale, ThemeMode;
+import 'package:rules_engine/rules_engine.dart' show baseBoxId;
 
 /// The language of the app: follow the device, or force one of the two it speaks.
 enum AppLanguage {
@@ -53,6 +54,9 @@ class AppSettings {
   /// Whether the in-game hint about limiting the narration has been dealt with.
   final bool narrationHintSeen;
 
+  /// Ids of the boxes the MJ owns. Always holds the base box.
+  final Set<String> ownedBoxes;
+
   const AppSettings({
     required this.themeMode,
     required this.keepScreenOn,
@@ -60,6 +64,7 @@ class AppSettings {
     required this.language,
     required this.narrationLevel,
     required this.narrationHintSeen,
+    required this.ownedBoxes,
   });
 
   static const defaults = AppSettings(
@@ -69,6 +74,7 @@ class AppSettings {
     language: AppLanguage.system,
     narrationLevel: NarrationLevel.defaults,
     narrationHintSeen: false,
+    ownedBoxes: {baseBoxId},
   );
 
   AppSettings copyWith({
@@ -78,6 +84,7 @@ class AppSettings {
     AppLanguage? language,
     NarrationLevel? narrationLevel,
     bool? narrationHintSeen,
+    Set<String>? ownedBoxes,
   }) => AppSettings(
     themeMode: themeMode ?? this.themeMode,
     keepScreenOn: keepScreenOn ?? this.keepScreenOn,
@@ -85,5 +92,6 @@ class AppSettings {
     language: language ?? this.language,
     narrationLevel: narrationLevel ?? this.narrationLevel,
     narrationHintSeen: narrationHintSeen ?? this.narrationHintSeen,
+    ownedBoxes: ownedBoxes ?? this.ownedBoxes,
   );
 }

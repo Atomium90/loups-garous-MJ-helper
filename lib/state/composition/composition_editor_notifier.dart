@@ -5,6 +5,7 @@ import '../../data/repositories/game_not_found_exception.dart';
 import '../providers/game_list_provider.dart';
 import '../providers/game_provider.dart';
 import '../providers/game_repository_provider.dart';
+import '../settings/settings_providers.dart';
 import 'composition_advisor_provider.dart';
 import 'composition_draft.dart';
 
@@ -54,7 +55,8 @@ class CompositionEditor extends _$CompositionEditor {
     if (counts.containsKey(roleId)) {
       counts.remove(roleId);
     } else {
-      counts[roleId] = 1;
+      // A group (the Deux Sœurs...) is taken whole or not at all.
+      counts[roleId] = ref.read(cardPoolProvider).registry.byIdOrNull(roleId)?.groupSize ?? 1;
     }
     _edit(_withCounts(draft, counts));
   }
@@ -129,7 +131,8 @@ class CompositionEditor extends _$CompositionEditor {
 
   Future<void> commit() async {
     final draft = state.value;
-    if (draft == null || !draft.isValid) return;
+    final pool = ref.read(cardPoolProvider);
+    if (draft == null || !draft.isValidFor(pool)) return;
 
     final counts = Map<String, int>.from(draft.roleCounts);
     if (draft.remaining > 0) {

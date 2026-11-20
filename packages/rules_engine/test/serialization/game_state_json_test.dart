@@ -61,11 +61,11 @@ void main() {
         .apply(
           state: state,
           action: const WolvesTarget(targetPlayerId: 'b'),
-          roleRegistry: RoleRegistry.base,
+          roleRegistry: RoleRegistry.all,
         )
         .state;
     state = machine
-        .apply(state: state, action: const FinalizeNight(), roleRegistry: RoleRegistry.base)
+        .apply(state: state, action: const FinalizeNight(), roleRegistry: RoleRegistry.all)
         .state;
 
     final restored = roundTrip(state);

@@ -8,7 +8,7 @@ List<Player> _players(Map<String, String> idToRole) => [
 
 void main() {
   const machine = GameStateMachine();
-  final roleRegistry = RoleRegistry.base;
+  final roleRegistry = RoleRegistry.all;
 
   group('HunterShoot resolution', () {
     test('kills the target and clears the cascade when nothing else is pending', () {

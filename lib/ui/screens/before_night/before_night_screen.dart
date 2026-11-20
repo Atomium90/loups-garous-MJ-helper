@@ -76,7 +76,7 @@ class _Body extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final composition = game.compositionJson ?? const <String, int>{};
-    final deck = deckLine(context.l10n, composition, RoleRegistry.base);
+    final deck = deckLine(context.l10n, composition, RoleRegistry.all);
     final reserve = game.reserveRolesJson ?? const <String>[];
 
     return Column(

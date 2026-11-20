@@ -12,7 +12,7 @@ import '../../widgets/section_label.dart';
 
 /// Mes boîtes. Informational for V1: the base box is the only one that exists,
 /// extensions are listed as coming soon. Nothing here is persisted or feeds the
-/// composition screen (which uses `RoleRegistry.base` directly).
+/// composition screen (which uses `RoleRegistry.all` directly).
 class BoxesScreen extends StatelessWidget {
   const BoxesScreen({super.key});
 

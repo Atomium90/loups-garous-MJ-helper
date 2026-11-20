@@ -13,8 +13,7 @@ import '../../models/wake_condition.dart';
 const baseGameRoles = <Role>[
   Role(
     id: 'voleur',
-    team: null, // unresolved until he steals a card
-    copies: 1,
+    team: Team.ambiguous, // settled only once he steals a card
     hasNightCall: true,
     wakeCondition: WakeCondition.firstNightOnly,
     actionType: ActionType.selectOne,
@@ -22,7 +21,6 @@ const baseGameRoles = <Role>[
   Role(
     id: 'cupidon',
     team: Team.village,
-    copies: 1,
     suggestionTier: 2,
     hasNightCall: true,
     wakeCondition: WakeCondition.firstNightOnly,
@@ -32,7 +30,6 @@ const baseGameRoles = <Role>[
   Role(
     id: 'voyante',
     team: Team.village,
-    copies: 1,
     suggestionTier: 1,
     hasNightCall: true,
     wakeCondition: WakeCondition.everyNight,
@@ -42,7 +39,7 @@ const baseGameRoles = <Role>[
   Role(
     id: 'loup_garou',
     team: Team.werewolves,
-    copies: 4,
+    multiple: true,
     hasNightCall: true,
     wakeCondition: WakeCondition.everyNight,
     orderConstraints: [OrderConstraint.after('voyante')],
@@ -51,7 +48,6 @@ const baseGameRoles = <Role>[
   Role(
     id: 'sorciere',
     team: Team.village,
-    copies: 1,
     suggestionTier: 1,
     hasNightCall: true,
     wakeCondition: WakeCondition.everyNight,
@@ -61,20 +57,18 @@ const baseGameRoles = <Role>[
   Role(
     id: 'villageois',
     team: Team.village,
-    copies: 13,
+    multiple: true,
     hasNightCall: false,
   ),
   Role(
     id: 'petite_fille',
     team: Team.village,
-    copies: 1,
     suggestionTier: 3,
     hasNightCall: false,
   ),
   Role(
     id: 'chasseur',
     team: Team.village,
-    copies: 1,
     suggestionTier: 2,
     hasNightCall: false,
     onDeath: DeathEffect.hunterShot,

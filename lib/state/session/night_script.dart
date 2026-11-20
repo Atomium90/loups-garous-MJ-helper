@@ -18,7 +18,7 @@ const kPlaceholderRoleId = 'villageois';
 NightScript buildNightScript({
   required GameState engine,
   required Map<String, int> composition,
-  RoleRegistry registry = RoleRegistry.base,
+  RoleRegistry registry = RoleRegistry.all,
 }) {
   final nightIndex = engine.nightIndex;
 

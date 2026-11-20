@@ -35,7 +35,7 @@ class _PastGameSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final typography = context.typography;
-    final registry = RoleRegistry.base;
+    final registry = RoleRegistry.all;
 
     final engine = _decodeEngine(game.sessionJson);
     final roster = ref.watch(rosterProvider(game.id)).value ?? const [];
@@ -302,7 +302,7 @@ class _SurvivorRow extends StatelessWidget {
     final colors = context.colors;
     final typography = context.typography;
     final id = roleId;
-    final wolves = id != null && RoleRegistry.base.byIdOrNull(id)?.team == Team.werewolves;
+    final wolves = id != null && RoleRegistry.all.byIdOrNull(id)?.team == Team.werewolves;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 6),
       decoration: BoxDecoration(

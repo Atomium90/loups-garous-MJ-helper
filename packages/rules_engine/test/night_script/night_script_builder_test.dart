@@ -15,7 +15,7 @@ Role _scriptRole(
 
 void main() {
   const builder = NightScriptBuilder();
-  final baseRoles = RoleRegistry.base.roles;
+  final baseRoles = RoleRegistry.all.roles;
   final allBaseIds = baseRoles.map((r) => r.id).toSet();
 
   group('NightScriptBuilder with real base game data', () {
