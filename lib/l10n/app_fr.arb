@@ -678,6 +678,14 @@
   "@settingsDuringGame": {
     "description": "Settings section: in-game behaviour."
   },
+  "settingsThiefReserve": "Réserve du Voleur choisie par le MJ",
+  "@settingsThiefReserve": {
+    "description": "Toggle: the MJ picks the Thief's two reserve cards instead of leaving them to the draw."
+  },
+  "settingsThiefReserveHint": "Désactivé : la réserve est tirée au hasard, comme dans les règles, et vous notez les 2 cartes restantes pendant la nuit 1.",
+  "@settingsThiefReserveHint": {
+    "description": "Explains the Thief reserve setting."
+  },
   "settingsKeepScreenOn": "Garder l'écran allumé",
   "@settingsKeepScreenOn": {
     "description": "Toggle: stop the screen from sleeping during a game."
