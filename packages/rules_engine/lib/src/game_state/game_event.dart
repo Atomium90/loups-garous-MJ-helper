@@ -84,6 +84,32 @@ class VictimInfected implements GameEvent {
   const VictimInfected({required this.playerId});
 }
 
+/// The Elder survived a first bite: the table is not told.
+class ElderSurvived implements GameEvent {
+  final String playerId;
+
+  const ElderSurvived({required this.playerId});
+}
+
+/// The villagers lost their special powers because the Elder was eliminated.
+class VillagersLostPowers implements GameEvent {
+  final String elderPlayerId;
+
+  const VillagersLostPowers({required this.elderPlayerId});
+}
+
+class KnightContaminated implements GameEvent {
+  final String wolfPlayerId;
+
+  const KnightContaminated({required this.wolfPlayerId});
+}
+
+class PlayersCharmed implements GameEvent {
+  final List<String> playerIds;
+
+  const PlayersCharmed({required this.playerIds});
+}
+
 class LoversPaired implements GameEvent {
   final String playerAId;
   final String playerBId;

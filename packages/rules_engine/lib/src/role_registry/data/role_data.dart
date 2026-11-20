@@ -136,6 +136,16 @@ const allRoles = <Role>[
     orderConstraints: [OrderConstraint.after('loup_garou')],
     actionType: ActionType.binaryChoice,
   ),
+  // He charms two players a night, after the Witch; the charmed then wake to meet. Solo: he wins
+  // when everyone else alive is charmed.
+  Role(
+    id: 'joueur_de_flute',
+    team: Team.solo,
+    hasNightCall: true,
+    wakeCondition: WakeCondition.everyNight,
+    orderConstraints: [OrderConstraint.after('sorciere')],
+    actionType: ActionType.selectTwo,
+  ),
   Role(
     id: 'villageois',
     team: Team.village,
@@ -154,5 +164,21 @@ const allRoles = <Role>[
     suggestionTier: 2,
     hasNightCall: false,
     onDeath: DeathEffect.hunterShot,
+  ),
+  // Two lives against the wolves; eliminated by the village, the poison or the Hunter's shot, he
+  // costs the villagers their powers.
+  Role(
+    id: 'ancien',
+    team: Team.village,
+    suggestionTier: 3,
+    hasNightCall: false,
+  ),
+  // Devoured by the wolves, he leaves the first wolf to his left diseased.
+  Role(
+    id: 'chevalier',
+    team: Team.village,
+    suggestionTier: 3,
+    hasNightCall: false,
+    onDeath: DeathEffect.knightDisease,
   ),
 ];

@@ -7,6 +7,12 @@ class PendingHunterShot implements PendingDecision {
   const PendingHunterShot({required this.deadHunterId});
 }
 
+/// The Knight was devoured: which wolf does his sword leave diseased? Only the MJ knows the cards.
+class PendingKnightWound implements PendingDecision {
+  final String deadKnightId;
+  const PendingKnightWound({required this.deadKnightId});
+}
+
 class PendingCaptainSuccession implements PendingDecision {
   final String deadCaptainId;
   const PendingCaptainSuccession({required this.deadCaptainId});

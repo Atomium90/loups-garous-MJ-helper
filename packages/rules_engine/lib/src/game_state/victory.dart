@@ -1,6 +1,9 @@
+import 'package:collection/collection.dart';
+
 import '../models/team.dart';
 import '../role_registry/role_registry.dart';
 import 'game_state.dart';
+import 'player.dart';
 import 'sides.dart';
 
 /// Who the table looks to have won.
@@ -13,6 +16,9 @@ enum VictoryKind {
 
   /// The White Werewolf is the only one left.
   whiteWolf,
+
+  /// Every living player but the Piper has been charmed.
+  piper,
 
   /// The two lovers, from opposite sides, are the last ones standing.
   lovers,
@@ -42,6 +48,16 @@ VictoryKind? proposeVictory(GameState state, RoleRegistry registry) {
 
   if (alive.length == 1 && alive.single.roleId == 'loup_garou_blanc') {
     return VictoryKind.whiteWolf;
+  }
+
+  // The Piper (while he has not been infected into a wolf) wins the instant everyone else alive
+  // is charmed, wolves included.
+  final piper = alive
+      .where((p) => p.roleId == 'joueur_de_flute' && p.teamOverride != Team.werewolves)
+      .firstOrNull;
+  if (piper != null &&
+      alive.every((p) => p.id == piper.id || p.hasStatus(PlayerStatus.charmed))) {
+    return VictoryKind.piper;
   }
 
   final sides = alive.map((p) => p.sideIn(registry)).toSet();

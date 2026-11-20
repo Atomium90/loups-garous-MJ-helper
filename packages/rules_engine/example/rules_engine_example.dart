@@ -128,12 +128,17 @@ String _describeEvent(GameEvent event) => switch (event) {
   ChienLoupChose(:final playerId, :final wolf) =>
     '$playerId choisit ${wolf ? 'les Loups' : 'le village'}',
   VictimInfected(:final playerId) => '$playerId est infecté',
+  ElderSurvived(:final playerId) => '$playerId survit à une première morsure',
+  VillagersLostPowers() => 'les villageois perdent leurs pouvoirs',
+  KnightContaminated(:final wolfPlayerId) => '$wolfPlayerId attrape la maladie du Chevalier',
+  PlayersCharmed(:final playerIds) => '${playerIds.join(' et ')} sont charmés',
 };
 
 String _describeCause(DeathCause cause) => switch (cause) {
   WolvesKill() => 'tué par les Loups',
   WitchDeathPotionKill() => 'tué par la potion de mort',
   WhiteWolfKill() => 'dévoré par le Loup-Garou Blanc',
+  DiseaseKill() => 'mort de la maladie du Chevalier',
   DayVoteKill() => 'éliminé par le village',
   HunterShotKill(:final shooterPlayerId) => 'abattu par $shooterPlayerId',
   LoversCascadeKill(:final causingPlayerId) => 'meurt de chagrin après $causingPlayerId',
@@ -143,4 +148,6 @@ String _describeDecision(PendingDecision decision) => switch (decision) {
   PendingHunterShot(:final deadHunterId) => 'le Chasseur ($deadHunterId) doit choisir sa cible',
   PendingCaptainSuccession(:final deadCaptainId) =>
     'le Capitaine ($deadCaptainId) doit désigner son successeur',
+  PendingKnightWound(:final deadKnightId) =>
+    'le Chevalier ($deadKnightId) laisse un Loup malade : lequel ?',
 };

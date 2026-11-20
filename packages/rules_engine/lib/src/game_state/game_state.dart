@@ -29,6 +29,16 @@ class WildChildState {
   const WildChildState({required this.childId, required this.modelId});
 }
 
+/// The wolf the dead Knight left diseased: it dies when [dueNight] starts, or ends if
+/// [atNightEnd] (the booklets differ: the Best Of says the beginning, Characters the end).
+class KnightWound {
+  final String wolfId;
+  final int dueNight;
+  final bool atNightEnd;
+
+  const KnightWound({required this.wolfId, required this.dueNight, this.atNightEnd = false});
+}
+
 class LoversPair {
   final String playerAId;
   final String playerBId;
@@ -76,6 +86,16 @@ class GameState {
   /// Null until the Wild Child picks his role model.
   final WildChildState? wildChild;
 
+  /// Elders who already survived a first bite (a wolf attack or the Cursed Wolf-Father's).
+  final Set<String> woundedElders;
+
+  /// The villagers lost their special powers: an Elder was eliminated by the village, the Witch's
+  /// poison or the Hunter's shot.
+  final bool villagersPowerless;
+
+  /// The wolf the dead Knight left diseased, until it dies.
+  final KnightWound? knightWound;
+
   /// Non-null exactly while a death cascade is paused on a Hunter/Captain
   /// choice only the MJ can make.
   final CascadeState? cascade;
@@ -97,6 +117,9 @@ class GameState {
     this.pendingBigBadWolfVictimId,
     this.pendingWhiteWolfVictimId,
     this.wildChild,
+    this.woundedElders = const {},
+    this.villagersPowerless = false,
+    this.knightWound,
     this.cascade,
     this.spentPowers = const {},
   });
@@ -122,7 +145,13 @@ class GameState {
     playerById(playerId); // validates existence
     // The Wild Child becomes a werewolf the moment his role model is eliminated, whatever the way.
     final turnsWildChild = wildChild != null && wildChild!.modelId == playerId;
+    // Eliminating the Elder (vote, poison, Hunter's shot) costs the villagers their powers. Not
+    // the wolves (his two lives), nor the grief of a lover.
+    final eldersLoss =
+        playerById(playerId).roleId == 'ancien' &&
+        (cause is DayVoteKill || cause is WitchDeathPotionKill || cause is HunterShotKill);
     return copyWith(
+      villagersPowerless: villagersPowerless || eldersLoss,
       players: [
         for (final p in players)
           if (p.id == playerId)
@@ -152,6 +181,9 @@ class GameState {
     Object? pendingBigBadWolfVictimId = _unset,
     Object? pendingWhiteWolfVictimId = _unset,
     Object? wildChild = _unset,
+    Set<String>? woundedElders,
+    bool? villagersPowerless,
+    Object? knightWound = _unset,
     Object? cascade = _unset,
     Map<String, int>? spentPowers,
   }) => GameState(
@@ -176,6 +208,9 @@ class GameState {
         ? this.pendingWhiteWolfVictimId
         : pendingWhiteWolfVictimId as String?,
     wildChild: identical(wildChild, _unset) ? this.wildChild : wildChild as WildChildState?,
+    woundedElders: woundedElders ?? this.woundedElders,
+    villagersPowerless: villagersPowerless ?? this.villagersPowerless,
+    knightWound: identical(knightWound, _unset) ? this.knightWound : knightWound as KnightWound?,
     cascade: identical(cascade, _unset) ? this.cascade : cascade as CascadeState?,
     spentPowers: spentPowers ?? this.spentPowers,
   );

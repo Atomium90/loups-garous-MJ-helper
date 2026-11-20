@@ -47,6 +47,7 @@ class GameSessionState {
 
   /// Whether the White Werewolf's solo nights are the odd ones in this game; fixed at its start.
   final bool whiteWolfOddNights;
+
   final List<PlayerRow> roster;
 
   /// Set once the Voleur has taken a reserve card: which player he is and
@@ -588,6 +589,15 @@ class GameSession extends _$GameSession {
     return _updateDay((d) => d.copyWith(revealSkipped: [...d.revealSkipped, engineId]));
   }
 
+  /// The MJ says which wolf the dead Knight's sword left diseased (null: none). The setting says
+  /// whether it dies as the next night begins or ends.
+  Future<void> knightContaminate(String? wolfEngineId) => applyAction(
+    KnightContaminate(
+      wolfPlayerId: wolfEngineId,
+      atNightEnd: ref.read(settingsProvider).value?.knightDiseaseAtNightEnd ?? false,
+    ),
+  );
+
   Future<void> hunterShoot(String? engineId) =>
       applyAction(HunterShoot(targetPlayerId: engineId));
 
@@ -607,6 +617,14 @@ class GameSession extends _$GameSession {
       action: const StartNextNight(),
       roleRegistry: _registry,
     );
+    final lines = nightLogEntriesForEvents(
+      result.events,
+      result.state,
+      phase: JournalPhase.night,
+    );
+    if (lines.isNotEmpty) {
+      await ref.read(gameRepositoryProvider).appendNightLog(gameId: gameId, entries: lines);
+    }
     const cursor = SessionCursor.nightStart;
     const day = DaySnapshot.fresh;
     await _persist(result.state, cursor, day);
@@ -624,6 +642,11 @@ class GameSession extends _$GameSession {
 
     final lines = <NightLogEntry>[
       ...nightLogEntriesFor(action, s.engine),
+      ...nightLogEntriesForEvents(
+        result.events,
+        result.state,
+        phase: _journalPhase(result.state),
+      ),
       for (final e in result.events)
         if (e is PlayerDied && e.cause is LoversCascadeKill)
           NightLogEntry(

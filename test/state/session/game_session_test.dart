@@ -446,6 +446,81 @@ void main() {
     });
   });
 
+  group('the Elder and the Knight', () {
+    Future<({int gameId, List<int> ids, GameSession n})> start(Map<String, int> comp) async {
+      final game = await _startedGame(repo, composition: comp);
+      final n = await notifierFor(game.gameId);
+      return (gameId: game.gameId, ids: game.seatRowIds, n: n);
+    }
+
+    test('the Elder survives a first bite and the journal says so', () async {
+      final g = await start({'ancien': 1, 'loup_garou': 2, 'villageois': 3});
+      await g.n.identifyRole('ancien', [g.ids[0]]); // Ana, noted when the wolves picked her
+      await g.n.identifyRole('loup_garou', [g.ids[1], g.ids[2]]);
+      await g.n.applyAction(WolvesTarget(targetPlayerId: '${g.ids[0]}'));
+      await g.n.applyAction(const FinalizeNight());
+
+      final s = stateOf(g.gameId);
+      expect(s.engine.playerById('${g.ids[0]}').alive, isTrue);
+      expect(s.recapDeaths, isEmpty);
+      final log = frenchJournal(await repo.watchNightLog(g.gameId).first);
+      expect(log, contains("Ana, l'Ancien, survit à la morsure"));
+    });
+
+    test('the Elder voted out costs the villagers their powers: the next night skips them', () async {
+      final g = await start({'ancien': 1, 'voyante': 1, 'loup_garou': 2, 'villageois': 2});
+      await g.n.identifyRole('ancien', [g.ids[0]]);
+      await g.n.identifyRole('voyante', [g.ids[1]]);
+      await g.n.skipStep();
+      await g.n.identifyRole('loup_garou', [g.ids[2], g.ids[3]]);
+      await g.n.applyAction(WolvesTarget(targetPlayerId: '${g.ids[4]}'));
+      await g.n.applyAction(const FinalizeNight());
+      await g.n.revealRole(g.ids[4], 'villageois');
+      await g.n.eliminateByVote('${g.ids[0]}');
+
+      expect(stateOf(g.gameId).engine.villagersPowerless, isTrue);
+      final log = frenchJournal(await repo.watchNightLog(g.gameId).first);
+      expect(log, contains("Ana, l'Ancien, est éliminé : les villageois perdent leurs pouvoirs"));
+
+      await g.n.startNextNight();
+      expect(stateOf(g.gameId).tonight.steps.map((st) => st.role.id), ['loup_garou']);
+    });
+
+    test('a devoured Knight asks which wolf is diseased, and that wolf dies as the night begins', () async {
+      final g = await start({'chevalier': 1, 'loup_garou': 2, 'villageois': 3});
+      await g.n.identifyRole('loup_garou', [g.ids[2], g.ids[4]]); // Cy and Ed
+      await g.n.applyAction(WolvesTarget(targetPlayerId: '${g.ids[0]}')); // Ana, the Knight
+      await g.n.applyAction(const FinalizeNight());
+      await g.n.revealRole(g.ids[0], 'chevalier');
+
+      expect(stateOf(g.gameId).engine.cascade?.decision, isA<PendingKnightWound>());
+      await g.n.knightContaminate('${g.ids[4]}'); // Ed
+      expect(stateOf(g.gameId).engine.cascade, isNull);
+      expect(stateOf(g.gameId).engine.knightWound?.wolfId, '${g.ids[4]}');
+
+      await g.n.eliminateByVote(null);
+      await g.n.startNextNight();
+
+      final s = stateOf(g.gameId);
+      expect(s.engine.playerById('${g.ids[4]}').alive, isFalse);
+      expect(s.engine.playerById('${g.ids[4]}').causeOfDeath, isA<DiseaseKill>());
+      final log = frenchJournal(await repo.watchNightLog(g.gameId).first);
+      expect(log, containsAll(['Le Chevalier laisse Ed malade', 'Ed meurt de la maladie du Chevalier']));
+    });
+
+    test('the wolf is spared when the MJ finds none to wound', () async {
+      final g = await start({'chevalier': 1, 'loup_garou': 2, 'villageois': 3});
+      await g.n.identifyRole('loup_garou', [g.ids[2], g.ids[4]]);
+      await g.n.applyAction(WolvesTarget(targetPlayerId: '${g.ids[0]}'));
+      await g.n.applyAction(const FinalizeNight());
+      await g.n.revealRole(g.ids[0], 'chevalier');
+
+      await g.n.knightContaminate(null);
+
+      expect(stateOf(g.gameId).engine.knightWound, isNull);
+    });
+  });
+
   group('the wolf camp', () {
     Future<({int gameId, List<int> ids, GameSession n})> start(Map<String, int> comp) async {
       final game = await _startedGame(repo, composition: comp);

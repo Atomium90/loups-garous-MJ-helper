@@ -31,7 +31,11 @@ enum JournalKind {
   chienLoupVillage('dog'),
   infection('infect'),
   bigBadWolfTarget('wolves'),
-  whiteWolfEats('wolves');
+  whiteWolfEats('wolves'),
+  elderSurvives('elder'),
+  villagersLosePowers('elder'),
+  knightContaminates('sword'),
+  diseaseDeath('skull');
 
   const JournalKind(this.iconName);
 

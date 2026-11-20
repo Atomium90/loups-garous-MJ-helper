@@ -104,6 +104,7 @@ NightContext _contextFor(GameState engine, {required bool whiteWolfOddNights}) =
   firstNightOf: {if (whiteWolfOddNights) 'loup_garou_blanc': 1},
   spentPowers: engine.spentPowersBeforeTonight,
   wolfSideLost: engine.wolfSideLost(RoleRegistry.all),
+  villagersPowerless: engine.villagersPowerless,
 );
 
 /// [roles] in the registry's declaration order, which is the official wake order.
