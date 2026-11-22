@@ -81,6 +81,24 @@ void main() {
     });
   });
 
+  group('when the dead keep their card hidden', () {
+    test('the morning, the reveal and the heartbreak no longer ask to turn the card over', () {
+      expect(
+        morningNarration(fr, const ['Ana'], cardsShown: false)[1].body,
+        'Leurs cartes restent cachées.',
+      );
+      expect(revealNarration(fr, 'Ana', cardsShown: false).first.body, 'Ta carte reste cachée.');
+      expect(
+        loversNarration(en, 'Bo', cardsShown: false).first.body,
+        'You die of heartbreak. Your card stays hidden.',
+      );
+    });
+
+    test('nobody dead still means no line about cards', () {
+      expect(morningNarration(fr, const [], cardsShown: false)[1].body, isNull);
+    });
+  });
+
   test('names are joined with "and" in the language of the app', () {
     expect(joinNames(fr, const ['Ana']), 'Ana');
     expect(joinNames(fr, const ['Ana', 'Bo']), 'Ana et Bo');

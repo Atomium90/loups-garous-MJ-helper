@@ -35,12 +35,19 @@ List<NarrationLine> roleCallNarration(AppLocalizations l10n, String roleId) {
   ];
 }
 
-/// The morning: the village wakes up, then who died in the night.
-List<NarrationLine> morningNarration(AppLocalizations l10n, List<String> deathNames) => [
+/// The morning: the village wakes up, then who died in the night. With [cardsShown] false the dead
+/// keep their card hidden.
+List<NarrationLine> morningNarration(
+  AppLocalizations l10n,
+  List<String> deathNames, {
+  bool cardsShown = true,
+}) => [
   NarrationLine(l10n.narrMorningHead, l10n.narrMorningBody),
   NarrationLine(
     l10n.narrDeathsHead(deathNames.length, joinNames(l10n, deathNames)),
-    deathNames.isEmpty ? null : l10n.narrDeathsBody,
+    deathNames.isEmpty
+        ? null
+        : (cardsShown ? l10n.narrDeathsBody : l10n.narrDeathsBodyHidden),
   ),
 ];
 
@@ -57,9 +64,17 @@ List<NarrationLine> voteNarration(AppLocalizations l10n) => [
   NarrationLine(l10n.narrVoteHead, l10n.narrVoteBody),
 ];
 
-/// Said to a player whose card is about to be turned over.
-List<NarrationLine> revealNarration(AppLocalizations l10n, String name) => [
-  NarrationLine(l10n.narrRevealHead(name), l10n.narrRevealBody),
+/// Said to a player whose card is about to be turned over, or kept hidden when [cardsShown] is
+/// false.
+List<NarrationLine> revealNarration(
+  AppLocalizations l10n,
+  String name, {
+  bool cardsShown = true,
+}) => [
+  NarrationLine(
+    l10n.narrRevealHead(name),
+    cardsShown ? l10n.narrRevealBody : l10n.narrRevealBodyHidden,
+  ),
 ];
 
 List<NarrationLine> hunterNarration(AppLocalizations l10n) => [
@@ -71,8 +86,15 @@ List<NarrationLine> successionNarration(AppLocalizations l10n) => [
 ];
 
 /// Said to the lover who dies of heartbreak.
-List<NarrationLine> loversNarration(AppLocalizations l10n, String name) => [
-  NarrationLine(l10n.narrLoversHead(name), l10n.narrLoversBody),
+List<NarrationLine> loversNarration(
+  AppLocalizations l10n,
+  String name, {
+  bool cardsShown = true,
+}) => [
+  NarrationLine(
+    l10n.narrLoversHead(name),
+    cardsShown ? l10n.narrLoversBody : l10n.narrLoversBodyHidden,
+  ),
 ];
 
 /// "Ana", "Ana et Bo", "Ana, Bo et Cy" (or with "and").

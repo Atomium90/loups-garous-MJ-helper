@@ -98,6 +98,10 @@ class AppSettings {
   /// role that needs it (the Fox, the Elder...). Off: it always offers to.
   final bool dealNotesOnlyIfNeeded;
 
+  /// The dead turn their card over in front of the table (the usual rule). Off, the roles stay
+  /// secret: the MJ is told not to have them shown, and notes a dead player's card in private.
+  final bool revealDeadCards;
+
   const AppSettings({
     required this.themeMode,
     required this.keepScreenOn,
@@ -113,6 +117,7 @@ class AppSettings {
     required this.voteTieRule,
     required this.crashReports,
     required this.dealNotesOnlyIfNeeded,
+    required this.revealDeadCards,
   });
 
   static const defaults = AppSettings(
@@ -130,6 +135,7 @@ class AppSettings {
     voteTieRule: VoteTieRule.nobody,
     crashReports: false,
     dealNotesOnlyIfNeeded: false,
+    revealDeadCards: true,
   );
 
   AppSettings copyWith({
@@ -147,6 +153,7 @@ class AppSettings {
     VoteTieRule? voteTieRule,
     bool? crashReports,
     bool? dealNotesOnlyIfNeeded,
+    bool? revealDeadCards,
   }) => AppSettings(
     themeMode: themeMode ?? this.themeMode,
     keepScreenOn: keepScreenOn ?? this.keepScreenOn,
@@ -162,5 +169,6 @@ class AppSettings {
     voteTieRule: voteTieRule ?? this.voteTieRule,
     crashReports: crashReports ?? this.crashReports,
     dealNotesOnlyIfNeeded: dealNotesOnlyIfNeeded ?? this.dealNotesOnlyIfNeeded,
+    revealDeadCards: revealDeadCards ?? this.revealDeadCards,
   );
 }

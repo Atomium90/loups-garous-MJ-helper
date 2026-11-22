@@ -1009,6 +1009,14 @@
   "@settingsDealNotesHint": {
     "description": "Explains the setting about noting the roles at the deal."
   },
+  "settingsRevealDead": "Retourner la carte des morts",
+  "@settingsRevealDead": {
+    "description": "Toggle: the dead turn their card over in front of the table."
+  },
+  "settingsRevealDeadHint": "Désactivé, les rôles restent secrets : les textes à lire ne demandent plus de retourner les cartes, et vous notez la carte d'un mort en privé.",
+  "@settingsRevealDeadHint": {
+    "description": "Explains the setting about turning the dead players' cards over."
+  },
   "settingsVoteTieTitle": "Égalité au vote",
   "@settingsVoteTieTitle": {
     "description": "Settings section: what a tied village vote does."
@@ -2491,6 +2499,22 @@
         "type": "String"
       }
     }
+  },
+  "narrDeathsBodyHidden": "Leurs cartes restent cachées.",
+  "@narrDeathsBodyHidden": {
+    "description": "Said after the deaths are announced when the dead do not show their card."
+  },
+  "narrRevealBodyHidden": "Ta carte reste cachée.",
+  "@narrRevealBodyHidden": {
+    "description": "Said to a player who just died when the dead do not show their card."
+  },
+  "narrLoversBodyHidden": "Tu meurs de chagrin. Ta carte reste cachée.",
+  "@narrLoversBodyHidden": {
+    "description": "Said to the lover who dies of heartbreak when the dead do not show their card."
+  },
+  "scriptRevealHintHidden": "Sa carte reste cachée à la table. Notez-la en privé : l'app en a besoin pour le Chasseur, l'Idiot, la Servante... Son rôle n'a pas encore été noté.",
+  "@scriptRevealHintHidden": {
+    "description": "Asks the MJ to note a dead player's card in private."
   },
   "narrRevealBody": "Retourne ta carte devant tout le monde.",
   "@narrRevealBody": {

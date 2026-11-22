@@ -187,6 +187,19 @@ class _SettingsBody extends StatelessWidget {
                 onChanged: (v) => notifier?.setAideMemoireInScript(v),
               ),
               _ToggleRow(
+                icon: AppIcons.help,
+                label: context.l10n.settingsRevealDead,
+                value: settings.revealDeadCards,
+                onChanged: (v) => notifier?.setRevealDeadCards(v),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  context.l10n.settingsRevealDeadHint,
+                  style: typography.counter.copyWith(color: colors.textTertiary, height: 1.55),
+                ),
+              ),
+              _ToggleRow(
                 icon: AppIcons.deal,
                 label: context.l10n.settingsDealNotes,
                 value: settings.dealNotesOnlyIfNeeded,

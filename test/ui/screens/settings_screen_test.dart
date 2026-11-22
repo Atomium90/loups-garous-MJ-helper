@@ -239,6 +239,22 @@ void main() {
     expect((await SharedPreferences.getInstance()).getBool('crash_reports'), isTrue);
   });
 
+  testWidgets('the dead cards toggle persists once flipped', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 2400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
+      initialLocation: '/settings',
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Retourner la carte des morts'));
+    await tester.pumpAndSettle();
+
+    expect((await SharedPreferences.getInstance()).getBool('reveal_dead_cards'), isFalse);
+  });
+
   testWidgets('the deal notes toggle is off by default and persists once flipped', (tester) async {
     await tester.binding.setSurfaceSize(const Size(400, 2400));
     addTearDown(() => tester.binding.setSurfaceSize(null));

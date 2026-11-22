@@ -1656,16 +1656,17 @@ class _BearGrowlBody extends StatelessWidget {
 }
 
 /// The day recap - what the MJ reads aloud when the village wakes.
-class _DayRecapBody extends StatelessWidget {
+class _DayRecapBody extends ConsumerWidget {
   const _DayRecapBody({required this.session, required this.onAdvance});
 
   final GameSessionState session;
   final VoidCallback onAdvance;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final typography = context.typography;
+    final cardsShown = ref.watch(deadCardsShownProvider);
     final engine = session.engine;
     final deaths = session.recapDeaths;
     final saved = session.day.savedFromWolvesName;
@@ -1694,7 +1695,11 @@ class _DayRecapBody extends StatelessWidget {
         ),
         const SizedBox(height: 14),
         NarrationBlock(
-          lines: morningNarration(context.l10n, [for (final d in deaths) d.name]),
+          lines: morningNarration(
+            context.l10n,
+            [for (final d in deaths) d.name],
+            cardsShown: cardsShown,
+          ),
         ),
         const SizedBox(height: 14),
         Container(
@@ -2137,23 +2142,24 @@ class _NextNightPrompt extends StatelessWidget {
 // --- interrupt panels (sheet-styled bodies, not real modals) ---
 
 /// The reveal sheet: a dead player whose card was never recorded.
-class _RevealPanel extends StatefulWidget {
+class _RevealPanel extends ConsumerStatefulWidget {
   const _RevealPanel({required this.session, required this.notifier});
 
   final GameSessionState session;
   final GameSession notifier;
 
   @override
-  State<_RevealPanel> createState() => _RevealPanelState();
+  ConsumerState<_RevealPanel> createState() => _RevealPanelState();
 }
 
-class _RevealPanelState extends State<_RevealPanel> {
+class _RevealPanelState extends ConsumerState<_RevealPanel> {
   String? _roleId;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final typography = context.typography;
+    final cardsShown = ref.watch(deadCardsShownProvider);
     final dead = widget.session.unrevealedDead.first;
     final options = unassignedRoles(widget.session);
 
@@ -2174,14 +2180,16 @@ class _RevealPanelState extends State<_RevealPanel> {
               borderRadius: BorderRadius.circular(AppRadii.cardSmall),
             ),
             child: Text(
-              context.l10n.scriptRevealHint,
+              cardsShown ? context.l10n.scriptRevealHint : context.l10n.scriptRevealHintHidden,
               style: typography.meta.copyWith(color: colors.textSecondary, height: 1.5),
             ),
           ),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 12, AppSpacing.screen, 0),
-          child: NarrationBlock(lines: revealNarration(context.l10n, dead.name)),
+          child: NarrationBlock(
+            lines: revealNarration(context.l10n, dead.name, cardsShown: cardsShown),
+          ),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 18, AppSpacing.screen, 8),
@@ -2692,16 +2700,17 @@ class _ScapegoatVotersPanelState extends State<_ScapegoatVotersPanel> {
   }
 }
 
-class _LoversAckPanel extends StatelessWidget {
+class _LoversAckPanel extends ConsumerWidget {
   const _LoversAckPanel({required this.session, required this.notifier});
 
   final GameSessionState session;
   final GameSession notifier;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final typography = context.typography;
+    final cardsShown = ref.watch(deadCardsShownProvider);
     final lover = session.engine.playerById(session.day.loversAck.first);
     final partnerId = session.engine.lovers?.partnerOf(lover.id);
     final partnerName = partnerId == null
@@ -2740,7 +2749,9 @@ class _LoversAckPanel extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 12, AppSpacing.screen, 0),
-          child: NarrationBlock(lines: loversNarration(context.l10n, lover.name)),
+          child: NarrationBlock(
+            lines: loversNarration(context.l10n, lover.name, cardsShown: cardsShown),
+          ),
         ),
         const Spacer(),
         Padding(
