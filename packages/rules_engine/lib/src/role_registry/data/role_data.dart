@@ -206,4 +206,12 @@ const allRoles = <Role>[
     suggestionTier: 3,
     hasNightCall: false,
   ),
+  // A tie in the village vote falls on him instead; eliminated, he names who votes next.
+  Role(
+    id: 'bouc_emissaire',
+    team: Team.village,
+    suggestionTier: 3,
+    hasNightCall: false,
+    onDeath: DeathEffect.scapegoatVoters,
+  ),
 ];

@@ -75,6 +75,16 @@ CascadeResult drainCascade({
                 remainingQueue: q,
               );
             }
+          case DeathEffect.scapegoatVoters:
+            // His last act is one of the villagers' powers, and needs someone to let vote.
+            if (!currentState.villagersPowerless && candidates.isNotEmpty) {
+              return CascadeResult(
+                state: currentState,
+                events: events,
+                pendingDecision: PendingScapegoatVoters(deadScapegoatId: player.id),
+                remainingQueue: q,
+              );
+            }
           case DeathEffect.knightDisease:
             // Only devoured by the wolves, and only while the villagers keep their powers.
             final devoured = player.causeOfDeath is WolvesKill;

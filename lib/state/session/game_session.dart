@@ -97,6 +97,20 @@ class GameSessionState {
     return engine.players.where((p) => p.roleId == 'ancien').length < elders;
   }
 
+  /// The living Scapegoat the app knows, while the villagers keep their powers: a tied vote falls
+  /// on him.
+  Player? get knownScapegoat => engine.villagersPowerless
+      ? null
+      : engine.players.where((p) => p.alive && p.roleId == 'bouc_emissaire').firstOrNull;
+
+  /// Whether a tied vote may fall on a Scapegoat the app does not know yet: the composition has
+  /// one whose card has not been noted, and the villagers still have their powers.
+  bool get scapegoatMayBeAlive {
+    if (engine.villagersPowerless || knownScapegoat != null) return false;
+    final goats = dealtComposition['bouc_emissaire'] ?? 0;
+    return engine.players.where((p) => p.roleId == 'bouc_emissaire').length < goats;
+  }
+
   /// Whether the player [playerId], about to be voted against, may be the Village Idiot: same
   /// logic as the Elder's, since he has no call to be known by.
   bool mayBeIdiot(String playerId) {
@@ -607,6 +621,14 @@ class GameSession extends _$GameSession {
     await _updateDay((d) => d.copyWith(stage: next));
   }
 
+  /// A tied vote with a living Scapegoat: he takes the blame in place of the tied players.
+  Future<void> voteTiedOnScapegoat(String scapegoatEngineId) =>
+      applyAction(DayVoteTie(scapegoatPlayerId: scapegoatEngineId));
+
+  /// The dead Scapegoat's choice of who votes the next day.
+  Future<void> chooseVoters(Set<String> allowedEngineIds) =>
+      applyAction(ScapegoatChooseVoters(allowedPlayerIds: allowedEngineIds));
+
   // --- day: the interrupts (reveal / chain / grief) ---
 
   /// Post-mortem card reveal (the reveal panel). Refused while a cascade is
@@ -727,6 +749,9 @@ class GameSession extends _$GameSession {
 
     if (action is ElectCaptain) {
       day = day.copyWith(stage: nextDayStage(DayStage.captain, result.state));
+    }
+    if (action is DayVoteTie) {
+      day = day.copyWith(stage: nextDayStage(DayStage.vote, result.state));
     }
     if (action is DayVoteElimination) {
       day = day.copyWith(stage: nextDayStage(DayStage.vote, result.state));

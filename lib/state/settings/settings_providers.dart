@@ -18,6 +18,7 @@ const _kThiefReserveChosen = 'thief_reserve_chosen';
 const _kFoxAfterWitch = 'fox_after_witch';
 const _kWhiteWolfOdd = 'white_wolf_odd_nights';
 const _kKnightAtNightEnd = 'knight_disease_night_end';
+const _kVoteTieRule = 'vote_tie_rule';
 
 /// The one `SharedPreferences` handle. Override in tests with an instance from
 /// `SharedPreferences.setMockInitialValues({})`.
@@ -48,7 +49,14 @@ class Settings extends _$Settings {
       foxAfterWitch: prefs.getBool(_kFoxAfterWitch) ?? false,
       whiteWolfOddNights: prefs.getBool(_kWhiteWolfOdd) ?? false,
       knightDiseaseAtNightEnd: prefs.getBool(_kKnightAtNightEnd) ?? false,
+      voteTieRule: VoteTieRule.fromName(prefs.getString(_kVoteTieRule)),
     );
+  }
+
+  Future<void> setVoteTieRule(VoteTieRule rule) async {
+    final prefs = await ref.read(sharedPreferencesProvider.future);
+    await prefs.setString(_kVoteTieRule, rule.name);
+    state = AsyncData((state.value ?? AppSettings.defaults).copyWith(voteTieRule: rule));
   }
 
   Future<void> setKnightDiseaseAtNightEnd(bool value) async {

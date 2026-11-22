@@ -39,6 +39,15 @@ class KnightWound {
   const KnightWound({required this.wolfId, required this.dueNight, this.atNightEnd = false});
 }
 
+/// The players the dead Scapegoat let vote on [day] (the day number is the night index of that
+/// day, as [GameState.nightIndex] reads during it). Everyone else sits it out.
+class VoteRestriction {
+  final Set<String> allowed;
+  final int day;
+
+  const VoteRestriction({required this.allowed, required this.day});
+}
+
 class LoversPair {
   final String playerAId;
   final String playerBId;
@@ -102,6 +111,9 @@ class GameState {
   /// The wolf the dead Knight left diseased, until it dies.
   final KnightWound? knightWound;
 
+  /// Who the dead Scapegoat let vote on a coming day, until that day is over.
+  final VoteRestriction? voteRestriction;
+
   /// Non-null exactly while a death cascade is paused on a Hunter/Captain
   /// choice only the MJ can make.
   final CascadeState? cascade;
@@ -128,6 +140,7 @@ class GameState {
     this.woundedElders = const {},
     this.villagersPowerless = false,
     this.knightWound,
+    this.voteRestriction,
     this.cascade,
     this.spentPowers = const {},
   });
@@ -150,6 +163,19 @@ class GameState {
       pendingWolfVictimId != null && pendingWolfVictimId == defenderProtectedId
       ? null
       : pendingWolfVictimId;
+
+  /// The living players who may vote today, or null when everyone but the pardoned Idiot may: the
+  /// Scapegoat's choice, while it applies to the day being played.
+  Set<String>? get votersToday {
+    final restriction = voteRestriction;
+    if (restriction == null || phase != GamePhase.day || restriction.day != nightIndex) {
+      return null;
+    }
+    return {
+      for (final p in alivePlayers)
+        if (restriction.allowed.contains(p.id)) p.id,
+    };
+  }
 
   List<Player> get alivePlayers => players.where((p) => p.alive).toList(growable: false);
 
@@ -201,6 +227,7 @@ class GameState {
     Set<String>? woundedElders,
     bool? villagersPowerless,
     Object? knightWound = _unset,
+    Object? voteRestriction = _unset,
     Object? cascade = _unset,
     Map<String, int>? spentPowers,
   }) => GameState(
@@ -234,6 +261,9 @@ class GameState {
     woundedElders: woundedElders ?? this.woundedElders,
     villagersPowerless: villagersPowerless ?? this.villagersPowerless,
     knightWound: identical(knightWound, _unset) ? this.knightWound : knightWound as KnightWound?,
+    voteRestriction: identical(voteRestriction, _unset)
+        ? this.voteRestriction
+        : voteRestriction as VoteRestriction?,
     cascade: identical(cascade, _unset) ? this.cascade : cascade as CascadeState?,
     spentPowers: spentPowers ?? this.spentPowers,
   );

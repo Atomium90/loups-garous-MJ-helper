@@ -39,7 +39,9 @@ enum JournalKind {
   piperCharms('piper'),
   defenderProtects('defender'),
   defenderSaves('defender'),
-  idiotPardoned('vote');
+  idiotPardoned('vote'),
+  scapegoatBlamed('scale'),
+  scapegoatVoters('vote');
 
   const JournalKind(this.iconName);
 

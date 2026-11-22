@@ -126,6 +126,23 @@ void main() {
     });
   });
 
+  group('the tie rule', () {
+    test('is "nobody is eliminated" by default, and the choice persists', () async {
+      final container = await containerWith({});
+      expect((await container.read(settingsProvider.future)).voteTieRule, VoteTieRule.nobody);
+
+      await container.read(settingsProvider.notifier).setVoteTieRule(VoteTieRule.revote);
+
+      expect(container.read(settingsProvider).value!.voteTieRule, VoteTieRule.revote);
+      expect((await SharedPreferences.getInstance()).getString('vote_tie_rule'), 'revote');
+    });
+
+    test('an unknown stored value falls back to the default', () async {
+      final container = await containerWith({'vote_tie_rule': 'nonsense'});
+      expect((await container.read(settingsProvider.future)).voteTieRule, VoteTieRule.nobody);
+    });
+  });
+
   group('the Knight disease timing', () {
     test('is the start of the next night by default, and the choice persists', () async {
       final container = await containerWith({});

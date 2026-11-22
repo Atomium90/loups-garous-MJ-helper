@@ -32,6 +32,21 @@ enum NarrationLevel {
   static const defaults = full;
 }
 
+/// What happens when the village vote is tied (the Scapegoat, when he is in play, always comes first).
+enum VoteTieRule {
+  /// Nobody is eliminated (the Base and Pact booklets).
+  nobody,
+
+  /// The Capitaine decides between the tied players.
+  captainDecides,
+
+  /// A second vote among the tied players (the Best Of booklet).
+  revote;
+
+  static VoteTieRule fromName(String? name) =>
+      values.firstWhere((r) => r.name == name, orElse: () => nobody);
+}
+
 /// The MJ's app-wide preferences, persisted via `shared_preferences`.
 /// Hand-written (like `SessionCursor` / `DaySnapshot`) - a handful of fields and no
 /// JSON, so freezed / json_serializable would be overhead.
@@ -73,6 +88,9 @@ class AppSettings {
   /// its beginning (the Best Of booklet, the default). Same effect for the players.
   final bool knightDiseaseAtNightEnd;
 
+  /// What a tied village vote does.
+  final VoteTieRule voteTieRule;
+
   const AppSettings({
     required this.themeMode,
     required this.keepScreenOn,
@@ -85,6 +103,7 @@ class AppSettings {
     required this.foxAfterWitch,
     required this.whiteWolfOddNights,
     required this.knightDiseaseAtNightEnd,
+    required this.voteTieRule,
   });
 
   static const defaults = AppSettings(
@@ -99,6 +118,7 @@ class AppSettings {
     foxAfterWitch: false,
     whiteWolfOddNights: false,
     knightDiseaseAtNightEnd: false,
+    voteTieRule: VoteTieRule.nobody,
   );
 
   AppSettings copyWith({
@@ -113,6 +133,7 @@ class AppSettings {
     bool? foxAfterWitch,
     bool? whiteWolfOddNights,
     bool? knightDiseaseAtNightEnd,
+    VoteTieRule? voteTieRule,
   }) => AppSettings(
     themeMode: themeMode ?? this.themeMode,
     keepScreenOn: keepScreenOn ?? this.keepScreenOn,
@@ -125,5 +146,6 @@ class AppSettings {
     foxAfterWitch: foxAfterWitch ?? this.foxAfterWitch,
     whiteWolfOddNights: whiteWolfOddNights ?? this.whiteWolfOddNights,
     knightDiseaseAtNightEnd: knightDiseaseAtNightEnd ?? this.knightDiseaseAtNightEnd,
+    voteTieRule: voteTieRule ?? this.voteTieRule,
   );
 }

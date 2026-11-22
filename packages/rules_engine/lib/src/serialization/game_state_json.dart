@@ -44,6 +44,8 @@ abstract final class GameStateJson {
       'defenderLastProtectedId': ?state.defenderLastProtectedId,
       if (state.woundedElders.isNotEmpty) 'woundedElders': [...state.woundedElders],
       if (state.villagersPowerless) 'villagersPowerless': true,
+      if (state.voteRestriction case final r?)
+        'voteRestriction': {'allowed': [...r.allowed], 'day': r.day},
       if (state.knightWound case final k?)
         'knightWound': {'wolf': k.wolfId, 'dueNight': k.dueNight, 'atNightEnd': k.atNightEnd},
       'cascade': ?_encodeCascade(state.cascade),
@@ -102,6 +104,13 @@ abstract final class GameStateJson {
         for (final id in (json['woundedElders'] as List<dynamic>?) ?? const []) id as String,
       },
       villagersPowerless: json['villagersPowerless'] == true,
+      voteRestriction: switch (json['voteRestriction'] as Map<String, dynamic>?) {
+        null => null,
+        final r => VoteRestriction(
+          allowed: {for (final id in r['allowed'] as List<dynamic>) id as String},
+          day: r['day'] as int,
+        ),
+      },
       knightWound: switch (json['knightWound'] as Map<String, dynamic>?) {
         null => null,
         final k => KnightWound(
@@ -134,6 +143,10 @@ abstract final class GameStateJson {
           'type': 'knightWound',
           'deadKnightId': deadKnightId,
         },
+        PendingScapegoatVoters(:final deadScapegoatId) => {
+          'type': 'scapegoatVoters',
+          'deadScapegoatId': deadScapegoatId,
+        },
       },
       'remainingQueue': [
         for (final task in cascade.remainingQueue)
@@ -152,6 +165,9 @@ abstract final class GameStateJson {
           deadCaptainId: decision['deadCaptainId'] as String,
         ),
         'knightWound' => PendingKnightWound(deadKnightId: decision['deadKnightId'] as String),
+        'scapegoatVoters' => PendingScapegoatVoters(
+          deadScapegoatId: decision['deadScapegoatId'] as String,
+        ),
         final other => throw ArgumentError('unknown pending decision type: $other'),
       },
       remainingQueue: [

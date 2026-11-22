@@ -171,6 +171,23 @@ class _SettingsBody extends StatelessWidget {
                 onChanged: (v) => notifier?.setAideMemoireInScript(v),
               ),
               const SizedBox(height: 22),
+              SectionLabel(context.l10n.settingsVoteTieTitle),
+              const SizedBox(height: 10),
+              AppSegmentedControl<VoteTieRule>(
+                selected: settings.voteTieRule,
+                onChanged: (r) => notifier?.setVoteTieRule(r),
+                options: [
+                  (value: VoteTieRule.nobody, icon: null, label: context.l10n.voteTieNobody),
+                  (value: VoteTieRule.captainDecides, icon: null, label: context.l10n.voteTieCaptain),
+                  (value: VoteTieRule.revote, icon: null, label: context.l10n.voteTieRevote),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                context.l10n.settingsVoteTieHint,
+                style: typography.counter.copyWith(color: colors.textTertiary, height: 1.55),
+              ),
+              const SizedBox(height: 22),
               SectionLabel(context.l10n.settingsNarrationTitle),
               const SizedBox(height: 10),
               AppSegmentedControl<NarrationLevel>(

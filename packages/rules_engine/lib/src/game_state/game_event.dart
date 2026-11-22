@@ -124,6 +124,20 @@ class IdiotPardoned implements GameEvent {
   const IdiotPardoned({required this.playerId});
 }
 
+/// The vote was tied and the Scapegoat took the blame.
+class ScapegoatBlamed implements GameEvent {
+  final String playerId;
+
+  const ScapegoatBlamed({required this.playerId});
+}
+
+/// The dead Scapegoat named who votes on the next day.
+class VotersChosen implements GameEvent {
+  final Set<String> allowedPlayerIds;
+
+  const VotersChosen({required this.allowedPlayerIds});
+}
+
 class LoversPaired implements GameEvent {
   final String playerAId;
   final String playerBId;

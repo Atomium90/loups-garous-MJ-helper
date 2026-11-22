@@ -50,6 +50,10 @@ String journalLine(AppLocalizations l10n, NightLogRow row) {
     JournalKind.defenderProtects => l10n.journalDefenderProtects(player),
     JournalKind.defenderSaves => l10n.journalDefenderSaves(player),
     JournalKind.idiotPardoned => l10n.journalIdiotPardoned(player),
+    JournalKind.scapegoatBlamed => l10n.journalScapegoatBlamed(player),
+    JournalKind.scapegoatVoters => player.isEmpty
+        ? l10n.journalScapegoatNobodyVotes
+        : l10n.journalScapegoatVoters(player),
     JournalKind.piperCharms =>
       (args['other'] ?? '').isEmpty
           ? l10n.journalPiperCharmsOne(player)

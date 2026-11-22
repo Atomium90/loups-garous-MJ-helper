@@ -122,6 +122,7 @@ abstract final class AppIcons {
   static const piperRole = TablerIcons.music;
   static const defender = TablerIcons.shield;
   static const idiot = TablerIcons.moodCrazyHappy;
+  static const scapegoat = TablerIcons.mask;
 
   /// The Witch's "Elle sauve X" button.
   static const witchSave = TablerIcons.heartPlus;

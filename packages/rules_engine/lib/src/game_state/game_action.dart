@@ -146,6 +146,22 @@ class HunterShoot implements GameAction {
   const HunterShoot({this.targetPlayerId});
 }
 
+/// The village vote is tied. With a living Scapegoat ([scapegoatPlayerId]) he is eliminated in
+/// place of the tied players, even if he is not one of them; without, nobody is.
+class DayVoteTie implements GameAction {
+  final String? scapegoatPlayerId;
+
+  const DayVoteTie({this.scapegoatPlayerId});
+}
+
+/// Resolves a pending PendingScapegoatVoters: [allowedPlayerIds] are the only ones who vote on the
+/// next day (empty: nobody does, so there is no vote).
+class ScapegoatChooseVoters implements GameAction {
+  final Set<String> allowedPlayerIds;
+
+  const ScapegoatChooseVoters({required this.allowedPlayerIds});
+}
+
 /// Resolves a pending PendingCaptainSuccession decision with nobody: the Village Idiot's honor is
 /// lost with him, not passed on.
 class CaptainNoSuccessor implements GameAction {

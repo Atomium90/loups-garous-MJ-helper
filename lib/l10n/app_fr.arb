@@ -12,7 +12,7 @@
   "@languageSystem": {
     "description": "Language choice that follows the phone's language."
   },
-  "roleName": "{roleId, select, voleur{Voleur} cupidon{Cupidon} voyante{Voyante} loup_garou{Loup-Garou} sorciere{Sorcière} villageois{Simple Villageois} petite_fille{Petite Fille} chasseur{Chasseur} renard{Renard} deux_soeurs{Deux Sœurs} montreur_d_ours{Montreur d'Ours} enfant_sauvage{Enfant Sauvage} chien_loup{Chien-Loup} loup_garou_blanc{Loup-Garou Blanc} infect_pere_des_loups{Infect Père des Loups} grand_mechant_loup{Grand-Méchant-Loup} ancien{L'Ancien} chevalier{Chevalier à l'Épée Rouillée} joueur_de_flute{Joueur de Flûte} joueurs_charmes{Joueurs charmés} ange{Ange} salvateur{Salvateur} idiot_du_village{Idiot du Village} other{Rôle inconnu}}",
+  "roleName": "{roleId, select, voleur{Voleur} cupidon{Cupidon} voyante{Voyante} loup_garou{Loup-Garou} sorciere{Sorcière} villageois{Simple Villageois} petite_fille{Petite Fille} chasseur{Chasseur} renard{Renard} deux_soeurs{Deux Sœurs} montreur_d_ours{Montreur d'Ours} enfant_sauvage{Enfant Sauvage} chien_loup{Chien-Loup} loup_garou_blanc{Loup-Garou Blanc} infect_pere_des_loups{Infect Père des Loups} grand_mechant_loup{Grand-Méchant-Loup} ancien{L'Ancien} chevalier{Chevalier à l'Épée Rouillée} joueur_de_flute{Joueur de Flûte} joueurs_charmes{Joueurs charmés} ange{Ange} salvateur{Salvateur} idiot_du_village{Idiot du Village} bouc_emissaire{Bouc Émissaire} other{Rôle inconnu}}",
   "@roleName": {
     "description": "The name of a role card, from its id (singular, no article).",
     "placeholders": {
@@ -21,7 +21,7 @@
       }
     }
   },
-  "rolePlural": "{roleId, select, voleur{Voleurs} cupidon{Cupidons} voyante{Voyantes} loup_garou{Loups-Garous} sorciere{Sorcières} villageois{Simples Villageois} petite_fille{Petites Filles} chasseur{Chasseurs} renard{Renards} deux_soeurs{Deux Sœurs} montreur_d_ours{Montreurs d'Ours} enfant_sauvage{Enfants Sauvages} chien_loup{Chiens-Loups} loup_garou_blanc{Loups-Garous Blancs} infect_pere_des_loups{Infects Pères des Loups} grand_mechant_loup{Grands-Méchants-Loups} ancien{Les Anciens} chevalier{Chevaliers à l'Épée Rouillée} joueur_de_flute{Joueurs de Flûte} joueurs_charmes{Joueurs charmés} ange{Anges} salvateur{Salvateurs} idiot_du_village{Idiots du Village} other{Rôles inconnus}}",
+  "rolePlural": "{roleId, select, voleur{Voleurs} cupidon{Cupidons} voyante{Voyantes} loup_garou{Loups-Garous} sorciere{Sorcières} villageois{Simples Villageois} petite_fille{Petites Filles} chasseur{Chasseurs} renard{Renards} deux_soeurs{Deux Sœurs} montreur_d_ours{Montreurs d'Ours} enfant_sauvage{Enfants Sauvages} chien_loup{Chiens-Loups} loup_garou_blanc{Loups-Garous Blancs} infect_pere_des_loups{Infects Pères des Loups} grand_mechant_loup{Grands-Méchants-Loups} ancien{Les Anciens} chevalier{Chevaliers à l'Épée Rouillée} joueur_de_flute{Joueurs de Flûte} joueurs_charmes{Joueurs charmés} ange{Anges} salvateur{Salvateurs} idiot_du_village{Idiots du Village} bouc_emissaire{Boucs Émissaires} other{Rôles inconnus}}",
   "@rolePlural": {
     "description": "The plural name of a role card, from its id.",
     "placeholders": {
@@ -30,7 +30,7 @@
       }
     }
   },
-  "roleWithArticle": "{roleId, select, voleur{le Voleur} cupidon{le Cupidon} voyante{la Voyante} loup_garou{le Loup-Garou} sorciere{la Sorcière} villageois{le Simple Villageois} petite_fille{la Petite Fille} chasseur{le Chasseur} renard{le Renard} deux_soeurs{les Deux Sœurs} montreur_d_ours{le Montreur d'Ours} enfant_sauvage{l'Enfant Sauvage} chien_loup{le Chien-Loup} loup_garou_blanc{le Loup-Garou Blanc} infect_pere_des_loups{l'Infect Père des Loups} grand_mechant_loup{le Grand-Méchant-Loup} ancien{l'Ancien} chevalier{le Chevalier à l'Épée Rouillée} joueur_de_flute{le Joueur de Flûte} joueurs_charmes{les joueurs charmés} ange{l'Ange} salvateur{le Salvateur} idiot_du_village{l'Idiot du Village} other{Rôle inconnu}}",
+  "roleWithArticle": "{roleId, select, voleur{le Voleur} cupidon{le Cupidon} voyante{la Voyante} loup_garou{le Loup-Garou} sorciere{la Sorcière} villageois{le Simple Villageois} petite_fille{la Petite Fille} chasseur{le Chasseur} renard{le Renard} deux_soeurs{les Deux Sœurs} montreur_d_ours{le Montreur d'Ours} enfant_sauvage{l'Enfant Sauvage} chien_loup{le Chien-Loup} loup_garou_blanc{le Loup-Garou Blanc} infect_pere_des_loups{l'Infect Père des Loups} grand_mechant_loup{le Grand-Méchant-Loup} ancien{l'Ancien} chevalier{le Chevalier à l'Épée Rouillée} joueur_de_flute{le Joueur de Flûte} joueurs_charmes{les joueurs charmés} ange{l'Ange} salvateur{le Salvateur} idiot_du_village{l'Idiot du Village} bouc_emissaire{le Bouc Émissaire} other{Rôle inconnu}}",
   "@roleWithArticle": {
     "description": "A role with its article, e.g. \"le Chasseur\", \"la Voyante\", \"the Hunter\".",
     "placeholders": {
@@ -39,7 +39,7 @@
       }
     }
   },
-  "roleRuleText": "{roleId, select, voleur{Réveillez le Voleur. Il peut échanger sa carte avec l'une des deux cartes non distribuées, ou garder la sienne.} cupidon{Réveillez Cupidon. Il désigne deux joueurs qui tombent amoureux, puis les deux amoureux ouvrent les yeux pour se reconnaître avant de se rendormir.} voyante{Réveillez la Voyante. Elle désigne un joueur dont vous lui révélez le rôle.} loup_garou{Réveillez les Loups-Garous. Ils désignent ensemble leur victime.} sorciere{Réveillez la Sorcière. Montrez-lui la victime des Loups. Elle peut utiliser sa potion de vie et/ou sa potion de mort.} villageois{Aucune action de nuit.} petite_fille{Aucun appel : elle peut risquer un œil pendant l'appel des Loups-Garous, à ses risques.} chasseur{Aucune action de nuit : à sa mort (jour ou nuit), il élimine immédiatement un joueur de son choix.} renard{Réveillez le Renard (facultatif). Il désigne un joueur : vous lui dites si un Loup se trouve parmi ce joueur et ses deux voisins vivants. S'il n'y en a aucun, il perd son pouvoir pour de bon.} deux_soeurs{Réveillez les Deux Sœurs : elles se reconnaissent, puis se rendorment. Appel facultatif après la nuit 1, une nuit sur deux.} montreur_d_ours{Réveillez le Montreur d'Ours la nuit 1 pour savoir qui il est. Chaque matin, après les victimes, vous grognez si l'un de ses deux voisins vivants est un Loup.} enfant_sauvage{Réveillez l'Enfant Sauvage la nuit 1 : il désigne son modèle. Il reste villageois tant que son modèle vit ; à la mort du modèle, il devient Loup-Garou et se réveille avec les Loups.} chien_loup{Juste avant les Loups, la nuit 1, demandez discrètement au Chien-Loup son choix : villageois ou Loup-Garou, pour de bon. S'il choisit les Loups, il se réveille avec eux chaque nuit.} loup_garou_blanc{Il se réveille avec les Loups chaque nuit. Une nuit sur deux, appelez-le seul : il peut éliminer un Loup. Il gagne seul s'il est le dernier en vie.} infect_pere_des_loups{Il se réveille avec les Loups. Une fois par partie, après eux, il peut infecter leur victime au lieu de la laisser mourir : elle devient Loup-Garou en secret et garde son pouvoir.} grand_mechant_loup{Il se réveille avec les Loups, puis seul une 2e fois tant qu'aucun Loup, Enfant Sauvage ni Chien-Loup n'est mort : il dévore une 2e victime, jamais un Loup.} ancien{Aucun appel. Il survit à la 1re attaque des Loups (sans l'annoncer) et meurt à la 2e. Le vote, le poison ou le tir du Chasseur le tuent d'un coup : les villageois perdent alors leurs pouvoirs pour le reste de la partie.} chevalier{Aucun appel. S'il est dévoré par les Loups, le premier Loup à sa gauche attrape la maladie : il meurt au début de la nuit suivante (ou à sa fin, selon le réglage), annoncé comme mort de maladie.} joueur_de_flute{Réveillez le Joueur de Flûte chaque nuit, après la Sorcière : il charme 2 joueurs. Réveillez ensuite les joueurs charmés pour qu'ils se reconnaissent. Il gagne dès que tous les autres joueurs vivants sont charmés.} joueurs_charmes{Réveillez tous les joueurs déjà charmés pour qu'ils se reconnaissent, puis rendormez-les.} ange{Aucun appel. La partie commence par un débat et un vote avant la nuit 1. Éliminé à ce vote ou pendant la nuit 1, il gagne seul ; vivant au 2e jour, il devient Simple Villageois (et il renonce à son objectif s'il est amoureux).} salvateur{Réveillez le Salvateur avant les Loups : il désigne un joueur, protégé des Loups cette nuit (lui-même inclus, mais jamais le même joueur deux nuits de suite). Il ne protège pas du charme ni de l'infection.} idiot_du_village{Aucun appel. Voté par le village, il révèle sa carte et est gracié : personne n'est éliminé ce jour-là, et il ne vote plus de la partie. Dévoré par les Loups ou abattu par le Chasseur, il meurt ; s'il était Capitaine, la charge est perdue.} other{}}",
+  "roleRuleText": "{roleId, select, voleur{Réveillez le Voleur. Il peut échanger sa carte avec l'une des deux cartes non distribuées, ou garder la sienne.} cupidon{Réveillez Cupidon. Il désigne deux joueurs qui tombent amoureux, puis les deux amoureux ouvrent les yeux pour se reconnaître avant de se rendormir.} voyante{Réveillez la Voyante. Elle désigne un joueur dont vous lui révélez le rôle.} loup_garou{Réveillez les Loups-Garous. Ils désignent ensemble leur victime.} sorciere{Réveillez la Sorcière. Montrez-lui la victime des Loups. Elle peut utiliser sa potion de vie et/ou sa potion de mort.} villageois{Aucune action de nuit.} petite_fille{Aucun appel : elle peut risquer un œil pendant l'appel des Loups-Garous, à ses risques.} chasseur{Aucune action de nuit : à sa mort (jour ou nuit), il élimine immédiatement un joueur de son choix.} renard{Réveillez le Renard (facultatif). Il désigne un joueur : vous lui dites si un Loup se trouve parmi ce joueur et ses deux voisins vivants. S'il n'y en a aucun, il perd son pouvoir pour de bon.} deux_soeurs{Réveillez les Deux Sœurs : elles se reconnaissent, puis se rendorment. Appel facultatif après la nuit 1, une nuit sur deux.} montreur_d_ours{Réveillez le Montreur d'Ours la nuit 1 pour savoir qui il est. Chaque matin, après les victimes, vous grognez si l'un de ses deux voisins vivants est un Loup.} enfant_sauvage{Réveillez l'Enfant Sauvage la nuit 1 : il désigne son modèle. Il reste villageois tant que son modèle vit ; à la mort du modèle, il devient Loup-Garou et se réveille avec les Loups.} chien_loup{Juste avant les Loups, la nuit 1, demandez discrètement au Chien-Loup son choix : villageois ou Loup-Garou, pour de bon. S'il choisit les Loups, il se réveille avec eux chaque nuit.} loup_garou_blanc{Il se réveille avec les Loups chaque nuit. Une nuit sur deux, appelez-le seul : il peut éliminer un Loup. Il gagne seul s'il est le dernier en vie.} infect_pere_des_loups{Il se réveille avec les Loups. Une fois par partie, après eux, il peut infecter leur victime au lieu de la laisser mourir : elle devient Loup-Garou en secret et garde son pouvoir.} grand_mechant_loup{Il se réveille avec les Loups, puis seul une 2e fois tant qu'aucun Loup, Enfant Sauvage ni Chien-Loup n'est mort : il dévore une 2e victime, jamais un Loup.} ancien{Aucun appel. Il survit à la 1re attaque des Loups (sans l'annoncer) et meurt à la 2e. Le vote, le poison ou le tir du Chasseur le tuent d'un coup : les villageois perdent alors leurs pouvoirs pour le reste de la partie.} chevalier{Aucun appel. S'il est dévoré par les Loups, le premier Loup à sa gauche attrape la maladie : il meurt au début de la nuit suivante (ou à sa fin, selon le réglage), annoncé comme mort de maladie.} joueur_de_flute{Réveillez le Joueur de Flûte chaque nuit, après la Sorcière : il charme 2 joueurs. Réveillez ensuite les joueurs charmés pour qu'ils se reconnaissent. Il gagne dès que tous les autres joueurs vivants sont charmés.} joueurs_charmes{Réveillez tous les joueurs déjà charmés pour qu'ils se reconnaissent, puis rendormez-les.} ange{Aucun appel. La partie commence par un débat et un vote avant la nuit 1. Éliminé à ce vote ou pendant la nuit 1, il gagne seul ; vivant au 2e jour, il devient Simple Villageois (et il renonce à son objectif s'il est amoureux).} salvateur{Réveillez le Salvateur avant les Loups : il désigne un joueur, protégé des Loups cette nuit (lui-même inclus, mais jamais le même joueur deux nuits de suite). Il ne protège pas du charme ni de l'infection.} idiot_du_village{Aucun appel. Voté par le village, il révèle sa carte et est gracié : personne n'est éliminé ce jour-là, et il ne vote plus de la partie. Dévoré par les Loups ou abattu par le Chasseur, il meurt ; s'il était Capitaine, la charge est perdue.} bouc_emissaire{Aucun appel. En cas d'égalité au vote, c'est lui qui est éliminé, même s'il n'était pas parmi les ex æquo. Éliminé, il désigne qui pourra voter au jour suivant : les autres n'ont pas le droit de vote.} other{}}",
   "@roleRuleText": {
     "description": "The instruction the game master follows when this role is called, from the role id.",
     "placeholders": {
@@ -415,6 +415,28 @@
         "type": "String"
       }
     }
+  },
+  "journalScapegoatBlamed": "Égalité au vote : le Bouc Émissaire {player} est éliminé",
+  "@journalScapegoatBlamed": {
+    "description": "Journal: a tied vote falls on the Scapegoat.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalScapegoatVoters": "Le Bouc Émissaire désigne qui peut voter : {player}",
+  "@journalScapegoatVoters": {
+    "description": "Journal: the players the Scapegoat lets vote.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalScapegoatNobodyVotes": "Le Bouc Émissaire ne laisse voter personne",
+  "@journalScapegoatNobodyVotes": {
+    "description": "Journal: the Scapegoat lets nobody vote."
   },
   "journalHeartbreakDeath": "{player} meurt de chagrin",
   "@journalHeartbreakDeath": {
@@ -919,6 +941,26 @@
   "settingsKnightNightEndHint": "Les livrets divergent : le Best Of fait mourir le Loup au début de la nuit suivante (par défaut), Personnages à sa fin. Même effet pour les joueurs.",
   "@settingsKnightNightEndHint": {
     "description": "Explains the Knight disease timing setting."
+  },
+  "settingsVoteTieTitle": "Égalité au vote",
+  "@settingsVoteTieTitle": {
+    "description": "Settings section: what a tied village vote does."
+  },
+  "voteTieNobody": "Personne",
+  "@voteTieNobody": {
+    "description": "Tie rule: nobody is eliminated."
+  },
+  "voteTieCaptain": "Capitaine",
+  "@voteTieCaptain": {
+    "description": "Tie rule: the Capitaine decides."
+  },
+  "voteTieRevote": "2e vote",
+  "@voteTieRevote": {
+    "description": "Tie rule: a second vote among the tied players."
+  },
+  "settingsVoteTieHint": "Que faire d'une égalité (le Bouc Émissaire passe toujours avant). Par défaut personne n'est éliminé (Base, Pacte) ; le Capitaine peut départager, ou les ex æquo revotent (Best Of).",
+  "@settingsVoteTieHint": {
+    "description": "Explains the tie rule setting."
   },
   "settingsKeepScreenOn": "Garder l'écran allumé",
   "@settingsKeepScreenOn": {
@@ -1523,6 +1565,94 @@
   "villagePardoned": "gracié · ne vote plus",
   "@villagePardoned": {
     "description": "Village tab: the pardoned Village Idiot no longer votes."
+  },
+  "scriptScapegoatAsk": "Y a-t-il un Bouc Émissaire en vie ? Désignez-le.",
+  "@scriptScapegoatAsk": {
+    "description": "Question on a tied vote when a Scapegoat may be alive."
+  },
+  "scriptScapegoatIs": "{name} est le Bouc Émissaire",
+  "@scriptScapegoatIs": {
+    "description": "Button that confirms the Scapegoat.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptScapegoatNone": "Pas de Bouc Émissaire en vie",
+  "@scriptScapegoatNone": {
+    "description": "Button: no Scapegoat is alive."
+  },
+  "scriptTieCaptain": "Le Capitaine départage : qui est éliminé ?",
+  "@scriptTieCaptain": {
+    "description": "Question when the Capitaine decides a tied vote."
+  },
+  "scriptTieRevote": "Second vote entre les ex æquo : qui est éliminé ?",
+  "@scriptTieRevote": {
+    "description": "Question when a tied vote is voted again."
+  },
+  "scriptTieNobody": "Finalement personne n'est éliminé",
+  "@scriptTieNobody": {
+    "description": "Button: the tie stays a tie, nobody is eliminated."
+  },
+  "scriptVoteNobodyVotes": "Personne ne peut voter : pas d'élimination",
+  "@scriptVoteNobodyVotes": {
+    "description": "Button when the Scapegoat left nobody allowed to vote."
+  },
+  "scriptVotersOnly": "Seuls peuvent voter : {names}.",
+  "@scriptVotersOnly": {
+    "description": "Who may vote today, after the Scapegoat's choice.",
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptVotersNobody": "Plus aucun joueur ne peut voter : pas de vote aujourd'hui.",
+  "@scriptVotersNobody": {
+    "description": "Nobody may vote today, after the Scapegoat's choice."
+  },
+  "scriptVotersPardoned": "Ne votent pas : {names} (graciés).",
+  "@scriptVotersPardoned": {
+    "description": "The pardoned Village Idiots do not vote.",
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptScapegoatDead": "Le Bouc Émissaire est éliminé",
+  "@scriptScapegoatDead": {
+    "description": "Subtitle of the Scapegoat's panel."
+  },
+  "scriptScapegoatTitle": "Sa dernière volonté",
+  "@scriptScapegoatTitle": {
+    "description": "Title of the Scapegoat's panel."
+  },
+  "scriptScapegoatBody": "Avant de partir, le Bouc Émissaire désigne les joueurs qui pourront voter au jour suivant. Les autres n'auront pas le droit de vote.",
+  "@scriptScapegoatBody": {
+    "description": "Explains the Scapegoat's last act."
+  },
+  "scriptScapegoatQuestion": "Qui peut voter ?",
+  "@scriptScapegoatQuestion": {
+    "description": "Question on the Scapegoat's panel."
+  },
+  "scriptScapegoatVoters": "{count, plural, =1{Seul 1 joueur vote} other{Seuls {count} joueurs votent}}",
+  "@scriptScapegoatVoters": {
+    "description": "Button that confirms how many players may vote.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scriptScapegoatNobody": "Personne ne vote",
+  "@scriptScapegoatNobody": {
+    "description": "Button: nobody may vote."
+  },
+  "scriptScapegoatEveryone": "Tout le monde peut voter",
+  "@scriptScapegoatEveryone": {
+    "description": "Button: everybody may vote."
   },
   "scriptThiefExtra": "Le Voleur a volé une carte de {role} : il compte en plus.",
   "@scriptThiefExtra": {

@@ -185,6 +185,23 @@ void main() {
     expect((await SharedPreferences.getInstance()).getBool('thief_reserve_chosen'), isTrue);
   });
 
+  testWidgets('the tie rule can be chosen and is remembered', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
+      initialLocation: '/settings',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('ÉGALITÉ AU VOTE'), findsOneWidget);
+    await tester.tap(find.text('2e vote'));
+    await tester.pumpAndSettle();
+
+    expect((await SharedPreferences.getInstance()).getString('vote_tie_rule'), 'revote');
+  });
+
   testWidgets('the Knight disease toggle persists once flipped', (tester) async {
     await tester.binding.setSurfaceSize(const Size(400, 2000));
     addTearDown(() => tester.binding.setSurfaceSize(null));

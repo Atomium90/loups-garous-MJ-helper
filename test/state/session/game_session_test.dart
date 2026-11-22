@@ -449,6 +449,76 @@ void main() {
     });
   });
 
+  group('the Scapegoat', () {
+    const comp = {'bouc_emissaire': 1, 'loup_garou': 2, 'villageois': 3};
+
+    Future<({int gameId, List<int> ids, GameSession n})> toDay() async {
+      final game = await _startedGame(repo, composition: comp);
+      final n = await notifierFor(game.gameId);
+      await n.identifyRole('loup_garou', [game.seatRowIds[1], game.seatRowIds[2]]);
+      await n.applyAction(WolvesTarget(targetPlayerId: '${game.seatRowIds[5]}'));
+      await n.applyAction(const FinalizeNight());
+      await n.revealRole(game.seatRowIds[5], 'villageois');
+      return (gameId: game.gameId, ids: game.seatRowIds, n: n);
+    }
+
+    test('is possibly alive while his card is unknown, and known once noted', () async {
+      final g = await toDay();
+      expect(stateOf(g.gameId).scapegoatMayBeAlive, isTrue);
+      expect(stateOf(g.gameId).knownScapegoat, isNull);
+
+      await g.n.identifyRole('bouc_emissaire', [g.ids[0]]);
+
+      expect(stateOf(g.gameId).scapegoatMayBeAlive, isFalse);
+      expect(stateOf(g.gameId).knownScapegoat?.id, '${g.ids[0]}');
+    });
+
+    test('takes a tied vote, is journalled, and the day ends', () async {
+      final g = await toDay();
+      await g.n.identifyRole('bouc_emissaire', [g.ids[0]]);
+
+      await g.n.voteTiedOnScapegoat('${g.ids[0]}');
+
+      final s = stateOf(g.gameId);
+      expect(s.engine.playerById('${g.ids[0]}').alive, isFalse);
+      expect(s.day.stage, DayStage.done);
+      expect(s.engine.cascade?.decision, isA<PendingScapegoatVoters>());
+      final log = frenchJournal(await repo.watchNightLog(g.gameId).first);
+      expect(log, contains('Égalité au vote : le Bouc Émissaire Ana est éliminé'));
+    });
+
+    test('names who votes next, which restricts the next day and is journalled', () async {
+      final g = await toDay();
+      await g.n.identifyRole('bouc_emissaire', [g.ids[0]]);
+      await g.n.voteTiedOnScapegoat('${g.ids[0]}');
+
+      await g.n.chooseVoters({'${g.ids[1]}', '${g.ids[3]}'});
+
+      final s = stateOf(g.gameId);
+      expect(s.engine.cascade, isNull);
+      expect(s.engine.voteRestriction?.allowed, {'${g.ids[1]}', '${g.ids[3]}'});
+      final log = frenchJournal(await repo.watchNightLog(g.gameId).first);
+      expect(log, contains('Le Bouc Émissaire désigne qui peut voter : Bo, Di'));
+    });
+
+    test('naming nobody is journalled as such', () async {
+      final g = await toDay();
+      await g.n.identifyRole('bouc_emissaire', [g.ids[0]]);
+      await g.n.voteTiedOnScapegoat('${g.ids[0]}');
+
+      await g.n.chooseVoters({});
+
+      final log = frenchJournal(await repo.watchNightLog(g.gameId).first);
+      expect(log, contains('Le Bouc Émissaire ne laisse voter personne'));
+    });
+
+    test('a vote with no Scapegoat in the game is never asked about', () async {
+      final game = await _startedGame(repo, composition: composition);
+      final s = await container.read(gameSessionProvider(game.gameId).future);
+      expect(s.scapegoatMayBeAlive, isFalse);
+    });
+  });
+
   group('the Village Idiot', () {
     const comp = {'idiot_du_village': 1, 'loup_garou': 2, 'villageois': 3};
 

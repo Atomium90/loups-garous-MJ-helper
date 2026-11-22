@@ -131,6 +131,8 @@ String _describeEvent(GameEvent event) => switch (event) {
   ElderSurvived(:final playerId) => '$playerId survit à une première morsure',
   VillagersLostPowers() => 'les villageois perdent leurs pouvoirs',
   IdiotPardoned(:final playerId) => '$playerId est gracié par le village',
+  ScapegoatBlamed(:final playerId) => '$playerId porte la faute de l\'égalité',
+  VotersChosen(:final allowedPlayerIds) => 'votent demain : ${allowedPlayerIds.join(', ')}',
   DefenderSaved(:final playerId) => '$playerId est protégé du Loup',
   KnightContaminated(:final wolfPlayerId) => '$wolfPlayerId attrape la maladie du Chevalier',
   PlayersCharmed(:final playerIds) => '${playerIds.join(' et ')} sont charmés',
@@ -152,4 +154,6 @@ String _describeDecision(PendingDecision decision) => switch (decision) {
     'le Capitaine ($deadCaptainId) doit désigner son successeur',
   PendingKnightWound(:final deadKnightId) =>
     'le Chevalier ($deadKnightId) laisse un Loup malade : lequel ?',
+  PendingScapegoatVoters(:final deadScapegoatId) =>
+    'le Bouc Émissaire ($deadScapegoatId) désigne qui vote demain',
 };

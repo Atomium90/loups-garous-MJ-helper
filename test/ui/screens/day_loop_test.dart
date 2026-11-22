@@ -92,6 +92,74 @@ void main() {
     );
   });
 
+  group('a tied vote', () {
+    const comp = {'bouc_emissaire': 1, 'loup_garou': 2, 'villageois': 3};
+
+    /// Night 1 with the wolves Bo and Cy eating Fi, to the village vote of day 1.
+    Future<void> toVote(WidgetTester tester) async {
+      await identify(tester, ['Bo', 'Cy']);
+      await tester.tap(find.text('Fi'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Les Loups désignent Fi');
+      await tap(tester, 'Résoudre la nuit');
+      await tap(tester, 'Simple Villageois');
+      await tap(tester, 'Fi était le Simple Villageois');
+      await tap(tester, 'Élire le Capitaine');
+      await tap(tester, 'Pas de Capitaine cette partie');
+    }
+
+    testWidgets('with no Scapegoat in the game, nobody is eliminated by default', (tester) async {
+      final id = await _startedGame(repo, const {'loup_garou': 2, 'villageois': 4});
+      await pump(tester, id);
+      await identify(tester, ['Bo', 'Cy']);
+      await tester.tap(find.text('Fi'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Les Loups désignent Fi');
+      await tap(tester, 'Résoudre la nuit');
+      await tap(tester, 'Je ne note pas');
+      await tap(tester, 'Élire le Capitaine');
+      await tap(tester, 'Pas de Capitaine cette partie');
+
+      await tap(tester, "Égalité, personne n'est éliminé");
+
+      expect(find.text('Commencer la nuit 2'), findsOneWidget);
+    });
+
+    testWidgets('falls on the Scapegoat, who then names who votes next', (tester) async {
+      final id = await _startedGame(repo, comp);
+      await pump(tester, id);
+      await toVote(tester);
+
+      await tap(tester, "Égalité, personne n'est éliminé");
+      expect(find.text('Y a-t-il un Bouc Émissaire en vie ? Désignez-le.'), findsOneWidget);
+      await tester.tap(find.text('Ana'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Ana est le Bouc Émissaire');
+
+      // his last wish: who may vote
+      expect(find.text('Qui peut voter ?'), findsOneWidget);
+      await tester.tap(find.text('Bo'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Seul 1 joueur vote');
+
+      expect(find.text('Commencer la nuit 2'), findsOneWidget);
+      await tap(tester, 'Journal');
+      expect(find.text('Égalité au vote : le Bouc Émissaire Ana est éliminé'), findsOneWidget);
+      expect(find.text('Le Bouc Émissaire désigne qui peut voter : Bo'), findsOneWidget);
+    });
+
+    testWidgets('"no Scapegoat alive" goes back to the usual tie', (tester) async {
+      final id = await _startedGame(repo, comp);
+      await pump(tester, id);
+      await toVote(tester);
+
+      await tap(tester, "Égalité, personne n'est éliminé");
+      await tap(tester, 'Pas de Bouc Émissaire en vie');
+
+      expect(find.text('Commencer la nuit 2'), findsOneWidget);
+    });
+  });
+
   group('the Village Idiot', () {
     const comp = {'idiot_du_village': 1, 'loup_garou': 2, 'villageois': 3};
 

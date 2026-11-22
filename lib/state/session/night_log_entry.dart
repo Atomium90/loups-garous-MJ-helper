@@ -132,6 +132,19 @@ List<NightLogEntry> nightLogEntriesForEvents(
         entry(JournalKind.elderSurvives, e.playerId)
       else if (e is VillagersLostPowers)
         entry(JournalKind.villagersLosePowers, e.elderPlayerId)
+      else if (e is ScapegoatBlamed)
+        entry(JournalKind.scapegoatBlamed, e.playerId)
+      else if (e is VotersChosen)
+        NightLogEntry(
+          phase: phase,
+          phaseIndex: after.nightIndex,
+          kind: JournalKind.scapegoatVoters,
+          args: {
+            'player': e.allowedPlayerIds.isEmpty
+                ? ''
+                : [for (final id in e.allowedPlayerIds) after.playerById(id).name].join(', '),
+          },
+        )
       else if (e is IdiotPardoned)
         entry(JournalKind.idiotPardoned, e.playerId)
       else if (e is DefenderSaved)

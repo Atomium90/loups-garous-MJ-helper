@@ -8,6 +8,7 @@ import '../../../state/session/day_plan.dart';
 import '../../../state/session/game_session.dart';
 import '../../../state/session/night_script.dart' show kCharmedStepRole;
 import '../../../state/session/session_cursor.dart';
+import '../../../state/settings/settings.dart' show VoteTieRule;
 import '../../../state/settings/settings_providers.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
@@ -1115,6 +1116,7 @@ IconData _roleIcon(String roleId) => switch (roleId) {
   'voleur' => AppIcons.thief,
   'chasseur' => AppIcons.hunter,
   'ancien' => AppIcons.elder,
+  'bouc_emissaire' => AppIcons.scapegoat,
   'idiot_du_village' => AppIcons.idiot,
   'salvateur' => AppIcons.defender,
   'ange' => AppIcons.angel,
@@ -1610,22 +1612,130 @@ class _CaptainElectionBody extends StatelessWidget {
 
 /// The village vote. 44px avatars (the largest in the app); the current
 /// captain's avatar carries a crown badge.
-class _VoteBody extends StatelessWidget {
+/// Where the vote is: the usual pick, or what a tie asks next.
+enum _VoteMode { vote, askScapegoat, tieBreak }
+
+class _VoteBody extends ConsumerStatefulWidget {
   const _VoteBody({required this.session, required this.notifier});
 
   final GameSessionState session;
   final GameSession notifier;
 
   @override
+  ConsumerState<_VoteBody> createState() => _VoteBodyState();
+}
+
+class _VoteBodyState extends ConsumerState<_VoteBody> {
+  _VoteMode _mode = _VoteMode.vote;
+
+  GameSessionState get _session => widget.session;
+  GameSession get _notifier => widget.notifier;
+
+  VoteTieRule get _rule => ref.read(settingsProvider).value?.voteTieRule ?? VoteTieRule.nobody;
+
+  /// The village votes against [id]: the Village Idiot, when it is one, is pardoned.
+  Future<void> _eliminate(String id) async {
+    if (_session.mayBeIdiot(id)) {
+      final name = _session.engine.playerById(id).name;
+      final isIdiot = await showIdiotQuestion(context, name: name);
+      if (isIdiot == true) {
+        await _notifier.identifyRole('idiot_du_village', [int.parse(id)]);
+      }
+    }
+    await _notifier.eliminateByVote(id);
+  }
+
+  /// The vote is tied: the Scapegoat first, then what the table decided for a tie.
+  Future<void> _tie() async {
+    final goat = _session.knownScapegoat;
+    if (goat != null) {
+      await _notifier.voteTiedOnScapegoat(goat.id);
+    } else if (_session.scapegoatMayBeAlive) {
+      setState(() => _mode = _VoteMode.askScapegoat);
+    } else {
+      await _tieWithoutScapegoat();
+    }
+  }
+
+  Future<void> _tieWithoutScapegoat() async {
+    final captainAlive = _session.engine.captainPlayerId != null;
+    if (_rule == VoteTieRule.nobody || (_rule == VoteTieRule.captainDecides && !captainAlive)) {
+      await _notifier.eliminateByVote(null);
+    } else {
+      setState(() => _mode = _VoteMode.tieBreak);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final captainId = session.engine.captainPlayerId;
-    final captainName = captainId == null ? null : session.engine.playerById(captainId).name;
+    final engine = _session.engine;
+    final captainId = engine.captainPlayerId;
+    final captainName = captainId == null ? null : engine.playerById(captainId).name;
+    final voters = engine.votersToday;
+    final pardoned = [
+      for (final p in engine.alivePlayers)
+        if (p.hasStatus(PlayerStatus.pardoned)) p.name,
+    ];
+
+    final Widget pick;
+    switch (_mode) {
+      case _VoteMode.askScapegoat:
+        pick = TargetPick(
+          question: context.l10n.scriptScapegoatAsk,
+          candidates: _alive(engine),
+          confirmLabel: context.l10n.scriptScapegoatIs,
+          onConfirm: (id) async {
+            await _notifier.identifyRole('bouc_emissaire', [int.parse(id)]);
+            await _notifier.voteTiedOnScapegoat(id);
+          },
+          secondaryLabel: context.l10n.scriptScapegoatNone,
+          onSecondary: () {
+            setState(() => _mode = _VoteMode.vote);
+            _tieWithoutScapegoat();
+          },
+        );
+      case _VoteMode.tieBreak:
+        pick = TargetPick(
+          question: _rule == VoteTieRule.captainDecides
+              ? context.l10n.scriptTieCaptain
+              : context.l10n.scriptTieRevote,
+          candidates: _alive(engine),
+          avatarSize: AppSizes.avatarVoteGrid,
+          crossAxisCount: AppSizes.gridColumnsSmallPool,
+          confirmLabel: context.l10n.scriptVoteEliminates,
+          onConfirm: _eliminate,
+          secondaryLabel: context.l10n.scriptTieNobody,
+          onSecondary: () => _notifier.eliminateByVote(null),
+        );
+      case _VoteMode.vote:
+        pick = TargetPick(
+          question: context.l10n.scriptVoteQuestion,
+          candidates: _alive(engine),
+          avatarSize: AppSizes.avatarVoteGrid,
+          crossAxisCount: AppSizes.gridColumnsSmallPool,
+          confirmLabel: context.l10n.scriptVoteEliminates,
+          onConfirm: _eliminate,
+          badgeFor: (c) => c.id == captainId
+              ? Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(color: colors.bgScreen, shape: BoxShape.circle),
+                  child: Icon(AppIcons.captain, size: 11, color: colors.warnText),
+                )
+              : null,
+          secondaryLabel: voters != null && voters.isEmpty
+              ? context.l10n.scriptVoteNobodyVotes
+              : context.l10n.scriptVoteTie,
+          onSecondary: voters != null && voters.isEmpty
+              ? () => _notifier.eliminateByVote(null)
+              : _tie,
+        );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _DayEyebrow(label: context.l10n.scriptVoteEyebrow(session.engine.nightIndex)),
+        _DayEyebrow(label: context.l10n.scriptVoteEyebrow(engine.nightIndex)),
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 12),
           child: _RoleBanner(
@@ -1636,38 +1746,31 @@ class _VoteBody extends StatelessWidget {
                 : context.l10n.scriptVoteBodyCaptain(captainName),
           ),
         ),
+        if (voters != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 8),
+            child: Text(
+              voters.isEmpty
+                  ? context.l10n.scriptVotersNobody
+                  : context.l10n.scriptVotersOnly(
+                      joinNames(context.l10n, [for (final id in voters) engine.playerById(id).name]),
+                    ),
+              style: context.typography.meta.copyWith(color: colors.warnText, height: 1.5),
+            ),
+          ),
+        if (pardoned.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 8),
+            child: Text(
+              context.l10n.scriptVotersPardoned(joinNames(context.l10n, pardoned)),
+              style: context.typography.meta.copyWith(color: colors.textTertiary, height: 1.5),
+            ),
+          ),
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 12),
           child: NarrationBlock(lines: voteNarration(context.l10n)),
         ),
-        Expanded(
-          child: TargetPick(
-            question: context.l10n.scriptVoteQuestion,
-            candidates: _alive(session.engine),
-            avatarSize: AppSizes.avatarVoteGrid,
-            crossAxisCount: AppSizes.gridColumnsSmallPool,
-            confirmLabel: context.l10n.scriptVoteEliminates,
-            onConfirm: (id) async {
-              if (session.mayBeIdiot(id)) {
-                final name = session.engine.playerById(id).name;
-                final isIdiot = await showIdiotQuestion(context, name: name);
-                if (isIdiot == true) {
-                  await notifier.identifyRole('idiot_du_village', [int.parse(id)]);
-                }
-              }
-              await notifier.eliminateByVote(id);
-            },
-            badgeFor: (c) => c.id == captainId
-                ? Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(color: colors.bgScreen, shape: BoxShape.circle),
-                    child: Icon(AppIcons.captain, size: 11, color: colors.warnText),
-                  )
-                : null,
-            secondaryLabel: context.l10n.scriptVoteTie,
-            onSecondary: () => notifier.eliminateByVote(null),
-          ),
-        ),
+        Expanded(child: pick),
       ],
     );
   }
@@ -1908,6 +2011,11 @@ class _ChainPanel extends StatelessWidget {
         notifier: notifier,
         deadKnightId: deadKnightId,
       ),
+      PendingScapegoatVoters(:final deadScapegoatId) => _ScapegoatVotersPanel(
+        session: session,
+        notifier: notifier,
+        deadScapegoatId: deadScapegoatId,
+      ),
     };
   }
 }
@@ -2095,6 +2203,99 @@ class _KnightWoundPanel extends ConsumerWidget {
             onConfirm: notifier.knightContaminate,
             secondaryLabel: context.l10n.scriptKnightNone,
             onSecondary: () => notifier.knightContaminate(null),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The Scapegoat was eliminated: who may vote on the next day? The ones not chosen sit it out.
+class _ScapegoatVotersPanel extends StatefulWidget {
+  const _ScapegoatVotersPanel({
+    required this.session,
+    required this.notifier,
+    required this.deadScapegoatId,
+  });
+
+  final GameSessionState session;
+  final GameSession notifier;
+  final String deadScapegoatId;
+
+  @override
+  State<_ScapegoatVotersPanel> createState() => _ScapegoatVotersPanelState();
+}
+
+class _ScapegoatVotersPanelState extends State<_ScapegoatVotersPanel> {
+  final _chosen = <String>{};
+
+  @override
+  Widget build(BuildContext context) {
+    final engine = widget.session.engine;
+    final goat = engine.playerById(widget.deadScapegoatId);
+    final alive = _alive(engine);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _SheetHandle(),
+        _DeadHeader(name: goat.name, subtitle: context.l10n.scriptScapegoatDead),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 16, AppSpacing.screen, 12),
+          child: _RoleBanner(
+            icon: AppIcons.scapegoat,
+            title: context.l10n.scriptScapegoatTitle,
+            body: context.l10n.scriptScapegoatBody,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 8),
+          child: Text(
+            context.l10n.scriptScapegoatQuestion,
+            style: context.typography.rowLabel.copyWith(color: context.colors.textPrimary),
+          ),
+        ),
+        Expanded(
+          child: GridView.count(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screen),
+            crossAxisCount: AppSizes.gridColumnsDefault,
+            mainAxisSpacing: AppSpacing.gridGapRow,
+            crossAxisSpacing: AppSpacing.gridGapColumn,
+            childAspectRatio: 1.0,
+            children: [
+              for (final c in alive)
+                AvatarPickCell(
+                  name: c.name,
+                  selected: _chosen.contains(c.id),
+                  onTap: () => setState(() {
+                    if (!_chosen.remove(c.id)) _chosen.add(c.id);
+                  }),
+                ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screen,
+            12,
+            AppSpacing.screen,
+            AppSpacing.screen,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: 8,
+            children: [
+              AppButton(
+                label: _chosen.isEmpty
+                    ? context.l10n.scriptScapegoatNobody
+                    : context.l10n.scriptScapegoatVoters(_chosen.length),
+                onPressed: () => widget.notifier.chooseVoters({..._chosen}),
+              ),
+              AppButton(
+                label: context.l10n.scriptScapegoatEveryone,
+                variant: AppButtonVariant.secondary,
+                onPressed: () => widget.notifier.chooseVoters({for (final c in alive) c.id}),
+              ),
+            ],
           ),
         ),
       ],
@@ -2304,9 +2505,11 @@ class _RoleBanner extends StatelessWidget {
                 decoration: BoxDecoration(color: colors.warnBg, shape: BoxShape.circle),
                 child: Icon(icon, size: 17, color: colors.warnText),
               ),
-              Text(
-                title,
-                style: typography.rowLabel.copyWith(fontSize: 16, color: colors.textPrimary),
+              Expanded(
+                child: Text(
+                  title,
+                  style: typography.rowLabel.copyWith(fontSize: 16, color: colors.textPrimary),
+                ),
               ),
             ],
           ),

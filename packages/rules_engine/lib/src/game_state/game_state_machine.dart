@@ -60,10 +60,11 @@ class GameStateMachine {
         action is! HunterShoot &&
         action is! CaptainNameSuccessor &&
         action is! KnightContaminate &&
-        action is! CaptainNoSuccessor) {
+        action is! CaptainNoSuccessor &&
+        action is! ScapegoatChooseVoters) {
       throw InvalidActionError(
         'A death cascade is pending a decision (${state.cascade.runtimeType}); '
-        'only HunterShoot, CaptainNameSuccessor, CaptainNoSuccessor or KnightContaminate can be applied until it resolves',
+        'only HunterShoot, CaptainNameSuccessor, CaptainNoSuccessor, KnightContaminate or ScapegoatChooseVoters can be applied until it resolves',
       );
     }
     switch (action) {
@@ -99,6 +100,10 @@ class GameStateMachine {
         return _applyDefenderProtect(state, action);
       case CaptainNoSuccessor():
         return _applyCaptainNoSuccessor(state, roleRegistry);
+      case DayVoteTie():
+        return _applyDayVoteTie(state, action, roleRegistry);
+      case ScapegoatChooseVoters():
+        return _applyScapegoatChooseVoters(state, action, roleRegistry);
       case KnightContaminate():
         return _applyKnightContaminate(state, action, roleRegistry);
       case FinalizeNight():
@@ -690,6 +695,78 @@ class GameStateMachine {
       );
     }
     throw InvalidActionError('No pending Hunter shot to resolve');
+  }
+
+  ActionResult _applyDayVoteTie(GameState state, DayVoteTie action, RoleRegistry roleRegistry) {
+    if (state.phase != GamePhase.day) {
+      throw InvalidActionError('A tied vote can only happen during the day');
+    }
+    final scapegoatId = action.scapegoatPlayerId;
+    if (scapegoatId == null) return ActionResult(state: state, events: const []);
+
+    final scapegoat = state.playerById(scapegoatId);
+    _requireAlive(scapegoat, 'the Scapegoat');
+    if (scapegoat.roleId != 'bouc_emissaire' || state.villagersPowerless) {
+      throw InvalidActionError('$scapegoatId cannot take the blame of a tied vote');
+    }
+    final killed = state.killPlayer(scapegoatId, cause: const DayVoteKill());
+    final drained = drainCascade(
+      state: killed,
+      queue: deathCascadeTasks(scapegoatId),
+      roleRegistry: roleRegistry,
+    );
+    return ActionResult(
+      state: drained.state.copyWith(
+        cascade: drained.pendingDecision == null
+            ? null
+            : CascadeState(
+                decision: drained.pendingDecision!,
+                remainingQueue: drained.remainingQueue,
+              ),
+      ),
+      events: [
+        ScapegoatBlamed(playerId: scapegoatId),
+        PlayerDied(playerId: scapegoatId, cause: const DayVoteKill()),
+        ...drained.events,
+      ],
+    );
+  }
+
+  ActionResult _applyScapegoatChooseVoters(
+    GameState state,
+    ScapegoatChooseVoters action,
+    RoleRegistry roleRegistry,
+  ) {
+    final cascade = state.cascade;
+    if (cascade == null || cascade.decision is! PendingScapegoatVoters) {
+      throw InvalidActionError('No pending Scapegoat choice to resolve');
+    }
+    final dead = state.playerById((cascade.decision as PendingScapegoatVoters).deadScapegoatId);
+    for (final id in action.allowedPlayerIds) {
+      state.playerById(id); // validates existence
+    }
+    // "The next day": the one that follows his death - this very morning when he died at night,
+    // tomorrow when he died in a day.
+    final day = dead.diedOnPhase == GamePhase.night ? dead.diedOnNight! : dead.diedOnNight! + 1;
+    final drained = drainCascade(
+      state: state.copyWith(
+        cascade: null,
+        voteRestriction: VoteRestriction(allowed: action.allowedPlayerIds, day: day),
+      ),
+      queue: cascade.remainingQueue,
+      roleRegistry: roleRegistry,
+    );
+    return ActionResult(
+      state: drained.state.copyWith(
+        cascade: drained.pendingDecision == null
+            ? null
+            : CascadeState(
+                decision: drained.pendingDecision!,
+                remainingQueue: drained.remainingQueue,
+              ),
+      ),
+      events: [VotersChosen(allowedPlayerIds: action.allowedPlayerIds), ...drained.events],
+    );
   }
 
   ActionResult _applyCaptainNoSuccessor(GameState state, RoleRegistry roleRegistry) {
