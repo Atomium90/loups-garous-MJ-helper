@@ -6,7 +6,10 @@ import 'session_cursor.dart';
 /// now. [DayStage]'s declaration order is the order of the day: a role that adds a stage (the
 /// bear growling at the start of the day, a second vote) adds a value in its place and a line
 /// here, and every screen that moves on goes through [nextDayStage].
-List<DayStage> dayStagesFor(GameState engine) => [
+List<DayStage> dayStagesFor(GameState engine) => engine.nightIndex == 0
+    // The day before the first night (the Angel is in play): only the debate and the vote.
+    ? [DayStage.vote, DayStage.done]
+    : [
   DayStage.recap,
   // After the victims are named, a living Bear Tamer growls if a neighbour is a wolf - unless the
   // villagers lost their powers.

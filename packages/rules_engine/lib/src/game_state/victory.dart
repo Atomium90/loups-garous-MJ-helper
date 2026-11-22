@@ -17,6 +17,9 @@ enum VictoryKind {
   /// The White Werewolf is the only one left.
   whiteWolf,
 
+  /// The Angel was eliminated at the first vote or during the first night.
+  angel,
+
   /// Every living player but the Piper has been charmed.
   piper,
 
@@ -33,13 +36,29 @@ enum VictoryKind {
 /// that role's own business.
 VictoryKind? proposeVictory(GameState state, RoleRegistry registry) {
   final alive = state.alivePlayers;
+
+  // The Angel wins the moment he is eliminated at the first vote (before night 1) or during
+  // night 1 - unless he is one of the lovers, who give up their own goal.
+  final angelOut = state.players.any(
+    (p) =>
+        p.roleId == 'ange' &&
+        !p.alive &&
+        state.lovers?.partnerOf(p.id) == null &&
+        (p.diedOnNight == 0 || (p.diedOnNight == 1 && p.diedOnPhase == GamePhase.night)),
+  );
+  if (angelOut) return VictoryKind.angel;
+
+  // Before the first night nobody's card is known yet (a player whose card is unknown counts for
+  // the village): no side can be said to have won, only the Angel's early win above.
+  if (state.nightIndex == 0) return null;
+
   if (alive.isEmpty) return VictoryKind.nobody;
 
   final lovers = state.lovers;
   if (lovers != null && alive.length == 2) {
     final ids = alive.map((p) => p.id).toSet();
     if (ids.containsAll([lovers.playerAId, lovers.playerBId])) {
-      final sides = alive.map((p) => p.sideIn(registry)).toSet();
+      final sides = alive.map((p) => state.sideOf(p, registry)).toSet();
       final wolfAndOther = sides.contains(Team.werewolves) && sides.length > 1;
       final withSolo = sides.contains(Team.solo);
       if (wolfAndOther || withSolo) return VictoryKind.lovers;
@@ -60,7 +79,7 @@ VictoryKind? proposeVictory(GameState state, RoleRegistry registry) {
     return VictoryKind.piper;
   }
 
-  final sides = alive.map((p) => p.sideIn(registry)).toSet();
+  final sides = alive.map((p) => state.sideOf(p, registry)).toSet();
   if (sides.contains(Team.solo)) return null;
   if (sides.length == 1 && sides.single == Team.werewolves) return VictoryKind.werewolves;
   if (!sides.contains(Team.werewolves)) return VictoryKind.village;

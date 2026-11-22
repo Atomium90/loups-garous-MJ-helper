@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:rules_engine/rules_engine.dart';
 
 const _builder = NightScriptBuilder();
@@ -61,7 +63,8 @@ NightScript buildNightScript({
   bool whiteWolfOddNights = false,
   RoleRegistry registry = RoleRegistry.all,
 }) {
-  final nightIndex = engine.nightIndex;
+  // Before night 1 (the Angel's vote) the script is night 1's.
+  final nightIndex = max(1, engine.nightIndex);
 
   // Confirmed holders' roles: everyone the deal / a reveal / a Voleur swap has
   // pinned down. The placeholder is filtered out (it never wakes anyway).
@@ -93,7 +96,7 @@ NightScript buildNightScript({
             if (r.hasNightCall) r.id,
         },
         nightIndex: nightIndex,
-        context: _contextFor(engine, whiteWolfOddNights: whiteWolfOddNights),
+        context: _contextFor(engine, nightIndex, whiteWolfOddNights: whiteWolfOddNights),
       ),
       engine,
     );
@@ -134,7 +137,7 @@ NightScript buildNightScript({
       compositionRoles: inOrder,
       aliveRoleIds: {for (final r in inOrder) r.id},
       nightIndex: nightIndex,
-      context: _contextFor(engine, whiteWolfOddNights: whiteWolfOddNights),
+      context: _contextFor(engine, nightIndex, whiteWolfOddNights: whiteWolfOddNights),
     ),
     engine,
   );
@@ -143,8 +146,12 @@ NightScript buildNightScript({
 /// What the game says about tonight's calls beyond the roles themselves.
 ///
 /// With [whiteWolfOddNights] the White Werewolf's solo power starts on night 1: the odd nights.
-NightContext _contextFor(GameState engine, {required bool whiteWolfOddNights}) => NightContext(
-  nightIndex: engine.nightIndex,
+NightContext _contextFor(
+  GameState engine,
+  int nightIndex, {
+  required bool whiteWolfOddNights,
+}) => NightContext(
+  nightIndex: nightIndex,
   firstNightOf: {if (whiteWolfOddNights) 'loup_garou_blanc': 1},
   spentPowers: engine.spentPowersBeforeTonight,
   wolfSideLost: engine.wolfSideLost(RoleRegistry.all),

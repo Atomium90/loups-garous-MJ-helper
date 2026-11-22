@@ -160,6 +160,28 @@ void main() {
     });
   });
 
+  testWidgets('the Angel is offered as a winner when he is in the game', (tester) async {
+    final id = await repo.createGame(initialPlayerCount: 3);
+    await repo.saveComposition(
+      gameId: id,
+      playerCount: 3,
+      roleCounts: const {'ange': 1, 'loup_garou': 1, 'villageois': 1},
+    );
+    await repo.savePlayerNames(gameId: id, names: const ['Ana', 'Bo', 'Cy']);
+    await repo.startGame(id);
+    await tester.binding.setSurfaceSize(const Size(400, 1600));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(repo)],
+      initialLocation: '/games/$id/end',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text("L'Ange"), findsOneWidget);
+    expect(find.text('Le Joueur de Flûte'), findsNothing);
+  });
+
   testWidgets('"On continue à jouer" leaves the game running', (tester) async {
     final id = await game();
     await tester.binding.setSurfaceSize(const Size(400, 1600));

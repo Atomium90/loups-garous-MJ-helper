@@ -261,14 +261,17 @@ class GameSession extends _$GameSession {
     final DaySnapshot day;
     final existing = game.sessionJson;
     if (existing == null) {
-      engine = GameState.initial(
+      final fresh = GameState.initial(
         players: [
           for (final r in roster)
             Player(id: '${r.id}', name: r.name, roleId: r.roleId ?? _placeholderRole),
         ],
       );
+      // With the Angel in play the game starts by a debate and a vote, before the first night.
+      final angelInPlay = (composition['ange'] ?? 0) > 0;
+      engine = angelInPlay ? fresh.copyWith(nightIndex: 0, phase: GamePhase.day) : fresh;
       cursor = SessionCursor.nightStart;
-      day = DaySnapshot.fresh;
+      day = angelInPlay ? const DaySnapshot(stage: DayStage.vote) : DaySnapshot.fresh;
       final settings = ref.read(settingsProvider).value;
       _foxAfterWitch = settings?.foxAfterWitch ?? false;
       _whiteWolfOdd = settings?.whiteWolfOddNights ?? false;

@@ -98,6 +98,26 @@ void main() {
     expect(find.text('2 Loups-Garous · Voleur · 5 Simples Villageois'), findsOneWidget);
   });
 
+  testWidgets('with the Angel the game starts with a debate, and says so', (tester) async {
+    final repository = FakeGameRepository();
+    final id = await _readyToDeal(
+      repository,
+      composition: const {'ange': 1, 'loup_garou': 2, 'villageois': 3},
+      names: const ['Camille', 'Julien', 'Noa', 'Lina', 'Théo', 'Awa'],
+    );
+
+    await pumpScreen(
+      tester,
+      BeforeNightScreen(gameId: id),
+      overrides: [gameRepositoryProvider.overrideWithValue(repository)],
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining("L'Ange est en jeu : la partie commence par un débat"), findsOneWidget);
+    expect(find.text('Commencer par le débat'), findsOneWidget);
+    expect(find.text('Commencer la nuit 1'), findsNothing);
+  });
+
   testWidgets('Commencer la nuit 1 starts the game and opens the Script tab', (tester) async {
     final repository = FakeGameRepository();
     final id = await _readyToDeal(

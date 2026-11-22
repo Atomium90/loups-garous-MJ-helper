@@ -155,6 +155,19 @@ void main() {
     });
   });
 
+  group('the day before night 1', () {
+    test('is not called day 0', () {
+      expect(fr.summaryPhase('day', 0), 'Avant la nuit 1');
+      expect(en.summaryPhase('day', 0), 'Before night 1');
+      expect(fr.summaryPhase('day', 2), 'Jour 2');
+      expect(fr.journalPhaseHeader('day', 0), 'AVANT LA NUIT 1');
+      expect(en.journalPhaseHeader('day', 0), 'BEFORE NIGHT 1');
+      expect(fr.journalPhaseHeader('day', 3), 'JOUR 3');
+      expect(fr.scriptVoteEyebrow(0), 'Avant la nuit 1 · vote');
+      expect(en.scriptVoteEyebrow(2), 'Day 2 · vote');
+    });
+  });
+
   group('death causes', () {
     const causes = <DeathCause>[
       WolvesKill(),

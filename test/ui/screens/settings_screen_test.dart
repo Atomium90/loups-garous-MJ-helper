@@ -369,7 +369,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('2 boîtes · 19 rôles'), findsOneWidget);
+      expect(find.text('2 boîtes · 20 rôles'), findsOneWidget);
     });
   });
 }

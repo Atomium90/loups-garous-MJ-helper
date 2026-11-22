@@ -30,6 +30,12 @@ void main() {
     });
   });
 
+  test('the day before night 1 is only a vote', () {
+    final before = _day(1).copyWith(nightIndex: 0);
+    expect(dayStagesFor(before), [DayStage.vote, DayStage.done]);
+    expect(nextDayStage(DayStage.vote, before), DayStage.done);
+  });
+
   group('with a Bear Tamer', () {
     GameState withBear({bool alive = true}) => GameState.initial(
       players: [

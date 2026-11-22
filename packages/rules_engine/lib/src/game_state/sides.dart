@@ -20,9 +20,20 @@ extension PlayerPack on Player {
 }
 
 extension GameStateSides on GameState {
+  /// The side [player] plays for at this point of the game: [Player.sideIn], except that the Angel
+  /// who is still alive once the second day has begun is a Simple Villageois for good.
+  Team sideOf(Player player, RoleRegistry registry) {
+    final side = player.sideIn(registry);
+    if (side == Team.solo && player.roleId == 'ange' && angelHasFallen) return Team.village;
+    return side;
+  }
+
+  /// The second day has begun: the Angel's chance to win alone is over.
+  bool get angelHasFallen => nightIndex >= 2 || (nightIndex == 1 && phase == GamePhase.day);
+
   /// Living players on [side].
   int aliveOnSide(Team side, RoleRegistry registry) =>
-      alivePlayers.where((p) => p.sideIn(registry) == side).length;
+      alivePlayers.where((p) => sideOf(p, registry) == side).length;
 
   /// Living players who play with the wolves.
   int aliveWolves(RoleRegistry registry) => aliveOnSide(Team.werewolves, registry);

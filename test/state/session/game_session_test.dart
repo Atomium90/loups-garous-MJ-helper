@@ -7,7 +7,9 @@ import 'package:loup_garou_mj/data/models/game_winner.dart';
 import 'package:loup_garou_mj/data/repositories/drift_game_repository.dart';
 import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
 import 'package:loup_garou_mj/state/session/game_session.dart';
+import 'package:loup_garou_mj/data/models/night_log_entry.dart' show JournalPhase;
 import 'package:loup_garou_mj/state/session/session_cursor.dart';
+import 'package:loup_garou_mj/state/session/session_summary_provider.dart';
 import 'package:loup_garou_mj/state/settings/settings_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:loup_garou_mj/ui/screens/in_game/script_tab.dart' show unassignedRoles;
@@ -444,6 +446,64 @@ void main() {
       expect(s.dealtHoldersKnown('loup_garou'), 1);
       expect(s.voleurSwapInsFor('loup_garou'), isEmpty); // she's not the Voleur
       expect(s.currentStepNeedsIdentify, isTrue); // one wolf still unknown
+    });
+  });
+
+  group('the Angel', () {
+    const comp = {'ange': 1, 'loup_garou': 2, 'villageois': 3};
+
+    test('starts the game with a vote before night 1', () async {
+      final game = await _startedGame(repo, composition: comp);
+      final s = await container.read(gameSessionProvider(game.gameId).future);
+
+      expect(s.engine.nightIndex, 0);
+      expect(s.engine.phase, GamePhase.day);
+      expect(s.day.stage, DayStage.vote);
+      // night 1's script is already known, for the night that follows
+      expect(s.tonight.steps.map((st) => st.role.id), ['loup_garou']);
+    });
+
+    test('a game without the Angel starts on night 1 as before', () async {
+      final game = await _startedGame(repo, composition: composition);
+      final s = await container.read(gameSessionProvider(game.gameId).future);
+
+      expect(s.engine.nightIndex, 1);
+      expect(s.engine.phase, GamePhase.night);
+    });
+
+    test('the vote, then night 1 begins', () async {
+      final game = await _startedGame(repo, composition: comp);
+      final n = await notifierFor(game.gameId);
+
+      await n.eliminateByVote('${game.seatRowIds[1]}');
+      expect(stateOf(game.gameId).day.stage, DayStage.done);
+      await n.startNextNight();
+
+      final s = stateOf(game.gameId);
+      expect(s.engine.nightIndex, 1);
+      expect(s.engine.phase, GamePhase.night);
+      expect(s.cursor, SessionCursor.nightStart);
+    });
+
+    test('is proposed the win once voted out, whose card is revealed afterwards', () async {
+      final game = await _startedGame(repo, composition: comp);
+      final n = await notifierFor(game.gameId);
+
+      await n.eliminateByVote('${game.seatRowIds[0]}');
+      expect(stateOf(game.gameId).proposedWinner, isNull); // card not known yet
+      await n.revealRole(game.seatRowIds[0], 'ange');
+
+      expect(stateOf(game.gameId).proposedWinner, GameWinner.angel);
+    });
+
+    test('the summary of the saved game reads "before night 1"', () async {
+      final game = await _startedGame(repo, composition: comp);
+      await container.read(gameSessionProvider(game.gameId).future);
+
+      final summary = await container.read(sessionSummaryProvider(game.gameId).future);
+      expect(summary!.nightIndex, 0);
+      expect(summary.phase, JournalPhase.day);
+      expect(summary.step, SummaryStep.villageVote);
     });
   });
 

@@ -120,6 +120,10 @@ class _Body extends ConsumerWidget {
                     height: 1.7,
                   ),
                 ),
+                if ((composition['ange'] ?? 0) > 0) ...[
+                  const SizedBox(height: 16),
+                  _AngelCallout(),
+                ],
                 if (reserve.isNotEmpty) ...[
                   const SizedBox(height: 16),
                   _ReserveCallout(hint: context.l10n.beforeNightReserveHint(reserveLine(context.l10n, reserve))),
@@ -139,7 +143,9 @@ class _Body extends ConsumerWidget {
             AppSpacing.screen,
           ),
           child: AppButton(
-            label: context.l10n.beforeNightStart,
+            label: (composition['ange'] ?? 0) > 0
+                ? context.l10n.beforeNightStartAngel
+                : context.l10n.beforeNightStart,
             leadingIcon: AppIcons.nightStart,
             onPressed: () => _onStart(context, ref),
           ),
@@ -187,6 +193,35 @@ class _DealCallout extends StatelessWidget {
                   style: typography.meta.copyWith(color: colors.textSecondary, height: 1.55),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// With the Angel in play the game does not start with the night.
+class _AngelCallout extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final typography = context.typography;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.bgInset,
+        borderRadius: BorderRadius.circular(AppRadii.button),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(AppIcons.angel, size: 18, color: colors.textSecondary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              context.l10n.beforeNightAngelHint,
+              style: typography.meta.copyWith(color: colors.textSecondary, height: 1.55),
             ),
           ),
         ],

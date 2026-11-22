@@ -92,6 +92,42 @@ void main() {
     );
   });
 
+  group('the Angel', () {
+    const comp = {'ange': 1, 'loup_garou': 2, 'villageois': 3};
+
+    testWidgets('the game opens on a debate and a vote, then night 1 starts', (tester) async {
+      final id = await _startedGame(repo, comp);
+      await pump(tester, id);
+
+      expect(find.textContaining("L'Ange est en jeu : débattez"), findsOneWidget);
+      expect(find.text('AVANT LA NUIT 1 · VOTE'), findsOneWidget);
+
+      await tester.tap(find.text('Bo'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Le village élimine Bo');
+      await tap(tester, 'Je ne note pas');
+      await tap(tester, 'Commencer la nuit 1');
+
+      expect(find.text('Qui sont les Loups-Garous ?'), findsOneWidget);
+    });
+
+    testWidgets('proposes his victory once he is voted out and his card shown', (tester) async {
+      final id = await _startedGame(repo, comp);
+      await pump(tester, id);
+
+      await tester.tap(find.text('Ana'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Le village élimine Ana');
+      await tap(tester, 'Ange');
+      await tap(tester, "Ana était l'Ange");
+
+      expect(
+        find.textContaining("L'Ange a été éliminé au premier vote"),
+        findsOneWidget,
+      );
+    });
+  });
+
   group('the Knight with the Rusty Sword', () {
     const comp = {'chevalier': 1, 'loup_garou': 2, 'villageois': 3};
 

@@ -181,4 +181,12 @@ const allRoles = <Role>[
     hasNightCall: false,
     onDeath: DeathEffect.knightDisease,
   ),
+  // No call: the game starts with a debate and a vote before the first night (night 0 of the
+  // engine). Eliminated at that vote or during night 1, he wins; alive on the second day, he is a
+  // Simple Villageois (see GameStateSides.sideOf).
+  Role(
+    id: 'ange',
+    team: Team.solo,
+    hasNightCall: false,
+  ),
 ];

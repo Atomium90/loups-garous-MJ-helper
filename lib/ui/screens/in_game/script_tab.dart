@@ -1102,6 +1102,7 @@ IconData _roleIcon(String roleId) => switch (roleId) {
   'voleur' => AppIcons.thief,
   'chasseur' => AppIcons.hunter,
   'ancien' => AppIcons.elder,
+  'ange' => AppIcons.angel,
   'chevalier' => AppIcons.knight,
   'joueur_de_flute' => AppIcons.piperRole,
   'joueurs_charmes' => AppIcons.piperRole,
@@ -1153,9 +1154,11 @@ class _DayBody extends ConsumerWidget {
     };
     final proposed = session.proposedWinner;
     final powerless = session.engine.villagersPowerless;
-    if (proposed == null && !powerless) return body;
+    final beforeNight1 = session.engine.nightIndex == 0;
+    if (proposed == null && !powerless && !beforeNight1) return body;
     return Column(
       children: [
+        if (beforeNight1) const _AngelDebateBanner(),
         if (proposed != null)
           _VictoryProposalBanner(
             winner: proposed,
@@ -1164,6 +1167,37 @@ class _DayBody extends ConsumerWidget {
         if (powerless) const _PowerlessBanner(),
         Expanded(child: body),
       ],
+    );
+  }
+}
+
+/// The game starts with a debate and a vote: the Angel is in play.
+class _AngelDebateBanner extends StatelessWidget {
+  const _AngelDebateBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(AppSpacing.screen, 8, AppSpacing.screen, 0),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.accentBg,
+        borderRadius: BorderRadius.circular(AppRadii.button),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 10,
+        children: [
+          Icon(AppIcons.angel, size: 18, color: colors.accentText),
+          Expanded(
+            child: Text(
+              context.l10n.scriptAngelDebate,
+              style: context.typography.meta.copyWith(color: colors.accentText, height: 1.5),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
