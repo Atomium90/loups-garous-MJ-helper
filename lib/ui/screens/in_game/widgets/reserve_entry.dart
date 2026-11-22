@@ -6,6 +6,7 @@ import '../../../theme/app_icons.dart';
 import '../../../theme/app_typography.dart';
 import '../../../utils/l10n.dart';
 import '../../../widgets/app_button.dart';
+import '../../../widgets/reserve_card.dart';
 
 /// The Voleur's two leftover cards, noted once the deal is done. The app needs them to know who
 /// can still hold what - and to force the swap when both are Loups-Garous.
@@ -44,7 +45,7 @@ class _ReserveEntryState extends State<ReserveEntry> {
     final roleId = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: context.colors.bgScreen,
-      builder: (_) => _PickerSheet(roleIds: _options(slot)),
+      builder: (_) => ReserveRolePickerSheet(roleIds: _options(slot)),
     );
     if (roleId != null && mounted) setState(() => _picked[slot] = roleId);
   }
@@ -77,10 +78,14 @@ class _ReserveEntryState extends State<ReserveEntry> {
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screen),
             children: [
               for (var slot = 0; slot < 2; slot++)
-                _Slot(
-                  index: slot,
-                  roleId: _picked[slot],
-                  onTap: () => _pick(slot),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: ReserveSlot(
+                    index: slot,
+                    roleId: _picked[slot],
+                    onTap: () => _pick(slot),
+                    icon: AppIcons.thief,
+                  ),
                 ),
             ],
           ),
@@ -111,98 +116,6 @@ class _ReserveEntryState extends State<ReserveEntry> {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _Slot extends StatelessWidget {
-  const _Slot({required this.index, required this.roleId, required this.onTap});
-
-  final int index;
-  final String? roleId;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final typography = context.typography;
-    final filled = roleId != null;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Material(
-        color: filled ? colors.accentBg : Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadii.button),
-          side: BorderSide(color: filled ? colors.accentBorder : colors.borderControl),
-        ),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppRadii.button),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            child: Row(
-              children: [
-                Text(
-                  context.l10n.reserveCard(index + 1),
-                  style: typography.counter.copyWith(color: colors.textTertiary),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    filled ? context.l10n.roleName(roleId!) : context.l10n.reservePick,
-                    style: typography.rowLabel.copyWith(
-                      color: filled ? colors.accentText : colors.textSecondary,
-                    ),
-                  ),
-                ),
-                Icon(AppIcons.thief, size: 15, color: colors.textTertiary),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PickerSheet extends StatelessWidget {
-  const _PickerSheet({required this.roleIds});
-
-  final List<String> roleIds;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final typography = context.typography;
-    return SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 16, AppSpacing.screen, 8),
-            child: Text(
-              context.l10n.reserveWhichCard,
-              style: typography.rowLabel.copyWith(color: colors.textPrimary),
-            ),
-          ),
-          Flexible(
-            child: ListView(
-              shrinkWrap: true,
-              children: [
-                for (final id in roleIds)
-                  ListTile(
-                    title: Text(
-                      context.l10n.roleName(id),
-                      style: typography.body.copyWith(color: colors.textPrimary),
-                    ),
-                    onTap: () => Navigator.of(context).pop(id),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

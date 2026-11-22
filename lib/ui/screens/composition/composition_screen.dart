@@ -16,6 +16,7 @@ import '../../utils/labels.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/app_chip.dart';
 import '../../widgets/app_stepper.dart';
+import '../../widgets/reserve_card.dart';
 
 class CompositionScreen extends ConsumerWidget {
   const CompositionScreen({required this.gameId, super.key});
@@ -396,8 +397,8 @@ class _ReserveSection extends StatelessWidget {
     final roleId = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: context.colors.bgScreen,
-      builder: (_) => _RolePickerSheet(
-        roles: draft.availableReserveRoles(slot, pool),
+      builder: (_) => ReserveRolePickerSheet(
+        roleIds: [for (final role in draft.availableReserveRoles(slot, pool)) role.id],
       ),
     );
     if (roleId != null) notifier.setReserveRole(slot, roleId);
@@ -423,8 +424,10 @@ class _ReserveSection extends StatelessWidget {
         for (var slot = 0; slot < 2; slot++)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: _ReserveSlot(
+            child: ReserveSlot(
               index: slot,
+              icon: AppIcons.newGame,
+              verticalPadding: 11,
               roleId: slot < draft.reserveRoleIds.length ? draft.reserveRoleIds[slot] : null,
               onTap: () => _pick(context, slot),
               onClear: slot < draft.reserveRoleIds.length
@@ -461,111 +464,6 @@ class _DrawnReserveNote extends StatelessWidget {
             child: Text(
               context.l10n.reserveRandomNote(packSize),
               style: context.typography.meta.copyWith(color: colors.textSecondary, height: 1.55),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ReserveSlot extends StatelessWidget {
-  const _ReserveSlot({
-    required this.index,
-    required this.roleId,
-    required this.onTap,
-    required this.onClear,
-  });
-
-  final int index;
-  final String? roleId;
-  final VoidCallback onTap;
-  final VoidCallback? onClear;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final typography = context.typography;
-    final filled = roleId != null;
-    return Material(
-      color: filled ? colors.accentBg : Colors.transparent,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadii.button),
-        side: BorderSide(color: filled ? colors.accentBorder : colors.borderControl),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadii.button),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-          child: Row(
-            children: [
-              Text(
-                context.l10n.reserveCard(index + 1),
-                style: typography.counter.copyWith(color: colors.textTertiary),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  filled ? context.l10n.roleName(roleId!) : context.l10n.reservePick,
-                  style: typography.rowLabel.copyWith(
-                    color: filled ? colors.accentText : colors.textSecondary,
-                  ),
-                ),
-              ),
-              if (onClear != null)
-                GestureDetector(
-                  onTap: onClear,
-                  behavior: HitTestBehavior.opaque,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 6),
-                    child: Icon(AppIcons.removeReserve, size: 16, color: colors.accentText),
-                  ),
-                )
-              else
-                Icon(AppIcons.newGame, size: 15, color: colors.textTertiary),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _RolePickerSheet extends StatelessWidget {
-  const _RolePickerSheet({required this.roles});
-
-  final List<Role> roles;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final typography = context.typography;
-    return SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 16, AppSpacing.screen, 8),
-            child: Text(
-              context.l10n.reserveWhichCard,
-              style: typography.rowLabel.copyWith(color: colors.textPrimary),
-            ),
-          ),
-          Flexible(
-            child: ListView(
-              shrinkWrap: true,
-              children: [
-                for (final role in roles)
-                  ListTile(
-                    title: Text(
-                      context.l10n.roleName(role.id),
-                      style: typography.body.copyWith(color: colors.textPrimary),
-                    ),
-                    onTap: () => Navigator.of(context).pop(role.id),
-                  ),
-              ],
             ),
           ),
         ],
