@@ -110,6 +110,16 @@ class _PlayersFormState extends ConsumerState<_PlayersForm> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 14, AppSpacing.screen, 0),
             children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Text(
+                  context.l10n.playersSeatingHint,
+                  style: context.typography.counter.copyWith(
+                    color: context.colors.textTertiary,
+                    height: 1.55,
+                  ),
+                ),
+              ),
               for (var i = 0; i < _controllers.length; i++)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 6),

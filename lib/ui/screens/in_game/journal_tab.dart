@@ -11,6 +11,7 @@ import '../../theme/app_typography.dart';
 import '../../utils/journal_labels.dart';
 import '../../utils/l10n.dart';
 import '../../utils/labels.dart';
+import 'journal_share.dart';
 
 /// The Journal tab: every logged line, grouped under its uppercase phase
 /// header, most recent first.
@@ -31,15 +32,32 @@ class JournalTab extends ConsumerWidget {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 16, AppSpacing.screen, 4),
-          child: Column(
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(context.l10n.journalTitle, style: typography.screenTitle.copyWith(color: colors.textPrimary)),
-              if (game != null)
-                Text(
-                  gameTitle(context.l10n, game),
-                  style: typography.meta.copyWith(color: colors.textSecondary),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.journalTitle,
+                      style: typography.screenTitle.copyWith(color: colors.textPrimary),
+                    ),
+                    if (game != null)
+                      Text(
+                        gameTitle(context.l10n, game),
+                        style: typography.meta.copyWith(color: colors.textSecondary),
+                      ),
+                  ],
                 ),
+              ),
+              IconButton(
+                tooltip: context.l10n.journalShare,
+                icon: Icon(AppIcons.share, size: 19, color: colors.textSecondary),
+                onPressed: game == null || (logAsync.value?.isEmpty ?? true)
+                    ? null
+                    : () => shareJournal(context, ref, game),
+              ),
             ],
           ),
         ),

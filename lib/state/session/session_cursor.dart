@@ -41,10 +41,15 @@ class SessionCursor {
 
 /// Which day-phase screen the MJ is on. Night vs day and the night index come
 /// from the engine `GameState`; this only tracks progress *within* a day.
-/// `recap` -> `captain` (day 1 only) -> `vote` -> `done` (ready for the next
-/// night). Interrupts (a card to reveal, a chain effect, a lover's grief) are
+/// `recap` -> `growl` (a living Bear Tamer) -> `captain` (day 1 only) -> `vote` -> `secondVote`
+/// (when the Wandering Judge called for one) -> `done`
+/// (ready for the next night). Interrupts (a card to reveal, a chain effect, a lover's grief) are
 /// driven by engine/session state and shown on top of whatever stage is set.
-enum DayStage { recap, captain, vote, done }
+///
+/// The declaration order is the order of the day and the values are stored by name: a stage a
+/// role adds goes in its place here, and in `dayStagesFor` (day_plan.dart), which decides which
+/// of them today has.
+enum DayStage { recap, growl, captain, vote, secondVote, done }
 
 /// The app-side day state, persisted next to the engine snapshot and the night
 /// cursor. Only meaningful once `engine.phase == GamePhase.day`; reset to
@@ -55,6 +60,14 @@ class DaySnapshot {
   /// The wolves' victim the Witch saved tonight - shown on the day recap
   /// ("attaqué puis sauvé"). Set when the life potion is used.
   final String? savedFromWolvesName;
+
+  /// The Village Idiot the village voted against today: pardoned, nobody is eliminated.
+  final String? pardonedName;
+
+  /// The Devoted Servant who revealed herself after a vote, and the player eliminated: the
+  /// takeover waits for the card to be known.
+  final String? servantId;
+  final String? servantDeadId;
 
   /// Ids of players the lovers cascade killed that the MJ has not yet
   /// acknowledged (the grief panel). The engine already applied the death;
@@ -68,6 +81,9 @@ class DaySnapshot {
   const DaySnapshot({
     this.stage = DayStage.recap,
     this.savedFromWolvesName,
+    this.pardonedName,
+    this.servantId,
+    this.servantDeadId,
     this.loversAck = const [],
     this.revealSkipped = const [],
   });
@@ -77,11 +93,18 @@ class DaySnapshot {
   DaySnapshot copyWith({
     DayStage? stage,
     String? savedFromWolvesName,
+    String? pardonedName,
+    String? servantId,
+    String? servantDeadId,
+    bool clearServant = false,
     List<String>? loversAck,
     List<String>? revealSkipped,
   }) => DaySnapshot(
     stage: stage ?? this.stage,
     savedFromWolvesName: savedFromWolvesName ?? this.savedFromWolvesName,
+    pardonedName: pardonedName ?? this.pardonedName,
+    servantId: clearServant ? null : servantId ?? this.servantId,
+    servantDeadId: clearServant ? null : servantDeadId ?? this.servantDeadId,
     loversAck: loversAck ?? this.loversAck,
     revealSkipped: revealSkipped ?? this.revealSkipped,
   );
@@ -89,6 +112,9 @@ class DaySnapshot {
   Map<String, dynamic> toJson() => {
     'stage': stage.name,
     if (savedFromWolvesName != null) 'savedFromWolvesName': savedFromWolvesName,
+    if (pardonedName != null) 'pardonedName': pardonedName,
+    if (servantId != null) 'servantId': servantId,
+    if (servantDeadId != null) 'servantDeadId': servantDeadId,
     if (loversAck.isNotEmpty) 'loversAck': loversAck,
     if (revealSkipped.isNotEmpty) 'revealSkipped': revealSkipped,
   };
@@ -96,6 +122,9 @@ class DaySnapshot {
   factory DaySnapshot.fromJson(Map<String, dynamic> json) => DaySnapshot(
     stage: DayStage.values.byName(json['stage'] as String? ?? 'recap'),
     savedFromWolvesName: json['savedFromWolvesName'] as String?,
+    pardonedName: json['pardonedName'] as String?,
+    servantId: json['servantId'] as String?,
+    servantDeadId: json['servantDeadId'] as String?,
     loversAck: (json['loversAck'] as List?)?.cast<String>() ?? const [],
     revealSkipped: (json['revealSkipped'] as List?)?.cast<String>() ?? const [],
   );

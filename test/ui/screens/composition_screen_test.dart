@@ -17,6 +17,7 @@ import 'package:loup_garou_mj/ui/widgets/app_button.dart';
 import 'package:loup_garou_mj/ui/widgets/app_chip.dart';
 import 'package:loup_garou_mj/ui/widgets/app_stepper.dart';
 import 'package:rules_engine/rules_engine.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../support/fake_game_repository.dart';
 import '../../support/pump_app.dart';
@@ -25,7 +26,7 @@ import '../../support/pump_app.dart';
 /// moot for the base registry anyway (see composition_advisor_test.dart: it never has a
 /// surplus tier to shuffle within the 8-18 player range), but explicit is cheap.
 Override _seededAdvisorOverride() => compositionAdvisorProvider.overrideWithValue(
-  CompositionAdvisor(RoleRegistry.base, random: Random(1)),
+  CompositionAdvisor(CardPool(registry: RoleRegistry.all), random: Random(1)),
 );
 
 /// A fresh draft game (status setup, no composition chosen yet).
@@ -40,19 +41,27 @@ Game _draftGame({required int id, required int playerCount}) {
   );
 }
 
-/// [CompositionScreen] always renders exactly 3 [AppStepper]s in this fixed order: the
-/// player-count stepper, then (within the role list) villageois's, then loup_garou's - both
-/// scaling roles always render their stepper regardless of current count. This mirrors
-/// `RoleRegistry.base.roles`' declared order filtered by team, not layout happenstance.
+/// The player-count stepper is the first [AppStepper] on the screen; the roles that can have
+/// several holders (Loup-Garou, Simple Villageois) each carry their own, next to their name.
 Finder _stepperPlusAt(int index) =>
     find.descendant(of: find.byType(AppStepper).at(index), matching: find.text('+'));
 Finder _stepperMinusAt(int index) =>
     find.descendant(of: find.byType(AppStepper).at(index), matching: find.text('−'));
 
+/// The "+" of the stepper sitting beside [roleName]'s label.
+Finder _roleStepperPlus(String roleName) => find.descendant(
+  of: find.ancestor(of: find.text(roleName), matching: find.byType(Row)).first,
+  matching: find.text('+'),
+);
+
 AppButton _launchButton(WidgetTester tester) =>
     tester.widget<AppButton>(find.widgetWithText(AppButton, 'Lancer la partie'));
 
 void main() {
+  // Each test starts with the default settings: a box ticked or a reserve rule set by an earlier
+  // test must not leak into the next.
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   testWidgets(
     "player-count stepper updates the footer, inert at the box's 8-18 bounds",
     (tester) async {
@@ -125,11 +134,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(_stepperPlusAt(2)); // player-count(0), villageois(1), loup_garou(2)
+    await tester.tap(_roleStepperPlus('Loup-Garou'));
     await tester.pump();
     expect(find.text('1 rôle pour 8 joueurs'), findsOneWidget);
 
-    await tester.tap(_stepperPlusAt(2));
+    await tester.tap(_roleStepperPlus('Loup-Garou'));
     await tester.pump();
     expect(find.text('2 rôles pour 8 joueurs'), findsOneWidget);
   });
@@ -149,9 +158,9 @@ void main() {
       expect(find.text('Compo complète'), findsNothing);
 
       // loup_garou x2 (max = playerCount = 2): remaining 0, exactly complete.
-      await tester.tap(_stepperPlusAt(2));
+      await tester.tap(_roleStepperPlus('Loup-Garou'));
       await tester.pump();
-      await tester.tap(_stepperPlusAt(2));
+      await tester.tap(_roleStepperPlus('Loup-Garou'));
       await tester.pump();
       expect(find.text('Compo complète'), findsOneWidget);
       expect(_launchButton(tester).onPressed, isNotNull);
@@ -177,7 +186,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(CompositionScreen), findsOneWidget);
 
-      await tester.tap(_stepperPlusAt(2)); // loup_garou +1
+      await tester.tap(_roleStepperPlus('Loup-Garou')); // +1 wolf
       await tester.pump();
       await tester.tap(find.text('Lancer la partie'));
       await tester.pumpAndSettle();
@@ -200,6 +209,7 @@ void main() {
   testWidgets('the Voleur reveals the reserve section and gates "Lancer la partie"', (
     tester,
   ) async {
+    SharedPreferences.setMockInitialValues({'thief_reserve_chosen': true});
     final repository = FakeGameRepository(initialGames: [_draftGame(id: 1, playerCount: 8)]);
     await pumpScreen(
       tester,
@@ -234,6 +244,7 @@ void main() {
   testWidgets('a role fully claimed by the reserve is disabled with an "en réserve" note', (
     tester,
   ) async {
+    SharedPreferences.setMockInitialValues({'thief_reserve_chosen': true});
     final repository = FakeGameRepository(initialGames: [_draftGame(id: 1, playerCount: 8)]);
     await pumpScreen(
       tester,
@@ -264,6 +275,7 @@ void main() {
   testWidgets('the reserve picker hides the Voleur and cards already spent by the deal', (
     tester,
   ) async {
+    SharedPreferences.setMockInitialValues({'thief_reserve_chosen': true});
     final repository = FakeGameRepository(initialGames: [_draftGame(id: 1, playerCount: 8)]);
     await pumpScreen(
       tester,
@@ -284,6 +296,89 @@ void main() {
     expect(find.widgetWithText(ListTile, 'Voleur'), findsNothing);
     expect(find.widgetWithText(ListTile, 'Voyante'), findsNothing);
     expect(find.widgetWithText(ListTile, 'Loup-Garou'), findsOneWidget); // 4 in box, 0 dealt
+  });
+
+  testWidgets('the Voleur sits under the ambiguous roles, apart from village and wolves', (
+    tester,
+  ) async {
+    final repository = FakeGameRepository(initialGames: [_draftGame(id: 1, playerCount: 8)]);
+    await pumpScreen(
+      tester,
+      const CompositionScreen(gameId: 1),
+      overrides: [gameRepositoryProvider.overrideWithValue(repository)],
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Village'), findsOneWidget);
+    expect(find.text('Loups'), findsOneWidget);
+    expect(find.text('Ambigus'), findsOneWidget);
+    // Nobody plays solo in the roles the app runs so far: no empty heading.
+    expect(find.text('Solitaires'), findsNothing);
+    expect(
+      tester.getTopLeft(find.text('Voleur')).dy,
+      greaterThan(tester.getTopLeft(find.text('Ambigus')).dy),
+    );
+  });
+
+  group('with more boxes owned', () {
+    Future<void> pumpWithBoxes(WidgetTester tester, List<String> boxes, int playerCount) async {
+      SharedPreferences.setMockInitialValues({'owned_boxes': boxes});
+      final repository = FakeGameRepository(
+        initialGames: [_draftGame(id: 1, playerCount: playerCount)],
+      );
+      await pumpScreen(
+        tester,
+        const CompositionScreen(gameId: 1),
+        overrides: [gameRepositoryProvider.overrideWithValue(repository)],
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('the base box alone stops at 18 players', (tester) async {
+      await pumpWithBoxes(tester, const ['base'], 18);
+
+      await tester.tap(_stepperPlusAt(0));
+      await tester.pump();
+      expect(find.textContaining('rôles pour 18 joueurs'), findsOneWidget);
+    });
+
+    testWidgets('a bigger box seats more players', (tester) async {
+      await pumpWithBoxes(tester, const ['base', 'best_of'], 18);
+
+      await tester.tap(_stepperPlusAt(0));
+      await tester.pump();
+      expect(find.textContaining('rôles pour 19 joueurs'), findsOneWidget);
+    });
+
+    testWidgets('a second box adds its Werewolf cards to the stepper', (tester) async {
+      await pumpWithBoxes(tester, const ['base', 'best_of'], 12);
+
+      // 4 Werewolves in the base box + 3 in Best Of: the 8th tap changes nothing.
+      for (var i = 0; i < 8; i++) {
+        await tester.tap(_roleStepperPlus('Loup-Garou'));
+        await tester.pump();
+      }
+      expect(find.text('7 rôles pour 12 joueurs'), findsOneWidget);
+    });
+  });
+
+  testWidgets('with the reserve left to the draw the Voleur asks for no reserve cards', (
+    tester,
+  ) async {
+    final repository = FakeGameRepository(initialGames: [_draftGame(id: 1, playerCount: 8)]);
+    await pumpScreen(
+      tester,
+      const CompositionScreen(gameId: 1),
+      overrides: [gameRepositoryProvider.overrideWithValue(repository)],
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Voleur'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Réserve du Voleur'), findsNothing);
+    expect(find.textContaining('Le Voleur ajoute 2 Simples Villageois au paquet (10 cartes)'), findsOneWidget);
+    expect(_launchButton(tester).onPressed, isNotNull);
   });
 
   testWidgets('back chevron keeps the game as a draft and returns home', (tester) async {
@@ -334,7 +429,7 @@ void main() {
     // produces: 2 Loups-Garous + every tier-1/2 special (Cupidon, Voyante, Sorcière,
     // Chasseur) + 2 Villageois filling the rest.
     const suggestionPhrase = '2 Loups-Garous · Cupidon · Voyante · Sorcière · Chasseur · '
-        '2 Villageois';
+        '2 Simples Villageois';
 
     testWidgets('shows the advisor pick for the current player count', (tester) async {
       final repository = FakeGameRepository(initialGames: [_draftGame(id: 1, playerCount: 8)]);

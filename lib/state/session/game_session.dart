@@ -4,11 +4,15 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rules_engine/rules_engine.dart';
 
 import '../../data/database/app_database.dart';
+import '../../data/models/game_winner.dart';
 import '../../data/models/night_log_entry.dart';
 import '../../data/repositories/game_not_found_exception.dart';
 import '../providers/game_repository_provider.dart';
+import '../settings/settings_providers.dart';
 import 'night_log_entry.dart';
+import 'day_plan.dart';
 import 'night_script.dart';
+import 'victory_proposal.dart';
 import 'session_cursor.dart';
 
 part 'game_session.g.dart';
@@ -16,7 +20,7 @@ part 'game_session.g.dart';
 /// The interrupt that must be cleared before the current [DayStage] body shows:
 /// a dead player's card to reveal, a chain effect to resolve, or a lover's
 /// grief death to acknowledge. Priority order, highest first.
-enum DayInterrupt { reveal, chain, loversAck }
+enum DayInterrupt { reveal, servant, chain, loversAck }
 
 /// Everything a running game's screens read: the engine truth, where we are in
 /// tonight's script and in the day, that script, the composition it was built
@@ -29,8 +33,21 @@ class GameSessionState {
   final Map<String, int> composition;
 
   /// The Voleur's two undealt reserve cards (empty when the composition has no
-  /// Voleur). His act offers these as the swap choices.
+  /// Voleur, or while a drawn reserve is not noted yet). His act offers these as the swap
+  /// choices.
   final List<String> reserveRoleIds;
+
+  /// The reserve is whatever two cards were left after the deal (the booklets' rule), noted by
+  /// the MJ on night 1, rather than picked at the composition.
+  final bool reserveDrawn;
+
+  /// Whether the Fox is called after the Witch in this game. Fixed when the game starts, so the
+  /// order never changes under the MJ's feet.
+  final bool foxAfterWitch;
+
+  /// Whether the White Werewolf's solo nights are the odd ones in this game; fixed at its start.
+  final bool whiteWolfOddNights;
+
   final List<PlayerRow> roster;
 
   /// Set once the Voleur has taken a reserve card: which player he is and
@@ -46,9 +63,142 @@ class GameSessionState {
     required this.tonight,
     required this.composition,
     required this.reserveRoleIds,
+    this.reserveDrawn = false,
+    this.foxAfterWitch = false,
+    this.whiteWolfOddNights = false,
     required this.roster,
     this.voleurSwapIn,
   });
+
+  /// The winner the table looks to have, or null while the game plainly goes on. Offered to the
+  /// MJ, never applied: only they end the game.
+  GameWinner? get proposedWinner {
+    final kind = proposeVictory(engine, RoleRegistry.all);
+    return kind == null ? null : winnerFor(kind);
+  }
+
+  /// The living Wandering Judge the app knows, while the villagers keep their powers.
+  Player? get knownJudge => engine.villagersPowerless
+      ? null
+      : engine.players.where((p) => p.alive && p.roleId == 'juge_begue').firstOrNull;
+
+  /// Whether the Wandering Judge may give his sign now: the first vote of a day, his sign unused.
+  bool get judgeCanSign =>
+      engine.phase == GamePhase.day &&
+      day.stage == DayStage.vote &&
+      knownJudge != null &&
+      !engine.spentPowers.containsKey('juge_begue');
+
+  /// The living Bear Tamer, once the MJ has noted who he is.
+  Player? get bearTamer =>
+      engine.players.where((p) => p.alive && p.roleId == 'montreur_d_ours').firstOrNull;
+
+  /// Whether he growls this morning, from the roles the app knows.
+  bool get bearShouldGrowl {
+    final bear = bearTamer;
+    return bear != null && engine.bearGrowls(bear.id, RoleRegistry.all);
+  }
+
+  /// Whether the player [playerId], about to be devoured, may be the Elder: the composition has
+  /// one whose card has not been noted yet, and this player's card is still unknown. The MJ is
+  /// asked, since the Elder's first bite is spared and he has no call of his own to be known by.
+  bool mayBeElder(String playerId) {
+    final elders = dealtComposition['ancien'] ?? 0;
+    if (elders == 0) return false;
+    if (engine.playerById(playerId).roleId != kPlaceholderRoleId) return false;
+    return engine.players.where((p) => p.roleId == 'ancien').length < elders;
+  }
+
+  /// The living Scapegoat the app knows, while the villagers keep their powers: a tied vote falls
+  /// on him.
+  Player? get knownScapegoat => engine.villagersPowerless
+      ? null
+      : engine.players.where((p) => p.alive && p.roleId == 'bouc_emissaire').firstOrNull;
+
+  /// Whether a tied vote may fall on a Scapegoat the app does not know yet: the composition has
+  /// one whose card has not been noted, and the villagers still have their powers.
+  bool get scapegoatMayBeAlive {
+    if (engine.villagersPowerless || knownScapegoat != null) return false;
+    final goats = dealtComposition['bouc_emissaire'] ?? 0;
+    return engine.players.where((p) => p.roleId == 'bouc_emissaire').length < goats;
+  }
+
+  /// Whether the player [playerId], about to be voted against, may be the Village Idiot: same
+  /// logic as the Elder's, since he has no call to be known by.
+  bool mayBeIdiot(String playerId) {
+    final idiots = dealtComposition['idiot_du_village'] ?? 0;
+    if (idiots == 0) return false;
+    if (engine.playerById(playerId).roleId != kPlaceholderRoleId) return false;
+    return engine.players.where((p) => p.roleId == 'idiot_du_village').length < idiots;
+  }
+
+  /// The living Devoted Servant the app knows.
+  Player? get knownServant =>
+      engine.players.where((p) => p.alive && p.roleId == 'servante_devouee').firstOrNull;
+
+  /// Whether the Devoted Servant may reveal herself after the village eliminated [eliminatedId]: the
+  /// composition has one who has not acted yet, and she is not known to be dead or in love. She has
+  /// no call, so the MJ is asked, right after the vote and before the card is turned over.
+  bool servantMayAct(String eliminatedId) {
+    if (engine.servantTakeover != null) return false;
+    if ((dealtComposition['servante_devouee'] ?? 0) == 0) return false;
+    final target = engine.playerById(eliminatedId);
+    // A Village Idiot not yet pardoned is spared, not eliminated.
+    if (target.roleId == 'idiot_du_village' && !target.hasStatus(PlayerStatus.pardoned)) {
+      return false;
+    }
+    if (target.roleId == 'servante_devouee') return false;
+    final known = engine.players.where((p) => p.roleId == 'servante_devouee');
+    if (known.isNotEmpty) {
+      final servant = known.first;
+      return servant.alive && engine.lovers?.partnerOf(servant.id) == null;
+    }
+    return servantCandidates(eliminatedId).isNotEmpty;
+  }
+
+  /// Who could be the Servant when she is not known: the living players whose card is not noted
+  /// and who are not in love.
+  List<Player> servantCandidates(String eliminatedId) => [
+    for (final p in engine.alivePlayers)
+      if (p.id != eliminatedId &&
+          rosterRoleId(p.id) == null &&
+          engine.lovers?.partnerOf(p.id) == null)
+        p,
+  ];
+
+  /// A drawn reserve the MJ has yet to note: asked for at the Voleur's step.
+  bool get reserveToEnter => reserveDrawn && reserveRoleIds.isEmpty;
+
+  /// Both reserve cards are wolves: the booklets force the Voleur to swap.
+  bool get reserveForcesSwap =>
+      reserveRoleIds.length == 2 &&
+      reserveRoleIds.every(
+        (id) => RoleRegistry.all.byIdOrNull(id)?.team == Team.werewolves,
+      );
+
+  /// The cards in the pack: the composition, plus the two Simples Villageois a drawn reserve
+  /// adds. Empty unless the reserve is drawn.
+  List<({String roleId, int count})> get pack {
+    if (!reserveDrawn) return const [];
+    final counts = {...composition};
+    counts.update(kPlaceholderRoleId, (n) => n + 2, ifAbsent: () => 2);
+    return [
+      for (final role in RoleRegistry.all.roles)
+        if ((counts[role.id] ?? 0) > 0) (roleId: role.id, count: counts[role.id]!),
+    ];
+  }
+
+  /// How many holders each role really has among the players: the [composition], less the cards
+  /// a drawn reserve took out of the deal.
+  Map<String, int> get dealtComposition =>
+      dealtCompositionOf(composition, reserveRoleIds, reserveDrawn: reserveDrawn);
+
+  /// How many dealt holders [roleId] is expected to have. A drawn reserve that is noted makes
+  /// this exact (a card in the middle has no holder); otherwise a role the composition does not
+  /// list is assumed to have one.
+  int expectedHolders(String roleId) => reserveDrawn && reserveRoleIds.isNotEmpty
+      ? dealtComposition[roleId] ?? 0
+      : composition[roleId] ?? 1;
 
   /// The step the cursor points at, or null once every step is done (the
   /// "ready to resolve the night" state).
@@ -64,7 +214,13 @@ class GameSessionState {
   bool get currentStepNeedsIdentify {
     final step = currentStep;
     if (step == null || cursor.subStep == NightSubStep.act) return false;
-    return dealtHoldersKnown(step.role.id) < (composition[step.role.id] ?? 1);
+    // The charmed players' call is made of whoever was charmed: nobody to identify.
+    if (step.role.id == kCharmedStepRole.id) return false;
+    // The card the Actor plays has no holder of its own: it is him.
+    if (step.role.id == engine.actor?.current && (composition[step.role.id] ?? 0) == 0) {
+      return false;
+    }
+    return dealtHoldersKnown(step.role.id) < expectedHolders(step.role.id);
   }
 
   /// How many confirmed holders of [roleId] are one of its *dealt* cards - the
@@ -126,6 +282,8 @@ class GameSessionState {
     // player still waiting to be revealed.
     if (engine.cascade != null) return DayInterrupt.chain;
     if (unrevealedDead.isNotEmpty) return DayInterrupt.reveal;
+    // Once the eliminated player's card is known, the Servante takes it.
+    if (day.servantId != null && day.servantDeadId != null) return DayInterrupt.servant;
     if (day.loversAck.isNotEmpty) return DayInterrupt.loversAck;
     return null;
   }
@@ -145,11 +303,22 @@ class GameSessionState {
 class GameSession extends _$GameSession {
   static const _placeholderRole = kPlaceholderRoleId;
   static const _machine = GameStateMachine();
-  final _registry = RoleRegistry.base;
+  final _registry = RoleRegistry.all;
 
   /// Persisted in the session blob: which player the Voleur is and the reserve
   /// card he took. Null until he swaps (or if he keeps his own card).
   ({String playerId, String roleId})? _voleurSwapIn;
+
+  /// The two leftover cards of a drawn reserve, once the MJ has noted them. Persisted in the
+  /// session blob (the game's own reserve column is only for a reserve picked at composition).
+  List<String> _drawnReserve = const [];
+
+  /// The Fox's place in the call order for this game, taken from the settings when the game's
+  /// session is created and kept in the snapshot.
+  bool _foxAfterWitch = false;
+
+  /// The White Werewolf's parity for this game, fixed like the Fox's place.
+  bool _whiteWolfOdd = false;
 
   @override
   Future<GameSessionState> build(int gameId) async {
@@ -157,7 +326,9 @@ class GameSession extends _$GameSession {
     final game = await repo.getGame(gameId);
     if (game == null) throw GameNotFoundException(gameId);
     final composition = game.compositionJson ?? const <String, int>{};
-    final reserveRoleIds = game.reserveRolesJson ?? const <String>[];
+    final pickedReserve = game.reserveRolesJson ?? const <String>[];
+    // A Voleur whose reserve was not picked at composition has it drawn.
+    final reserveDrawn = composition.containsKey('voleur') && pickedReserve.isEmpty;
     final roster = await repo.getRoster(gameId);
 
     final GameState engine;
@@ -165,14 +336,20 @@ class GameSession extends _$GameSession {
     final DaySnapshot day;
     final existing = game.sessionJson;
     if (existing == null) {
-      engine = GameState.initial(
+      final fresh = GameState.initial(
         players: [
           for (final r in roster)
             Player(id: '${r.id}', name: r.name, roleId: r.roleId ?? _placeholderRole),
         ],
       );
+      // With the Angel in play the game starts by a debate and a vote, before the first night.
+      final angelInPlay = (composition['ange'] ?? 0) > 0;
+      engine = angelInPlay ? fresh.copyWith(nightIndex: 0, phase: GamePhase.day) : fresh;
       cursor = SessionCursor.nightStart;
-      day = DaySnapshot.fresh;
+      day = angelInPlay ? const DaySnapshot(stage: DayStage.vote) : DaySnapshot.fresh;
+      final settings = ref.read(settingsProvider).value;
+      _foxAfterWitch = settings?.foxAfterWitch ?? false;
+      _whiteWolfOdd = settings?.whiteWolfOddNights ?? false;
       await _persist(engine, cursor, day);
     } else {
       final decoded = jsonDecode(existing) as Map<String, dynamic>;
@@ -188,9 +365,25 @@ class GameSession extends _$GameSession {
           roleId: voleur['roleId'] as String,
         );
       }
+      _drawnReserve = [
+        for (final id in decoded['drawnReserve'] as List<dynamic>? ?? const []) id as String,
+      ];
+      _foxAfterWitch = decoded['foxAfterWitch'] == true;
+      _whiteWolfOdd = decoded['whiteWolfOdd'] == true;
     }
+    final reserveRoleIds = reserveDrawn ? _drawnReserve : pickedReserve;
 
-    final tonight = buildNightScript(engine: engine, composition: composition);
+    final tonight = buildNightScript(
+      engine: engine,
+      composition: composition,
+      dealtComposition: dealtCompositionOf(
+        composition,
+        reserveRoleIds,
+        reserveDrawn: reserveDrawn,
+      ),
+      foxAfterWitch: _foxAfterWitch,
+      whiteWolfOddNights: _whiteWolfOdd,
+    );
     return GameSessionState(
       engine: engine,
       cursor: _clamp(cursor, tonight),
@@ -198,6 +391,9 @@ class GameSession extends _$GameSession {
       tonight: tonight,
       composition: composition,
       reserveRoleIds: reserveRoleIds,
+      reserveDrawn: reserveDrawn,
+      foxAfterWitch: _foxAfterWitch,
+      whiteWolfOddNights: _whiteWolfOdd,
       roster: roster,
       voleurSwapIn: _voleurSwapIn,
     );
@@ -210,6 +406,9 @@ class GameSession extends _$GameSession {
       'day': day.toJson(),
       if (_voleurSwapIn case final v?)
         'voleurSwapIn': {'playerId': v.playerId, 'roleId': v.roleId},
+      if (_drawnReserve.isNotEmpty) 'drawnReserve': _drawnReserve,
+      if (_foxAfterWitch) 'foxAfterWitch': true,
+      if (_whiteWolfOdd) 'whiteWolfOdd': true,
     });
     return ref.read(gameRepositoryProvider).saveSession(gameId: gameId, sessionJson: blob);
   }
@@ -310,6 +509,16 @@ class GameSession extends _$GameSession {
 
   // --- night: Voleur ---
 
+  /// Notes the two cards left in the middle after the deal (a drawn reserve): from now on the
+  /// roles that sit there have no holder to look for, and his act offers these two cards.
+  Future<void> enterReserve(List<String> roleIds) async {
+    final s = state.value;
+    if (s == null || !s.reserveToEnter || roleIds.length != 2) return;
+    _drawnReserve = List.unmodifiable(roleIds);
+    await _persist(s.engine, s.cursor, s.day);
+    _emit(s, reserveRoleIds: _drawnReserve);
+  }
+
   /// The Voleur's turn: swap his card for one of the two reserve cards, or
   /// ([stolenRoleId] null) keep his own. A stolen role is written onto the
   /// roster too, so it counts as known. Refuses a [stolenRoleId] that isn't
@@ -319,6 +528,8 @@ class GameSession extends _$GameSession {
     final s = state.value;
     if (s == null) return;
     if (stolenRoleId != null && !s.reserveRoleIds.contains(stolenRoleId)) return;
+    // Two wolves in the reserve: keeping his own card is not an option.
+    if (stolenRoleId == null && s.reserveForcesSwap) return;
     if (stolenRoleId != null) {
       await ref.read(gameRepositoryProvider).assignRoles(
         playerRowIds: [int.parse(voleurEngineId)],
@@ -334,6 +545,116 @@ class GameSession extends _$GameSession {
     );
   }
 
+  // --- night: Renard ---
+
+  /// The Fox sniffs around [middleEngineId]: the MJ says whether a wolf is among the three.
+  /// With none his power is gone for good, which the script reads from the engine.
+  Future<void> foxSniff({required String middleEngineId, required bool wolfFound}) =>
+      applyAction(FoxSniff(middlePlayerId: middleEngineId, wolfFound: wolfFound));
+
+  // --- night: the wolf camp ---
+
+  Future<void> wildChildChoose({required String childEngineId, required String modelEngineId}) =>
+      applyAction(WildChildChooseModel(childPlayerId: childEngineId, modelPlayerId: modelEngineId));
+
+  Future<void> chienLoupChoose({required String engineId, required bool wolf}) =>
+      applyAction(ChienLoupChoose(playerId: engineId, wolf: wolf));
+
+  Future<void> infectVictim() => applyAction(const InfectVictim());
+
+  Future<void> bigBadWolfTarget(String engineId) =>
+      applyAction(BigBadWolfTarget(targetPlayerId: engineId));
+
+  Future<void> whiteWolfEat(String engineId) =>
+      applyAction(WhiteWolfEat(targetPlayerId: engineId));
+
+  // --- night: the Piper ---
+
+  /// The Piper charms [engineIds] (one or two players).
+  Future<void> piperCharm(List<String> engineIds) =>
+      applyAction(PiperCharm(playerIds: engineIds));
+
+  // --- night: Comédien ---
+
+  /// The three cards laid face up for the Actor.
+  Future<void> actorSetCards(List<String> roleIds) => applyAction(ActorSetCards(roleIds: roleIds));
+
+  /// The Actor takes the power of [roleId] for tonight.
+  Future<void> actorChoose(String roleId) => applyAction(ActorChooseCard(roleId: roleId));
+
+  // --- day: Servante Dévouée ---
+
+  /// The Devoted Servant ([servantId]) reveals herself right after the vote that eliminated
+  /// [deadId]: her takeover waits for the card to be known, then the MJ confirms it.
+  Future<void> servantReveals({required String servantId, required String deadId}) async {
+    final s = state.value;
+    if (s == null) return;
+    if (s.engine.playerById(servantId).roleId != 'servante_devouee') {
+      await identifyRole('servante_devouee', [int.parse(servantId)]);
+    }
+    await _updateDay((d) => d.copyWith(servantId: servantId, servantDeadId: deadId));
+  }
+
+  Future<void> cancelServant() => _updateDay((d) => d.copyWith(clearServant: true));
+
+  /// The Servant takes the eliminated player's role: on the roster too, where the MJ reads who
+  /// holds what.
+  Future<void> servantTakes() async {
+    final s = state.value;
+    final servantId = s?.day.servantId;
+    final deadId = s?.day.servantDeadId;
+    if (s == null || servantId == null || deadId == null) return;
+    if (s.engine.lovers?.partnerOf(servantId) != null) {
+      await cancelServant();
+      return;
+    }
+    await ref.read(gameRepositoryProvider).assignRoles(
+      playerRowIds: [int.parse(servantId)],
+      roleId: s.engine.playerById(deadId).roleId,
+    );
+    await applyAction(ServantTakesRole(servantPlayerId: servantId, deadPlayerId: deadId));
+  }
+
+  // --- night: Abominable Sectaire ---
+
+  /// The village is divided: [groupAEngineIds] are the first group, everyone else the second.
+  Future<void> divideVillage(Set<String> groupAEngineIds) =>
+      applyAction(DivideVillage(groupAPlayerIds: groupAEngineIds));
+
+  // --- day: Juge Bègue ---
+
+  /// The Wandering Judge gives his sign: a second vote follows this one.
+  Future<void> judgeSign() => applyAction(const JudgeSign());
+
+  // --- night: Salvateur ---
+
+  Future<void> defenderProtect(String engineId) =>
+      applyAction(DefenderProtect(targetPlayerId: engineId));
+
+  // --- night: Deux Sœurs, Trois Frères ---
+
+  /// The Two Sisters woke and met: a journal line, then on to the next call.
+  Future<void> sistersMet() => _groupMet(JournalKind.sistersMeet);
+
+  /// The Three Brothers woke and met.
+  Future<void> brothersMet() => _groupMet(JournalKind.brothersMeet);
+
+  Future<void> _groupMet(JournalKind kind) async {
+    final s = state.value;
+    if (s == null) return;
+    await ref.read(gameRepositoryProvider).appendNightLog(
+      gameId: gameId,
+      entries: [
+        NightLogEntry(
+          phase: _journalPhase(s.engine),
+          phaseIndex: s.engine.nightIndex,
+          kind: kind,
+        ),
+      ],
+    );
+    await skipStep();
+  }
+
   // --- night: Cupidon ---
 
   Future<void> pairLovers(String engineIdA, String engineIdB) =>
@@ -346,9 +667,30 @@ class GameSession extends _$GameSession {
   Future<void> advanceFromRecap() async {
     final s = state.value;
     if (s == null) return;
-    final next = s.engine.nightIndex == 1 && s.engine.captainPlayerId == null
-        ? DayStage.captain
-        : DayStage.vote;
+    final next = nextDayStage(DayStage.recap, s.engine);
+    await _updateDay((d) => d.copyWith(stage: next));
+  }
+
+  // --- day: the Bear Tamer's growl ---
+
+  /// The morning's growl is done: [growled] says whether the MJ growled (journalled), then the day
+  /// goes on.
+  Future<void> bearGrowlDone({required bool growled}) async {
+    final s = state.value;
+    if (s == null) return;
+    if (growled) {
+      await ref.read(gameRepositoryProvider).appendNightLog(
+        gameId: gameId,
+        entries: [
+          NightLogEntry(
+            phase: _journalPhase(s.engine),
+            phaseIndex: s.engine.nightIndex,
+            kind: JournalKind.bearGrowls,
+          ),
+        ],
+      );
+    }
+    final next = nextDayStage(DayStage.growl, s.engine);
     await _updateDay((d) => d.copyWith(stage: next));
   }
 
@@ -358,7 +700,10 @@ class GameSession extends _$GameSession {
     if (engineId != null) {
       await applyAction(ElectCaptain(playerId: engineId));
     } else {
-      await _updateDay((d) => d.copyWith(stage: DayStage.vote));
+      final s = state.value;
+      if (s == null) return;
+      final next = nextDayStage(DayStage.captain, s.engine);
+      await _updateDay((d) => d.copyWith(stage: next));
     }
   }
 
@@ -381,8 +726,17 @@ class GameSession extends _$GameSession {
         ),
       ],
     );
-    await _updateDay((d) => d.copyWith(stage: DayStage.done));
+    final next = nextDayStage(_voteStageOf(s), s.engine);
+    await _updateDay((d) => d.copyWith(stage: next));
   }
+
+  /// A tied vote with a living Scapegoat: he takes the blame in place of the tied players.
+  Future<void> voteTiedOnScapegoat(String scapegoatEngineId) =>
+      applyAction(DayVoteTie(scapegoatPlayerId: scapegoatEngineId));
+
+  /// The dead Scapegoat's choice of who votes the next day.
+  Future<void> chooseVoters(Set<String> allowedEngineIds) =>
+      applyAction(ScapegoatChooseVoters(allowedPlayerIds: allowedEngineIds));
 
   // --- day: the interrupts (reveal / chain / grief) ---
 
@@ -401,8 +755,20 @@ class GameSession extends _$GameSession {
     return _updateDay((d) => d.copyWith(revealSkipped: [...d.revealSkipped, engineId]));
   }
 
+  /// The MJ says which wolf the dead Knight's sword left diseased (null: none). The setting says
+  /// whether it dies as the next night begins or ends.
+  Future<void> knightContaminate(String? wolfEngineId) => applyAction(
+    KnightContaminate(
+      wolfPlayerId: wolfEngineId,
+      atNightEnd: ref.read(settingsProvider).value?.knightDiseaseAtNightEnd ?? false,
+    ),
+  );
+
   Future<void> hunterShoot(String? engineId) =>
       applyAction(HunterShoot(targetPlayerId: engineId));
+
+  /// The Village Idiot's honor is lost with him: no successor.
+  Future<void> captainHasNoSuccessor() => applyAction(const CaptainNoSuccessor());
 
   Future<void> nameCaptainSuccessor(String engineId) =>
       applyAction(CaptainNameSuccessor(successorPlayerId: engineId));
@@ -420,6 +786,14 @@ class GameSession extends _$GameSession {
       action: const StartNextNight(),
       roleRegistry: _registry,
     );
+    final lines = nightLogEntriesForEvents(
+      result.events,
+      result.state,
+      phase: JournalPhase.night,
+    );
+    if (lines.isNotEmpty) {
+      await ref.read(gameRepositoryProvider).appendNightLog(gameId: gameId, entries: lines);
+    }
     const cursor = SessionCursor.nightStart;
     const day = DaySnapshot.fresh;
     await _persist(result.state, cursor, day);
@@ -437,6 +811,11 @@ class GameSession extends _$GameSession {
 
     final lines = <NightLogEntry>[
       ...nightLogEntriesFor(action, s.engine),
+      ...nightLogEntriesForEvents(
+        result.events,
+        result.state,
+        phase: _journalPhase(result.state),
+      ),
       for (final e in result.events)
         if (e is PlayerDied && e.cause is LoversCascadeKill)
           NightLogEntry(
@@ -453,7 +832,7 @@ class GameSession extends _$GameSession {
     final cursor = _cursorAfter(action, s.cursor);
     final day = _dayAfter(action, result, s);
     // RevealRole and a Voleur swap both write a role onto the roster first.
-    final roster = action is RevealRole || action is VoleurSwap
+    final roster = action is RevealRole || action is VoleurSwap || action is ServantTakesRole
         ? await _loadRoster()
         : s.roster;
 
@@ -477,15 +856,45 @@ class GameSession extends _$GameSession {
       day = day.copyWith(loversAck: [...day.loversAck, ...griefDeaths]);
     }
 
-    if (action is ElectCaptain) day = day.copyWith(stage: DayStage.vote);
-    if (action is DayVoteElimination) day = day.copyWith(stage: DayStage.done);
+    if (action is ServantTakesRole) day = day.copyWith(clearServant: true);
+    if (action is ElectCaptain) {
+      day = day.copyWith(stage: nextDayStage(DayStage.captain, result.state));
+    }
+    if (action is DayVoteTie) {
+      day = day.copyWith(stage: nextDayStage(_voteStageOf(s), result.state));
+    }
+    if (action is DayVoteElimination) {
+      day = day.copyWith(stage: nextDayStage(_voteStageOf(s), result.state));
+      for (final e in result.events) {
+        if (e is IdiotPardoned) {
+          day = day.copyWith(pardonedName: result.state.playerById(e.playerId).name);
+        }
+      }
+    }
 
     return day;
   }
 
+  /// The vote the day is at - the second one when the Wandering Judge called for it, the first
+  /// otherwise - whatever stage the day was left on.
+  DayStage _voteStageOf(GameSessionState s) =>
+      s.day.stage == DayStage.secondVote ? DayStage.secondVote : DayStage.vote;
+
   SessionCursor _cursorAfter(GameAction action, SessionCursor c) => switch (action) {
     // These complete a night role's turn -> advance to the next step.
-    WolvesTarget() || CupidonPair() || VoleurSwap() => SessionCursor(
+    WolvesTarget() ||
+    CupidonPair() ||
+    VoleurSwap() ||
+    FoxSniff() ||
+    WildChildChooseModel() ||
+    ChienLoupChoose() ||
+    InfectVictim() ||
+    BigBadWolfTarget() ||
+    WhiteWolfEat() ||
+    PiperCharm() ||
+    DivideVillage() ||
+    ActorChooseCard() ||
+    DefenderProtect() => SessionCursor(
       stepIndex: c.stepIndex + 1,
       subStep: NightSubStep.identify,
     ),
@@ -508,16 +917,31 @@ class GameSession extends _$GameSession {
     SessionCursor? cursor,
     DaySnapshot? day,
     List<PlayerRow>? roster,
+    List<String>? reserveRoleIds,
   }) {
     final nextEngine = engine ?? prev.engine;
+    final nextReserve = reserveRoleIds ?? prev.reserveRoleIds;
     state = AsyncData(
       GameSessionState(
         engine: nextEngine,
         cursor: cursor ?? prev.cursor,
         day: day ?? prev.day,
-        tonight: buildNightScript(engine: nextEngine, composition: prev.composition),
+        tonight: buildNightScript(
+          engine: nextEngine,
+          composition: prev.composition,
+          dealtComposition: dealtCompositionOf(
+            prev.composition,
+            nextReserve,
+            reserveDrawn: prev.reserveDrawn,
+          ),
+          foxAfterWitch: prev.foxAfterWitch,
+          whiteWolfOddNights: prev.whiteWolfOddNights,
+        ),
         composition: prev.composition,
-        reserveRoleIds: prev.reserveRoleIds,
+        reserveRoleIds: nextReserve,
+        reserveDrawn: prev.reserveDrawn,
+        foxAfterWitch: prev.foxAfterWitch,
+        whiteWolfOddNights: prev.whiteWolfOddNights,
         roster: roster ?? prev.roster,
         voleurSwapIn: _voleurSwapIn,
       ),

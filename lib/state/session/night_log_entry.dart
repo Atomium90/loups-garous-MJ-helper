@@ -34,6 +34,85 @@ List<NightLogEntry> nightLogEntriesFor(GameAction action, GameState before) {
         entry(JournalKind.cupidPair, {'player': name(playerAId), 'other': name(playerBId)}),
       ];
 
+    case FoxSniff(:final middlePlayerId, :final wolfFound):
+      return [
+        entry(
+          wolfFound ? JournalKind.foxFindsWolf : JournalKind.foxFindsNone,
+          {'player': name(middlePlayerId)},
+        ),
+      ];
+
+    case WildChildChooseModel(:final childPlayerId, :final modelPlayerId):
+      return [
+        entry(JournalKind.wildChildModel, {
+          'player': name(childPlayerId),
+          'other': name(modelPlayerId),
+        }),
+      ];
+
+    case ChienLoupChoose(:final playerId, :final wolf):
+      return [
+        entry(
+          wolf ? JournalKind.chienLoupWolf : JournalKind.chienLoupVillage,
+          {'player': name(playerId)},
+        ),
+      ];
+
+    case InfectVictim():
+      final victimId = before.pendingWolfVictimId;
+      if (victimId == null) return const [];
+      return [entry(JournalKind.infection, {'player': name(victimId)})];
+
+    case BigBadWolfTarget(:final targetPlayerId):
+      return [entry(JournalKind.bigBadWolfTarget, {'player': name(targetPlayerId)})];
+
+    case WhiteWolfEat(:final targetPlayerId):
+      return [entry(JournalKind.whiteWolfEats, {'player': name(targetPlayerId)})];
+
+    case JudgeSign():
+      return [entry(JournalKind.judgeSign)];
+
+    case ActorChooseCard(:final roleId):
+      return [entry(JournalKind.actorChooses, {'role': roleId})];
+
+    case ServantTakesRole(:final servantPlayerId, :final deadPlayerId):
+      return [
+        entry(JournalKind.servantTakes, {
+          'player': name(servantPlayerId),
+          'other': name(deadPlayerId),
+          'role': before.playerById(deadPlayerId).roleId,
+        }),
+      ];
+
+    case DivideVillage(:final groupAPlayerIds):
+      return [
+        entry(JournalKind.villageDivided, {
+          'player': [
+            for (final p in before.players)
+              if (groupAPlayerIds.contains(p.id)) p.name,
+          ].join(', '),
+          'other': [
+            for (final p in before.players)
+              if (!groupAPlayerIds.contains(p.id)) p.name,
+          ].join(', '),
+        }),
+      ];
+
+    case DefenderProtect(:final targetPlayerId):
+      return [entry(JournalKind.defenderProtects, {'player': name(targetPlayerId)})];
+
+    case KnightContaminate(:final wolfPlayerId):
+      if (wolfPlayerId == null) return const [];
+      return [entry(JournalKind.knightContaminates, {'player': name(wolfPlayerId)})];
+
+    case PiperCharm(:final playerIds):
+      return [
+        entry(JournalKind.piperCharms, {
+          'player': name(playerIds.first),
+          if (playerIds.length > 1) 'other': name(playerIds[1]),
+        }),
+      ];
+
     case VoleurSwap(:final stolenRoleId):
       return [
         stolenRoleId == null
@@ -60,4 +139,46 @@ List<NightLogEntry> nightLogEntriesFor(GameAction action, GameState before) {
     default:
       return const [];
   }
+}
+
+/// The journal lines the events of an action add on their own: what the table never sees
+/// announced (an Elder surviving a bite), the powers the villagers lost, a death of disease.
+List<NightLogEntry> nightLogEntriesForEvents(
+  List<GameEvent> events,
+  GameState after, {
+  required JournalPhase phase,
+}) {
+  NightLogEntry entry(JournalKind kind, String playerId) => NightLogEntry(
+    phase: phase,
+    phaseIndex: after.nightIndex,
+    kind: kind,
+    args: {'player': after.playerById(playerId).name},
+  );
+
+  return [
+    for (final e in events)
+      if (e is ElderSurvived)
+        entry(JournalKind.elderSurvives, e.playerId)
+      else if (e is VillagersLostPowers)
+        entry(JournalKind.villagersLosePowers, e.elderPlayerId)
+      else if (e is ScapegoatBlamed)
+        entry(JournalKind.scapegoatBlamed, e.playerId)
+      else if (e is VotersChosen)
+        NightLogEntry(
+          phase: phase,
+          phaseIndex: after.nightIndex,
+          kind: JournalKind.scapegoatVoters,
+          args: {
+            'player': e.allowedPlayerIds.isEmpty
+                ? ''
+                : [for (final id in e.allowedPlayerIds) after.playerById(id).name].join(', '),
+          },
+        )
+      else if (e is IdiotPardoned)
+        entry(JournalKind.idiotPardoned, e.playerId)
+      else if (e is DefenderSaved)
+        entry(JournalKind.defenderSaves, e.playerId)
+      else if (e is PlayerDied && e.cause is DiseaseKill)
+        entry(JournalKind.diseaseDeath, e.playerId),
+  ];
 }

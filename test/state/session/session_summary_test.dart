@@ -61,6 +61,44 @@ void main() {
     expect(summary.roleId, 'loup_garou');
   });
 
+  test('a night with a drawn Voleur reserve counts only the roles that still wake', () async {
+    // Night 2: the Sorcière sat in the reserve, so the script has just the wolves' step.
+    final game = Game(
+      id: 1,
+      createdAt: DateTime(2026, 8, 20),
+      updatedAt: DateTime(2026, 8, 20),
+      playerCount: 6,
+      compositionJson: const {'voleur': 1, 'loup_garou': 2, 'sorciere': 1, 'villageois': 2},
+      status: GameStatus.inProgress,
+      sessionJson: jsonEncode({
+        'engine': GameStateJson.encode(
+          GameState.initial(
+            players: [
+              for (final (i, role) in [
+                'villageois',
+                'loup_garou',
+                'loup_garou',
+                'villageois',
+                'villageois',
+                'villageois',
+              ].indexed)
+                Player(id: '$i', name: 'P$i', roleId: role),
+            ],
+          ).copyWith(nightIndex: 2),
+        ),
+        'cursor': const SessionCursor(stepIndex: 1, subStep: NightSubStep.identify).toJson(),
+        'drawnReserve': ['sorciere', 'villageois'],
+      }),
+    );
+
+    final summary = await _summaryOf(game);
+
+    // Past the wolves, nothing is left to call: a script that still listed the Sorcière would
+    // name her here.
+    expect(summary!.step, SummaryStep.nightEnd);
+    expect(summary.roleId, isNull);
+  });
+
   group('a saved day reads back as its stage', () {
     final engine = GameState.initial(
       players: [

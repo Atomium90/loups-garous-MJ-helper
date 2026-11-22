@@ -15,7 +15,19 @@ Role _scriptRole(
 
 void main() {
   const builder = NightScriptBuilder();
-  final baseRoles = RoleRegistry.base.roles;
+  // The base box's roles only: these tests pin the base game's script, whatever roles the
+  // registry holds besides.
+  const baseIds = {
+    'voleur',
+    'cupidon',
+    'voyante',
+    'loup_garou',
+    'sorciere',
+    'villageois',
+    'petite_fille',
+    'chasseur',
+  };
+  final baseRoles = [for (final r in RoleRegistry.all.roles) if (baseIds.contains(r.id)) r];
   final allBaseIds = baseRoles.map((r) => r.id).toSet();
 
   group('NightScriptBuilder with real base game data', () {
@@ -241,10 +253,10 @@ void main() {
       expect(script.steps, isEmpty);
     });
 
-    test('an unimplemented wake condition throws', () {
+    test('a conditional role without a guard is a data error', () {
       final weird = _scriptRole(
         'weird',
-        wakeCondition: WakeCondition.everyOtherNight,
+        wakeCondition: WakeCondition.conditional,
       );
       expect(
         () => builder.build(
@@ -252,7 +264,7 @@ void main() {
           aliveRoleIds: {'weird'},
           nightIndex: 1,
         ),
-        throwsUnimplementedError,
+        throwsStateError,
       );
     });
 
@@ -284,6 +296,18 @@ void main() {
       );
     });
 
+    test('a context for another night than the one asked for is refused', () {
+      expect(
+        () => builder.build(
+          compositionRoles: [],
+          aliveRoleIds: {},
+          nightIndex: 2,
+          context: const NightContext(nightIndex: 3),
+        ),
+        throwsArgumentError,
+      );
+    });
+
     test('duplicate role ids in compositionRoles throws', () {
       final a1 = _scriptRole('a');
       final a2 = _scriptRole('a');
@@ -295,6 +319,76 @@ void main() {
         ),
         throwsArgumentError,
       );
+    });
+  });
+
+  group('NightScriptBuilder with a night context', () {
+    const everyOther = Role(
+      id: 'sisters',
+      team: Team.village,
+      hasNightCall: true,
+      wakeCondition: WakeCondition.everyOtherNight,
+      optionalCall: true,
+    );
+    const lateStarter = Role(
+      id: 'late',
+      team: Team.solo,
+      hasNightCall: true,
+      wakeCondition: WakeCondition.everyNight,
+      firstWakeNight: 2,
+    );
+    const infect = Role(
+      id: 'infect',
+      team: Team.werewolves,
+      hasNightCall: true,
+      wakeCondition: WakeCondition.conditional,
+      wakeGuard: WakeGuard.powerUnspent,
+    );
+    const roles = [everyOther, lateStarter, infect, Role(id: 'seer', team: Team.village, hasNightCall: true, wakeCondition: WakeCondition.everyNight)];
+    final ids = {for (final r in roles) r.id};
+
+    List<String> night(int index, {NightContext? context}) => builder
+        .build(
+          compositionRoles: roles,
+          aliveRoleIds: ids,
+          nightIndex: index,
+          context: context ?? NightContext(nightIndex: index),
+        )
+        .steps
+        .map((s) => s.role.id)
+        .toList();
+
+    test('calls every-other-night roles on odd nights and late starters from their night', () {
+      expect(night(1), ['sisters', 'infect', 'seer']);
+      expect(night(2), ['late', 'infect', 'seer']);
+      expect(night(3), ['sisters', 'late', 'infect', 'seer']);
+    });
+
+    test('stops calling a role whose one-time power is spent', () {
+      expect(
+        night(3, context: const NightContext(nightIndex: 3, spentPowers: {'infect'})),
+        ['sisters', 'late', 'seer'],
+      );
+    });
+
+    test('lets villagers sleep once they lost their powers, not the wolves or solo roles', () {
+      expect(
+        night(3, context: const NightContext(nightIndex: 3, villagersPowerless: true)),
+        ['late', 'infect'],
+      );
+    });
+
+    test('marks an optional call so the script can offer to pass it', () {
+      final script = builder.build(
+        compositionRoles: roles,
+        aliveRoleIds: ids,
+        nightIndex: 1,
+      );
+      expect({for (final s in script.steps) s.role.id: s.optional}, {
+        'sisters': true,
+        'infect': false,
+        'seer': false,
+      });
     });
   });
 }

@@ -9,4 +9,10 @@ enum DeathEffect {
 
   /// Chasseur: immediately eliminates another living player of their choice.
   hunterShot,
+
+  /// Bouc Emissaire: when eliminated he names who may vote on the next day.
+  scapegoatVoters,
+
+  /// Chevalier a l'Epee Rouillee: devoured by the wolves, he leaves one of them diseased.
+  knightDisease,
 }

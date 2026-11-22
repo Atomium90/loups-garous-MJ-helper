@@ -71,6 +71,9 @@ abstract class GameRepository {
   /// Reactive journal for one game, most recent first (descending seq).
   Stream<List<NightLogRow>> watchNightLog(int gameId);
 
+  /// The journal as it is now, newest line first - for what reads it once (the share).
+  Future<List<NightLogRow>> getNightLog(int gameId);
+
   /// Deletes a game, but only if it's still GameStatus.setup (abandoned
   /// draft cleanup, not a general-purpose delete). Its roster and journal
   /// rows cascade.

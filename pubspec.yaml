@@ -1,7 +1,7 @@
 name: loup_garou_mj
 description: "A new Flutter project."
 publish_to: 'none'
-version: 0.6.0+12
+version: 0.18.0+24
 
 environment:
   sdk: ^3.13.1
@@ -21,6 +21,8 @@ dependencies:
   riverpod_annotation: ^4.0.6
   rules_engine:
     path: packages/rules_engine
+  sentry_flutter: ^10.6.0
+  share_plus: ^13.3.1
   shared_preferences: ^2.3.2
   tabler_icons_plus: ^3.44.0
   wakelock_plus: ^1.2.8

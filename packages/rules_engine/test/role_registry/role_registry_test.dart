@@ -16,11 +16,11 @@ const _expectedNoNightCallIds = {'villageois', 'petite_fille', 'chasseur'};
 const _expectedNightCallIds = {'voleur', 'cupidon', 'voyante', 'loup_garou', 'sorciere'};
 
 void main() {
-  final registry = RoleRegistry.base;
+  final registry = RoleRegistry.all;
 
-  group('RoleRegistry.base data', () {
-    test('has exactly 8 dealt roles (capitaine is an elected status, not a role)', () {
-      expect(registry.roles, hasLength(8));
+  group('RoleRegistry.all data', () {
+    test('has no Capitaine role (an elected status, not a dealt card)', () {
+      expect(registry.byIdOrNull('capitaine'), isNull);
     });
 
     test('has no duplicate ids', () {
@@ -28,8 +28,8 @@ void main() {
       expect(ids.toSet(), hasLength(ids.length));
     });
 
-    test('ids match exactly the 8 expected base game roles', () {
-      expect(registry.roles.map((r) => r.id).toSet(), equals(_expectedIds));
+    test('holds every role of the base game', () {
+      expect(registry.roles.map((r) => r.id).toSet(), containsAll(_expectedIds));
     });
 
     test('every orderConstraints.roleId resolves to a real role id', () {
@@ -79,20 +79,24 @@ void main() {
       expect(registry.byId('sorciere').wakeCondition, WakeCondition.everyNight);
     });
 
-    test('every role ships with at least one card, base box multiples spelled out', () {
-      for (final role in registry.roles) {
-        expect(role.copies, greaterThanOrEqualTo(1), reason: role.id);
-      }
-      expect(registry.byId('loup_garou').copies, 4);
-      expect(registry.byId('villageois').copies, 13);
-      // The rest are singletons.
-      for (final id in _expectedIds.difference({'loup_garou', 'villageois'})) {
-        expect(registry.byId(id).copies, 1, reason: id);
+    test('only the Loups-Garous and the Simples Villageois can have several holders', () {
+      for (final id in _expectedIds) {
+        final role = registry.byId(id);
+        expect(role.multiple, {'loup_garou', 'villageois'}.contains(id), reason: id);
+        expect(role.groupSize, 1, reason: id);
       }
     });
 
-    test('only chasseur has a non-none onDeath effect', () {
-      for (final role in registry.roles) {
+    test('among the base roles only the Voleur is ambiguous, and none plays solo', () {
+      for (final id in _expectedIds) {
+        final role = registry.byId(id);
+        expect(role.team == Team.ambiguous, id == 'voleur', reason: id);
+        expect(role.team == Team.solo, isFalse, reason: id);
+      }
+    });
+
+    test('among the base roles only chasseur has a non-none onDeath effect', () {
+      for (final role in _expectedIds.map(registry.byId)) {
         final expected = switch (role.id) {
           'chasseur' => DeathEffect.hunterShot,
           _ => DeathEffect.none,
@@ -117,8 +121,12 @@ void main() {
       expect(registry.byIdOrNull('nonexistent'), isNull);
     });
 
-    test('byTeam(werewolves) returns exactly loup_garou', () {
-      expect(registry.byTeam(Team.werewolves).map((r) => r.id), ['loup_garou']);
+    test('byTeam(werewolves) returns the wolf pack, the plain wolf first', () {
+      expect(registry.byTeam(Team.werewolves).map((r) => r.id), [
+        'loup_garou',
+        'infect_pere_des_loups',
+        'grand_mechant_loup',
+      ]);
     });
   });
 }

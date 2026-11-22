@@ -4,7 +4,7 @@
 import 'package:rules_engine/rules_engine.dart';
 
 void main() {
-  final roleRegistry = RoleRegistry.base;
+  final roleRegistry = RoleRegistry.all;
   const scriptBuilder = NightScriptBuilder();
   const machine = GameStateMachine();
 
@@ -121,11 +121,35 @@ String _describeEvent(GameEvent event) => switch (event) {
   WitchLifePotionUsed() => 'la Sorcière utilise sa potion de vie',
   WitchDeathPotionUsed(:final targetPlayerId) =>
     'la Sorcière utilise sa potion de mort sur $targetPlayerId',
+  FoxSniffed(:final middlePlayerId, :final wolfFound) =>
+    'le Renard flaire autour de $middlePlayerId : ${wolfFound ? 'un loup' : 'aucun loup'}',
+  WildChildModelChosen(:final childPlayerId, :final modelPlayerId) =>
+    '$childPlayerId prend $modelPlayerId pour modèle',
+  ChienLoupChose(:final playerId, :final wolf) =>
+    '$playerId choisit ${wolf ? 'les Loups' : 'le village'}',
+  VictimInfected(:final playerId) => '$playerId est infecté',
+  ElderSurvived(:final playerId) => '$playerId survit à une première morsure',
+  VillagersLostPowers() => 'les villageois perdent leurs pouvoirs',
+  IdiotPardoned(:final playerId) => '$playerId est gracié par le village',
+  ScapegoatBlamed(:final playerId) => '$playerId porte la faute de l\'égalité',
+  VotersChosen(:final allowedPlayerIds) => 'votent demain : ${allowedPlayerIds.join(', ')}',
+  VillageDivided(:final groupAPlayerIds) =>
+    'le village est divisé : ${groupAPlayerIds.join(', ')} d\'un côté',
+  ServantTookRole(:final servantPlayerId, :final roleId) =>
+    '$servantPlayerId prend le rôle $roleId',
+  ActorCardsSet(:final roleIds) => 'cartes du Comédien : ${roleIds.join(', ')}',
+  ActorChoseCard(:final roleId) => 'le Comédien prend le pouvoir de $roleId',
+  JudgeSignGiven() => 'le Juge Bègue demande un deuxième vote',
+  DefenderSaved(:final playerId) => '$playerId est protégé du Loup',
+  KnightContaminated(:final wolfPlayerId) => '$wolfPlayerId attrape la maladie du Chevalier',
+  PlayersCharmed(:final playerIds) => '${playerIds.join(' et ')} sont charmés',
 };
 
 String _describeCause(DeathCause cause) => switch (cause) {
   WolvesKill() => 'tué par les Loups',
   WitchDeathPotionKill() => 'tué par la potion de mort',
+  WhiteWolfKill() => 'dévoré par le Loup-Garou Blanc',
+  DiseaseKill() => 'mort de la maladie du Chevalier',
   DayVoteKill() => 'éliminé par le village',
   HunterShotKill(:final shooterPlayerId) => 'abattu par $shooterPlayerId',
   LoversCascadeKill(:final causingPlayerId) => 'meurt de chagrin après $causingPlayerId',
@@ -135,4 +159,8 @@ String _describeDecision(PendingDecision decision) => switch (decision) {
   PendingHunterShot(:final deadHunterId) => 'le Chasseur ($deadHunterId) doit choisir sa cible',
   PendingCaptainSuccession(:final deadCaptainId) =>
     'le Capitaine ($deadCaptainId) doit désigner son successeur',
+  PendingKnightWound(:final deadKnightId) =>
+    'le Chevalier ($deadKnightId) laisse un Loup malade : lequel ?',
+  PendingScapegoatVoters(:final deadScapegoatId) =>
+    'le Bouc Émissaire ($deadScapegoatId) désigne qui vote demain',
 };

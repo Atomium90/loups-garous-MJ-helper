@@ -17,6 +17,7 @@ enum SummaryStep {
   role,
   nightEnd,
   recap,
+  bearGrowl,
   captainElection,
   villageVote,
   dayDone,
@@ -73,21 +74,32 @@ SessionSummary _summarize(Game game, String blob) {
   final engine = GameStateJson.decode(decoded['engine'] as Map<String, dynamic>);
 
   if (engine.phase == GamePhase.day) {
+    final stage = DayStage.values.asNameMap()[decoded['day']?['stage']] ?? DayStage.recap;
     final step = engine.cascade != null
         ? SummaryStep.chainEffect
-        : switch (decoded['day']?['stage'] as String?) {
-            'captain' => SummaryStep.captainElection,
-            'vote' => SummaryStep.villageVote,
-            'done' => SummaryStep.dayDone,
-            _ => SummaryStep.recap,
+        : switch (stage) {
+            DayStage.recap => SummaryStep.recap,
+            DayStage.growl => SummaryStep.bearGrowl,
+            DayStage.captain => SummaryStep.captainElection,
+            DayStage.vote || DayStage.secondVote => SummaryStep.villageVote,
+            DayStage.done => SummaryStep.dayDone,
           };
     return SessionSummary(phase: JournalPhase.day, nightIndex: engine.nightIndex, step: step);
   }
 
   final cursor = SessionCursor.fromJson(decoded['cursor'] as Map<String, dynamic>);
+  final composition = game.compositionJson ?? const <String, int>{};
+  final pickedReserve = game.reserveRolesJson ?? const <String>[];
+  final reserveDrawn = composition.containsKey('voleur') && pickedReserve.isEmpty;
+  final reserve = reserveDrawn
+      ? [for (final id in decoded['drawnReserve'] as List<dynamic>? ?? const []) id as String]
+      : pickedReserve;
   final script = buildNightScript(
     engine: engine,
-    composition: game.compositionJson ?? const {},
+    composition: composition,
+    dealtComposition: dealtCompositionOf(composition, reserve, reserveDrawn: reserveDrawn),
+    foxAfterWitch: decoded['foxAfterWitch'] == true,
+    whiteWolfOddNights: decoded['whiteWolfOdd'] == true,
   );
   final inRoleTurn = cursor.stepIndex < script.steps.length;
   return SessionSummary(

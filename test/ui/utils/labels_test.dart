@@ -14,7 +14,7 @@ import 'package:rules_engine/rules_engine.dart';
 void main() {
   setUpAll(initializeDateFormatting);
 
-  final registry = RoleRegistry.base;
+  final registry = RoleRegistry.all;
   final fr = lookupAppLocalizations(const Locale('fr'));
   final en = lookupAppLocalizations(const Locale('en'));
 
@@ -29,9 +29,9 @@ void main() {
       expect(roleCountLabel(en, 'loup_garou', 2), '2 Werewolves');
     });
 
-    test('Villageois is invariable in French', () {
-      expect(roleCountLabel(fr, 'villageois', 3), '3 Villageois');
-      expect(roleCountLabel(en, 'villageois', 3), '3 Villagers');
+    test('Simple Villageois pluralises its first word in French', () {
+      expect(roleCountLabel(fr, 'villageois', 3), '3 Simples Villageois');
+      expect(roleCountLabel(en, 'villageois', 3), '3 Simple Villagers');
     });
   });
 
@@ -48,18 +48,27 @@ void main() {
     test('wolves first, plain villageois last, rest in registry order between', () {
       expect(
         deckLine(fr, composition, registry),
-        '2 Loups-Garous · Cupidon · Voyante · Sorcière · Chasseur · 2 Villageois',
+        '2 Loups-Garous · Cupidon · Voyante · Sorcière · Chasseur · 2 Simples Villageois',
       );
       expect(
         deckLine(en, composition, registry),
-        '2 Werewolves · Cupid · Seer · Witch · Hunter · 2 Villagers',
+        '2 Werewolves · Cupid · Seer · Witch · Hunter · 2 Simple Villagers',
       );
+    });
+
+    test('names a group as it is instead of counting it', () {
+      const withSisters = {'deux_soeurs': 2, 'loup_garou': 2, 'villageois': 4};
+      expect(
+        deckLine(fr, withSisters, registry),
+        '2 Loups-Garous · Deux Sœurs · 4 Simples Villageois',
+      );
+      expect(deckLine(en, withSisters, registry), '2 Werewolves · Two Sisters · 4 Simple Villagers');
     });
 
     test('drops zero-count entries', () {
       final line = deckLine(fr, const {'loup_garou': 2, 'voyante': 0, 'villageois': 6}, registry);
 
-      expect(line, '2 Loups-Garous · 6 Villageois');
+      expect(line, '2 Loups-Garous · 6 Simples Villageois');
     });
   });
 
@@ -115,12 +124,55 @@ void main() {
         expect(winnerIcon(winner), isNotNull);
       }
     });
+
+    test('every winner has a label of its own, none silently reads "Annulée"', () {
+      // An unknown winner falls back to the "cancelled" wording: a missing entry would make two
+      // winners share a label.
+      for (final l10n in [fr, en]) {
+        final full = {for (final w in GameWinner.values) winnerLabel(l10n, w)};
+        final short = {for (final w in GameWinner.values) winnerShort(l10n, w)};
+        expect(full, hasLength(GameWinner.values.length), reason: l10n.localeName);
+        expect(short, hasLength(GameWinner.values.length), reason: l10n.localeName);
+      }
+    });
+
+    test('the stored order of the winners never changes: new ones come last', () {
+      expect(GameWinner.values.take(4), [
+        GameWinner.village,
+        GameWinner.wolves,
+        GameWinner.lovers,
+        GameWinner.none,
+      ]);
+    });
+
+    test('a solo winner needs its role in the game, the others none', () {
+      expect(GameWinner.village.requiredRoleId, isNull);
+      expect(GameWinner.none.requiredRoleId, isNull);
+      expect(GameWinner.piper.requiredRoleId, 'joueur_de_flute');
+      expect(GameWinner.whiteWolf.requiredRoleId, 'loup_garou_blanc');
+      expect(GameWinner.angel.requiredRoleId, 'ange');
+      expect(GameWinner.sectarian.requiredRoleId, 'abominable_sectaire');
+    });
+  });
+
+  group('the day before night 1', () {
+    test('is not called day 0', () {
+      expect(fr.summaryPhase('day', 0), 'Avant la nuit 1');
+      expect(en.summaryPhase('day', 0), 'Before night 1');
+      expect(fr.summaryPhase('day', 2), 'Jour 2');
+      expect(fr.journalPhaseHeader('day', 0), 'AVANT LA NUIT 1');
+      expect(en.journalPhaseHeader('day', 0), 'BEFORE NIGHT 1');
+      expect(fr.journalPhaseHeader('day', 3), 'JOUR 3');
+      expect(fr.scriptVoteEyebrow(0), 'Avant la nuit 1 · vote');
+      expect(en.scriptVoteEyebrow(2), 'Day 2 · vote');
+    });
   });
 
   group('death causes', () {
     const causes = <DeathCause>[
       WolvesKill(),
       WitchDeathPotionKill(),
+      WhiteWolfKill(),
       DayVoteKill(),
       HunterShotKill(shooterPlayerId: 'a'),
       LoversCascadeKill(causingPlayerId: 'a'),
@@ -137,6 +189,7 @@ void main() {
       expect(deathCauseLabel(fr, const WolvesKill()), 'Victime des Loups');
       expect(deathCauseShort(fr, const WitchDeathPotionKill()), 'potion de mort');
       expect(deathCauseLabel(en, const HunterShotKill(shooterPlayerId: 'a')), "Hunter's shot");
+      expect(deathCauseLabel(fr, const WhiteWolfKill()), 'Dévoré par le Loup-Garou Blanc');
     });
   });
 

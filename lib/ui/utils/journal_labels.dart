@@ -33,5 +33,39 @@ String journalLine(AppLocalizations l10n, NightLogRow row) {
     JournalKind.hunterShoots => l10n.journalHunterShoots(player),
     JournalKind.seerObserves => l10n.journalSeerObserves(player),
     JournalKind.heartbreakDeath => l10n.journalHeartbreakDeath(player),
+    JournalKind.foxFindsWolf => l10n.journalFoxFindsWolf(player),
+    JournalKind.foxFindsNone => l10n.journalFoxFindsNone(player),
+    JournalKind.sistersMeet => l10n.journalSistersMeet,
+    JournalKind.brothersMeet => l10n.journalBrothersMeet,
+    JournalKind.bearGrowls => l10n.journalBearGrowls,
+    JournalKind.wildChildModel => l10n.journalWildChildModel(player, args['other'] ?? ''),
+    JournalKind.chienLoupWolf => l10n.journalChienLoupWolf(player),
+    JournalKind.chienLoupVillage => l10n.journalChienLoupVillage(player),
+    JournalKind.infection => l10n.journalInfection(player),
+    JournalKind.bigBadWolfTarget => l10n.journalBigBadWolfTarget(player),
+    JournalKind.whiteWolfEats => l10n.journalWhiteWolfEats(player),
+    JournalKind.elderSurvives => l10n.journalElderSurvives(player),
+    JournalKind.villagersLosePowers => l10n.journalVillagersLosePowers(player),
+    JournalKind.knightContaminates => l10n.journalKnightContaminates(player),
+    JournalKind.diseaseDeath => l10n.journalDiseaseDeath(player),
+    JournalKind.judgeSign => l10n.journalJudgeSign,
+    JournalKind.actorChooses => l10n.journalActorChooses(l10n.roleWithArticle(args['role'] ?? '')),
+    JournalKind.servantTakes => l10n.journalServantTakes(
+      player,
+      args['other'] ?? '',
+      l10n.roleWithArticle(args['role'] ?? ''),
+    ),
+    JournalKind.villageDivided => l10n.journalVillageDivided(player, args['other'] ?? ''),
+    JournalKind.defenderProtects => l10n.journalDefenderProtects(player),
+    JournalKind.defenderSaves => l10n.journalDefenderSaves(player),
+    JournalKind.idiotPardoned => l10n.journalIdiotPardoned(player),
+    JournalKind.scapegoatBlamed => l10n.journalScapegoatBlamed(player),
+    JournalKind.scapegoatVoters => player.isEmpty
+        ? l10n.journalScapegoatNobodyVotes
+        : l10n.journalScapegoatVoters(player),
+    JournalKind.piperCharms =>
+      (args['other'] ?? '').isEmpty
+          ? l10n.journalPiperCharmsOne(player)
+          : l10n.journalPiperCharms(player, args['other']!),
   };
 }

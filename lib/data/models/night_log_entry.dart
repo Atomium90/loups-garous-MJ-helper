@@ -21,7 +21,32 @@ enum JournalKind {
   hunterNoShot('hunter'),
   hunterShoots('hunter'),
   seerObserves('seer'),
-  heartbreakDeath('skull');
+  heartbreakDeath('skull'),
+  foxFindsWolf('fox'),
+  foxFindsNone('fox'),
+  sistersMeet('sisters'),
+  brothersMeet('sisters'),
+  bearGrowls('bear'),
+  wildChildModel('wildChild'),
+  chienLoupWolf('dog'),
+  chienLoupVillage('dog'),
+  infection('infect'),
+  bigBadWolfTarget('wolves'),
+  whiteWolfEats('wolves'),
+  elderSurvives('elder'),
+  villagersLosePowers('elder'),
+  knightContaminates('sword'),
+  diseaseDeath('skull'),
+  piperCharms('piper'),
+  defenderProtects('defender'),
+  defenderSaves('defender'),
+  idiotPardoned('vote'),
+  scapegoatBlamed('scale'),
+  scapegoatVoters('vote'),
+  judgeSign('vote'),
+  villageDivided('sectarian'),
+  servantTakes('servant'),
+  actorChooses('actor');
 
   const JournalKind(this.iconName);
 

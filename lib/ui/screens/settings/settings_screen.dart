@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:rules_engine/rules_engine.dart';
 
 import '../../../state/providers/game_repository_provider.dart';
 import '../../../state/settings/settings.dart';
@@ -25,13 +26,22 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settingsAsync = ref.watch(settingsProvider);
     final notifier = ref.read(settingsProvider.notifier);
+    final crashReports = ref.watch(crashReportingAvailableProvider);
 
     return Scaffold(
       body: SafeArea(
         child: settingsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, _) => const _SettingsBody(settings: AppSettings.defaults, notifier: null),
-          data: (settings) => _SettingsBody(settings: settings, notifier: notifier),
+          error: (_, _) => _SettingsBody(
+            settings: AppSettings.defaults,
+            notifier: null,
+            crashReportsAvailable: crashReports,
+          ),
+          data: (settings) => _SettingsBody(
+            settings: settings,
+            notifier: notifier,
+            crashReportsAvailable: crashReports,
+          ),
         ),
       ),
     );
@@ -39,15 +49,23 @@ class SettingsScreen extends ConsumerWidget {
 }
 
 class _SettingsBody extends StatelessWidget {
-  const _SettingsBody({required this.settings, required this.notifier});
+  const _SettingsBody({
+    required this.settings,
+    required this.notifier,
+    required this.crashReportsAvailable,
+  });
 
   final AppSettings settings;
   final Settings? notifier;
+
+  /// This build can send crash reports (it has a Sentry DSN), so the setting is offered.
+  final bool crashReportsAvailable;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final typography = context.typography;
+    final pool = CardPool(registry: RoleRegistry.all, ownedBoxIds: settings.ownedBoxes);
 
     return Column(
       children: [
@@ -60,8 +78,60 @@ class _SettingsBody extends StatelessWidget {
               _NavRow(
                 icon: AppIcons.boxes,
                 label: context.l10n.settingsMyBoxes,
-                sublabel: context.l10n.settingsBaseBoxRoles(8),
+                sublabel: context.l10n.settingsOwnedBoxes(pool.ownedBoxIds.length, pool.availableRoleCount),
                 onTap: () => context.pushNamed('boxes'),
+              ),
+              _ToggleRow(
+                icon: AppIcons.thief,
+                label: context.l10n.settingsThiefReserve,
+                value: settings.thiefReserveChosen,
+                onChanged: (v) => notifier?.setThiefReserveChosen(v),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  context.l10n.settingsThiefReserveHint,
+                  style: typography.counter.copyWith(color: colors.textTertiary, height: 1.55),
+                ),
+              ),
+              _ToggleRow(
+                icon: AppIcons.fox,
+                label: context.l10n.settingsFoxAfterWitch,
+                value: settings.foxAfterWitch,
+                onChanged: (v) => notifier?.setFoxAfterWitch(v),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  context.l10n.settingsFoxAfterWitchHint,
+                  style: typography.counter.copyWith(color: colors.textTertiary, height: 1.55),
+                ),
+              ),
+              _ToggleRow(
+                icon: AppIcons.whiteWolf,
+                label: context.l10n.settingsWhiteWolfOdd,
+                value: settings.whiteWolfOddNights,
+                onChanged: (v) => notifier?.setWhiteWolfOddNights(v),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  context.l10n.settingsWhiteWolfOddHint,
+                  style: typography.counter.copyWith(color: colors.textTertiary, height: 1.55),
+                ),
+              ),
+              _ToggleRow(
+                icon: AppIcons.knight,
+                label: context.l10n.settingsKnightNightEnd,
+                value: settings.knightDiseaseAtNightEnd,
+                onChanged: (v) => notifier?.setKnightDiseaseAtNightEnd(v),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  context.l10n.settingsKnightNightEndHint,
+                  style: typography.counter.copyWith(color: colors.textTertiary, height: 1.55),
+                ),
               ),
               _ComingSoonRow(icon: AppIcons.regulars, label: context.l10n.regularsBook),
               const SizedBox(height: 22),
@@ -117,6 +187,23 @@ class _SettingsBody extends StatelessWidget {
                 onChanged: (v) => notifier?.setAideMemoireInScript(v),
               ),
               const SizedBox(height: 22),
+              SectionLabel(context.l10n.settingsVoteTieTitle),
+              const SizedBox(height: 10),
+              AppSegmentedControl<VoteTieRule>(
+                selected: settings.voteTieRule,
+                onChanged: (r) => notifier?.setVoteTieRule(r),
+                options: [
+                  (value: VoteTieRule.nobody, icon: null, label: context.l10n.voteTieNobody),
+                  (value: VoteTieRule.captainDecides, icon: null, label: context.l10n.voteTieCaptain),
+                  (value: VoteTieRule.revote, icon: null, label: context.l10n.voteTieRevote),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                context.l10n.settingsVoteTieHint,
+                style: typography.counter.copyWith(color: colors.textTertiary, height: 1.55),
+              ),
+              const SizedBox(height: 22),
               SectionLabel(context.l10n.settingsNarrationTitle),
               const SizedBox(height: 10),
               AppSegmentedControl<NarrationLevel>(
@@ -135,6 +222,21 @@ class _SettingsBody extends StatelessWidget {
               ),
               const SizedBox(height: 22),
               SectionLabel(context.l10n.settingsData),
+              if (crashReportsAvailable) ...[
+                _ToggleRow(
+                  icon: AppIcons.crashReports,
+                  label: context.l10n.settingsCrashReports,
+                  value: settings.crashReports,
+                  onChanged: (v) => notifier?.setCrashReports(v),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    context.l10n.settingsCrashReportsHint,
+                    style: typography.counter.copyWith(color: colors.textTertiary, height: 1.55),
+                  ),
+                ),
+              ],
               const _DeleteAllGamesRow(),
             ],
           ),

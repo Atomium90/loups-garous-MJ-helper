@@ -217,6 +217,14 @@ class DriftGameRepository implements GameRepository {
   }
 
   @override
+  Future<List<NightLogRow>> getNightLog(int gameId) {
+    final query = _db.select(_db.nightLog)
+      ..where((e) => e.gameId.equals(gameId))
+      ..orderBy([(e) => OrderingTerm.desc(e.seq)]);
+    return query.get();
+  }
+
+  @override
   Future<void> discardDraft(int gameId) {
     return (_db.delete(
       _db.games,

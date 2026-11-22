@@ -5,10 +5,12 @@ import 'package:loup_garou_mj/data/models/game_status.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:loup_garou_mj/main.dart';
 import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
+import 'package:loup_garou_mj/state/settings/settings_providers.dart';
 import 'package:loup_garou_mj/ui/screens/home/home_screen.dart';
 import 'package:loup_garou_mj/ui/screens/settings/boxes_screen.dart';
 import 'package:loup_garou_mj/ui/screens/settings/settings_screen.dart';
 import 'package:loup_garou_mj/ui/theme/app_icons.dart';
+import 'package:loup_garou_mj/ui/widgets/app_toggle.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../support/fake_game_repository.dart';
@@ -22,6 +24,9 @@ Future<void> _openSettingsInApp(
   Locale device = const Locale('fr', 'FR'),
 }) async {
   SharedPreferences.setMockInitialValues({'language': ?stored});
+  // Réglages is long: tall enough to see the language section without scrolling.
+  await tester.binding.setSurfaceSize(const Size(400, 2000));
+  addTearDown(() => tester.binding.setSurfaceSize(null));
   tester.platformDispatcher.localesTestValue = [device];
   addTearDown(tester.platformDispatcher.clearLocalesTestValue);
   await tester.pumpWidget(
@@ -68,6 +73,8 @@ void main() {
   });
 
   testWidgets('switching the theme segment persists the choice', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAppRouter(
       tester,
       overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
@@ -83,7 +90,7 @@ void main() {
   });
 
   testWidgets('the narration level can be changed and is remembered', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(400, 1600));
+    await tester.binding.setSurfaceSize(const Size(400, 2000));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAppRouter(
       tester,
@@ -102,6 +109,8 @@ void main() {
 
   group('the language', () {
     testWidgets('can be forced from Réglages and is remembered', (tester) async {
+      await tester.binding.setSurfaceSize(const Size(400, 2000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
       await pumpAppRouter(
         tester,
         overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
@@ -142,7 +151,7 @@ void main() {
 
   testWidgets('the aide-mémoire toggle flips and persists', (tester) async {
     // Réglages is longer than the default test screen since the language section was added.
-    await tester.binding.setSurfaceSize(const Size(400, 1200));
+    await tester.binding.setSurfaceSize(const Size(400, 2000));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAppRouter(
       tester,
@@ -156,6 +165,126 @@ void main() {
 
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getBool('aide_memoire'), isFalse);
+  });
+
+  testWidgets('the Thief reserve toggle is off by default and persists once flipped', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
+      initialLocation: '/settings',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Désactivé : la réserve est tirée au hasard'), findsOneWidget);
+    await tester.tap(find.text('Réserve du Voleur choisie par le MJ'));
+    await tester.pumpAndSettle();
+
+    expect((await SharedPreferences.getInstance()).getBool('thief_reserve_chosen'), isTrue);
+  });
+
+  testWidgets('the tie rule can be chosen and is remembered', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
+      initialLocation: '/settings',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('ÉGALITÉ AU VOTE'), findsOneWidget);
+    await tester.tap(find.text('2e vote'));
+    await tester.pumpAndSettle();
+
+    expect((await SharedPreferences.getInstance()).getString('vote_tie_rule'), 'revote');
+  });
+
+  testWidgets('the crash reports are not offered by a build with nowhere to send them', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
+      initialLocation: '/settings',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Envoyer les rapports de plantage'), findsNothing);
+  });
+
+  testWidgets('the crash reports are off until flipped, and the choice persists', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpAppRouter(
+      tester,
+      overrides: [
+        gameRepositoryProvider.overrideWithValue(FakeGameRepository()),
+        crashReportingAvailableProvider.overrideWithValue(true),
+      ],
+      initialLocation: '/settings',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Jamais de noms de joueurs'), findsOneWidget);
+    expect((await SharedPreferences.getInstance()).getBool('crash_reports'), isNull);
+    await tester.tap(find.text('Envoyer les rapports de plantage'));
+    await tester.pumpAndSettle();
+
+    expect((await SharedPreferences.getInstance()).getBool('crash_reports'), isTrue);
+  });
+
+  testWidgets('the Knight disease toggle persists once flipped', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
+      initialLocation: '/settings',
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Maladie du Chevalier en fin de nuit'));
+    await tester.pumpAndSettle();
+
+    expect((await SharedPreferences.getInstance()).getBool('knight_disease_night_end'), isTrue);
+  });
+
+  testWidgets('the White Werewolf parity toggle persists once flipped', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
+      initialLocation: '/settings',
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Loup-Garou Blanc seul les nuits impaires'));
+    await tester.pumpAndSettle();
+
+    expect((await SharedPreferences.getInstance()).getBool('white_wolf_odd_nights'), isTrue);
+  });
+
+  testWidgets('the Fox position toggle persists once flipped', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
+      initialLocation: '/settings',
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Renard appelé après la Sorcière'));
+    await tester.pumpAndSettle();
+
+    expect((await SharedPreferences.getInstance()).getBool('fox_after_witch'), isTrue);
   });
 
   group('deleting every game', () {
@@ -180,7 +309,7 @@ void main() {
     }
 
     Future<void> openSettings(WidgetTester tester, FakeGameRepository repository) async {
-      await tester.binding.setSurfaceSize(const Size(400, 1200));
+      await tester.binding.setSurfaceSize(const Size(400, 2000));
       addTearDown(() => tester.binding.setSurfaceSize(null));
       await pumpAppRouter(
         tester,
@@ -220,18 +349,81 @@ void main() {
     });
   });
 
-  testWidgets('Mes boîtes opens from Réglages and is informational', (tester) async {
-    await pumpAppRouter(
-      tester,
-      overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
-      initialLocation: '/settings',
-    );
-    await tester.pumpAndSettle();
+  group('Mes boîtes', () {
+    Future<void> openBoxes(WidgetTester tester) async {
+      // Tall enough for the six boxes to be on screen at once.
+      await tester.binding.setSurfaceSize(const Size(800, 1400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await pumpAppRouter(
+        tester,
+        overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
+        initialLocation: '/settings',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Mes boîtes'));
+      await tester.pumpAndSettle();
+    }
 
-    await tester.tap(find.text('Mes boîtes'));
-    await tester.pumpAndSettle();
-    expect(find.byType(BoxesScreen), findsOneWidget);
-    expect(find.text('Nouvelle Lune'), findsOneWidget);
-    expect(find.text('bientôt'), findsWidgets);
+    testWidgets('opens from Réglages and lists the six boxes', (tester) async {
+      await openBoxes(tester);
+
+      expect(find.byType(BoxesScreen), findsOneWidget);
+      for (final name in [
+        'Loups-Garous de Thiercelieux',
+        'Nouvelle Lune',
+        'Le Village',
+        'Personnages',
+        'Le Pacte',
+        'Best Of',
+      ]) {
+        expect(find.text(name), findsOneWidget, reason: name);
+      }
+      expect(find.byType(AppToggle), findsNWidgets(6));
+    });
+
+    testWidgets('only the base box is owned at first, and it cannot be unticked', (tester) async {
+      await openBoxes(tester);
+
+      expect(find.text('8 rôles disponibles pour vos parties'), findsOneWidget);
+      final toggles = tester.widgetList<AppToggle>(find.byType(AppToggle)).toList();
+      expect(toggles.map((t) => t.value), [true, false, false, false, false, false]);
+      expect(toggles.first.onChanged, isNull);
+    });
+
+    testWidgets('ticking a box owns it and remembers it', (tester) async {
+      await openBoxes(tester);
+
+      await tester.tap(find.byType(AppToggle).at(5)); // Best Of
+      await tester.pumpAndSettle();
+
+      final toggles = tester.widgetList<AppToggle>(find.byType(AppToggle)).toList();
+      expect(toggles.map((t) => t.value), [true, false, false, false, false, true]);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getStringList('owned_boxes'), unorderedEquals(['base', 'best_of']));
+    });
+
+    testWidgets('a box ticked earlier is still ticked when the screen opens', (tester) async {
+      SharedPreferences.setMockInitialValues({
+        'owned_boxes': ['base', 'characters'],
+      });
+      await openBoxes(tester);
+
+      final toggles = tester.widgetList<AppToggle>(find.byType(AppToggle)).toList();
+      expect(toggles.map((t) => t.value), [true, false, false, true, false, false]);
+    });
+
+    testWidgets('the Réglages row sums up the owned boxes', (tester) async {
+      SharedPreferences.setMockInitialValues({
+        'owned_boxes': ['base', 'best_of'],
+      });
+      await pumpAppRouter(
+        tester,
+        overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
+        initialLocation: '/settings',
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('2 boîtes · 20 rôles'), findsOneWidget);
+    });
   });
 }

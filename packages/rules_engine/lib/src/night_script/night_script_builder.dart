@@ -1,5 +1,6 @@
 import 'package:collection/collection.dart';
 
+import '../models/night_context.dart';
 import '../models/order_constraint.dart';
 import '../models/role.dart';
 import '../models/wake_condition.dart';
@@ -14,13 +15,26 @@ import 'night_script_step.dart';
 class NightScriptBuilder {
   const NightScriptBuilder();
 
+  /// [context] carries what decides whether a role is called beyond its place in the order
+  /// (see [NightContext]); by default only [nightIndex] is known, which is all the roles that
+  /// wake every night, or on the first one, need.
   NightScript build({
     required List<Role> compositionRoles,
     required Set<String> aliveRoleIds,
     required int nightIndex,
+    NightContext? context,
   }) {
     if (nightIndex < 1) {
       throw ArgumentError.value(nightIndex, 'nightIndex', 'must be >= 1');
+    }
+
+    final night = context ?? NightContext(nightIndex: nightIndex);
+    if (night.nightIndex != nightIndex) {
+      throw ArgumentError.value(
+        context,
+        'context',
+        'is for night ${night.nightIndex}, not night $nightIndex',
+      );
     }
 
     final compositionIds = compositionRoles.map((r) => r.id).toList();
@@ -32,6 +46,7 @@ class NightScriptBuilder {
       );
     }
 
+    final introOnly = <String>{};
     final eligible = compositionRoles.where((role) {
       if (!role.hasNightCall) return false;
       if (!aliveRoleIds.contains(role.id)) return false;
@@ -41,7 +56,15 @@ class NightScriptBuilder {
           'Role "${role.id}" has hasNightCall=true but no wakeCondition set',
         );
       }
-      return wakeCondition.isActiveOnNight(nightIndex);
+      if (losesNightCall(role, night)) return false;
+      if (role.id == night.actorCard) return true;
+      if (wakeCondition.isActiveFor(role, night)) return true;
+      // Not its night of power, but it wakes with the wolves tonight and must be identified.
+      if (nightIndex == 1 && role.knownOnFirstNight) {
+        introOnly.add(role.id);
+        return true;
+      }
+      return false;
     }).toList();
 
     final ordered = _topoSort(eligible);
@@ -50,7 +73,11 @@ class NightScriptBuilder {
       nightIndex: nightIndex,
       steps: [
         for (var i = 0; i < ordered.length; i++)
-          NightScriptStep(role: ordered[i], stepIndex: i + 1),
+          NightScriptStep(
+            role: ordered[i],
+            stepIndex: i + 1,
+            identifyOnly: introOnly.contains(ordered[i].id),
+          ),
       ],
     );
   }

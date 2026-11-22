@@ -96,7 +96,12 @@ jobs:
       # Signed with the Flutter template's default debug key for now (see
       # android/app/build.gradle.kts) - installable, not a real store release. A proper
       # keystore is a separate, later decision (tied to the final applicationId).
-      - run: flutter build apk --release
+      # The Sentry DSN (a repository secret, optional) tells the app where its anonymous crash
+      # reports go, when the user allows them. Without it the build never reports anything.
+      - name: Build the APK
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        run: flutter build apk --release --dart-define=SENTRY_DSN="$SENTRY_DSN"
 
       - name: Name the APK and write its checksum
         env:

@@ -1,4 +1,5 @@
 import '../game_state/death_cause.dart';
+import '../models/team.dart';
 import '../game_state/game_state.dart';
 import '../game_state/pending_decision.dart';
 import '../game_state/player.dart';
@@ -21,6 +22,8 @@ abstract final class GameStateJson {
             'causeOfDeath': ?_encodeCause(p.causeOfDeath),
             'diedOnNight': ?p.diedOnNight,
             'diedOnPhase': ?p.diedOnPhase?.name,
+            'teamOverride': ?p.teamOverride?.name,
+            if (p.statuses.isNotEmpty) 'statuses': [for (final s in p.statuses) s.name],
           },
       ],
       'nightIndex': state.nightIndex,
@@ -34,7 +37,24 @@ abstract final class GameStateJson {
       'captainPlayerId': ?state.captainPlayerId,
       'pendingWolfVictimId': ?state.pendingWolfVictimId,
       'pendingWitchDeathTargetId': ?state.pendingWitchDeathTargetId,
+      'pendingBigBadWolfVictimId': ?state.pendingBigBadWolfVictimId,
+      'pendingWhiteWolfVictimId': ?state.pendingWhiteWolfVictimId,
+      if (state.wildChild case final w?) 'wildChild': {'child': w.childId, 'model': w.modelId},
+      'defenderProtectedId': ?state.defenderProtectedId,
+      'defenderLastProtectedId': ?state.defenderLastProtectedId,
+      if (state.woundedElders.isNotEmpty) 'woundedElders': [...state.woundedElders],
+      if (state.villagersPowerless) 'villagersPowerless': true,
+      if (state.voteRestriction case final r?)
+        'voteRestriction': {'allowed': [...r.allowed], 'day': r.day},
+      if (state.division case final d?) 'division': [...d.groupA],
+      if (state.actor case final a?)
+        'actor': {'cards': a.cards, 'used': a.used, if (a.current != null) 'current': a.current},
+      if (state.servantTakeover case final t?)
+        'servantTakeover': {'player': t.playerId, 'role': t.roleId, 'day': t.day},
+      if (state.knightWound case final k?)
+        'knightWound': {'wolf': k.wolfId, 'dueNight': k.dueNight, 'atNightEnd': k.atNightEnd},
       'cascade': ?_encodeCascade(state.cascade),
+      if (state.spentPowers.isNotEmpty) 'spentPowers': state.spentPowers,
     };
   }
 
@@ -55,6 +75,14 @@ abstract final class GameStateJson {
               null => null,
               final name => GamePhase.values.byName(name),
             },
+            teamOverride: switch (p['teamOverride'] as String?) {
+              null => null,
+              final name => Team.values.byName(name),
+            },
+            statuses: {
+              for (final name in (p['statuses'] as List<dynamic>?) ?? const [])
+                PlayerStatus.values.byName(name as String),
+            },
           ),
       ],
       nightIndex: json['nightIndex'] as int,
@@ -69,7 +97,58 @@ abstract final class GameStateJson {
       captainPlayerId: json['captainPlayerId'] as String?,
       pendingWolfVictimId: json['pendingWolfVictimId'] as String?,
       pendingWitchDeathTargetId: json['pendingWitchDeathTargetId'] as String?,
+      pendingBigBadWolfVictimId: json['pendingBigBadWolfVictimId'] as String?,
+      pendingWhiteWolfVictimId: json['pendingWhiteWolfVictimId'] as String?,
+      wildChild: switch (json['wildChild'] as Map<String, dynamic>?) {
+        null => null,
+        final w => WildChildState(childId: w['child'] as String, modelId: w['model'] as String),
+      },
+      defenderProtectedId: json['defenderProtectedId'] as String?,
+      defenderLastProtectedId: json['defenderLastProtectedId'] as String?,
+      woundedElders: {
+        for (final id in (json['woundedElders'] as List<dynamic>?) ?? const []) id as String,
+      },
+      villagersPowerless: json['villagersPowerless'] == true,
+      voteRestriction: switch (json['voteRestriction'] as Map<String, dynamic>?) {
+        null => null,
+        final r => VoteRestriction(
+          allowed: {for (final id in r['allowed'] as List<dynamic>) id as String},
+          day: r['day'] as int,
+        ),
+      },
+      actor: switch (json['actor'] as Map<String, dynamic>?) {
+        null => null,
+        final a => ActorState(
+          cards: [for (final id in a['cards'] as List<dynamic>) id as String],
+          used: [for (final id in a['used'] as List<dynamic>) id as String],
+          current: a['current'] as String?,
+        ),
+      },
+      servantTakeover: switch (json['servantTakeover'] as Map<String, dynamic>?) {
+        null => null,
+        final t => ServantTakeover(
+          playerId: t['player'] as String,
+          roleId: t['role'] as String,
+          day: t['day'] as int,
+        ),
+      },
+      division: switch (json['division'] as List<dynamic>?) {
+        null => null,
+        final ids => VillageDivision(groupA: {for (final id in ids) id as String}),
+      },
+      knightWound: switch (json['knightWound'] as Map<String, dynamic>?) {
+        null => null,
+        final k => KnightWound(
+          wolfId: k['wolf'] as String,
+          dueNight: k['dueNight'] as int,
+          atNightEnd: k['atNightEnd'] == true,
+        ),
+      },
       cascade: _decodeCascade(json['cascade'] as Map<String, dynamic>?),
+      spentPowers: {
+        for (final entry in ((json['spentPowers'] as Map<String, dynamic>?) ?? const {}).entries)
+          entry.key: entry.value as int,
+      },
     );
   }
 
@@ -84,6 +163,14 @@ abstract final class GameStateJson {
         PendingCaptainSuccession(:final deadCaptainId) => {
           'type': 'captainSuccession',
           'deadCaptainId': deadCaptainId,
+        },
+        PendingKnightWound(:final deadKnightId) => {
+          'type': 'knightWound',
+          'deadKnightId': deadKnightId,
+        },
+        PendingScapegoatVoters(:final deadScapegoatId) => {
+          'type': 'scapegoatVoters',
+          'deadScapegoatId': deadScapegoatId,
         },
       },
       'remainingQueue': [
@@ -101,6 +188,10 @@ abstract final class GameStateJson {
         'hunterShot' => PendingHunterShot(deadHunterId: decision['deadHunterId'] as String),
         'captainSuccession' => PendingCaptainSuccession(
           deadCaptainId: decision['deadCaptainId'] as String,
+        ),
+        'knightWound' => PendingKnightWound(deadKnightId: decision['deadKnightId'] as String),
+        'scapegoatVoters' => PendingScapegoatVoters(
+          deadScapegoatId: decision['deadScapegoatId'] as String,
         ),
         final other => throw ArgumentError('unknown pending decision type: $other'),
       },
@@ -129,6 +220,8 @@ abstract final class GameStateJson {
     null => null,
     WolvesKill() => {'type': 'wolves'},
     WitchDeathPotionKill() => {'type': 'witchPotion'},
+    WhiteWolfKill() => {'type': 'whiteWolf'},
+    DiseaseKill() => {'type': 'disease'},
     DayVoteKill() => {'type': 'dayVote'},
     HunterShotKill(:final shooterPlayerId) => {
       'type': 'hunterShot',
@@ -144,6 +237,8 @@ abstract final class GameStateJson {
     null => null,
     'wolves' => const WolvesKill(),
     'witchPotion' => const WitchDeathPotionKill(),
+    'whiteWolf' => const WhiteWolfKill(),
+    'disease' => const DiseaseKill(),
     'dayVote' => const DayVoteKill(),
     'hunterShot' => HunterShotKill(shooterPlayerId: json!['shooterPlayerId'] as String),
     'loversCascade' => LoversCascadeKill(causingPlayerId: json!['causingPlayerId'] as String),

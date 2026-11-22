@@ -5,6 +5,7 @@ import 'package:rules_engine/rules_engine.dart';
 
 import '../../../state/composition/composition_draft.dart';
 import '../../../state/composition/composition_editor_notifier.dart';
+import '../../../state/settings/settings_providers.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
@@ -15,17 +16,7 @@ import '../../utils/labels.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/app_chip.dart';
 import '../../widgets/app_stepper.dart';
-
-/// Minimum/maximum player count for the base box ("La boîte de base couvre 8 à 18 joueurs" -
-/// see Réglages/Mes boîtes copy). Enforced here at the widget layer; [CompositionEditor] itself
-/// only guards against negative counts. Should eventually live as real `RoleRegistry` metadata
-/// once extensions widen the range per-box.
-const _minPlayers = 8;
-const _maxPlayers = 18;
-
-/// The two roles whose count scales with player count (only wolves/villagers ever exceed 1 in
-/// the base game) get an inline stepper instead of a plain tap-to-toggle chip.
-const _scalingRoleIds = {'loup_garou', 'villageois'};
+import '../../widgets/reserve_card.dart';
 
 class CompositionScreen extends ConsumerWidget {
   const CompositionScreen({required this.gameId, super.key});
@@ -36,11 +27,13 @@ class CompositionScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final draftAsync = ref.watch(compositionEditorProvider(gameId));
     final notifier = ref.read(compositionEditorProvider(gameId).notifier);
+    final pool = ref.watch(cardPoolProvider);
 
     return Scaffold(
       body: SafeArea(
         child: draftAsync.when(
-          data: (draft) => _CompositionBody(gameId: gameId, draft: draft, notifier: notifier),
+          data: (draft) =>
+              _CompositionBody(gameId: gameId, draft: draft, notifier: notifier, pool: pool),
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, stackTrace) => Center(
             child: Padding(
@@ -59,23 +52,43 @@ class CompositionScreen extends ConsumerWidget {
 }
 
 class _CompositionBody extends StatelessWidget {
-  const _CompositionBody({required this.gameId, required this.draft, required this.notifier});
+  const _CompositionBody({
+    required this.gameId,
+    required this.draft,
+    required this.notifier,
+    required this.pool,
+  });
 
   final int gameId;
   final CompositionDraft draft;
   final CompositionEditor notifier;
+  final CardPool pool;
+
+  /// A heading and the chips of [team]'s roles in the pool; nothing when the pool has none.
+  List<Widget> _section(BuildContext context, String label, Team team) {
+    final roles = pool.available.byTeam(team);
+    if (roles.isEmpty) return const [];
+    return [
+      Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Text(
+          label,
+          style: context.typography.meta.copyWith(color: context.colors.textTertiary),
+        ),
+      ),
+      _RoleGroup(roles: roles, draft: draft, notifier: notifier, pool: pool),
+      const SizedBox(height: 14),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    final typography = context.typography;
-
-    final villageRoles = RoleRegistry.base.roles
-        .where((r) => (r.team ?? Team.village) == Team.village)
-        .toList(growable: false);
-    final wolfRoles = RoleRegistry.base.roles
-        .where((r) => (r.team ?? Team.village) == Team.werewolves)
-        .toList(growable: false);
+    final sections = [
+      (context.l10n.compositionVillage, Team.village),
+      (context.l10n.compositionWolves, Team.werewolves),
+      (context.l10n.compositionSolo, Team.solo),
+      (context.l10n.compositionAmbiguous, Team.ambiguous),
+    ];
 
     return Column(
       children: [
@@ -89,6 +102,7 @@ class _CompositionBody extends StatelessWidget {
         _PlayerCountRow(
           playerCount: draft.playerCount,
           onChanged: notifier.setPlayerCount,
+          max: pool.maxPlayers,
         ),
         Expanded(
           child: SingleChildScrollView(
@@ -96,27 +110,20 @@ class _CompositionBody extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _SuggestionCard(draft: draft, notifier: notifier),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(context.l10n.compositionVillage, style: typography.meta.copyWith(color: colors.textTertiary)),
-                ),
-                _RoleGroup(roles: villageRoles, draft: draft, notifier: notifier),
-                const SizedBox(height: 14),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(context.l10n.compositionWolves, style: typography.meta.copyWith(color: colors.textTertiary)),
-                ),
-                _RoleGroup(roles: wolfRoles, draft: draft, notifier: notifier),
-                if (draft.hasVoleur) ...[
+                _SuggestionCard(draft: draft, notifier: notifier, registry: pool.available),
+                for (final (label, team) in sections) ..._section(context, label, team),
+                if (draft.reserveChosen && draft.hasVoleur) ...[
                   const SizedBox(height: 18),
-                  _ReserveSection(draft: draft, notifier: notifier),
+                  _ReserveSection(draft: draft, notifier: notifier, pool: pool),
+                ] else if (draft.reserveDrawn) ...[
+                  const SizedBox(height: 4),
+                  _DrawnReserveNote(packSize: draft.playerCount + 2),
                 ],
               ],
             ),
           ),
         ),
-        _Footer(gameId: gameId, draft: draft, notifier: notifier),
+        _Footer(gameId: gameId, draft: draft, notifier: notifier, pool: pool),
       ],
     );
   }
@@ -124,10 +131,14 @@ class _CompositionBody extends StatelessWidget {
 
 
 class _PlayerCountRow extends StatelessWidget {
-  const _PlayerCountRow({required this.playerCount, required this.onChanged});
+  const _PlayerCountRow({required this.playerCount, required this.onChanged, required this.max});
 
   final int playerCount;
   final ValueChanged<int> onChanged;
+
+  /// The most players the owned boxes seat. A draft saved with more (a box was unticked since)
+  /// keeps its count, and can only be brought down.
+  final int max;
 
   @override
   Widget build(BuildContext context) {
@@ -155,8 +166,8 @@ class _PlayerCountRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: AppStepper(
               value: playerCount,
-              min: _minPlayers,
-              max: _maxPlayers,
+              min: CardPool.minPlayers,
+              max: playerCount > max ? playerCount : max,
               onChanged: onChanged,
             ),
           ),
@@ -169,10 +180,11 @@ class _PlayerCountRow extends StatelessWidget {
 /// The advisor's pick for the current player count. Hidden once nothing's left to apply -
 /// either the draft already matches it, or no suggestion has been computed yet.
 class _SuggestionCard extends StatelessWidget {
-  const _SuggestionCard({required this.draft, required this.notifier});
+  const _SuggestionCard({required this.draft, required this.notifier, required this.registry});
 
   final CompositionDraft draft;
   final CompositionEditor notifier;
+  final RoleRegistry registry;
 
   @override
   Widget build(BuildContext context) {
@@ -206,7 +218,7 @@ class _SuggestionCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      deckLine(context.l10n, suggestion.roleCounts, RoleRegistry.base),
+                      deckLine(context.l10n, suggestion.roleCounts, registry),
                       style: typography.counter.copyWith(color: colors.textSecondary),
                     ),
                   ],
@@ -255,15 +267,21 @@ class _SuggestionApplyButton extends StatelessWidget {
 }
 
 class _RoleGroup extends StatelessWidget {
-  const _RoleGroup({required this.roles, required this.draft, required this.notifier});
+  const _RoleGroup({
+    required this.roles,
+    required this.draft,
+    required this.notifier,
+    required this.pool,
+  });
 
   final List<Role> roles;
   final CompositionDraft draft;
   final CompositionEditor notifier;
+  final CardPool pool;
 
   int _scalingMax(Role role) {
     final current = draft.roleCounts[role.id] ?? 0;
-    final boxFree = draft.cardsLeft(role.id, RoleRegistry.base) + current;
+    final boxFree = draft.cardsLeft(role.id, pool) + current;
     return boxFree < draft.playerCount ? boxFree : draft.playerCount;
   }
 
@@ -274,7 +292,7 @@ class _RoleGroup extends StatelessWidget {
       runSpacing: 8,
       children: [
         for (final role in roles)
-          _scalingRoleIds.contains(role.id)
+          role.multiple
               ? _RoleCountChip(
                   label: context.l10n.roleName(role.id),
                   count: draft.roleCounts[role.id] ?? 0,
@@ -283,28 +301,33 @@ class _RoleGroup extends StatelessWidget {
                   max: _scalingMax(role),
                   onChanged: (count) => notifier.setRoleCount(role.id, count),
                 )
-              : _SingletonRoleChip(role: role, draft: draft, notifier: notifier),
+              : _SingletonRoleChip(role: role, draft: draft, notifier: notifier, pool: pool),
       ],
     );
   }
 }
 
-/// A tap-to-toggle chip for the singleton roles. Disabled (dimmed, "en
+/// A tap-to-toggle chip for the roles that take one holder (or one fixed group). Disabled (dimmed, "en
 /// réserve") when the role isn't in the deal and its only box card is already
 /// set aside as the Voleur's reserve - the MJ frees it by clearing that
 /// reserve slot below.
 class _SingletonRoleChip extends StatelessWidget {
-  const _SingletonRoleChip({required this.role, required this.draft, required this.notifier});
+  const _SingletonRoleChip({
+    required this.role,
+    required this.draft,
+    required this.notifier,
+    required this.pool,
+  });
 
   final Role role;
   final CompositionDraft draft;
   final CompositionEditor notifier;
+  final CardPool pool;
 
   @override
   Widget build(BuildContext context) {
     final inDeal = draft.roleCounts.containsKey(role.id);
-    final claimedByReserve =
-        !inDeal && draft.cardsLeft(role.id, RoleRegistry.base) <= 0;
+    final claimedByReserve = !inDeal && draft.cardsLeft(role.id, pool) < role.groupSize;
     return AppChip(
       label: context.l10n.roleName(role.id),
       selected: inDeal,
@@ -315,8 +338,8 @@ class _SingletonRoleChip extends StatelessWidget {
   }
 }
 
-/// A pill combining a role's name with an inline stepper, for the two roles that can exceed
-/// count 1 (loup_garou, villageois) - reuses the one increment/decrement affordance the design
+/// A pill combining a role's name with an inline stepper, for the roles that can exceed
+/// count 1 (the Loups-Garous, the Simples Villageois) - reuses the one increment/decrement affordance the design
 /// already establishes (the player-count stepper) rather than inventing an undocumented gesture.
 class _RoleCountChip extends StatelessWidget {
   const _RoleCountChip({
@@ -364,17 +387,18 @@ class _RoleCountChip extends StatelessWidget {
 /// composition; the MJ picks two roles (any base role) that get set aside on
 /// the table and offered to the Voleur when he wakes.
 class _ReserveSection extends StatelessWidget {
-  const _ReserveSection({required this.draft, required this.notifier});
+  const _ReserveSection({required this.draft, required this.notifier, required this.pool});
 
   final CompositionDraft draft;
   final CompositionEditor notifier;
+  final CardPool pool;
 
   Future<void> _pick(BuildContext context, int slot) async {
     final roleId = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: context.colors.bgScreen,
-      builder: (_) => _RolePickerSheet(
-        roles: draft.availableReserveRoles(slot, RoleRegistry.base),
+      builder: (_) => ReserveRolePickerSheet(
+        roleIds: [for (final role in draft.availableReserveRoles(slot, pool)) role.id],
       ),
     );
     if (roleId != null) notifier.setReserveRole(slot, roleId);
@@ -400,8 +424,10 @@ class _ReserveSection extends StatelessWidget {
         for (var slot = 0; slot < 2; slot++)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: _ReserveSlot(
+            child: ReserveSlot(
               index: slot,
+              icon: AppIcons.newGame,
+              verticalPadding: 11,
               roleId: slot < draft.reserveRoleIds.length ? draft.reserveRoleIds[slot] : null,
               onTap: () => _pick(context, slot),
               onClear: slot < draft.reserveRoleIds.length
@@ -414,103 +440,30 @@ class _ReserveSection extends StatelessWidget {
   }
 }
 
-class _ReserveSlot extends StatelessWidget {
-  const _ReserveSlot({
-    required this.index,
-    required this.roleId,
-    required this.onTap,
-    required this.onClear,
-  });
+/// What the Voleur adds to the pack when his reserve is left to the draw.
+class _DrawnReserveNote extends StatelessWidget {
+  const _DrawnReserveNote({required this.packSize});
 
-  final int index;
-  final String? roleId;
-  final VoidCallback onTap;
-  final VoidCallback? onClear;
+  final int packSize;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final typography = context.typography;
-    final filled = roleId != null;
-    return Material(
-      color: filled ? colors.accentBg : Colors.transparent,
-      shape: RoundedRectangleBorder(
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.bgInset,
         borderRadius: BorderRadius.circular(AppRadii.button),
-        side: BorderSide(color: filled ? colors.accentBorder : colors.borderControl),
       ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadii.button),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-          child: Row(
-            children: [
-              Text(
-                context.l10n.reserveCard(index + 1),
-                style: typography.counter.copyWith(color: colors.textTertiary),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  filled ? context.l10n.roleName(roleId!) : context.l10n.reservePick,
-                  style: typography.rowLabel.copyWith(
-                    color: filled ? colors.accentText : colors.textSecondary,
-                  ),
-                ),
-              ),
-              if (onClear != null)
-                GestureDetector(
-                  onTap: onClear,
-                  behavior: HitTestBehavior.opaque,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 6),
-                    child: Icon(AppIcons.removeReserve, size: 16, color: colors.accentText),
-                  ),
-                )
-              else
-                Icon(AppIcons.newGame, size: 15, color: colors.textTertiary),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _RolePickerSheet extends StatelessWidget {
-  const _RolePickerSheet({required this.roles});
-
-  final List<Role> roles;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final typography = context.typography;
-    return SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 10,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 16, AppSpacing.screen, 8),
+          Icon(AppIcons.thief, size: 18, color: colors.textSecondary),
+          Expanded(
             child: Text(
-              context.l10n.reserveWhichCard,
-              style: typography.rowLabel.copyWith(color: colors.textPrimary),
-            ),
-          ),
-          Flexible(
-            child: ListView(
-              shrinkWrap: true,
-              children: [
-                for (final role in roles)
-                  ListTile(
-                    title: Text(
-                      context.l10n.roleName(role.id),
-                      style: typography.body.copyWith(color: colors.textPrimary),
-                    ),
-                    onTap: () => Navigator.of(context).pop(role.id),
-                  ),
-              ],
+              context.l10n.reserveRandomNote(packSize),
+              style: context.typography.meta.copyWith(color: colors.textSecondary, height: 1.55),
             ),
           ),
         ],
@@ -520,11 +473,17 @@ class _RolePickerSheet extends StatelessWidget {
 }
 
 class _Footer extends StatelessWidget {
-  const _Footer({required this.gameId, required this.draft, required this.notifier});
+  const _Footer({
+    required this.gameId,
+    required this.draft,
+    required this.notifier,
+    required this.pool,
+  });
 
   final int gameId;
   final CompositionDraft draft;
   final CompositionEditor notifier;
+  final CardPool pool;
 
   @override
   Widget build(BuildContext context) {
@@ -569,7 +528,7 @@ class _Footer extends StatelessWidget {
             ),
           AppButton(
             label: context.l10n.compositionStart,
-            onPressed: draft.isValid
+            onPressed: draft.isValidFor(pool)
                 ? () async {
                     // Capture the router before the await: commit() invalidates
                     // gameListProvider/gameProvider, which can rebuild this subtree

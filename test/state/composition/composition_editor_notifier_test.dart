@@ -12,22 +12,34 @@ import 'package:loup_garou_mj/state/composition/composition_advisor_provider.dar
 import 'package:loup_garou_mj/state/composition/composition_editor_notifier.dart';
 import 'package:loup_garou_mj/state/providers/game_provider.dart';
 import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
+import 'package:loup_garou_mj/state/settings/settings_providers.dart';
 import 'package:rules_engine/rules_engine.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../support/fake_game_repository.dart';
 
-/// A registry shaped like the real base game (a wolf role + a villager filler), plus one
-/// oversized tier - the base box alone never has more candidates than a tier's target slots,
-/// so this is what actually exercises rerollSuggestion's shuffle-and-cut path.
-RoleRegistry _registryWithSurplusTier() => const RoleRegistry([
-  Role(id: 'loup_garou', team: Team.werewolves, copies: 4, hasNightCall: true),
-  Role(id: 'villageois', team: Team.village, copies: 20, hasNightCall: false),
-  Role(id: 'a', team: Team.village, suggestionTier: 1, hasNightCall: false),
-  Role(id: 'b', team: Team.village, suggestionTier: 2, hasNightCall: false),
-  Role(id: 'c', team: Team.village, suggestionTier: 2, hasNightCall: false),
-  Role(id: 'd', team: Team.village, suggestionTier: 2, hasNightCall: false),
-  Role(id: 'e', team: Team.village, suggestionTier: 2, hasNightCall: false),
-]);
+/// A pool shaped like the real base game (a wolf role + a villager filler), plus one oversized
+/// tier - the base box alone never has more candidates than a tier's target slots, so this is
+/// what actually exercises rerollSuggestion's shuffle-and-cut path.
+CardPool _poolWithSurplusTier() => CardPool(
+  registry: const RoleRegistry([
+    Role(id: 'loup_garou', team: Team.werewolves, multiple: true, hasNightCall: true),
+    Role(id: 'villageois', team: Team.village, multiple: true, hasNightCall: false),
+    Role(id: 'a', team: Team.village, suggestionTier: 1, hasNightCall: false),
+    Role(id: 'b', team: Team.village, suggestionTier: 2, hasNightCall: false),
+    Role(id: 'c', team: Team.village, suggestionTier: 2, hasNightCall: false),
+    Role(id: 'd', team: Team.village, suggestionTier: 2, hasNightCall: false),
+    Role(id: 'e', team: Team.village, suggestionTier: 2, hasNightCall: false),
+  ]),
+  boxes: const [
+    GameBox(
+      id: baseBoxId,
+      cards: {'loup_garou': 4, 'villageois': 20, 'a': 1, 'b': 1, 'c': 1, 'd': 1, 'e': 1},
+    ),
+  ],
+);
+
+CardPool _basePool() => CardPool(registry: RoleRegistry.all);
 
 void main() {
   group('CompositionEditor with a fake repository', () {
@@ -42,7 +54,7 @@ void main() {
           // Seeded so tests reading `suggestion` get a stable pick (moot for the base registry
           // alone: see composition_advisor_test.dart - it never has a surplus tier to shuffle).
           compositionAdvisorProvider.overrideWithValue(
-            CompositionAdvisor(RoleRegistry.base, random: Random(1)),
+            CompositionAdvisor(_basePool(), random: Random(1)),
           ),
         ],
       );
@@ -98,7 +110,7 @@ void main() {
     test('build seeds a suggestion for the initial player count', () async {
       final id = await fakeRepository.createGame(initialPlayerCount: 8);
       final draft = await container.read(compositionEditorProvider(id).future);
-      final expected = CompositionAdvisor(RoleRegistry.base, random: Random(1)).suggest(8);
+      final expected = CompositionAdvisor(_basePool(), random: Random(1)).suggest(8);
       expect(draft.suggestion?.roleCounts, expected.roleCounts);
     });
 
@@ -188,23 +200,6 @@ void main() {
       expect(draft.isValid, isFalse);
     });
 
-    test('the Voleur needs exactly two reserve cards to be valid', () async {
-      final id = await fakeRepository.createGame(initialPlayerCount: 6);
-      final notifier = await notifierFor(id);
-      notifier.setRoleCount('loup_garou', 1);
-      notifier.toggleRole('voleur');
-
-      var draft = container.read(compositionEditorProvider(id)).value!;
-      expect(draft.hasVoleur, isTrue);
-      expect(draft.isValid, isFalse); // reserve empty
-
-      notifier.setReserveRole(0, 'chasseur');
-      notifier.setReserveRole(1, 'cupidon');
-      draft = container.read(compositionEditorProvider(id)).value!;
-      expect(draft.reserveRoleIds, ['chasseur', 'cupidon']);
-      expect(draft.isValid, isTrue);
-    });
-
     test('availableReserveRoles honours box copies and excludes the Voleur', () async {
       final id = await fakeRepository.createGame(initialPlayerCount: 8);
       final notifier = await notifierFor(id);
@@ -214,7 +209,7 @@ void main() {
 
       final draft = container.read(compositionEditorProvider(id)).value!;
       final ids = draft
-          .availableReserveRoles(0, RoleRegistry.base)
+          .availableReserveRoles(0, _basePool())
           .map((r) => r.id)
           .toSet();
       expect(ids, isNot(contains('voleur')));
@@ -226,12 +221,12 @@ void main() {
       notifier.setReserveRole(0, 'chasseur');
       final draft2 = container.read(compositionEditorProvider(id)).value!;
       expect(
-        draft2.availableReserveRoles(0, RoleRegistry.base).map((r) => r.id),
+        draft2.availableReserveRoles(0, _basePool()).map((r) => r.id),
         contains('chasseur'),
       );
       // ...but not for the other slot.
       expect(
-        draft2.availableReserveRoles(1, RoleRegistry.base).map((r) => r.id),
+        draft2.availableReserveRoles(1, _basePool()).map((r) => r.id),
         isNot(contains('chasseur')),
       );
     });
@@ -248,20 +243,6 @@ void main() {
       expect(draft.hasVoleur, isFalse);
       expect(draft.reserveRoleIds, isEmpty);
       expect(draft.isValid, isTrue);
-    });
-
-    test('commit passes the reserve through only while the Voleur is in play', () async {
-      final id = await fakeRepository.createGame(initialPlayerCount: 6);
-      final notifier = await notifierFor(id);
-      notifier.setRoleCount('loup_garou', 1);
-      notifier.toggleRole('voleur');
-      notifier.setReserveRole(0, 'chasseur');
-      notifier.setReserveRole(1, 'villageois');
-
-      await notifier.commit();
-
-      final game = await fakeRepository.getGame(id);
-      expect(game!.reserveRolesJson, ['chasseur', 'villageois']);
     });
 
     test('clearRoles empties the selection', () async {
@@ -414,6 +395,141 @@ void main() {
     });
   });
 
+  group('the Voleur reserve', () {
+    late FakeGameRepository repository;
+
+    /// A container whose settings say whether the MJ picks the reserve.
+    Future<ProviderContainer> containerFor({required bool chosen}) async {
+      SharedPreferences.setMockInitialValues({'thief_reserve_chosen': chosen});
+      final prefs = await SharedPreferences.getInstance();
+      final container = ProviderContainer(
+        overrides: [
+          gameRepositoryProvider.overrideWithValue(repository),
+          sharedPreferencesProvider.overrideWith((ref) async => prefs),
+          cardPoolProvider.overrideWithValue(_basePool()),
+        ],
+      );
+      addTearDown(container.dispose);
+      await container.read(settingsProvider.future);
+      return container;
+    }
+
+    Future<CompositionEditor> editorOf(ProviderContainer container, int id) async {
+      await container.read(compositionEditorProvider(id).future);
+      return container.read(compositionEditorProvider(id).notifier);
+    }
+
+    setUp(() => repository = FakeGameRepository());
+
+    group('picked by the MJ', () {
+      test('the Voleur needs exactly two reserve cards to be valid', () async {
+        final container = await containerFor(chosen: true);
+        final id = await repository.createGame(initialPlayerCount: 6);
+        final notifier = await editorOf(container, id);
+        notifier.setRoleCount('loup_garou', 1);
+        notifier.toggleRole('voleur');
+
+        var draft = container.read(compositionEditorProvider(id)).value!;
+        expect(draft.hasVoleur, isTrue);
+        expect(draft.isValid, isFalse); // reserve empty
+
+        notifier.setReserveRole(0, 'chasseur');
+        notifier.setReserveRole(1, 'cupidon');
+        draft = container.read(compositionEditorProvider(id)).value!;
+        expect(draft.reserveRoleIds, ['chasseur', 'cupidon']);
+        expect(draft.isValid, isTrue);
+      });
+
+      test('commit passes the reserve through only while the Voleur is in play', () async {
+        final container = await containerFor(chosen: true);
+        final id = await repository.createGame(initialPlayerCount: 6);
+        final notifier = await editorOf(container, id);
+        notifier.setRoleCount('loup_garou', 1);
+        notifier.toggleRole('voleur');
+        notifier.setReserveRole(0, 'chasseur');
+        notifier.setReserveRole(1, 'villageois');
+
+        await notifier.commit();
+
+        expect((await repository.getGame(id))!.reserveRolesJson, ['chasseur', 'villageois']);
+      });
+
+      test('a reserve saved with the game comes back with the draft', () async {
+        final container = await containerFor(chosen: true);
+        final id = await repository.createGame(initialPlayerCount: 6);
+        var notifier = await editorOf(container, id);
+        notifier.toggleRole('voleur');
+        notifier.setReserveRole(0, 'chasseur');
+        notifier.setReserveRole(1, 'cupidon');
+
+        final reopened = await containerFor(chosen: true);
+        notifier = await editorOf(reopened, id);
+        expect(
+          reopened.read(compositionEditorProvider(id)).value!.reserveRoleIds,
+          ['chasseur', 'cupidon'],
+        );
+      });
+    });
+
+    group('left to the draw', () {
+      test('the Voleur needs no reserve to be valid', () async {
+        final container = await containerFor(chosen: false);
+        final id = await repository.createGame(initialPlayerCount: 6);
+        final notifier = await editorOf(container, id);
+        notifier.toggleRole('voleur');
+
+        final draft = container.read(compositionEditorProvider(id)).value!;
+        expect(draft.reserveDrawn, isTrue);
+        expect(draft.reserveComplete, isTrue);
+        expect(draft.isValid, isTrue);
+      });
+
+      test('commit keeps no reserve, even one saved by an earlier choice', () async {
+        // A game drafted while the MJ picked the reserve ...
+        final picking = await containerFor(chosen: true);
+        final id = await repository.createGame(initialPlayerCount: 6);
+        final earlier = await editorOf(picking, id);
+        earlier.toggleRole('voleur');
+        earlier.setReserveRole(0, 'chasseur');
+        earlier.setReserveRole(1, 'cupidon');
+
+        // ... then launched once the setting is off.
+        final container = await containerFor(chosen: false);
+        final notifier = await editorOf(container, id);
+        expect(container.read(compositionEditorProvider(id)).value!.reserveRoleIds, isEmpty);
+        await notifier.commit();
+
+        final game = (await repository.getGame(id))!;
+        expect(game.reserveRolesJson, isNull);
+        expect(game.compositionJson, containsPair('voleur', 1));
+      });
+
+      test('the pack holds two more Simples Villageois, which must exist', () async {
+        final container = await containerFor(chosen: false);
+        final id = await repository.createGame(initialPlayerCount: 18);
+        final notifier = await editorOf(container, id);
+        notifier.toggleRole('voleur');
+        // 18 players: 17 roles to fill with Simples Villageois + the Voleur. The base box has
+        // 13 Simples Villageois, and the pack needs 2 more than the 17 - 4 wolves - 4 specials.
+        notifier.setRoleCount('loup_garou', 1);
+
+        final draft = container.read(compositionEditorProvider(id)).value!;
+        // 16 villagers to fill + 2 = 18 > 13.
+        expect(draft.isValidFor(_basePool()), isFalse);
+      });
+
+      test('the Villageois stepper leaves room for the two extra cards', () async {
+        final container = await containerFor(chosen: false);
+        final id = await repository.createGame(initialPlayerCount: 18);
+        final notifier = await editorOf(container, id);
+        notifier.toggleRole('voleur');
+
+        final draft = container.read(compositionEditorProvider(id)).value!;
+        expect(draft.cardsLeft('villageois', _basePool()), 11); // 13 - the 2 added to the pack
+      });
+    });
+  });
+
   group('CompositionEditor.rerollSuggestion', () {
     test('can vary the pick once the pool has surplus candidates', () async {
       final fakeRepository = FakeGameRepository();
@@ -421,7 +537,7 @@ void main() {
         overrides: [
           gameRepositoryProvider.overrideWithValue(fakeRepository),
           compositionAdvisorProvider.overrideWithValue(
-            CompositionAdvisor(_registryWithSurplusTier(), random: Random(7)),
+            CompositionAdvisor(_poolWithSurplusTier(), random: Random(7)),
           ),
         ],
       );

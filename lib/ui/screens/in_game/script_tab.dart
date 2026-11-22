@@ -1,9 +1,15 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:rules_engine/rules_engine.dart';
 
+import '../../../data/models/game_winner.dart';
+import '../../../state/session/day_plan.dart';
 import '../../../state/session/game_session.dart';
+import '../../../state/session/night_script.dart' show kCharmedStepRole;
 import '../../../state/session/session_cursor.dart';
+import '../../../state/settings/settings.dart' show VoteTieRule;
+import '../../../state/settings/settings_providers.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
@@ -14,7 +20,11 @@ import '../../widgets/app_button.dart';
 import '../../widgets/narration_block.dart';
 import '../../widgets/avatar_pick_cell.dart';
 import '../../widgets/player_avatar.dart';
+import 'widgets/elder_question.dart';
+import 'widgets/fox_act.dart';
 import 'widgets/identify_step.dart';
+import 'widgets/two_choice_act.dart';
+import 'widgets/reserve_entry.dart';
 import 'widgets/simple_act.dart';
 import 'widgets/target_pick.dart';
 import 'widgets/unreadable_game_notice.dart';
@@ -53,8 +63,15 @@ class _NightBody extends ConsumerWidget {
 
   List<String> _holderNames(String roleId) => [
     for (final p in session.engine.players)
-      if (p.roleId == roleId) p.name,
+      if (roleId == kCharmedStepRole.id
+          ? p.alive && p.hasStatus(PlayerStatus.charmed)
+          : p.roleId == roleId)
+        p.name,
   ];
+
+  /// Where tonight's first real call is: the steps before it are settled before the village
+  /// sleeps.
+  int get _firstCallIndex => session.tonight.steps.indexWhere((s) => !s.role.preparation);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -84,8 +101,9 @@ class _NightBody extends ConsumerWidget {
                 ),
                 NarrationBlock(
                   lines: [
-                    // the first role of the night is preceded by "the village goes to sleep"
-                    if (session.cursor.stepIndex == 0) ...nightStartNarration(context.l10n),
+                    // the first call of the night is preceded by "the village goes to sleep"; what is
+                    // settled before that (a card shown at the deal) comes ahead of it
+                    if (session.cursor.stepIndex == _firstCallIndex) ...nightStartNarration(context.l10n),
                     ...roleCallNarration(context.l10n, step.role.id),
                   ],
                 ),
@@ -97,9 +115,30 @@ class _NightBody extends ConsumerWidget {
     );
   }
 
+  /// The Elder has no call of his own, so the app learns he is one when the wolves pick him: asks,
+  /// and notes the card, so his first bite is spared.
+  Future<void> _askIfElder(BuildContext context, GameSession notifier, String victimId) async {
+    if (!session.mayBeElder(victimId)) return;
+    final name = session.engine.playerById(victimId).name;
+    final isElder = await showElderQuestion(context, name: name);
+    if (isElder == true) await notifier.identifyRole('ancien', [int.parse(victimId)]);
+  }
+
   Widget _body(BuildContext context, GameSession notifier, NightScriptStep? step) {
+    if (session.engine.cascade != null) {
+      return _ChainPanel(session: session, notifier: notifier);
+    }
     if (step == null) {
       return _FinalizePrompt(onResolve: () => notifier.applyAction(const FinalizeNight()));
+    }
+    if (step.role.id == 'voleur' &&
+        session.reserveToEnter &&
+        session.cursor.subStep != NightSubStep.act) {
+      return ReserveEntry(
+        pack: session.pack,
+        onConfirm: notifier.enterReserve,
+        onDefer: notifier.skipStep,
+      );
     }
     if (session.currentStepNeedsIdentify) {
       final roleId = step.role.id;
@@ -118,7 +157,7 @@ class _NightBody extends ConsumerWidget {
       };
       return IdentifyStep(
         role: step.role,
-        count: (session.composition[roleId] ?? 1) - session.dealtHoldersKnown(roleId),
+        count: session.expectedHolders(roleId) - session.dealtHoldersKnown(roleId),
         candidates: [
           for (final p in session.engine.alivePlayers)
             if (!taken.contains(int.parse(p.id))) (rowId: int.parse(p.id), name: p.name),
@@ -133,12 +172,24 @@ class _NightBody extends ConsumerWidget {
         onDefer: notifier.skipStep,
       );
     }
-    return _actBody(context, notifier, step.role);
+    return _actBody(context, notifier, step);
   }
 
-  Widget _actBody(BuildContext context, GameSession notifier, Role role) {
+  Widget _actBody(BuildContext context, GameSession notifier, NightScriptStep step) {
+    final role = step.role;
     final alive = session.engine.alivePlayers;
     Candidate cand(Player p) => (id: p.id, name: p.name);
+
+    // Every card of this role is in the Voleur's reserve: nobody holds it, but the MJ still
+    // calls it so the table cannot tell. Nothing to act.
+    if (session.reserveDrawn &&
+        session.reserveRoleIds.isNotEmpty &&
+        !alive.any((p) => p.roleId == role.id) &&
+        session.expectedHolders(role.id) == 0 &&
+        role.id != session.engine.actor?.current &&
+        role.id != 'voleur') {
+      return SimpleAct(primaryLabel: context.l10n.scriptSkipRole, onPrimary: notifier.skipStep);
+    }
 
     switch (role.id) {
       case 'voyante':
@@ -160,25 +211,242 @@ class _NightBody extends ConsumerWidget {
           onSkip: notifier.skipStep,
         );
 
+      case 'renard':
+        return FoxAct(
+          candidates: [for (final p in alive) cand(p)],
+          trioFor: (middleId) => [
+            for (final p in session.engine.foxTrio(middleId)) p.name,
+          ],
+          appKnowsWolf: (middleId) => session.engine.wolfAmong(
+            session.engine.foxTrio(middleId),
+            RoleRegistry.all,
+          ),
+          onAnswer: (middleId, wolfFound) =>
+              notifier.foxSniff(middleEngineId: middleId, wolfFound: wolfFound),
+          onSkip: notifier.skipStep,
+        );
+
+      case 'enfant_sauvage':
+        final child = session.engine.players.where((p) => p.alive && p.roleId == role.id).firstOrNull;
+        if (child == null) {
+          return SimpleAct(primaryLabel: context.l10n.scriptSkipRole, onPrimary: notifier.skipStep);
+        }
+        return TargetPick(
+          question: context.l10n.scriptWildChildQuestion,
+          candidates: [for (final p in alive) if (p.id != child.id) cand(p)],
+          confirmLabel: context.l10n.scriptWildChildModel,
+          onConfirm: (id) => notifier.wildChildChoose(childEngineId: child.id, modelEngineId: id),
+          secondaryLabel: context.l10n.scriptSkipRole,
+          onSecondary: notifier.skipStep,
+        );
+
+      case 'chien_loup':
+        final dog = session.engine.players.where((p) => p.alive && p.roleId == role.id).firstOrNull;
+        if (dog == null) {
+          return SimpleAct(primaryLabel: context.l10n.scriptSkipRole, onPrimary: notifier.skipStep);
+        }
+        return TwoChoiceAct(
+          question: context.l10n.scriptChienLoupQuestion,
+          firstLabel: context.l10n.scriptChienLoupWolf,
+          onFirst: () => notifier.chienLoupChoose(engineId: dog.id, wolf: true),
+          secondLabel: context.l10n.scriptChienLoupVillager,
+          onSecond: () => notifier.chienLoupChoose(engineId: dog.id, wolf: false),
+        );
+
+      case 'infect_pere_des_loups':
+        final victimId = session.engine.pendingWolfVictimId;
+        if (victimId == null) {
+          return SimpleAct(
+            primaryLabel: context.l10n.commonContinue,
+            onPrimary: notifier.skipStep,
+          );
+        }
+        final victim = session.engine.playerById(victimId).name;
+        return TwoChoiceAct(
+          question: context.l10n.scriptInfectAsk(victim),
+          firstLabel: context.l10n.scriptInfectNo,
+          onFirst: notifier.skipStep,
+          secondLabel: context.l10n.scriptInfectYes(victim),
+          onSecond: notifier.infectVictim,
+        );
+
+      case 'grand_mechant_loup':
+        return TargetPick(
+          question: context.l10n.scriptBigBadWolfQuestion,
+          candidates: [
+            for (final p in alive)
+              if (!session.engine.wakesWithWolves(p, RoleRegistry.all) &&
+                  p.id != session.engine.pendingWolfVictimId)
+                cand(p),
+          ],
+          confirmLabel: context.l10n.scriptBigBadWolfPick,
+          onConfirm: (id) async {
+            await _askIfElder(context, notifier, id);
+            await notifier.bigBadWolfTarget(id);
+          },
+          secondaryLabel: context.l10n.scriptSkipRole,
+          onSecondary: notifier.skipStep,
+        );
+
+      case 'loup_garou_blanc':
+        // The first night he only wakes with the wolves: nothing to act, just to be known.
+        if (step.identifyOnly) {
+          return SimpleAct(
+            primaryLabel: context.l10n.commonContinue,
+            onPrimary: notifier.skipStep,
+          );
+        }
+        return TargetPick(
+          question: context.l10n.scriptWhiteWolfQuestion,
+          candidates: [
+            for (final p in alive)
+              if (session.engine.wakesWithWolves(p, RoleRegistry.all) && p.roleId != role.id)
+                cand(p),
+          ],
+          confirmLabel: context.l10n.scriptWhiteWolfPick,
+          onConfirm: notifier.whiteWolfEat,
+          secondaryLabel: context.l10n.scriptSkipRole,
+          onSecondary: notifier.skipStep,
+        );
+
+      case 'deux_soeurs':
+        return SimpleAct(
+          primaryLabel: context.l10n.scriptSistersDone,
+          onPrimary: notifier.sistersMet,
+          secondaryLabel: context.l10n.scriptSkipRole,
+          onSecondary: notifier.skipStep,
+        );
+
+      case 'trois_freres':
+        return SimpleAct(
+          primaryLabel: context.l10n.scriptBrothersDone,
+          onPrimary: notifier.brothersMet,
+          secondaryLabel: context.l10n.scriptSkipRole,
+          onSecondary: notifier.skipStep,
+        );
+
+      case 'comedien':
+        final actor = session.engine.actor;
+        if (actor == null) {
+          return _ActorCards(
+            key: const ValueKey('actorCardsLaid'),
+            title: context.l10n.scriptActorCardsQuestion,
+            cards: actorCardRoleIds,
+            count: actorCardCount,
+            onConfirm: notifier.actorSetCards,
+            onSkip: notifier.skipStep,
+          );
+        }
+        return _ActorCards(
+          key: const ValueKey('actorCardChosen'),
+          title: context.l10n.scriptActorQuestion,
+          cards: [
+            for (final c in actor.available)
+              // Cupidon pairs lovers on the first night only, and only once.
+              if (c != 'cupidon' ||
+                  (session.engine.nightIndex == 1 && session.engine.lovers == null))
+                c,
+          ],
+          count: 1,
+          onConfirm: (cards) => notifier.actorChoose(cards.single),
+          onSkip: notifier.skipStep,
+        );
+
+      case 'abominable_sectaire':
+        // The village is divided before the night; he has no call of his own.
+        return _DivideAct(
+          candidates: [for (final p in session.engine.players) cand(p)],
+          onConfirm: notifier.divideVillage,
+          onSkip: notifier.skipStep,
+        );
+
+      case 'juge_begue':
+        // He only shows the MJ his secret sign; the second vote it calls for plays in the day.
+        return SimpleAct(
+          primaryLabel: context.l10n.commonContinue,
+          onPrimary: notifier.skipStep,
+        );
+
+      case 'villageois_villageois':
+        // His card is public: the MJ only notes who shows it.
+        return SimpleAct(
+          primaryLabel: context.l10n.commonContinue,
+          onPrimary: notifier.skipStep,
+        );
+
+      case 'montreur_d_ours':
+        // He only makes himself known tonight; his power plays in the morning.
+        return SimpleAct(
+          primaryLabel: context.l10n.commonContinue,
+          onPrimary: notifier.skipStep,
+        );
+
       case 'cupidon':
         return _LoversPick(
           candidates: [for (final p in alive) cand(p)],
           onConfirm: (a, b) => notifier.pairLovers(a, b),
           onSkip: notifier.skipStep,
+          question: context.l10n.scriptLoversQuestion,
+          pairLabel: context.l10n.scriptLoversPair,
+          pickLabel: context.l10n.scriptLoversPick,
+          icon: AppIcons.cupid,
+        );
+
+      case 'joueur_de_flute':
+        return _LoversPick(
+          candidates: [
+            for (final p in alive)
+              if (p.roleId != role.id && !p.hasStatus(PlayerStatus.charmed)) cand(p),
+          ],
+          onConfirm: (a, b) => notifier.piperCharm([a, b]),
+          onSkip: notifier.skipStep,
+          question: context.l10n.scriptPiperQuestion,
+          pairLabel: context.l10n.scriptPiperCharm,
+          pickLabel: context.l10n.scriptLoversPick,
+          icon: AppIcons.piperRole,
+          single: (
+            label: context.l10n.scriptPiperCharmOne,
+            onConfirm: (id) => notifier.piperCharm([id]),
+          ),
+        );
+
+      case 'joueurs_charmes':
+        return SimpleAct(
+          primaryLabel: context.l10n.scriptCharmedDone,
+          onPrimary: notifier.skipStep,
         );
 
       case 'loup_garou':
         return TargetPick(
           question: context.l10n.scriptWolvesQuestion,
-          candidates: [for (final p in alive) if (p.roleId != 'loup_garou') cand(p)],
+          candidates: [
+            for (final p in alive)
+              if (!session.engine.wakesWithWolves(p, RoleRegistry.all)) cand(p),
+          ],
           confirmLabel: context.l10n.scriptWolvesPick,
-          onConfirm: (id) => notifier.applyAction(WolvesTarget(targetPlayerId: id)),
+          onConfirm: (id) async {
+            await _askIfElder(context, notifier, id);
+            await notifier.applyAction(WolvesTarget(targetPlayerId: id));
+          },
+          secondaryLabel: context.l10n.scriptSkipRole,
+          onSecondary: notifier.skipStep,
+        );
+
+      case 'salvateur':
+        return TargetPick(
+          question: context.l10n.scriptDefenderQuestion,
+          candidates: [
+            for (final p in alive)
+              if (p.id != session.engine.defenderLastProtectedId) cand(p),
+          ],
+          confirmLabel: context.l10n.scriptDefenderProtects,
+          onConfirm: notifier.defenderProtect,
           secondaryLabel: context.l10n.scriptSkipRole,
           onSecondary: notifier.skipStep,
         );
 
       case 'sorciere':
-        final victimId = session.engine.pendingWolfVictimId;
+        final victimId = session.engine.wolfVictimForWitch;
         return WitchAct(
           witch: session.engine.witch,
           wolfVictim: victimId == null ? null : cand(session.engine.playerById(victimId)),
@@ -195,6 +463,7 @@ class _NightBody extends ConsumerWidget {
         }
         return _VoleurAct(
           reserveRoleIds: session.reserveRoleIds,
+          mustSwap: session.reserveForcesSwap,
           onConfirm: (stolenRoleId) => notifier.voleurSwap(
             voleurEngineId: voleur.id,
             stolenRoleId: stolenRoleId,
@@ -211,9 +480,16 @@ class _NightBody extends ConsumerWidget {
 /// his own. The two reserve cards double as the reminder of what's on the
 /// table - no separate collapsible needed. A stolen night role gets a nudge.
 class _VoleurAct extends StatefulWidget {
-  const _VoleurAct({required this.reserveRoleIds, required this.onConfirm});
+  const _VoleurAct({
+    required this.reserveRoleIds,
+    required this.onConfirm,
+    this.mustSwap = false,
+  });
 
   final List<String> reserveRoleIds;
+
+  /// Both reserve cards are wolves: he cannot keep his own card.
+  final bool mustSwap;
 
   /// null = he keeps his card.
   final void Function(String? stolenRoleId) onConfirm;
@@ -234,8 +510,8 @@ class _VoleurActState extends State<_VoleurAct> {
     final picked = _choice != null;
     final keeps = _choice == '';
     final stolen = keeps ? null : _choice;
-    final stolenRole = stolen == null ? null : RoleRegistry.base.byId(stolen);
-    final stealsNightRole = stolenRole?.hasNightCall ?? false;
+    final stolenRole = stolen == null ? null : RoleRegistry.all.byId(stolen);
+    final stealsNightRole = (stolenRole?.hasNightCall ?? false) && !stolenRole!.preparation;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -247,6 +523,14 @@ class _VoleurActState extends State<_VoleurAct> {
             style: typography.rowLabel.copyWith(color: colors.textPrimary),
           ),
         ),
+        if (widget.mustSwap)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 8),
+            child: Text(
+              context.l10n.scriptThiefMustSwap,
+              style: typography.meta.copyWith(color: colors.warnText, height: 1.5),
+            ),
+          ),
         Expanded(
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screen),
@@ -258,10 +542,11 @@ class _VoleurActState extends State<_VoleurAct> {
                   selected: _choice == id,
                   onTap: () => setState(() => _choice = id),
                 ),
-              _KeepCardOption(
-                selected: keeps,
-                onTap: () => setState(() => _choice = ''),
-              ),
+              if (!widget.mustSwap)
+                _KeepCardOption(
+                  selected: keeps,
+                  onTap: () => setState(() => _choice = ''),
+                ),
             ],
           ),
         ),
@@ -488,7 +773,7 @@ class _SeerResult extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final typography = context.typography;
-    final role = RoleRegistry.base.byId(roleId);
+    final role = RoleRegistry.all.byId(roleId);
     final wolves = role.team == Team.werewolves;
 
     return Column(
@@ -570,11 +855,25 @@ class _LoversPick extends StatefulWidget {
     required this.candidates,
     required this.onConfirm,
     required this.onSkip,
+    required this.question,
+    required this.pairLabel,
+    required this.pickLabel,
+    required this.icon,
+    this.single,
   });
 
   final List<Candidate> candidates;
   final void Function(String a, String b) onConfirm;
   final VoidCallback onSkip;
+  final String question;
+
+  /// The button once two are picked: "Cupidon unit A et B".
+  final String Function(String a, String b) pairLabel;
+  final String pickLabel;
+  final IconData icon;
+
+  /// With a single player left to pick, the button and what it does (the Piper may charm just one).
+  final ({String Function(String name) label, void Function(String id) onConfirm})? single;
 
   @override
   State<_LoversPick> createState() => _LoversPickState();
@@ -597,7 +896,9 @@ class _LoversPickState extends State<_LoversPick> {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final typography = context.typography;
-    final complete = _selected.length == 2;
+    // Two to pick, or the one that is left when only one can be (the Piper's last charm).
+    final needed = widget.candidates.length == 1 && widget.single != null ? 1 : 2;
+    final complete = _selected.length == needed;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -608,12 +909,12 @@ class _LoversPickState extends State<_LoversPick> {
             children: [
               Expanded(
                 child: Text(
-                  context.l10n.scriptLoversQuestion,
+                  widget.question,
                   style: typography.rowLabel.copyWith(color: colors.textPrimary),
                 ),
               ),
               Text(
-                context.l10n.identifyProgress(_selected.length, 2),
+                context.l10n.identifyProgress(_selected.length, needed),
                 style: typography.counter.copyWith(color: colors.accentText),
               ),
             ],
@@ -648,13 +949,17 @@ class _LoversPickState extends State<_LoversPick> {
             spacing: 8,
             children: [
               AppButton(
-                label: complete
-                    ? context.l10n.scriptLoversPair(_name(_selected[0]), _name(_selected[1]))
-                    : context.l10n.scriptLoversPick,
-                leadingIcon: complete ? AppIcons.cupid : null,
-                onPressed: complete
-                    ? () => widget.onConfirm(_selected[0], _selected[1])
-                    : null,
+                label: !complete
+                    ? widget.pickLabel
+                    : needed == 1
+                    ? widget.single!.label(_name(_selected[0]))
+                    : widget.pairLabel(_name(_selected[0]), _name(_selected[1])),
+                leadingIcon: complete ? widget.icon : null,
+                onPressed: !complete
+                    ? null
+                    : needed == 1
+                    ? () => widget.single!.onConfirm(_selected[0])
+                    : () => widget.onConfirm(_selected[0], _selected[1]),
               ),
               AppButton(
                 label: context.l10n.scriptSkipRole,
@@ -873,6 +1178,28 @@ IconData _roleIcon(String roleId) => switch (roleId) {
   'cupidon' => AppIcons.cupid,
   'voleur' => AppIcons.thief,
   'chasseur' => AppIcons.hunter,
+  'ancien' => AppIcons.elder,
+  'bouc_emissaire' => AppIcons.scapegoat,
+  'idiot_du_village' => AppIcons.idiot,
+  'salvateur' => AppIcons.defender,
+  'ange' => AppIcons.angel,
+  'chevalier' => AppIcons.knight,
+  'joueur_de_flute' => AppIcons.piperRole,
+  'joueurs_charmes' => AppIcons.piperRole,
+  'renard' => AppIcons.fox,
+  'deux_soeurs' => AppIcons.sisters,
+  'trois_freres' => AppIcons.brothers,
+  'villageois_villageois' => AppIcons.trustedVillager,
+  'juge_begue' => AppIcons.judge,
+  'abominable_sectaire' => AppIcons.sectarian,
+  'servante_devouee' => AppIcons.servant,
+  'comedien' => AppIcons.actor,
+  'montreur_d_ours' => AppIcons.bearTamer,
+  'enfant_sauvage' => AppIcons.wildChild,
+  'chien_loup' => AppIcons.chienLoup,
+  'loup_garou_blanc' => AppIcons.whiteWolf,
+  'infect_pere_des_loups' => AppIcons.infect,
+  'grand_mechant_loup' => AppIcons.bigBadWolf,
   'capitaine' => AppIcons.captain,
   _ => AppIcons.village,
 };
@@ -895,21 +1222,151 @@ class _DayBody extends ConsumerWidget {
         return _RevealPanel(session: session, notifier: n);
       case DayInterrupt.chain:
         return _ChainPanel(session: session, notifier: n);
+      case DayInterrupt.servant:
+        return _ServantPanel(session: session, notifier: n);
       case DayInterrupt.loversAck:
         return _LoversAckPanel(session: session, notifier: n);
       case null:
         break;
     }
 
-    return switch (session.day.stage) {
+    final body = switch (session.day.stage) {
       DayStage.recap => _DayRecapBody(session: session, onAdvance: n.advanceFromRecap),
+      DayStage.growl => _BearGrowlBody(session: session, notifier: n),
       DayStage.captain => _CaptainElectionBody(session: session, notifier: n),
-      DayStage.vote => _VoteBody(session: session, notifier: n),
+      DayStage.vote || DayStage.secondVote => _VoteBody(
+        key: ValueKey(session.day.stage),
+        session: session,
+        notifier: n,
+      ),
       DayStage.done => _NextNightPrompt(
         nextNight: session.engine.nightIndex + 1,
         onStart: n.startNextNight,
+        note: session.day.pardonedName == null
+            ? null
+            : context.l10n.scriptIdiotPardoned(session.day.pardonedName!),
       ),
     };
+    final proposed = session.proposedWinner;
+    final powerless = session.engine.villagersPowerless;
+    final beforeNight1 = session.engine.nightIndex == 0;
+    if (proposed == null && !powerless && !beforeNight1) return body;
+    return Column(
+      children: [
+        if (beforeNight1) const _AngelDebateBanner(),
+        if (proposed != null)
+          _VictoryProposalBanner(
+            winner: proposed,
+            onEnd: () => context.push('/games/$gameId/end'),
+          ),
+        if (powerless) const _PowerlessBanner(),
+        Expanded(child: body),
+      ],
+    );
+  }
+}
+
+/// The game starts with a debate and a vote: the Angel is in play.
+class _AngelDebateBanner extends StatelessWidget {
+  const _AngelDebateBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(AppSpacing.screen, 8, AppSpacing.screen, 0),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.accentBg,
+        borderRadius: BorderRadius.circular(AppRadii.button),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 10,
+        children: [
+          Icon(AppIcons.angel, size: 18, color: colors.accentText),
+          Expanded(
+            child: Text(
+              context.l10n.scriptAngelDebate,
+              style: context.typography.meta.copyWith(color: colors.accentText, height: 1.5),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A reminder that the villagers lost their powers: the script stops calling them.
+class _PowerlessBanner extends StatelessWidget {
+  const _PowerlessBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(AppSpacing.screen, 8, AppSpacing.screen, 0),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.warnBg,
+        borderRadius: BorderRadius.circular(AppRadii.button),
+      ),
+      child: Row(
+        spacing: 10,
+        children: [
+          Icon(AppIcons.elder, size: 18, color: colors.warnText),
+          Expanded(
+            child: Text(
+              context.l10n.scriptPowerless,
+              style: context.typography.meta.copyWith(color: colors.warnText, height: 1.5),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The table looks decided: says so and offers to end the game. Never ends it by itself, and
+/// the game can be played on.
+class _VictoryProposalBanner extends StatelessWidget {
+  const _VictoryProposalBanner({required this.winner, required this.onEnd});
+
+  final GameWinner winner;
+  final VoidCallback onEnd;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final typography = context.typography;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(AppSpacing.screen, 8, AppSpacing.screen, 0),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.accentBg,
+        borderRadius: BorderRadius.circular(AppRadii.button),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 10,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 10,
+            children: [
+              Icon(AppIcons.endGame, size: 18, color: colors.accentText),
+              Expanded(
+                child: Text(
+                  context.l10n.victoryProposal(winner.name),
+                  style: typography.meta.copyWith(color: colors.accentText, height: 1.5),
+                ),
+              ),
+            ],
+          ),
+          AppButton(label: context.l10n.endGameTitle, compact: true, onPressed: onEnd),
+        ],
+      ),
+    );
   }
 }
 
@@ -935,10 +1392,267 @@ List<({String roleId, int remaining})> unassignedRoles(GameSessionState session)
     assigned['voleur'] = (assigned['voleur'] ?? 0) + 1;
   }
   return [
-    for (final e in session.composition.entries)
+    for (final e in session.dealtComposition.entries)
       if (e.value - (assigned[e.key] ?? 0) > 0)
         (roleId: e.key, remaining: e.value - (assigned[e.key] ?? 0)),
   ];
+}
+
+/// Picks [count] of [cards] (a role list): the three cards laid face up for the Actor, then the
+/// one whose power he takes tonight.
+class _ActorCards extends StatefulWidget {
+  const _ActorCards({
+    super.key,
+    required this.title,
+    required this.cards,
+    required this.count,
+    required this.onConfirm,
+    required this.onSkip,
+  });
+
+  final String title;
+  final List<String> cards;
+  final int count;
+  final ValueChanged<List<String>> onConfirm;
+  final VoidCallback onSkip;
+
+  @override
+  State<_ActorCards> createState() => _ActorCardsState();
+}
+
+class _ActorCardsState extends State<_ActorCards> {
+  final _picked = <String>[];
+
+  void _toggle(String id) => setState(() {
+    if (_picked.contains(id)) {
+      _picked.remove(id);
+    } else if (widget.count == 1) {
+      _picked
+        ..clear()
+        ..add(id);
+    } else if (_picked.length < widget.count) {
+      _picked.add(id);
+    }
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final complete = _picked.length == widget.count;
+    final label = widget.count == 1
+        ? (complete
+              ? context.l10n.scriptActorUses(context.l10n.roleWithArticle(_picked.single))
+              : context.l10n.scriptPickCard)
+        : (complete ? context.l10n.scriptActorCardsConfirm : context.l10n.scriptActorCardsPick);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 18, AppSpacing.screen, 10),
+          child: Text(
+            widget.title,
+            style: context.typography.rowLabel.copyWith(color: context.colors.textPrimary),
+          ),
+        ),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screen),
+            children: [
+              for (final id in widget.cards)
+                _RoleOption(
+                  roleId: id,
+                  remaining: 1,
+                  selected: _picked.contains(id),
+                  onTap: () => _toggle(id),
+                ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screen,
+            12,
+            AppSpacing.screen,
+            AppSpacing.screen,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: 8,
+            children: [
+              AppButton(
+                label: label,
+                onPressed: complete ? () => widget.onConfirm([..._picked]) : null,
+              ),
+              AppButton(
+                label: context.l10n.scriptSkipRole,
+                variant: AppButtonVariant.secondary,
+                onPressed: widget.onSkip,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Divides the village in two groups, for the Abominable Sectaire: the MJ picks the first, and
+/// everybody else is the second. Optional: it can be passed.
+class _DivideAct extends StatefulWidget {
+  const _DivideAct({required this.candidates, required this.onConfirm, required this.onSkip});
+
+  final List<Candidate> candidates;
+  final ValueChanged<Set<String>> onConfirm;
+  final VoidCallback onSkip;
+
+  @override
+  State<_DivideAct> createState() => _DivideActState();
+}
+
+class _DivideActState extends State<_DivideAct> {
+  final _first = <String>{};
+
+  @override
+  Widget build(BuildContext context) {
+    // Both groups need someone.
+    final valid = _first.isNotEmpty && _first.length < widget.candidates.length;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 18, AppSpacing.screen, 10),
+          child: Text(
+            context.l10n.scriptDivideQuestion,
+            style: context.typography.rowLabel.copyWith(color: context.colors.textPrimary),
+          ),
+        ),
+        Expanded(
+          child: GridView.count(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screen),
+            crossAxisCount: AppSizes.gridColumnsDefault,
+            mainAxisSpacing: AppSpacing.gridGapRow,
+            crossAxisSpacing: AppSpacing.gridGapColumn,
+            childAspectRatio: 1.0,
+            children: [
+              for (final c in widget.candidates)
+                AvatarPickCell(
+                  name: c.name,
+                  selected: _first.contains(c.id),
+                  onTap: () => setState(() {
+                    if (!_first.remove(c.id)) _first.add(c.id);
+                  }),
+                ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screen,
+            12,
+            AppSpacing.screen,
+            AppSpacing.screen,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: 8,
+            children: [
+              AppButton(
+                label: valid
+                    ? context.l10n.scriptDivideConfirm(_first.length)
+                    : context.l10n.scriptDividePick,
+                onPressed: valid ? () => widget.onConfirm({..._first}) : null,
+              ),
+              AppButton(
+                label: context.l10n.scriptSkipRole,
+                variant: AppButtonVariant.secondary,
+                onPressed: widget.onSkip,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The Bear Tamer's growl, right after the victims are named. The app says whether it expects
+/// one from the roles it knows; the MJ, who knows the table, does what is right.
+class _BearGrowlBody extends StatelessWidget {
+  const _BearGrowlBody({required this.session, required this.notifier});
+
+  final GameSessionState session;
+  final GameSession notifier;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final typography = context.typography;
+    final bear = session.bearTamer;
+    if (bear == null) {
+      // He died since: nothing to growl, on with the day.
+      WidgetsBinding.instance.addPostFrameCallback((_) => notifier.bearGrowlDone(growled: false));
+      return const SizedBox.shrink();
+    }
+    final around = session.engine.aliveNeighbours(bear.id);
+    final neighbours = joinNames(context.l10n, [
+      for (final p in {?around.left, ?around.right}) p.name,
+    ]);
+    final expected = session.bearShouldGrowl;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 18, AppSpacing.screen, 8),
+          child: Text(
+            context.l10n.scriptGrowlTitle,
+            style: typography.rowLabel.copyWith(color: colors.textPrimary),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 8),
+          child: NarrationBlock(lines: growlNarration(context.l10n)),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 6),
+          child: Text(
+            context.l10n.scriptGrowlWho(bear.name, neighbours),
+            style: typography.body.copyWith(color: colors.textSecondary, height: 1.5),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 0),
+          child: Text(
+            expected ? context.l10n.scriptGrowlExpected : context.l10n.scriptGrowlNotExpected,
+            style: typography.meta.copyWith(color: colors.textTertiary, height: 1.5),
+          ),
+        ),
+        const Spacer(),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screen,
+            0,
+            AppSpacing.screen,
+            AppSpacing.screen,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: 8,
+            children: [
+              AppButton(
+                label: expected ? context.l10n.scriptGrowlDo : context.l10n.scriptGrowlNone,
+                onPressed: () => notifier.bearGrowlDone(growled: expected),
+              ),
+              AppButton(
+                label: expected ? context.l10n.scriptGrowlNone : context.l10n.scriptGrowlDo,
+                variant: AppButtonVariant.secondary,
+                onPressed: () => notifier.bearGrowlDone(growled: !expected),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 /// The day recap - what the MJ reads aloud when the village wakes.
@@ -956,15 +1670,14 @@ class _DayRecapBody extends StatelessWidget {
     final deaths = session.recapDeaths;
     final saved = session.day.savedFromWolvesName;
 
-    final aliveByTeam = <Team, int>{};
-    for (final p in engine.alivePlayers) {
-      final team = RoleRegistry.base.byIdOrNull(p.roleId)?.team ?? Team.village;
-      aliveByTeam[team] = (aliveByTeam[team] ?? 0) + 1;
-    }
+    final wolvesAlive = engine.aliveWolves(RoleRegistry.all);
+    final villageAlive = engine.alivePlayers.length - wolvesAlive;
 
-    final ctaLabel = engine.nightIndex == 1 && engine.captainPlayerId == null
-        ? context.l10n.scriptElectCaptain
-        : context.l10n.scriptOpenVote;
+    final ctaLabel = switch (nextDayStage(DayStage.recap, engine)) {
+      DayStage.growl => context.l10n.scriptOpenGrowl,
+      DayStage.captain => context.l10n.scriptElectCaptain,
+      _ => context.l10n.scriptOpenVote,
+    };
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(
@@ -1026,13 +1739,13 @@ class _DayRecapBody extends StatelessWidget {
             Expanded(
               child: _StatCell(
                 label: context.l10n.compositionVillage,
-                value: aliveByTeam[Team.village] ?? 0,
+                value: villageAlive,
               ),
             ),
             Expanded(
               child: _StatCell(
                 label: context.l10n.compositionWolves,
-                value: aliveByTeam[Team.werewolves] ?? 0,
+                value: wolvesAlive,
               ),
             ),
           ],
@@ -1058,7 +1771,7 @@ class _RecapDeathRow extends StatelessWidget {
     final colors = context.colors;
     final typography = context.typography;
     final id = roleId;
-    final role = id == null ? null : RoleRegistry.base.byIdOrNull(id);
+    final role = id == null ? null : RoleRegistry.all.byIdOrNull(id);
     return Row(
       spacing: 12,
       children: [
@@ -1150,65 +1863,237 @@ class _CaptainElectionBody extends StatelessWidget {
 
 /// The village vote. 44px avatars (the largest in the app); the current
 /// captain's avatar carries a crown badge.
-class _VoteBody extends StatelessWidget {
-  const _VoteBody({required this.session, required this.notifier});
+/// Where the vote is: the usual pick, or what a tie asks next.
+enum _VoteMode { vote, askScapegoat, tieBreak }
+
+class _VoteBody extends ConsumerStatefulWidget {
+  const _VoteBody({super.key, required this.session, required this.notifier});
 
   final GameSessionState session;
   final GameSession notifier;
 
   @override
+  ConsumerState<_VoteBody> createState() => _VoteBodyState();
+}
+
+class _VoteBodyState extends ConsumerState<_VoteBody> {
+  _VoteMode _mode = _VoteMode.vote;
+
+  GameSessionState get _session => widget.session;
+  GameSession get _notifier => widget.notifier;
+
+  VoteTieRule get _rule => ref.read(settingsProvider).value?.voteTieRule ?? VoteTieRule.nobody;
+
+  /// The village votes against [id]: the Village Idiot, when it is one, is pardoned; otherwise the
+  /// Devoted Servant may reveal herself before the card is turned over.
+  Future<void> _eliminate(String id) async {
+    var idiot = false;
+    if (_session.mayBeIdiot(id)) {
+      final name = _session.engine.playerById(id).name;
+      final isIdiot = await showIdiotQuestion(context, name: name);
+      if (isIdiot == true) {
+        idiot = true;
+        await _notifier.identifyRole('idiot_du_village', [int.parse(id)]);
+      }
+    }
+    if (!idiot && mounted && _session.servantMayAct(id)) {
+      final servantId = await _askServant(id);
+      if (servantId != null) await _notifier.servantReveals(servantId: servantId, deadId: id);
+    }
+    await _notifier.eliminateByVote(id);
+  }
+
+  /// Asks whether the Devoted Servant reveals herself, and who she is when the app does not know:
+  /// her id, or null when she does not.
+  Future<String?> _askServant(String eliminatedId) async {
+    final dead = _session.engine.playerById(eliminatedId).name;
+    final known = _session.knownServant;
+    final l10n = context.l10n;
+    final yes = await showCardQuestion(
+      context,
+      title: l10n.scriptServantAskTitle,
+      body: known == null
+          ? l10n.scriptServantAskUnknown(dead)
+          : l10n.scriptServantAskKnown(known.name, dead),
+      yes: l10n.scriptServantYes,
+      no: l10n.scriptServantNo,
+    );
+    if (yes != true) return null;
+    if (known != null) return known.id;
+    if (!mounted) return null;
+    return showPlayerChoice(
+      context,
+      title: l10n.scriptServantWho,
+      players: [
+        for (final p in _session.servantCandidates(eliminatedId)) (id: p.id, name: p.name),
+      ],
+    );
+  }
+
+  /// The vote is tied: the Scapegoat first, then what the table decided for a tie.
+  Future<void> _tie() async {
+    final goat = _session.knownScapegoat;
+    if (goat != null) {
+      await _notifier.voteTiedOnScapegoat(goat.id);
+    } else if (_session.scapegoatMayBeAlive) {
+      setState(() => _mode = _VoteMode.askScapegoat);
+    } else {
+      await _tieWithoutScapegoat();
+    }
+  }
+
+  Future<void> _tieWithoutScapegoat() async {
+    final captainAlive = _session.engine.captainPlayerId != null;
+    if (_rule == VoteTieRule.nobody || (_rule == VoteTieRule.captainDecides && !captainAlive)) {
+      await _notifier.eliminateByVote(null);
+    } else {
+      setState(() => _mode = _VoteMode.tieBreak);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final captainId = session.engine.captainPlayerId;
-    final captainName = captainId == null ? null : session.engine.playerById(captainId).name;
+    final engine = _session.engine;
+    final captainId = engine.captainPlayerId;
+    final captainName = captainId == null ? null : engine.playerById(captainId).name;
+    final voters = engine.votersToday;
+    final second = _session.day.stage == DayStage.secondVote;
+    final pardoned = [
+      for (final p in engine.alivePlayers)
+        if (p.hasStatus(PlayerStatus.pardoned)) p.name,
+    ];
+
+    final Widget pick;
+    switch (_mode) {
+      case _VoteMode.askScapegoat:
+        pick = TargetPick(
+          question: context.l10n.scriptScapegoatAsk,
+          candidates: _alive(engine),
+          confirmLabel: context.l10n.scriptScapegoatIs,
+          onConfirm: (id) async {
+            await _notifier.identifyRole('bouc_emissaire', [int.parse(id)]);
+            await _notifier.voteTiedOnScapegoat(id);
+          },
+          secondaryLabel: context.l10n.scriptScapegoatNone,
+          onSecondary: () {
+            setState(() => _mode = _VoteMode.vote);
+            _tieWithoutScapegoat();
+          },
+        );
+      case _VoteMode.tieBreak:
+        pick = TargetPick(
+          question: _rule == VoteTieRule.captainDecides
+              ? context.l10n.scriptTieCaptain
+              : context.l10n.scriptTieRevote,
+          candidates: _alive(engine),
+          avatarSize: AppSizes.avatarVoteGrid,
+          crossAxisCount: AppSizes.gridColumnsSmallPool,
+          confirmLabel: context.l10n.scriptVoteEliminates,
+          onConfirm: _eliminate,
+          secondaryLabel: context.l10n.scriptTieNobody,
+          onSecondary: () => _notifier.eliminateByVote(null),
+        );
+      case _VoteMode.vote:
+        pick = TargetPick(
+          question: context.l10n.scriptVoteQuestion,
+          candidates: _alive(engine),
+          avatarSize: AppSizes.avatarVoteGrid,
+          crossAxisCount: AppSizes.gridColumnsSmallPool,
+          confirmLabel: context.l10n.scriptVoteEliminates,
+          onConfirm: _eliminate,
+          badgeFor: (c) => c.id == captainId
+              ? Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(color: colors.bgScreen, shape: BoxShape.circle),
+                  child: Icon(AppIcons.captain, size: 11, color: colors.warnText),
+                )
+              : null,
+          secondaryLabel: voters != null && voters.isEmpty
+              ? context.l10n.scriptVoteNobodyVotes
+              : context.l10n.scriptVoteTie,
+          onSecondary: voters != null && voters.isEmpty
+              ? () => _notifier.eliminateByVote(null)
+              : _tie,
+        );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _DayEyebrow(label: context.l10n.scriptVoteEyebrow(session.engine.nightIndex)),
+        _DayEyebrow(
+          label: second
+              ? context.l10n.scriptSecondVoteEyebrow(engine.nightIndex)
+              : context.l10n.scriptVoteEyebrow(engine.nightIndex),
+        ),
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 12),
           child: _RoleBanner(
             icon: AppIcons.vote,
-            title: context.l10n.scriptVoteTitle,
-            body: captainName == null
+            title: second ? context.l10n.scriptSecondVoteTitle : context.l10n.scriptVoteTitle,
+            body: second
+                ? context.l10n.scriptSecondVoteBody
+                : captainName == null
                 ? context.l10n.scriptVoteBody
                 : context.l10n.scriptVoteBodyCaptain(captainName),
           ),
         ),
+        if (_session.judgeCanSign)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 8),
+            child: AppButton(
+              label: context.l10n.scriptJudgeSign,
+              variant: AppButtonVariant.secondary,
+              leadingIcon: AppIcons.judge,
+              onPressed: _notifier.judgeSign,
+            ),
+          )
+        else if (!second && engine.secondVoteToday)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 8),
+            child: Text(
+              context.l10n.scriptJudgeSignDone,
+              style: context.typography.meta.copyWith(color: colors.warnText, height: 1.5),
+            ),
+          ),
+        if (voters != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 8),
+            child: Text(
+              voters.isEmpty
+                  ? context.l10n.scriptVotersNobody
+                  : context.l10n.scriptVotersOnly(
+                      joinNames(context.l10n, [for (final id in voters) engine.playerById(id).name]),
+                    ),
+              style: context.typography.meta.copyWith(color: colors.warnText, height: 1.5),
+            ),
+          ),
+        if (pardoned.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 8),
+            child: Text(
+              context.l10n.scriptVotersPardoned(joinNames(context.l10n, pardoned)),
+              style: context.typography.meta.copyWith(color: colors.textTertiary, height: 1.5),
+            ),
+          ),
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 12),
           child: NarrationBlock(lines: voteNarration(context.l10n)),
         ),
-        Expanded(
-          child: TargetPick(
-            question: context.l10n.scriptVoteQuestion,
-            candidates: _alive(session.engine),
-            avatarSize: AppSizes.avatarVoteGrid,
-            crossAxisCount: AppSizes.gridColumnsSmallPool,
-            confirmLabel: context.l10n.scriptVoteEliminates,
-            onConfirm: (id) => notifier.eliminateByVote(id),
-            badgeFor: (c) => c.id == captainId
-                ? Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(color: colors.bgScreen, shape: BoxShape.circle),
-                    child: Icon(AppIcons.captain, size: 11, color: colors.warnText),
-                  )
-                : null,
-            secondaryLabel: context.l10n.scriptVoteTie,
-            onSecondary: () => notifier.eliminateByVote(null),
-          ),
-        ),
+        Expanded(child: pick),
       ],
     );
   }
 }
 
 class _NextNightPrompt extends StatelessWidget {
-  const _NextNightPrompt({required this.nextNight, required this.onStart});
+  const _NextNightPrompt({required this.nextNight, required this.onStart, this.note});
 
   final int nextNight;
   final VoidCallback onStart;
+
+  /// What happened to close the day when it was not an elimination (the Idiot's pardon).
+  final String? note;
 
   @override
   Widget build(BuildContext context) {
@@ -1216,6 +2101,14 @@ class _NextNightPrompt extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.end,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (note != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 10),
+            child: Text(
+              note!,
+              style: context.typography.body.copyWith(color: context.colors.warnText),
+            ),
+          ),
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 10),
           child: Text(
@@ -1330,11 +2223,13 @@ class _RevealPanelState extends State<_RevealPanel> {
                     ? null
                     : () => widget.notifier.revealRole(int.parse(dead.id), _roleId!),
               ),
-              AppButton(
-                label: context.l10n.scriptDontNote,
-                variant: AppButtonVariant.secondary,
-                onPressed: () => widget.notifier.skipReveal(dead.id),
-              ),
+              // The Devoted Servant needs this card to take the role: it cannot be left out.
+              if (widget.session.day.servantDeadId != dead.id)
+                AppButton(
+                  label: context.l10n.scriptDontNote,
+                  variant: AppButtonVariant.secondary,
+                  onPressed: () => widget.notifier.skipReveal(dead.id),
+                ),
             ],
           ),
         ),
@@ -1422,6 +2317,16 @@ class _ChainPanel extends StatelessWidget {
         session: session,
         notifier: notifier,
         deadCaptainId: deadCaptainId,
+      ),
+      PendingKnightWound(:final deadKnightId) => _KnightWoundPanel(
+        session: session,
+        notifier: notifier,
+        deadKnightId: deadKnightId,
+      ),
+      PendingScapegoatVoters(:final deadScapegoatId) => _ScapegoatVotersPanel(
+        session: session,
+        notifier: notifier,
+        deadScapegoatId: deadScapegoatId,
       ),
     };
   }
@@ -1551,6 +2456,235 @@ class _SuccessionPanel extends StatelessWidget {
             confirmIcon: AppIcons.captain,
             confirmLabel: context.l10n.scriptCaptainBecomes,
             onConfirm: (id) => notifier.nameCaptainSuccessor(id),
+            secondaryLabel: context.l10n.scriptSuccessionNone,
+            onSecondary: notifier.captainHasNoSuccessor,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The Knight was devoured: which wolf does his rusty sword leave diseased? The app suggests the
+/// first wolf to his left among the cards it knows; the MJ, who knows the table, decides.
+class _KnightWoundPanel extends ConsumerWidget {
+  const _KnightWoundPanel({
+    required this.session,
+    required this.notifier,
+    required this.deadKnightId,
+  });
+
+  final GameSessionState session;
+  final GameSession notifier;
+  final String deadKnightId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final knight = session.engine.playerById(deadKnightId);
+    final suggested = session.engine.firstWolfToLeftOf(deadKnightId, RoleRegistry.all);
+    final atEnd = ref.watch(settingsProvider).value?.knightDiseaseAtNightEnd ?? false;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _SheetHandle(),
+        _DeadHeader(name: knight.name, subtitle: context.l10n.scriptKnightDead),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 16, AppSpacing.screen, 12),
+          child: _RoleBanner(
+            icon: AppIcons.knight,
+            title: context.l10n.scriptKnightTitle,
+            body: atEnd ? context.l10n.scriptKnightBodyEnd : context.l10n.scriptKnightBodyStart,
+          ),
+        ),
+        if (suggested != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 8),
+            child: Text(
+              context.l10n.scriptKnightSuggested(suggested.name),
+              style: context.typography.meta.copyWith(
+                color: context.colors.textTertiary,
+                height: 1.5,
+              ),
+            ),
+          ),
+        Expanded(
+          child: TargetPick(
+            question: context.l10n.scriptKnightQuestion,
+            candidates: _alive(session.engine),
+            confirmLabel: context.l10n.scriptKnightWounds,
+            onConfirm: notifier.knightContaminate,
+            secondaryLabel: context.l10n.scriptKnightNone,
+            onSecondary: () => notifier.knightContaminate(null),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The Scapegoat was eliminated: who may vote on the next day? The ones not chosen sit it out.
+/// The Devoted Servant takes the eliminated player's role, once the card is known: says what she
+/// becomes and what carries over, and the MJ confirms.
+class _ServantPanel extends StatelessWidget {
+  const _ServantPanel({required this.session, required this.notifier});
+
+  final GameSessionState session;
+  final GameSession notifier;
+
+  @override
+  Widget build(BuildContext context) {
+    final engine = session.engine;
+    final servant = engine.playerById(session.day.servantId!);
+    final dead = engine.playerById(session.day.servantDeadId!);
+    final newRole = dead.roleId;
+    final wasCaptain = engine.captainPlayerId == servant.id;
+    final typography = context.typography;
+    final colors = context.colors;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _SheetHandle(),
+        _DeadHeader(
+          name: servant.name,
+          subtitle: context.l10n.scriptServantHeader(dead.name),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 16, AppSpacing.screen, 12),
+          child: _RoleBanner(
+            icon: AppIcons.servant,
+            title: context.l10n.scriptServantTitle(context.l10n.roleWithArticle(newRole)),
+            body: context.l10n.roleRuleText(newRole),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 8),
+          child: Text(
+            context.l10n.scriptServantNote,
+            style: typography.meta.copyWith(color: colors.textSecondary, height: 1.5),
+          ),
+        ),
+        if (wasCaptain)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 8),
+            child: Text(
+              context.l10n.scriptServantCaptain,
+              style: typography.meta.copyWith(color: colors.warnText, height: 1.5),
+            ),
+          ),
+        const Spacer(),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screen,
+            12,
+            AppSpacing.screen,
+            AppSpacing.screen,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: 8,
+            children: [
+              AppButton(
+                label: context.l10n.scriptServantTakes,
+                onPressed: notifier.servantTakes,
+              ),
+              AppButton(
+                label: context.l10n.scriptServantCancel,
+                variant: AppButtonVariant.secondary,
+                onPressed: notifier.cancelServant,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ScapegoatVotersPanel extends StatefulWidget {
+  const _ScapegoatVotersPanel({
+    required this.session,
+    required this.notifier,
+    required this.deadScapegoatId,
+  });
+
+  final GameSessionState session;
+  final GameSession notifier;
+  final String deadScapegoatId;
+
+  @override
+  State<_ScapegoatVotersPanel> createState() => _ScapegoatVotersPanelState();
+}
+
+class _ScapegoatVotersPanelState extends State<_ScapegoatVotersPanel> {
+  final _chosen = <String>{};
+
+  @override
+  Widget build(BuildContext context) {
+    final engine = widget.session.engine;
+    final goat = engine.playerById(widget.deadScapegoatId);
+    final alive = _alive(engine);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _SheetHandle(),
+        _DeadHeader(name: goat.name, subtitle: context.l10n.scriptScapegoatDead),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 16, AppSpacing.screen, 12),
+          child: _RoleBanner(
+            icon: AppIcons.scapegoat,
+            title: context.l10n.scriptScapegoatTitle,
+            body: context.l10n.scriptScapegoatBody,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 8),
+          child: Text(
+            context.l10n.scriptScapegoatQuestion,
+            style: context.typography.rowLabel.copyWith(color: context.colors.textPrimary),
+          ),
+        ),
+        Expanded(
+          child: GridView.count(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screen),
+            crossAxisCount: AppSizes.gridColumnsDefault,
+            mainAxisSpacing: AppSpacing.gridGapRow,
+            crossAxisSpacing: AppSpacing.gridGapColumn,
+            childAspectRatio: 1.0,
+            children: [
+              for (final c in alive)
+                AvatarPickCell(
+                  name: c.name,
+                  selected: _chosen.contains(c.id),
+                  onTap: () => setState(() {
+                    if (!_chosen.remove(c.id)) _chosen.add(c.id);
+                  }),
+                ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screen,
+            12,
+            AppSpacing.screen,
+            AppSpacing.screen,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: 8,
+            children: [
+              AppButton(
+                label: _chosen.isEmpty
+                    ? context.l10n.scriptScapegoatNobody
+                    : context.l10n.scriptScapegoatVoters(_chosen.length),
+                onPressed: () => widget.notifier.chooseVoters({..._chosen}),
+              ),
+              AppButton(
+                label: context.l10n.scriptScapegoatEveryone,
+                variant: AppButtonVariant.secondary,
+                onPressed: () => widget.notifier.chooseVoters({for (final c in alive) c.id}),
+              ),
+            ],
           ),
         ),
       ],
@@ -1678,7 +2812,7 @@ class _RevealedCard extends StatelessWidget {
     final colors = context.colors;
     final typography = context.typography;
     final id = roleId;
-    final role = id == null ? null : RoleRegistry.base.byIdOrNull(id);
+    final role = id == null ? null : RoleRegistry.all.byIdOrNull(id);
     final wolves = role?.team == Team.werewolves;
     return Container(
       padding: const EdgeInsets.all(14),
@@ -1760,9 +2894,11 @@ class _RoleBanner extends StatelessWidget {
                 decoration: BoxDecoration(color: colors.warnBg, shape: BoxShape.circle),
                 child: Icon(icon, size: 17, color: colors.warnText),
               ),
-              Text(
-                title,
-                style: typography.rowLabel.copyWith(fontSize: 16, color: colors.textPrimary),
+              Expanded(
+                child: Text(
+                  title,
+                  style: typography.rowLabel.copyWith(fontSize: 16, color: colors.textPrimary),
+                ),
               ),
             ],
           ),

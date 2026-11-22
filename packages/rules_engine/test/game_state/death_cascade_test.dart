@@ -8,7 +8,7 @@ List<Player> _players(Map<String, String> idToRole, {String? dead}) => [
 
 void main() {
   const machine = GameStateMachine();
-  final roleRegistry = RoleRegistry.base;
+  final roleRegistry = RoleRegistry.all;
 
   group('FinalizeNight, no cascade (DeathEffect.none scenarios)', () {
     test('no wolf/witch action produces zero deaths', () {

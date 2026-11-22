@@ -107,6 +107,25 @@ void main() {
       expect(stepIds(script), ['voyante', 'loup_garou']);
     });
 
+    test('does not wake a role whose cards all sit in a drawn reserve, with no holder', () {
+      // The Sorcière was left in the middle by the deal: nobody holds her.
+      final script = buildNightScript(
+        engine: _state(nightIndex: 2, roles: {0: 'loup_garou', 1: 'loup_garou'}),
+        composition: const {'loup_garou': 2, 'sorciere': 1, 'villageois': 3},
+        dealtComposition: const {'loup_garou': 2, 'villageois': 5},
+      );
+      expect(stepIds(script), ['loup_garou']);
+    });
+
+    test('night 1 still calls a role whose cards are in the reserve, to keep the table guessing', () {
+      final script = buildNightScript(
+        engine: _state(),
+        composition: const {'loup_garou': 2, 'sorciere': 1, 'villageois': 3},
+        dealtComposition: const {'loup_garou': 2, 'villageois': 5},
+      );
+      expect(stepIds(script), ['loup_garou', 'sorciere']);
+    });
+
     test('a stolen Voyante drops out once the Voleur holding her dies', () {
       final script = buildNightScript(
         engine: _state(
@@ -117,6 +136,169 @@ void main() {
         composition: const {'voleur': 1, 'loup_garou': 2, 'villageois': 3},
       );
       expect(stepIds(script), ['loup_garou']);
+    });
+  });
+
+  group('the Fox, the Sisters and the Bear Tamer', () {
+    const composition = {
+      'renard': 1,
+      'deux_soeurs': 2,
+      'montreur_d_ours': 1,
+      'loup_garou': 2,
+      'villageois': 0,
+    };
+
+    test('night 1 calls all three between the Voyante\'s place and the wolves', () {
+      final script = buildNightScript(engine: _state(count: 8), composition: composition);
+      expect(stepIds(script), ['renard', 'deux_soeurs', 'montreur_d_ours', 'loup_garou']);
+    });
+
+    test('the Fox can be called after the Witch instead (the Best Of order)', () {
+      final script = buildNightScript(
+        engine: _state(count: 8),
+        composition: {...composition, 'voyante': 1, 'sorciere': 1},
+        foxAfterWitch: true,
+      );
+      expect(stepIds(script), [
+        'voyante',
+        'deux_soeurs',
+        'montreur_d_ours',
+        'loup_garou',
+        'sorciere',
+        'renard',
+      ]);
+    });
+
+    test('with no Witch the Fox keeps his place whatever the setting', () {
+      final script = buildNightScript(
+        engine: _state(count: 8),
+        composition: composition,
+        foxAfterWitch: true,
+      );
+      expect(stepIds(script), ['renard', 'deux_soeurs', 'montreur_d_ours', 'loup_garou']);
+    });
+
+    test('night 2 keeps the Fox and drops the Sisters and the Bear Tamer', () {
+      final script = buildNightScript(
+        engine: _state(
+          count: 8,
+          nightIndex: 2,
+          roles: {0: 'renard', 1: 'deux_soeurs', 2: 'deux_soeurs', 3: 'montreur_d_ours', 4: 'loup_garou', 5: 'loup_garou'},
+        ),
+        composition: composition,
+      );
+      expect(stepIds(script), ['renard', 'loup_garou']);
+    });
+
+    test('night 3 offers the Sisters again while both are alive', () {
+      final roles = {0: 'renard', 1: 'deux_soeurs', 2: 'deux_soeurs', 4: 'loup_garou', 5: 'loup_garou'};
+      final both = buildNightScript(
+        engine: _state(count: 8, nightIndex: 3, roles: roles),
+        composition: composition,
+      );
+      expect(stepIds(both), ['renard', 'deux_soeurs', 'loup_garou']);
+
+      final one = buildNightScript(
+        engine: _state(count: 8, nightIndex: 3, roles: roles, dead: {2}),
+        composition: composition,
+      );
+      expect(stepIds(one), ['renard', 'loup_garou']);
+    });
+
+    test('a Fox who lost his power is not called any more', () {
+      final script = buildNightScript(
+        engine: _state(
+          count: 8,
+          nightIndex: 2,
+          roles: {0: 'renard', 4: 'loup_garou', 5: 'loup_garou'},
+        ).copyWith(spentPowers: {'renard': 1}),
+        composition: composition,
+      );
+      expect(stepIds(script), ['loup_garou']);
+    });
+
+    test('Sisters not yet identified on night 3 may still be alive: they are offered', () {
+      final script = buildNightScript(
+        engine: _state(count: 8, nightIndex: 3, roles: {4: 'loup_garou', 5: 'loup_garou'}),
+        composition: composition,
+      );
+      expect(stepIds(script), contains('deux_soeurs'));
+    });
+  });
+
+  group('the Big Bad Wolf', () {
+    const composition = {'grand_mechant_loup': 1, 'loup_garou': 2, 'villageois': 3};
+
+    test('is called while no wolf is dead', () {
+      final script = buildNightScript(
+        engine: _state(
+          nightIndex: 2,
+          roles: {0: 'grand_mechant_loup', 1: 'loup_garou', 2: 'loup_garou'},
+          dead: {5},
+        ),
+        composition: composition,
+      );
+      expect(stepIds(script), ['loup_garou', 'grand_mechant_loup']);
+    });
+
+    test('stops being called from the night after a wolf died', () {
+      final script = buildNightScript(
+        engine: _state(
+          nightIndex: 3,
+          roles: {0: 'grand_mechant_loup', 1: 'loup_garou', 2: 'loup_garou'},
+          dead: {2},
+        ),
+        composition: composition,
+      );
+      expect(stepIds(script), ['loup_garou']);
+    });
+  });
+
+  group('the Piper', () {
+    const composition = {'joueur_de_flute': 1, 'loup_garou': 2, 'sorciere': 1, 'villageois': 2};
+    final roles = {0: 'joueur_de_flute', 1: 'loup_garou', 2: 'loup_garou', 3: 'sorciere'};
+
+    GameState engineWith({Set<int> charmed = const {}, bool infected = false, int night = 2}) {
+      final base = _state(nightIndex: night, roles: roles);
+      return base.copyWith(
+        players: [
+          for (final (i, p) in base.players.indexed)
+            p.copyWith(
+              statuses: charmed.contains(i) ? {PlayerStatus.charmed} : const {},
+              teamOverride: infected && i == 0 ? Team.werewolves : null,
+            ),
+        ],
+      );
+    }
+
+    test('is called after the Witch every night', () {
+      final script = buildNightScript(engine: engineWith(), composition: composition);
+      expect(stepIds(script), ['loup_garou', 'sorciere', 'joueur_de_flute']);
+    });
+
+    test('wakes the charmed right after him, once someone is charmed', () {
+      final script = buildNightScript(
+        engine: engineWith(charmed: {4, 5}),
+        composition: composition,
+      );
+      expect(stepIds(script), ['loup_garou', 'sorciere', 'joueur_de_flute', 'joueurs_charmes']);
+      expect([for (final s in script.steps) s.stepIndex], [1, 2, 3, 4]);
+    });
+
+    test('has nobody to wake once the charmed are all dead', () {
+      final script = buildNightScript(
+        engine: engineWith(charmed: {4, 5}).killPlayer('4', cause: const DayVoteKill()).killPlayer('5', cause: const DayVoteKill()),
+        composition: composition,
+      );
+      expect(stepIds(script), isNot(contains('joueurs_charmes')));
+    });
+
+    test('is no longer called once he is infected, and neither are the charmed', () {
+      final script = buildNightScript(
+        engine: engineWith(charmed: {4}, infected: true),
+        composition: composition,
+      );
+      expect(stepIds(script), ['loup_garou', 'sorciere']);
     });
   });
 }

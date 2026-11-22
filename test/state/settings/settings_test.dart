@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart' show ThemeMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:loup_garou_mj/state/crash_reporting/crash_reporting.dart';
 import 'package:loup_garou_mj/state/settings/settings.dart';
 import 'package:loup_garou_mj/state/settings/settings_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -123,6 +124,139 @@ void main() {
       expect(settings.narrationHintSeen, isTrue);
       expect(prefs.getString('narration_level'), 'off');
       expect(prefs.getBool('narration_hint_seen'), isTrue);
+    });
+  });
+
+  group('the crash reports', () {
+    test('are off by default, and the choice persists', () async {
+      final container = await containerWith({});
+      expect((await container.read(settingsProvider.future)).crashReports, isFalse);
+
+      await container.read(settingsProvider.notifier).setCrashReports(true);
+
+      expect(container.read(settingsProvider).value!.crashReports, isTrue);
+      expect((await SharedPreferences.getInstance()).getBool('crash_reports'), isTrue);
+    });
+
+    test('a stored choice is read back', () async {
+      final container = await containerWith({'crash_reports': true});
+      expect((await container.read(settingsProvider.future)).crashReports, isTrue);
+    });
+
+    test('this build has nowhere to send them without a DSN', () {
+      expect(CrashReporting.available, isFalse);
+    });
+  });
+
+  group('the tie rule', () {
+    test('is "nobody is eliminated" by default, and the choice persists', () async {
+      final container = await containerWith({});
+      expect((await container.read(settingsProvider.future)).voteTieRule, VoteTieRule.nobody);
+
+      await container.read(settingsProvider.notifier).setVoteTieRule(VoteTieRule.revote);
+
+      expect(container.read(settingsProvider).value!.voteTieRule, VoteTieRule.revote);
+      expect((await SharedPreferences.getInstance()).getString('vote_tie_rule'), 'revote');
+    });
+
+    test('an unknown stored value falls back to the default', () async {
+      final container = await containerWith({'vote_tie_rule': 'nonsense'});
+      expect((await container.read(settingsProvider.future)).voteTieRule, VoteTieRule.nobody);
+    });
+  });
+
+  group('the Knight disease timing', () {
+    test('is the start of the next night by default, and the choice persists', () async {
+      final container = await containerWith({});
+      expect((await container.read(settingsProvider.future)).knightDiseaseAtNightEnd, isFalse);
+
+      await container.read(settingsProvider.notifier).setKnightDiseaseAtNightEnd(true);
+
+      expect(container.read(settingsProvider).value!.knightDiseaseAtNightEnd, isTrue);
+      expect((await SharedPreferences.getInstance()).getBool('knight_disease_night_end'), isTrue);
+    });
+  });
+
+  group('the White Werewolf parity', () {
+    test('is the even nights by default, and the choice persists', () async {
+      final container = await containerWith({});
+      expect((await container.read(settingsProvider.future)).whiteWolfOddNights, isFalse);
+
+      await container.read(settingsProvider.notifier).setWhiteWolfOddNights(true);
+
+      expect(container.read(settingsProvider).value!.whiteWolfOddNights, isTrue);
+      expect((await SharedPreferences.getInstance()).getBool('white_wolf_odd_nights'), isTrue);
+    });
+  });
+
+  group('the Fox position', () {
+    test('is after the Seer by default, and the choice persists', () async {
+      final container = await containerWith({});
+      expect((await container.read(settingsProvider.future)).foxAfterWitch, isFalse);
+
+      await container.read(settingsProvider.notifier).setFoxAfterWitch(true);
+
+      expect(container.read(settingsProvider).value!.foxAfterWitch, isTrue);
+      expect((await SharedPreferences.getInstance()).getBool('fox_after_witch'), isTrue);
+    });
+  });
+
+  group('the Thief reserve', () {
+    test('is drawn at random by default', () async {
+      final container = await containerWith({});
+      expect((await container.read(settingsProvider.future)).thiefReserveChosen, isFalse);
+    });
+
+    test('the choice persists', () async {
+      final container = await containerWith({});
+      await container.read(settingsProvider.future);
+      await container.read(settingsProvider.notifier).setThiefReserveChosen(true);
+
+      expect(container.read(settingsProvider).value!.thiefReserveChosen, isTrue);
+      expect((await SharedPreferences.getInstance()).getBool('thief_reserve_chosen'), isTrue);
+    });
+  });
+
+  group('the owned boxes', () {
+    test('default to the base box alone', () async {
+      final container = await containerWith({});
+      final settings = await container.read(settingsProvider.future);
+      expect(settings.ownedBoxes, {'base'});
+      expect(container.read(cardPoolProvider).ownedBoxIds, {'base'});
+    });
+
+    test('read the stored ids, drop unknown ones and always keep the base box', () async {
+      final container = await containerWith({
+        'owned_boxes': ['best_of', 'nope'],
+      });
+      final settings = await container.read(settingsProvider.future);
+      expect(settings.ownedBoxes, {'base', 'best_of'});
+    });
+
+    test('ticking and unticking a box persists and moves the card pool', () async {
+      final container = await containerWith({});
+      await container.read(settingsProvider.future);
+      final notifier = container.read(settingsProvider.notifier);
+      final prefs = await SharedPreferences.getInstance();
+
+      await notifier.setBoxOwned('best_of', true);
+      expect(container.read(settingsProvider).value!.ownedBoxes, {'base', 'best_of'});
+      expect(prefs.getStringList('owned_boxes'), unorderedEquals(['base', 'best_of']));
+      expect(container.read(cardPoolProvider).ownedBoxIds, {'base', 'best_of'});
+
+      await notifier.setBoxOwned('best_of', false);
+      expect(container.read(settingsProvider).value!.ownedBoxes, {'base'});
+    });
+
+    test('the base box cannot be unticked and an unknown box cannot be ticked', () async {
+      final container = await containerWith({});
+      await container.read(settingsProvider.future);
+      final notifier = container.read(settingsProvider.notifier);
+
+      await notifier.setBoxOwned('base', false);
+      await notifier.setBoxOwned('nope', true);
+
+      expect(container.read(settingsProvider).value!.ownedBoxes, {'base'});
     });
   });
 

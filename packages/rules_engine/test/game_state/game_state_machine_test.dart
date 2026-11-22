@@ -8,7 +8,7 @@ List<Player> _players(Map<String, String> idToRole, {String? dead}) => [
 
 void main() {
   const machine = GameStateMachine();
-  final roleRegistry = RoleRegistry.base;
+  final roleRegistry = RoleRegistry.all;
 
   group('VoleurSwap', () {
     test('changes the roleId to the stolen role', () {

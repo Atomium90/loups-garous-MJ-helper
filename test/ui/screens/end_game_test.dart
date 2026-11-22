@@ -24,7 +24,7 @@ void main() {
     addTearDown(db.close);
   });
 
-  Future<int> game() async {
+  Future<int> game({bool wolfAlive = true}) async {
     final id = await repo.createGame(initialPlayerCount: 3);
     await repo.saveComposition(
       gameId: id,
@@ -34,9 +34,20 @@ void main() {
     await repo.savePlayerNames(gameId: id, names: const ['Ana', 'Bo', 'Cy']);
     await repo.startGame(id);
     final rid = (await repo.getRoster(id)).map((r) => r.id).toList();
+    // Every card is known, so no dead player's reveal gets in the way of the day screen.
+    await repo.assignRoles(playerRowIds: [rid[0]], roleId: 'loup_garou');
+    await repo.assignRoles(playerRowIds: [rid[1], rid[2]], roleId: 'villageois');
     final engine = GameState(
       players: [
-        Player(id: '${rid[0]}', name: 'Ana', roleId: 'loup_garou'),
+        Player(
+          id: '${rid[0]}',
+          name: 'Ana',
+          roleId: 'loup_garou',
+          alive: wolfAlive,
+          causeOfDeath: wolfAlive ? null : const DayVoteKill(),
+          diedOnNight: wolfAlive ? null : 2,
+          diedOnPhase: wolfAlive ? null : GamePhase.day,
+        ),
         Player(id: '${rid[1]}', name: 'Bo', roleId: 'villageois'),
         Player(
           id: '${rid[2]}',
@@ -92,6 +103,83 @@ void main() {
     final done = await repo.getGame(id);
     expect(done!.status, GameStatus.completed);
     expect(done.winner, GameWinner.wolves);
+  });
+
+  testWidgets('only the winners every game can have are offered when no solo role is in play', (
+    tester,
+  ) async {
+    final id = await game();
+    await tester.binding.setSurfaceSize(const Size(400, 1600));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(repo)],
+      initialLocation: '/games/$id/end',
+    );
+    await tester.pumpAndSettle();
+
+    for (final offered in ['Le village', 'Les Loups-Garous', 'Les Amoureux', 'Personne']) {
+      expect(find.text(offered), findsOneWidget, reason: offered);
+    }
+    for (final hidden in ['Le Joueur de Flûte', 'Le Loup-Garou Blanc', "L'Ange", "L'Abominable Sectaire"]) {
+      expect(find.text(hidden), findsNothing, reason: hidden);
+    }
+  });
+
+  group('the proposal on the day screen', () {
+    Future<void> openDay(WidgetTester tester, int id) async {
+      await tester.binding.setSurfaceSize(const Size(400, 1600));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await pumpAppRouter(
+        tester,
+        overrides: [gameRepositoryProvider.overrideWithValue(repo)],
+        initialLocation: '/games/$id/game',
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('says nothing while wolves and villagers are both alive', (tester) async {
+      await openDay(tester, await game());
+
+      expect(find.textContaining('semble avoir gagné'), findsNothing);
+    });
+
+    testWidgets('offers to end the game once no wolf is left, without ending it', (tester) async {
+      final id = await game(wolfAlive: false);
+      await openDay(tester, id);
+
+      expect(
+        find.text('Il ne reste que des villageois : le village semble avoir gagné.'),
+        findsOneWidget,
+      );
+      expect((await repo.getGame(id))!.status, GameStatus.inProgress);
+
+      await tester.tap(find.widgetWithText(AppButton, 'Terminer la partie'));
+      await tester.pumpAndSettle();
+      expect(find.text('Le village'), findsOneWidget); // the end screen, to pick the winner
+    });
+  });
+
+  testWidgets('the Angel is offered as a winner when he is in the game', (tester) async {
+    final id = await repo.createGame(initialPlayerCount: 3);
+    await repo.saveComposition(
+      gameId: id,
+      playerCount: 3,
+      roleCounts: const {'ange': 1, 'loup_garou': 1, 'villageois': 1},
+    );
+    await repo.savePlayerNames(gameId: id, names: const ['Ana', 'Bo', 'Cy']);
+    await repo.startGame(id);
+    await tester.binding.setSurfaceSize(const Size(400, 1600));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(repo)],
+      initialLocation: '/games/$id/end',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text("L'Ange"), findsOneWidget);
+    expect(find.text('Le Joueur de Flûte'), findsNothing);
   });
 
   testWidgets('"On continue à jouer" leaves the game running', (tester) async {

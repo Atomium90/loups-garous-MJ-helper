@@ -5,8 +5,10 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:loup_garou_mj/data/database/app_database.dart';
 import 'package:loup_garou_mj/data/models/game_winner.dart';
+import 'package:loup_garou_mj/data/models/night_log_entry.dart';
 import 'package:loup_garou_mj/data/repositories/drift_game_repository.dart';
 import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
+import 'package:loup_garou_mj/state/providers/share_provider.dart';
 import 'package:loup_garou_mj/state/session/session_cursor.dart';
 import 'package:loup_garou_mj/ui/theme/app_icons.dart';
 import 'package:rules_engine/rules_engine.dart';
@@ -121,6 +123,84 @@ void main() {
     await tester.tap(find.text(winnerLabel));
     await tester.pumpAndSettle();
   }
+
+  testWidgets('the share button hands the journal to the share sheet', (tester) async {
+    final id = await finishedGame(GameWinner.village);
+    await repo.appendNightLog(
+      gameId: id,
+      entries: const [
+        NightLogEntry(
+          phase: JournalPhase.night,
+          phaseIndex: 1,
+          kind: JournalKind.wolvesTarget,
+          args: {'player': 'Cy'},
+        ),
+      ],
+    );
+    final shared = <({String text, String subject})>[];
+    await tester.binding.setSurfaceSize(const Size(400, 1600));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpAppRouter(
+      tester,
+      overrides: [
+        gameRepositoryProvider.overrideWithValue(repo),
+        textSharerProvider.overrideWithValue(
+          ({required text, required subject}) async => shared.add((text: text, subject: subject)),
+        ),
+      ],
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Village'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(AppIcons.share));
+    await tester.pumpAndSettle();
+
+    expect(shared, hasLength(1));
+    expect(shared.single.text, contains('Vainqueur : Le village'));
+    expect(shared.single.text, contains('- Les Loups désignent Cy'));
+    expect(shared.single.subject, isNotEmpty);
+  });
+
+  testWidgets('the journal screen shares too, and has nothing to share while empty', (tester) async {
+    final id = await finishedGame(GameWinner.wolves);
+    final shared = <String>[];
+    await tester.binding.setSurfaceSize(const Size(400, 1600));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpAppRouter(
+      tester,
+      overrides: [
+        gameRepositoryProvider.overrideWithValue(repo),
+        textSharerProvider.overrideWithValue(
+          ({required text, required subject}) async => shared.add(text),
+        ),
+      ],
+      initialLocation: '/games/$id/journal',
+    );
+    await tester.pumpAndSettle();
+
+    // an empty journal: the button is inert
+    await tester.tap(find.byIcon(AppIcons.share));
+    await tester.pumpAndSettle();
+    expect(shared, isEmpty);
+
+    await repo.appendNightLog(
+      gameId: id,
+      entries: const [
+        NightLogEntry(
+          phase: JournalPhase.night,
+          phaseIndex: 1,
+          kind: JournalKind.wolvesTarget,
+          args: {'player': 'Cy'},
+        ),
+      ],
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(AppIcons.share));
+    await tester.pumpAndSettle();
+
+    expect(shared.single, contains('- Les Loups désignent Cy'));
+  });
 
   testWidgets('a finished game can be deleted from its recap', (tester) async {
     final id = await finishedGame(GameWinner.village);

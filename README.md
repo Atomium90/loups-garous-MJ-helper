@@ -41,7 +41,7 @@ The rules engine (pure Dart, `packages/rules_engine`) is complete for the base g
 The Flutter app (`lib/`) drives the loop: Accueil → Composition → Les joueurs → Avant la
 nuit 1 → the in-game Script / Village / Journal shell. The MJ identifies each role as it wakes,
 runs Cupidon / the Seer / the Wolves / the Witch, resolves the night, then works through the
-day — the recap (with any card to reveal and any chain effect), the captain election, the
+day — the recap (with any card to reveal and any chain effect), the sheriff election, the
 village vote — and on into the next night, until they end the game and declare a winner. A
 finished game can be reopened from Accueil for its recap.
 
@@ -59,13 +59,21 @@ finished game can be reopened from Accueil for its recap.
 
 Réglages (theme, keep-screen-awake, aide-mémoire visibility) is reachable from the Accueil gear
 and from a persistent 46px header inside a game; that header's home button leaves the game
-running and returns to Accueil. Mes boîtes is informational for now — the base box, extensions
-listed as coming soon.
+running and returns to Accueil. Mes boîtes lists the six boxes (base, New Moon, The Village,
+Characters, The Pact, Best Of): the MJ ticks what they own and the composition only offers the
+roles those boxes can supply (`CardPool` in the rules engine). The extensions' roles themselves are
+not implemented yet, so ticking a box adds nothing beyond the base roles it already holds.
 
-Also not built: the regulars address book and the extension boxes.
+Also not built: the regulars address book and the extension roles.
+
+Crash reports are strictly opt-in. A build only knows where to send them when it is given the DSN
+of a Sentry project (`flutter build apk --dart-define=SENTRY_DSN=...`; the release workflow reads
+it from the optional `SENTRY_DSN` repository secret). Without a DSN the app never reports anything
+and the setting is not shown; with one, the setting in Réglages is off until the MJ turns it on,
+and nothing about the games (names, roles, journal) is attached to a report.
 
 The script also tells the MJ what to say out loud: waking and putting each role back to sleep,
-the morning and who died, the Captain election, the vote, and the Hunter's, the Captain's and
+the morning and who died, the Sheriff election, the vote, and the Hunter's, the Sheriff's and
 a lover's death. A "Phrases du MJ" setting in Réglages chooses between none, the essential line
 of each moment, or the full text (the default), and the block can be folded away in the game.
 

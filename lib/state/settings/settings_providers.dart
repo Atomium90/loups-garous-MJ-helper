@@ -1,7 +1,10 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart' show Provider;
 import 'package:material_ui/material_ui.dart' show ThemeMode;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:rules_engine/rules_engine.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../crash_reporting/crash_reporting.dart';
 import 'settings.dart';
 
 part 'settings_providers.g.dart';
@@ -12,6 +15,16 @@ const _kAideMemoire = 'aide_memoire';
 const _kLanguage = 'language';
 const _kNarrationLevel = 'narration_level';
 const _kNarrationHintSeen = 'narration_hint_seen';
+const _kOwnedBoxes = 'owned_boxes';
+const _kThiefReserveChosen = 'thief_reserve_chosen';
+const _kFoxAfterWitch = 'fox_after_witch';
+const _kWhiteWolfOdd = 'white_wolf_odd_nights';
+const _kKnightAtNightEnd = 'knight_disease_night_end';
+const _kVoteTieRule = 'vote_tie_rule';
+
+/// Whether this build can send crash reports at all (it was given a Sentry DSN). The setting is
+/// only shown when it can. Overridden in tests.
+final crashReportingAvailableProvider = Provider<bool>((ref) => CrashReporting.available);
 
 /// The one `SharedPreferences` handle. Override in tests with an instance from
 /// `SharedPreferences.setMockInitialValues({})`.
@@ -37,7 +50,67 @@ class Settings extends _$Settings {
       language: AppLanguage.fromCode(prefs.getString(_kLanguage)),
       narrationLevel: NarrationLevel.fromName(prefs.getString(_kNarrationLevel)),
       narrationHintSeen: prefs.getBool(_kNarrationHintSeen) ?? false,
+      ownedBoxes: _readOwnedBoxes(prefs.getStringList(_kOwnedBoxes)),
+      thiefReserveChosen: prefs.getBool(_kThiefReserveChosen) ?? false,
+      foxAfterWitch: prefs.getBool(_kFoxAfterWitch) ?? false,
+      whiteWolfOddNights: prefs.getBool(_kWhiteWolfOdd) ?? false,
+      knightDiseaseAtNightEnd: prefs.getBool(_kKnightAtNightEnd) ?? false,
+      voteTieRule: VoteTieRule.fromName(prefs.getString(_kVoteTieRule)),
+      crashReports: prefs.getBool(kCrashReportsPref) ?? false,
     );
+  }
+
+  /// The MJ allows (or stops) the anonymous crash reports; Sentry follows at once.
+  Future<void> setCrashReports(bool value) async {
+    final prefs = await ref.read(sharedPreferencesProvider.future);
+    await prefs.setBool(kCrashReportsPref, value);
+    state = AsyncData((state.value ?? AppSettings.defaults).copyWith(crashReports: value));
+    await CrashReporting.allow(value);
+  }
+
+  Future<void> setVoteTieRule(VoteTieRule rule) async {
+    final prefs = await ref.read(sharedPreferencesProvider.future);
+    await prefs.setString(_kVoteTieRule, rule.name);
+    state = AsyncData((state.value ?? AppSettings.defaults).copyWith(voteTieRule: rule));
+  }
+
+  Future<void> setKnightDiseaseAtNightEnd(bool value) async {
+    final prefs = await ref.read(sharedPreferencesProvider.future);
+    await prefs.setBool(_kKnightAtNightEnd, value);
+    state = AsyncData(
+      (state.value ?? AppSettings.defaults).copyWith(knightDiseaseAtNightEnd: value),
+    );
+  }
+
+  Future<void> setWhiteWolfOddNights(bool value) async {
+    final prefs = await ref.read(sharedPreferencesProvider.future);
+    await prefs.setBool(_kWhiteWolfOdd, value);
+    state = AsyncData((state.value ?? AppSettings.defaults).copyWith(whiteWolfOddNights: value));
+  }
+
+  Future<void> setFoxAfterWitch(bool value) async {
+    final prefs = await ref.read(sharedPreferencesProvider.future);
+    await prefs.setBool(_kFoxAfterWitch, value);
+    state = AsyncData((state.value ?? AppSettings.defaults).copyWith(foxAfterWitch: value));
+  }
+
+  Future<void> setThiefReserveChosen(bool value) async {
+    final prefs = await ref.read(sharedPreferencesProvider.future);
+    await prefs.setBool(_kThiefReserveChosen, value);
+    state = AsyncData(
+      (state.value ?? AppSettings.defaults).copyWith(thiefReserveChosen: value),
+    );
+  }
+
+  /// Ticks or unticks a box. The base box stays owned: the app cannot deal without it.
+  Future<void> setBoxOwned(String boxId, bool owned) async {
+    if (boxId == baseBoxId || gameBoxById(boxId) == null) return;
+    final prefs = await ref.read(sharedPreferencesProvider.future);
+    final current = (state.value ?? AppSettings.defaults).ownedBoxes;
+    final next = {...current, boxId};
+    if (!owned) next.remove(boxId);
+    await prefs.setStringList(_kOwnedBoxes, [...next]);
+    state = AsyncData((state.value ?? AppSettings.defaults).copyWith(ownedBoxes: next));
   }
 
   Future<void> setNarrationLevel(NarrationLevel level) async {
@@ -82,4 +155,20 @@ class Settings extends _$Settings {
       (state.value ?? AppSettings.defaults).copyWith(aideMemoireInScript: value),
     );
   }
+}
+
+/// The stored ids, minus the unknown ones, plus the base box. Anything unreadable falls back to
+/// the base box alone.
+Set<String> _readOwnedBoxes(List<String>? stored) => {
+  baseBoxId,
+  for (final id in stored ?? const <String>[])
+    if (gameBoxById(id) != null) id,
+};
+
+/// The boxes the MJ owns, as a [CardPool] over every role the app runs: what the composition
+/// and the advisor can offer. Falls back to the base box while the settings load.
+@riverpod
+CardPool cardPool(Ref ref) {
+  final owned = ref.watch(settingsProvider).value?.ownedBoxes;
+  return CardPool(registry: RoleRegistry.all, ownedBoxIds: owned ?? const [baseBoxId]);
 }

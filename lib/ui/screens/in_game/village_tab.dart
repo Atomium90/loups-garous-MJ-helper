@@ -61,15 +61,8 @@ class _VillageBody extends StatelessWidget {
     final dead = players.where((p) => !p.alive).toList(growable: false);
     final captainId = session.engine.captainPlayerId;
 
-    var villageAlive = 0;
-    var wolvesAlive = 0;
-    for (final p in alive) {
-      final roleId = _confirmedRole(p.id);
-      final team = roleId == null
-          ? Team.village
-          : (RoleRegistry.base.byIdOrNull(roleId)?.team ?? Team.village);
-      team == Team.werewolves ? wolvesAlive++ : villageAlive++;
-    }
+    final wolvesAlive = session.engine.aliveWolves(RoleRegistry.all);
+    final villageAlive = alive.length - wolvesAlive;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 16, AppSpacing.screen, AppSpacing.screen),
@@ -106,6 +99,13 @@ class _VillageBody extends StatelessWidget {
               roleId: _confirmedRole(p.id),
               isCaptain: p.id == captainId,
               dead: false,
+              pardoned: p.hasStatus(PlayerStatus.pardoned),
+              publicIdentity:
+                  p.roleId == 'villageois_villageois' &&
+                  session.engine.servantTakeover?.playerId != p.id,
+              group: session.engine.division == null
+                  ? null
+                  : session.engine.division!.groupOf(p.id) + 1,
             ),
         ],
         if (dead.isNotEmpty) ...[
@@ -189,6 +189,9 @@ class _PlayerRow extends StatelessWidget {
     required this.isCaptain,
     required this.dead,
     this.deathLine,
+    this.pardoned = false,
+    this.publicIdentity = false,
+    this.group,
   });
 
   final String name;
@@ -197,12 +200,21 @@ class _PlayerRow extends StatelessWidget {
   final bool dead;
   final String? deathLine;
 
+  /// The Village Idiot the village pardoned: he no longer votes.
+  final bool pardoned;
+
+  /// The Trusted Villager showed his card to everyone at the deal.
+  final bool publicIdentity;
+
+  /// 1 or 2 once the village was divided in two groups, null otherwise.
+  final int? group;
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final typography = context.typography;
     final id = roleId;
-    final wolves = id != null && RoleRegistry.base.byIdOrNull(id)?.team == Team.werewolves;
+    final wolves = id != null && RoleRegistry.all.byIdOrNull(id)?.team == Team.werewolves;
     // An unknown id falls back to the neutral "unknown role" name.
     final roleText = context.l10n.roleName(id ?? '');
 
@@ -249,6 +261,21 @@ class _PlayerRow extends StatelessWidget {
                     Text(
                       deathLine!,
                       style: typography.micro.copyWith(color: colors.textTertiary),
+                    ),
+                  if (group != null)
+                    Text(
+                      context.l10n.villageGroup(group!),
+                      style: typography.micro.copyWith(color: colors.textTertiary),
+                    ),
+                  if (publicIdentity)
+                    Text(
+                      context.l10n.villagePublic,
+                      style: typography.micro.copyWith(color: colors.textTertiary),
+                    ),
+                  if (pardoned)
+                    Text(
+                      context.l10n.villagePardoned,
+                      style: typography.micro.copyWith(color: colors.warnText),
                     ),
                 ],
               ),

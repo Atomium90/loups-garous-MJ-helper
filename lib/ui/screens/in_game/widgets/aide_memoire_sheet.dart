@@ -29,7 +29,7 @@ class _AideMemoire extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final typography = context.typography;
-    final registry = RoleRegistry.base;
+    final registry = RoleRegistry.all;
 
     final inComposition = registry.roles
         .where((r) => (composition[r.id] ?? 0) > 0)
@@ -40,7 +40,7 @@ class _AideMemoire extends StatelessWidget {
 
     // Waking roles are numbered in call order; the rest get a dash.
     var wakeNo = 0;
-    String indexFor(Role r) => r.hasNightCall ? '${++wakeNo}' : '—';
+    String indexFor(Role r) => r.hasNightCall && !r.preparation ? '${++wakeNo}' : '—';
 
     return SafeArea(
       top: false,

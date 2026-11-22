@@ -5,6 +5,7 @@ import '../../data/repositories/game_not_found_exception.dart';
 import '../providers/game_list_provider.dart';
 import '../providers/game_provider.dart';
 import '../providers/game_repository_provider.dart';
+import '../settings/settings_providers.dart';
 import 'composition_advisor_provider.dart';
 import 'composition_draft.dart';
 
@@ -16,9 +17,13 @@ class CompositionEditor extends _$CompositionEditor {
   Future<CompositionDraft> build(int gameId) async {
     final game = await ref.watch(gameProvider(gameId).future);
     if (game == null) throw GameNotFoundException(gameId);
-    final draft = CompositionDraft.fromGame(game);
+    final draft = CompositionDraft.fromGame(game, reserveChosen: _reserveChosen());
     return draft.copyWith(suggestion: _suggestionFor(draft.playerCount));
   }
+
+  /// The house-rule setting. Settings not loaded (or unreadable) mean the default: the reserve
+  /// is drawn. Not awaited, so the composition never waits on the preferences.
+  bool _reserveChosen() => ref.watch(settingsProvider).value?.thiefReserveChosen ?? false;
 
   void setPlayerCount(int count) {
     final draft = state.value;
@@ -54,7 +59,8 @@ class CompositionEditor extends _$CompositionEditor {
     if (counts.containsKey(roleId)) {
       counts.remove(roleId);
     } else {
-      counts[roleId] = 1;
+      // A group (the Deux Sœurs...) is taken whole or not at all.
+      counts[roleId] = ref.read(cardPoolProvider).registry.byIdOrNull(roleId)?.groupSize ?? 1;
     }
     _edit(_withCounts(draft, counts));
   }
@@ -115,10 +121,15 @@ class CompositionEditor extends _$CompositionEditor {
           gameId: draft.gameId,
           playerCount: draft.playerCount,
           roleCounts: draft.roleCounts,
-          reserveRoleIds: draft.hasVoleur ? draft.reserveRoleIds : const [],
+          reserveRoleIds: _reserveToKeep(draft),
         )
         .catchError((Object _) {});
   }
+
+  /// The reserve the MJ picked, kept only while the Voleur is in play and the MJ is the one
+  /// picking: a drawn reserve is noted on night 1 instead.
+  List<String> _reserveToKeep(CompositionDraft draft) =>
+      draft.hasVoleur && draft.reserveChosen ? draft.reserveRoleIds : const [];
 
   /// Applies new role counts, clearing the reserve when the Voleur is no
   /// longer in play (a stale reserve would otherwise block "Lancer la partie").
@@ -129,7 +140,8 @@ class CompositionEditor extends _$CompositionEditor {
 
   Future<void> commit() async {
     final draft = state.value;
-    if (draft == null || !draft.isValid) return;
+    final pool = ref.read(cardPoolProvider);
+    if (draft == null || !draft.isValidFor(pool)) return;
 
     final counts = Map<String, int>.from(draft.roleCounts);
     if (draft.remaining > 0) {
@@ -140,7 +152,7 @@ class CompositionEditor extends _$CompositionEditor {
       gameId: draft.gameId,
       playerCount: draft.playerCount,
       roleCounts: counts,
-      reserveRoleIds: draft.hasVoleur ? draft.reserveRoleIds : const [],
+      reserveRoleIds: _reserveToKeep(draft),
     );
     ref.invalidate(gameListProvider);
     ref.invalidate(gameProvider(gameId));

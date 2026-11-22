@@ -57,6 +57,126 @@ class RoleRevealed implements GameEvent {
   const RoleRevealed({required this.playerId, required this.roleId});
 }
 
+class FoxSniffed implements GameEvent {
+  final String middlePlayerId;
+  final bool wolfFound;
+
+  const FoxSniffed({required this.middlePlayerId, required this.wolfFound});
+}
+
+class WildChildModelChosen implements GameEvent {
+  final String childPlayerId;
+  final String modelPlayerId;
+
+  const WildChildModelChosen({required this.childPlayerId, required this.modelPlayerId});
+}
+
+class ChienLoupChose implements GameEvent {
+  final String playerId;
+  final bool wolf;
+
+  const ChienLoupChose({required this.playerId, required this.wolf});
+}
+
+class VictimInfected implements GameEvent {
+  final String playerId;
+
+  const VictimInfected({required this.playerId});
+}
+
+/// The Elder survived a first bite: the table is not told.
+class ElderSurvived implements GameEvent {
+  final String playerId;
+
+  const ElderSurvived({required this.playerId});
+}
+
+/// The villagers lost their special powers because the Elder was eliminated.
+class VillagersLostPowers implements GameEvent {
+  final String elderPlayerId;
+
+  const VillagersLostPowers({required this.elderPlayerId});
+}
+
+class KnightContaminated implements GameEvent {
+  final String wolfPlayerId;
+
+  const KnightContaminated({required this.wolfPlayerId});
+}
+
+class PlayersCharmed implements GameEvent {
+  final List<String> playerIds;
+
+  const PlayersCharmed({required this.playerIds});
+}
+
+/// The wolves picked a player the Defender protected: nobody died of it.
+class DefenderSaved implements GameEvent {
+  final String playerId;
+
+  const DefenderSaved({required this.playerId});
+}
+
+/// The village voted against the Village Idiot: he shows his card and is pardoned.
+class IdiotPardoned implements GameEvent {
+  final String playerId;
+
+  const IdiotPardoned({required this.playerId});
+}
+
+/// The vote was tied and the Scapegoat took the blame.
+class ScapegoatBlamed implements GameEvent {
+  final String playerId;
+
+  const ScapegoatBlamed({required this.playerId});
+}
+
+/// The dead Scapegoat named who votes on the next day.
+class VotersChosen implements GameEvent {
+  final Set<String> allowedPlayerIds;
+
+  const VotersChosen({required this.allowedPlayerIds});
+}
+
+/// The Wandering Judge called for a second vote.
+class JudgeSignGiven implements GameEvent {
+  const JudgeSignGiven();
+}
+
+/// The village was divided in two groups.
+class VillageDivided implements GameEvent {
+  final Set<String> groupAPlayerIds;
+
+  const VillageDivided({required this.groupAPlayerIds});
+}
+
+/// The Servante Devouee took the role of an eliminated player.
+class ServantTookRole implements GameEvent {
+  final String servantPlayerId;
+  final String deadPlayerId;
+  final String roleId;
+
+  const ServantTookRole({
+    required this.servantPlayerId,
+    required this.deadPlayerId,
+    required this.roleId,
+  });
+}
+
+/// The Comedien's cards were laid face up.
+class ActorCardsSet implements GameEvent {
+  final List<String> roleIds;
+
+  const ActorCardsSet({required this.roleIds});
+}
+
+/// The Comedien took a card's power for the night.
+class ActorChoseCard implements GameEvent {
+  final String roleId;
+
+  const ActorChoseCard({required this.roleId});
+}
+
 class LoversPaired implements GameEvent {
   final String playerAId;
   final String playerBId;

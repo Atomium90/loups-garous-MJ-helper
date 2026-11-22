@@ -4,11 +4,16 @@
 /// `dart test`, independently of the UI.
 library;
 
+export 'src/boxes/card_pool.dart';
+export 'src/boxes/game_box.dart';
+export 'src/boxes/game_boxes.dart';
+
 export 'src/composition_advisor/composition_advisor.dart';
 export 'src/composition_advisor/composition_suggestion.dart';
 
 export 'src/models/action_type.dart';
 export 'src/models/death_effect.dart';
+export 'src/models/night_context.dart';
 export 'src/models/order_constraint.dart';
 export 'src/models/role.dart';
 export 'src/models/team.dart';
@@ -19,6 +24,7 @@ export 'src/role_registry/role_registry.dart';
 export 'src/night_script/night_script_builder.dart';
 export 'src/night_script/night_script_step.dart';
 
+export 'src/game_state/actor_cards.dart';
 export 'src/game_state/death_cause.dart';
 export 'src/game_state/game_action.dart';
 export 'src/game_state/game_event.dart';
@@ -27,5 +33,7 @@ export 'src/game_state/game_state.dart';
 export 'src/game_state/game_state_machine.dart';
 export 'src/game_state/pending_decision.dart';
 export 'src/game_state/player.dart';
+export 'src/game_state/sides.dart';
+export 'src/game_state/victory.dart';
 
 export 'src/serialization/game_state_json.dart';

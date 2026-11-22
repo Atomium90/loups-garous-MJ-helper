@@ -12,7 +12,7 @@
   "@languageSystem": {
     "description": "Language choice that follows the phone's language."
   },
-  "roleName": "{roleId, select, voleur{Voleur} cupidon{Cupidon} voyante{Voyante} loup_garou{Loup-Garou} sorciere{Sorcière} villageois{Villageois} petite_fille{Petite Fille} chasseur{Chasseur} other{Rôle inconnu}}",
+  "roleName": "{roleId, select, voleur{Voleur} cupidon{Cupidon} voyante{Voyante} loup_garou{Loup-Garou} sorciere{Sorcière} villageois{Simple Villageois} petite_fille{Petite Fille} chasseur{Chasseur} renard{Renard} deux_soeurs{Deux Sœurs} montreur_d_ours{Montreur d'Ours} enfant_sauvage{Enfant Sauvage} chien_loup{Chien-Loup} loup_garou_blanc{Loup-Garou Blanc} infect_pere_des_loups{Infect Père des Loups} grand_mechant_loup{Grand-Méchant-Loup} ancien{L'Ancien} chevalier{Chevalier à l'Épée Rouillée} joueur_de_flute{Joueur de Flûte} joueurs_charmes{Joueurs charmés} ange{Ange} salvateur{Salvateur} idiot_du_village{Idiot du Village} bouc_emissaire{Bouc Émissaire} trois_freres{Trois Frères} villageois_villageois{Villageois-Villageois} juge_begue{Juge Bègue} abominable_sectaire{Abominable Sectaire} servante_devouee{Servante Dévouée} comedien{Comédien} other{Rôle inconnu}}",
   "@roleName": {
     "description": "The name of a role card, from its id (singular, no article).",
     "placeholders": {
@@ -21,7 +21,7 @@
       }
     }
   },
-  "rolePlural": "{roleId, select, voleur{Voleurs} cupidon{Cupidons} voyante{Voyantes} loup_garou{Loups-Garous} sorciere{Sorcières} villageois{Villageois} petite_fille{Petites Filles} chasseur{Chasseurs} other{Rôles inconnus}}",
+  "rolePlural": "{roleId, select, voleur{Voleurs} cupidon{Cupidons} voyante{Voyantes} loup_garou{Loups-Garous} sorciere{Sorcières} villageois{Simples Villageois} petite_fille{Petites Filles} chasseur{Chasseurs} renard{Renards} deux_soeurs{Deux Sœurs} montreur_d_ours{Montreurs d'Ours} enfant_sauvage{Enfants Sauvages} chien_loup{Chiens-Loups} loup_garou_blanc{Loups-Garous Blancs} infect_pere_des_loups{Infects Pères des Loups} grand_mechant_loup{Grands-Méchants-Loups} ancien{Les Anciens} chevalier{Chevaliers à l'Épée Rouillée} joueur_de_flute{Joueurs de Flûte} joueurs_charmes{Joueurs charmés} ange{Anges} salvateur{Salvateurs} idiot_du_village{Idiots du Village} bouc_emissaire{Boucs Émissaires} trois_freres{Trois Frères} villageois_villageois{Villageois-Villageois} juge_begue{Juges Bègues} abominable_sectaire{Abominables Sectaires} servante_devouee{Servantes Dévouées} comedien{Comédiens} other{Rôles inconnus}}",
   "@rolePlural": {
     "description": "The plural name of a role card, from its id.",
     "placeholders": {
@@ -30,7 +30,7 @@
       }
     }
   },
-  "roleWithArticle": "{roleId, select, voleur{le Voleur} cupidon{le Cupidon} voyante{la Voyante} loup_garou{le Loup-Garou} sorciere{la Sorcière} villageois{le Villageois} petite_fille{la Petite Fille} chasseur{le Chasseur} other{Rôle inconnu}}",
+  "roleWithArticle": "{roleId, select, voleur{le Voleur} cupidon{le Cupidon} voyante{la Voyante} loup_garou{le Loup-Garou} sorciere{la Sorcière} villageois{le Simple Villageois} petite_fille{la Petite Fille} chasseur{le Chasseur} renard{le Renard} deux_soeurs{les Deux Sœurs} montreur_d_ours{le Montreur d'Ours} enfant_sauvage{l'Enfant Sauvage} chien_loup{le Chien-Loup} loup_garou_blanc{le Loup-Garou Blanc} infect_pere_des_loups{l'Infect Père des Loups} grand_mechant_loup{le Grand-Méchant-Loup} ancien{l'Ancien} chevalier{le Chevalier à l'Épée Rouillée} joueur_de_flute{le Joueur de Flûte} joueurs_charmes{les joueurs charmés} ange{l'Ange} salvateur{le Salvateur} idiot_du_village{l'Idiot du Village} bouc_emissaire{le Bouc Émissaire} trois_freres{les Trois Frères} villageois_villageois{le Villageois-Villageois} juge_begue{le Juge Bègue} abominable_sectaire{l'Abominable Sectaire} servante_devouee{la Servante Dévouée} comedien{le Comédien} other{Rôle inconnu}}",
   "@roleWithArticle": {
     "description": "A role with its article, e.g. \"le Chasseur\", \"la Voyante\", \"the Hunter\".",
     "placeholders": {
@@ -39,7 +39,7 @@
       }
     }
   },
-  "roleRuleText": "{roleId, select, voleur{Réveillez le Voleur. Il peut échanger sa carte avec l'une des deux cartes non distribuées, ou garder la sienne.} cupidon{Réveillez Cupidon. Il désigne deux joueurs qui tombent amoureux, puis les deux amoureux ouvrent les yeux pour se reconnaître avant de se rendormir.} voyante{Réveillez la Voyante. Elle désigne un joueur dont vous lui révélez le rôle.} loup_garou{Réveillez les Loups-Garous. Ils désignent ensemble leur victime.} sorciere{Réveillez la Sorcière. Montrez-lui la victime des Loups. Elle peut utiliser sa potion de vie et/ou sa potion de mort.} villageois{Aucune action de nuit.} petite_fille{Aucun appel : elle peut risquer un œil pendant l'appel des Loups-Garous, à ses risques.} chasseur{Aucune action de nuit : à sa mort (jour ou nuit), il élimine immédiatement un joueur de son choix.} other{}}",
+  "roleRuleText": "{roleId, select, voleur{Réveillez le Voleur. Il peut échanger sa carte avec l'une des deux cartes non distribuées, ou garder la sienne.} cupidon{Réveillez Cupidon. Il désigne deux joueurs qui tombent amoureux, puis les deux amoureux ouvrent les yeux pour se reconnaître avant de se rendormir.} voyante{Réveillez la Voyante. Elle désigne un joueur dont vous lui révélez le rôle.} loup_garou{Réveillez les Loups-Garous. Ils désignent ensemble leur victime.} sorciere{Réveillez la Sorcière. Montrez-lui la victime des Loups. Elle peut utiliser sa potion de vie et/ou sa potion de mort.} villageois{Aucune action de nuit.} petite_fille{Aucun appel : elle peut risquer un œil pendant l'appel des Loups-Garous, à ses risques.} chasseur{Aucune action de nuit : à sa mort (jour ou nuit), il élimine immédiatement un joueur de son choix.} renard{Réveillez le Renard (facultatif). Il désigne un joueur : vous lui dites si un Loup se trouve parmi ce joueur et ses deux voisins vivants. S'il n'y en a aucun, il perd son pouvoir pour de bon.} deux_soeurs{Réveillez les Deux Sœurs : elles se reconnaissent, puis se rendorment. Appel facultatif après la nuit 1, une nuit sur deux.} montreur_d_ours{Réveillez le Montreur d'Ours la nuit 1 pour savoir qui il est. Chaque matin, après les victimes, vous grognez si l'un de ses deux voisins vivants est un Loup.} enfant_sauvage{Réveillez l'Enfant Sauvage la nuit 1 : il désigne son modèle. Il reste villageois tant que son modèle vit ; à la mort du modèle, il devient Loup-Garou et se réveille avec les Loups.} chien_loup{Juste avant les Loups, la nuit 1, demandez discrètement au Chien-Loup son choix : villageois ou Loup-Garou, pour de bon. S'il choisit les Loups, il se réveille avec eux chaque nuit.} loup_garou_blanc{Il se réveille avec les Loups chaque nuit. Une nuit sur deux, appelez-le seul : il peut éliminer un Loup. Il gagne seul s'il est le dernier en vie.} infect_pere_des_loups{Il se réveille avec les Loups. Une fois par partie, après eux, il peut infecter leur victime au lieu de la laisser mourir : elle devient Loup-Garou en secret et garde son pouvoir.} grand_mechant_loup{Il se réveille avec les Loups, puis seul une 2e fois tant qu'aucun Loup, Enfant Sauvage ni Chien-Loup n'est mort : il dévore une 2e victime, jamais un Loup.} ancien{Aucun appel. Il survit à la 1re attaque des Loups (sans l'annoncer) et meurt à la 2e. Le vote, le poison ou le tir du Chasseur le tuent d'un coup : les villageois perdent alors leurs pouvoirs pour le reste de la partie.} chevalier{Aucun appel. S'il est dévoré par les Loups, le premier Loup à sa gauche attrape la maladie : il meurt au début de la nuit suivante (ou à sa fin, selon le réglage), annoncé comme mort de maladie.} joueur_de_flute{Réveillez le Joueur de Flûte chaque nuit, après la Sorcière : il charme 2 joueurs. Réveillez ensuite les joueurs charmés pour qu'ils se reconnaissent. Il gagne dès que tous les autres joueurs vivants sont charmés.} joueurs_charmes{Réveillez tous les joueurs déjà charmés pour qu'ils se reconnaissent, puis rendormez-les.} ange{Aucun appel. La partie commence par un débat et un vote avant la nuit 1. Éliminé à ce vote ou pendant la nuit 1, il gagne seul ; vivant au 2e jour, il devient Simple Villageois (et il renonce à son objectif s'il est amoureux).} salvateur{Réveillez le Salvateur avant les Loups : il désigne un joueur, protégé des Loups cette nuit (lui-même inclus, mais jamais le même joueur deux nuits de suite). Il ne protège pas du charme ni de l'infection.} idiot_du_village{Aucun appel. Voté par le village, il révèle sa carte et est gracié : personne n'est éliminé ce jour-là, et il ne vote plus de la partie. Dévoré par les Loups ou abattu par le Chasseur, il meurt ; s'il était Capitaine, la charge est perdue.} bouc_emissaire{Aucun appel. En cas d'égalité au vote, c'est lui qui est éliminé, même s'il n'était pas parmi les ex æquo. Éliminé, il désigne qui pourra voter au jour suivant : les autres n'ont pas le droit de vote.} trois_freres{Réveillez les Trois Frères : ils se reconnaissent, puis se rendorment. Appel facultatif après la nuit 1, une nuit sur deux.} villageois_villageois{Pas d'appel de nuit. À la distribution, il montre sa carte à tout le monde : notez qui c'est avant de faire dormir le village. Il n'a aucun pouvoir.} juge_begue{Réveillez le Juge Bègue : il vous montre en silence le signe secret par lequel il demandera un deuxième vote. Une seule fois dans la partie, pendant un vote.} abominable_sectaire{Pas d'appel de nuit. Avant la nuit 1, divisez le village en deux groupes selon un critère visible de tous (côté de la table, vêtement…), puis notez-les. Le Sectaire gagne seul quand tout le groupe dont il ne fait pas partie est éliminé : il quitte alors la partie.} servante_devouee{Aucun appel de nuit. Juste après un vote, avant que la carte de l'éliminé soit retournée, elle peut se révéler et prendre son rôle : son nouveau rôle joue dès la nuit suivante, comme une première nuit. Une seule fois, et pas si elle est amoureuse.} comedien{Posez trois cartes à pouvoir (sans Loup-Garou) face visible. Chaque nuit, réveillez le Comédien : il choisit l'une d'elles et en utilise le pouvoir cette nuit-là, à l'appel du rôle ; la carte sort ensuite du jeu.} other{}}",
   "@roleRuleText": {
     "description": "The instruction the game master follows when this role is called, from the role id.",
     "placeholders": {
@@ -57,7 +57,7 @@
       }
     }
   },
-  "winnerLabel": "{winner, select, village{Le village} wolves{Les Loups-Garous} lovers{Les Amoureux} other{Personne}}",
+  "winnerLabel": "{winner, select, village{Le village} wolves{Les Loups-Garous} lovers{Les Amoureux} piper{Le Joueur de Flûte} whiteWolf{Le Loup-Garou Blanc} angel{L'Ange} sectarian{L'Abominable Sectaire} other{Personne}}",
   "@winnerLabel": {
     "description": "The winning side, from the winner name (village, wolves, lovers, none).",
     "placeholders": {
@@ -66,7 +66,16 @@
       }
     }
   },
-  "winnerShort": "{winner, select, village{Village} wolves{Loups} lovers{Amoureux} other{Annulée}}",
+  "victoryProposal": "{winner, select, village{Il ne reste que des villageois : le village semble avoir gagné.} wolves{Il ne reste que des Loups-Garous : ils semblent avoir gagné.} lovers{Il ne reste que les deux Amoureux, de camps opposés : ils semblent avoir gagné.} whiteWolf{Le Loup-Garou Blanc est le dernier en vie : il semble avoir gagné.} angel{L'Ange a été éliminé au premier vote ou pendant la première nuit : il semble avoir gagné.} piper{Tous les joueurs vivants sont charmés : le Joueur de Flûte semble avoir gagné.} none{Plus personne n'est en vie : personne ne gagne.} sectarian{Tout le groupe adverse de l'Abominable Sectaire est éliminé : il semble avoir gagné et quitte la partie, qui peut continuer pour les autres.} other{La partie semble terminée.}}",
+  "@victoryProposal": {
+    "description": "Banner offering to end the game when the table looks decided; winner is the GameWinner name.",
+    "placeholders": {
+      "winner": {
+        "type": "String"
+      }
+    }
+  },
+  "winnerShort": "{winner, select, village{Village} wolves{Loups} lovers{Amoureux} piper{Flûtiste} whiteWolf{Loup blanc} angel{Ange} sectarian{Sectaire} other{Annulée}}",
   "@winnerShort": {
     "description": "Terse winning side for a history row.",
     "placeholders": {
@@ -75,7 +84,7 @@
       }
     }
   },
-  "deathCauseLabel": "{cause, select, wolves{Victime des Loups} witchPoison{Potion de mort de la Sorcière} dayVote{Vote du village} hunterShot{Tir du Chasseur} other{Mort de chagrin}}",
+  "deathCauseLabel": "{cause, select, wolves{Victime des Loups} witchPoison{Potion de mort de la Sorcière} disease{Mort de la maladie du Chevalier} whiteWolf{Dévoré par le Loup-Garou Blanc} dayVote{Vote du village} hunterShot{Tir du Chasseur} other{Mort de chagrin}}",
   "@deathCauseLabel": {
     "description": "A death's cause in the day recap, from the cause key (wolves, witchPoison, dayVote, hunterShot, loversGrief).",
     "placeholders": {
@@ -84,7 +93,7 @@
       }
     }
   },
-  "deathCauseShort": "{cause, select, wolves{Loups} witchPoison{potion de mort} dayVote{vote du village} hunterShot{tir du Chasseur} other{mort de chagrin}}",
+  "deathCauseShort": "{cause, select, wolves{Loups} witchPoison{potion de mort} disease{maladie du Chevalier} whiteWolf{Loup-Garou Blanc} dayVote{vote du village} hunterShot{tir du Chasseur} other{mort de chagrin}}",
   "@deathCauseShort": {
     "description": "Terse death cause shown after the phase in the Village tab.",
     "placeholders": {
@@ -123,7 +132,7 @@
       }
     }
   },
-  "journalPhaseHeader": "{phase, select, night{NUIT {index}} day{JOUR {index}} other{{index}}}",
+  "journalPhaseHeader": "{phase, select, night{NUIT {index}} day{{index, plural, =0{AVANT LA NUIT 1} other{JOUR {index}}}} other{{index}}}",
   "@journalPhaseHeader": {
     "description": "Header a group of journal lines sits under: the phase (night or day) and its number.",
     "placeholders": {
@@ -240,6 +249,199 @@
       }
     }
   },
+  "journalFoxFindsWolf": "Le Renard flaire autour de {player} : un Loup",
+  "@journalFoxFindsWolf": {
+    "description": "Journal: the Fox's sniff found a wolf; player is the middle player.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalFoxFindsNone": "Le Renard flaire autour de {player} : aucun Loup, il perd son pouvoir",
+  "@journalFoxFindsNone": {
+    "description": "Journal: the Fox's sniff found no wolf and he loses his power.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalBrothersMeet": "Les Trois Frères se reconnaissent",
+  "@journalBrothersMeet": {
+    "description": "Journal: the Three Brothers woke and met."
+  },
+  "journalSistersMeet": "Les Deux Sœurs se reconnaissent",
+  "@journalSistersMeet": {
+    "description": "Journal: the Two Sisters woke and met."
+  },
+  "journalBearGrowls": "Le Montreur d'Ours grogne",
+  "@journalBearGrowls": {
+    "description": "Journal: the Bear Tamer growls at dawn."
+  },
+  "journalWildChildModel": "{player} prend {other} pour modèle",
+  "@journalWildChildModel": {
+    "description": "Journal: the Wild Child's role model.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      },
+      "other": {
+        "type": "String"
+      }
+    }
+  },
+  "journalChienLoupWolf": "{player}, Chien-Loup, rejoint les Loups",
+  "@journalChienLoupWolf": {
+    "description": "Journal: the Wolf-Hound chooses the wolves.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalChienLoupVillage": "{player}, Chien-Loup, reste villageois",
+  "@journalChienLoupVillage": {
+    "description": "Journal: the Wolf-Hound stays a villager.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalInfection": "{player} est infecté par l'Infect Père des Loups",
+  "@journalInfection": {
+    "description": "Journal: the Cursed Wolf-Father infects the victim.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalBigBadWolfTarget": "Le Grand-Méchant-Loup dévore aussi {player}",
+  "@journalBigBadWolfTarget": {
+    "description": "Journal: the Big Bad Wolf's second victim.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalWhiteWolfEats": "Le Loup-Garou Blanc élimine {player}",
+  "@journalWhiteWolfEats": {
+    "description": "Journal: the White Werewolf eats a wolf.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalElderSurvives": "{player}, l'Ancien, survit à la morsure",
+  "@journalElderSurvives": {
+    "description": "Journal: the Elder survives a first bite (the table is not told).",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalVillagersLosePowers": "{player}, l'Ancien, est éliminé : les villageois perdent leurs pouvoirs",
+  "@journalVillagersLosePowers": {
+    "description": "Journal: the Elder is eliminated and the villagers lose their powers.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalKnightContaminates": "Le Chevalier laisse {player} malade",
+  "@journalKnightContaminates": {
+    "description": "Journal: the wolf the Knight's sword left diseased.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalDiseaseDeath": "{player} meurt de la maladie du Chevalier",
+  "@journalDiseaseDeath": {
+    "description": "Journal: the diseased wolf dies.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalPiperCharms": "Le Joueur de Flûte charme {player} et {other}",
+  "@journalPiperCharms": {
+    "description": "Journal: the Piper charms two players.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      },
+      "other": {
+        "type": "String"
+      }
+    }
+  },
+  "journalPiperCharmsOne": "Le Joueur de Flûte charme {player}",
+  "@journalPiperCharmsOne": {
+    "description": "Journal: the Piper charms the last player left to charm.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalDefenderProtects": "Le Salvateur protège {player}",
+  "@journalDefenderProtects": {
+    "description": "Journal: the player the Defender protects.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalDefenderSaves": "{player} est choisi par les Loups mais protégé : personne ne meurt",
+  "@journalDefenderSaves": {
+    "description": "Journal: the wolves picked a protected player.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalIdiotPardoned": "{player}, l'Idiot du Village, est gracié par le village",
+  "@journalIdiotPardoned": {
+    "description": "Journal: the village voted against the Village Idiot, who is pardoned.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalScapegoatBlamed": "Égalité au vote : le Bouc Émissaire {player} est éliminé",
+  "@journalScapegoatBlamed": {
+    "description": "Journal: a tied vote falls on the Scapegoat.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalScapegoatVoters": "Le Bouc Émissaire désigne qui peut voter : {player}",
+  "@journalScapegoatVoters": {
+    "description": "Journal: the players the Scapegoat lets vote.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      }
+    }
+  },
+  "journalScapegoatNobodyVotes": "Le Bouc Émissaire ne laisse voter personne",
+  "@journalScapegoatNobodyVotes": {
+    "description": "Journal: the Scapegoat lets nobody vote."
+  },
   "journalHeartbreakDeath": "{player} meurt de chagrin",
   "@journalHeartbreakDeath": {
     "description": "Journal: a lover dies with the other.",
@@ -249,7 +451,7 @@
       }
     }
   },
-  "summaryPhase": "{phase, select, day{Jour {index}} other{Nuit {index}}}",
+  "summaryPhase": "{phase, select, day{{index, plural, =0{Avant la nuit 1} other{Jour {index}}}} other{Nuit {index}}}",
   "@summaryPhase": {
     "description": "Home's resume line, first part: the phase (night or day) and its number.",
     "placeholders": {
@@ -268,6 +470,10 @@
   "summaryStepRecap": "récap",
   "@summaryStepRecap": {
     "description": "Resume line: the day's recap of the night."
+  },
+  "summaryStepBearGrowl": "grognement de l'ours",
+  "@summaryStepBearGrowl": {
+    "description": "Resume line: the Bear Tamer's growl."
   },
   "summaryStepCaptainElection": "élection du Capitaine",
   "@summaryStepCaptainElection": {
@@ -460,6 +666,10 @@
   "@playersTitle": {
     "description": "Title of the screen where the players are named."
   },
+  "playersSeatingHint": "Notez les joueurs dans l'ordre où ils sont assis autour de la table : certains rôles regardent leurs voisins.",
+  "@playersSeatingHint": {
+    "description": "Hint above the player list: the order is the seating order."
+  },
   "playersNamedCount": "{named} sur {total} nommés",
   "@playersNamedCount": {
     "description": "How many players have a name so far.",
@@ -510,6 +720,14 @@
   "@compositionWolves": {
     "description": "Heading above the werewolf-side roles."
   },
+  "compositionSolo": "Solitaires",
+  "@compositionSolo": {
+    "description": "Heading above the roles that play for their own goal."
+  },
+  "compositionAmbiguous": "Ambigus",
+  "@compositionAmbiguous": {
+    "description": "Heading above the roles that can change side or role during the game."
+  },
   "compositionPlayers": "Joueurs",
   "@compositionPlayers": {
     "description": "Label of the player count stepper."
@@ -555,6 +773,15 @@
   "reserveWhichCard": "Quelle carte ?",
   "@reserveWhichCard": {
     "description": "Title of the sheet where a reserve card is chosen."
+  },
+  "reserveRandomNote": "Le Voleur ajoute 2 Simples Villageois au paquet ({count} cartes). La réserve est ce qu'il reste après la distribution : vous noterez ces 2 cartes pendant la nuit 1.",
+  "@reserveRandomNote": {
+    "description": "Composition note when the Thief's reserve is drawn; count is the pack size.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "compositionRoleCount": "{assigned, plural, =0{0 rôles} =1{1 rôle} other{{assigned} rôles}} pour {players, plural, =1{1 joueur} other{{players} joueurs}}",
   "@compositionRoleCount": {
@@ -609,6 +836,23 @@
   "@beforeNightDealHint": {
     "description": "How the cards are dealt."
   },
+  "beforeNightPackHint": "Ajoutez 2 Simples Villageois au paquet ({count} cartes), mélangez et distribuez. Posez les 2 cartes restantes au centre, face cachée : vous les noterez pendant la nuit 1.",
+  "@beforeNightPackHint": {
+    "description": "How to deal when the Thief's reserve is drawn; count is the pack size.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "beforeNightAngelHint": "L'Ange est en jeu : la partie commence par un débat et un vote, avant la nuit 1.",
+  "@beforeNightAngelHint": {
+    "description": "Tells the MJ the game starts with a vote when the Angel is in play."
+  },
+  "beforeNightStartAngel": "Commencer par le débat",
+  "@beforeNightStartAngel": {
+    "description": "Button that starts the game when the Angel is in play (a debate and a vote come first)."
+  },
   "beforeNightReserveHint": "Posez ces 2 cartes au centre, face cachée : {cards}.",
   "@beforeNightReserveHint": {
     "description": "Where to put the Thief's reserve cards; cards lists them.",
@@ -634,11 +878,14 @@
   "@settingsMyBoxes": {
     "description": "The boxes (base game and expansions) the MJ owns."
   },
-  "settingsBaseBoxRoles": "Boîte de base · {count} rôles",
-  "@settingsBaseBoxRoles": {
+  "settingsOwnedBoxes": "{boxes, plural, =1{1 boîte} other{{boxes} boîtes}} · {roles, plural, =0{aucun rôle} =1{1 rôle} other{{roles} rôles}}",
+  "@settingsOwnedBoxes": {
     "description": "Summary of what the owned boxes provide.",
     "placeholders": {
-      "count": {
+      "boxes": {
+        "type": "int"
+      },
+      "roles": {
         "type": "int"
       }
     }
@@ -667,6 +914,58 @@
   "@settingsDuringGame": {
     "description": "Settings section: in-game behaviour."
   },
+  "settingsThiefReserve": "Réserve du Voleur choisie par le MJ",
+  "@settingsThiefReserve": {
+    "description": "Toggle: the MJ picks the Thief's two reserve cards instead of leaving them to the draw."
+  },
+  "settingsThiefReserveHint": "Désactivé : la réserve est tirée au hasard, comme dans les règles, et vous notez les 2 cartes restantes pendant la nuit 1.",
+  "@settingsThiefReserveHint": {
+    "description": "Explains the Thief reserve setting."
+  },
+  "settingsFoxAfterWitch": "Renard appelé après la Sorcière",
+  "@settingsFoxAfterWitch": {
+    "description": "Toggle: the Fox is called after the Witch instead of after the Seer."
+  },
+  "settingsFoxAfterWitchHint": "Les livrets se contredisent : le Pacte appelle le Renard après la Voyante (par défaut), le Best Of après la Sorcière. Pris en compte à chaque nouvelle partie.",
+  "@settingsFoxAfterWitchHint": {
+    "description": "Explains the Fox position setting."
+  },
+  "settingsWhiteWolfOdd": "Loup-Garou Blanc seul les nuits impaires",
+  "@settingsWhiteWolfOdd": {
+    "description": "Toggle: the White Werewolf's solo night falls on odd nights instead of even ones."
+  },
+  "settingsWhiteWolfOddHint": "Les livrets ne disent pas par quelle nuit commencer. Par défaut, il est seul les nuits 2, 4, 6… ; activé, les nuits 1, 3, 5… Pris en compte à chaque nouvelle partie.",
+  "@settingsWhiteWolfOddHint": {
+    "description": "Explains the White Werewolf parity setting."
+  },
+  "settingsKnightNightEnd": "Maladie du Chevalier en fin de nuit",
+  "@settingsKnightNightEnd": {
+    "description": "Toggle: the Knight's disease strikes at the end of the night instead of its beginning."
+  },
+  "settingsKnightNightEndHint": "Les livrets divergent : le Best Of fait mourir le Loup au début de la nuit suivante (par défaut), Personnages à sa fin. Même effet pour les joueurs.",
+  "@settingsKnightNightEndHint": {
+    "description": "Explains the Knight disease timing setting."
+  },
+  "settingsVoteTieTitle": "Égalité au vote",
+  "@settingsVoteTieTitle": {
+    "description": "Settings section: what a tied village vote does."
+  },
+  "voteTieNobody": "Personne",
+  "@voteTieNobody": {
+    "description": "Tie rule: nobody is eliminated."
+  },
+  "voteTieCaptain": "Capitaine",
+  "@voteTieCaptain": {
+    "description": "Tie rule: the Capitaine decides."
+  },
+  "voteTieRevote": "2e vote",
+  "@voteTieRevote": {
+    "description": "Tie rule: a second vote among the tied players."
+  },
+  "settingsVoteTieHint": "Que faire d'une égalité (le Bouc Émissaire passe toujours avant). Par défaut personne n'est éliminé (Base, Pacte) ; le Capitaine peut départager, ou les ex æquo revotent (Best Of).",
+  "@settingsVoteTieHint": {
+    "description": "Explains the tie rule setting."
+  },
   "settingsKeepScreenOn": "Garder l'écran allumé",
   "@settingsKeepScreenOn": {
     "description": "Toggle: stop the screen from sleeping during a game."
@@ -674,6 +973,14 @@
   "settingsAideMemoire": "Aide-mémoire dans le script",
   "@settingsAideMemoire": {
     "description": "Toggle: show the quick-reference button in the script."
+  },
+  "settingsCrashReports": "Envoyer les rapports de plantage",
+  "@settingsCrashReports": {
+    "description": "Toggle: anonymous crash reports."
+  },
+  "settingsCrashReportsHint": "Si l'app plante, un rapport technique anonyme aide à corriger le problème. Jamais de noms de joueurs, de rôles ni de contenu de partie. Désactivé par défaut.",
+  "@settingsCrashReportsHint": {
+    "description": "What the crash reports contain."
   },
   "settingsData": "Données",
   "@settingsData": {
@@ -711,7 +1018,7 @@
   "@deleteAllDone": {
     "description": "Snackbar after every game was deleted."
   },
-  "boxesRolesAvailable": "{count} rôles disponibles pour vos parties",
+  "boxesRolesAvailable": "{count, plural, =0{Aucun rôle disponible} =1{1 rôle disponible pour vos parties} other{{count} rôles disponibles pour vos parties}}",
   "@boxesRolesAvailable": {
     "description": "How many roles the owned boxes give.",
     "placeholders": {
@@ -720,37 +1027,36 @@
       }
     }
   },
-  "boxesOwned": "Possédées",
-  "@boxesOwned": {
-    "description": "Heading above the boxes the MJ owns."
+  "boxesBase": "Jeu de base",
+  "@boxesBase": {
+    "description": "Heading above the base box, which is always owned."
   },
-  "boxBaseName": "Loups-Garous de Thiercelieux",
-  "@boxBaseName": {
-    "description": "Name of the base game's box."
-  },
-  "boxBaseDetail": "Boîte de base · {count} cartes",
-  "@boxBaseDetail": {
-    "description": "Kind and size of the base box.",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "boxesExpansions": "Extensions",
+  "boxesExpansions": "Extensions et compilations",
   "@boxesExpansions": {
-    "description": "Heading above the expansions."
+    "description": "Heading above the boxes the MJ can tick."
   },
-  "boxExpansionDetail": "Extension · {count} cartes",
-  "@boxExpansionDetail": {
-    "description": "Kind and size of an expansion.",
+  "boxName": "{boxId, select, base{Loups-Garous de Thiercelieux} new_moon{Nouvelle Lune} village{Le Village} characters{Personnages} pact{Le Pacte} best_of{Best Of} other{Boîte inconnue}}",
+  "@boxName": {
+    "description": "Name of a box, by box id. Proper nouns of the printed products.",
     "placeholders": {
-      "count": {
+      "boxId": {
+        "type": "String"
+      }
+    }
+  },
+  "boxDetail": "{boxId, select, base{Boîte de base} new_moon{Autocollants} village{Autocollants} characters{Extension} pact{Compilation} best_of{Compilation} other{Boîte}} · {roles, plural, =0{rôles à venir} =1{1 rôle géré} other{{roles} rôles gérés}}",
+  "@boxDetail": {
+    "description": "What kind of box it is and how many of its roles the app runs.",
+    "placeholders": {
+      "boxId": {
+        "type": "String"
+      },
+      "roles": {
         "type": "int"
       }
     }
   },
-  "boxesFooter": "Les extensions arrivent après la V1. La boîte de base couvre 8 à 18 joueurs.",
+  "boxesFooter": "Cochez ce que vous possédez : la composition ne propose que les rôles de vos boîtes. Les rôles de chaque extension arrivent au fil des mises à jour.",
   "@boxesFooter": {
     "description": "Footer of the boxes screen."
   },
@@ -809,6 +1115,19 @@
   "journalTitle": "Journal",
   "@journalTitle": {
     "description": "Title of the journal."
+  },
+  "journalShare": "Partager le journal",
+  "@journalShare": {
+    "description": "Tooltip of the button that shares the journal as text."
+  },
+  "journalShareWinner": "Vainqueur : {winner}",
+  "@journalShareWinner": {
+    "description": "Line of the shared journal naming the winner.",
+    "placeholders": {
+      "winner": {
+        "type": "String"
+      }
+    }
   },
   "journalLoadError": "Impossible de charger le journal.",
   "@journalLoadError": {
@@ -985,6 +1304,576 @@
   "@scriptLoadError": {
     "description": "The script tab failed to load."
   },
+  "reserveEntryTitle": "Les 2 cartes restantes",
+  "@reserveEntryTitle": {
+    "description": "Title of the panel where the MJ notes the Thief's two leftover cards."
+  },
+  "reserveEntryBody": "Regardez les 2 cartes posées au centre et indiquez-les : l'app en a besoin pour savoir qui peut porter quoi.",
+  "@reserveEntryBody": {
+    "description": "Explains why the leftover cards are noted."
+  },
+  "reserveEntryConfirm": "Valider ces 2 cartes",
+  "@reserveEntryConfirm": {
+    "description": "Button that confirms the Thief's two leftover cards."
+  },
+  "scriptThiefMustSwap": "Les deux cartes sont des Loups-Garous : le Voleur doit en prendre une.",
+  "@scriptThiefMustSwap": {
+    "description": "Said when the Thief cannot keep his card because both reserve cards are Werewolves."
+  },
+  "scriptFoxQuestion": "Qui le Renard désigne-t-il ?",
+  "@scriptFoxQuestion": {
+    "description": "Question on the Fox's turn: the middle player of the three he sniffs."
+  },
+  "scriptFoxSniff": "Flairer autour de {name}",
+  "@scriptFoxSniff": {
+    "description": "Button that confirms the Fox's middle player.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptFoxTrio": "Le Renard flaire {names}.",
+  "@scriptFoxTrio": {
+    "description": "The three players the Fox sniffs; names is a list.",
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptFoxAsk": "Y a-t-il au moins un Loup parmi eux ?",
+  "@scriptFoxAsk": {
+    "description": "Question to the MJ after the Fox's sniff."
+  },
+  "scriptFoxHint": "{wolf, select, true{D'après les rôles notés : au moins un Loup.} other{D'après les rôles notés : aucun Loup.}}",
+  "@scriptFoxHint": {
+    "description": "What the app knows of the three the Fox sniffed; wolf is true or false.",
+    "placeholders": {
+      "wolf": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptFoxYes": "Oui, il y a un Loup",
+  "@scriptFoxYes": {
+    "description": "The MJ confirms a wolf is among the Fox's three."
+  },
+  "scriptFoxNo": "Non, aucun Loup",
+  "@scriptFoxNo": {
+    "description": "The MJ says no wolf is among the Fox's three."
+  },
+  "scriptFoxLoses": "Sans Loup, le Renard perd son pouvoir pour de bon.",
+  "@scriptFoxLoses": {
+    "description": "Warning that a sniff with no wolf ends the Fox's power."
+  },
+  "scriptBrothersDone": "Ils se sont reconnus",
+  "@scriptBrothersDone": {
+    "description": "Button once the Three Brothers have met."
+  },
+  "scriptSistersDone": "Elles se sont reconnues",
+  "@scriptSistersDone": {
+    "description": "Button once the Two Sisters have met."
+  },
+  "scriptWildChildQuestion": "Qui est le modèle de l'Enfant Sauvage ?",
+  "@scriptWildChildQuestion": {
+    "description": "Question on the Wild Child's turn."
+  },
+  "scriptWildChildModel": "Son modèle : {name}",
+  "@scriptWildChildModel": {
+    "description": "Button that confirms the Wild Child's role model.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptChienLoupQuestion": "Que choisit le Chien-Loup ? Ce choix est définitif.",
+  "@scriptChienLoupQuestion": {
+    "description": "Question on the Wolf-Hound's turn."
+  },
+  "scriptChienLoupWolf": "Il rejoint les Loups",
+  "@scriptChienLoupWolf": {
+    "description": "The Wolf-Hound chooses the wolves."
+  },
+  "scriptChienLoupVillager": "Il reste villageois",
+  "@scriptChienLoupVillager": {
+    "description": "The Wolf-Hound stays a villager."
+  },
+  "scriptInfectAsk": "Les Loups ont désigné {name}. L'Infect Père des Loups lève-t-il la main ?",
+  "@scriptInfectAsk": {
+    "description": "Question to the MJ on the Cursed Wolf-Father's turn.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptInfectYes": "Infecter {name}",
+  "@scriptInfectYes": {
+    "description": "Button: the Cursed Wolf-Father infects the victim.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptInfectNo": "Il n'infecte pas",
+  "@scriptInfectNo": {
+    "description": "Button: the Cursed Wolf-Father lets the victim be eaten."
+  },
+  "scriptBigBadWolfQuestion": "Quelle est la 2e victime du Grand-Méchant-Loup ?",
+  "@scriptBigBadWolfQuestion": {
+    "description": "Question on the Big Bad Wolf's turn."
+  },
+  "scriptBigBadWolfPick": "Le Grand-Méchant-Loup dévore {name}",
+  "@scriptBigBadWolfPick": {
+    "description": "Button that confirms the Big Bad Wolf's second victim.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptWhiteWolfQuestion": "Quel Loup le Loup-Garou Blanc élimine-t-il ?",
+  "@scriptWhiteWolfQuestion": {
+    "description": "Question on the White Werewolf's solo turn."
+  },
+  "scriptWhiteWolfPick": "Le Loup-Garou Blanc élimine {name}",
+  "@scriptWhiteWolfPick": {
+    "description": "Button that confirms the wolf the White Werewolf eats.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptKnightDead": "Le Chevalier est dévoré",
+  "@scriptKnightDead": {
+    "description": "Subtitle of the Knight's panel."
+  },
+  "scriptKnightTitle": "L'épée rouillée",
+  "@scriptKnightTitle": {
+    "description": "Title of the Knight's panel."
+  },
+  "scriptKnightBodyStart": "Le premier Loup à sa gauche (de son point de vue) attrape la maladie et mourra au début de la nuit prochaine. Annoncez-le le matin comme une mort de maladie.",
+  "@scriptKnightBodyStart": {
+    "description": "Explains the Knight's disease, striking as the next night begins."
+  },
+  "scriptKnightBodyEnd": "Le premier Loup à sa gauche (de son point de vue) attrape la maladie et mourra à la fin de la nuit prochaine. Annoncez-le le matin comme une mort de maladie.",
+  "@scriptKnightBodyEnd": {
+    "description": "Explains the Knight's disease, striking as the next night ends."
+  },
+  "scriptKnightSuggested": "D'après les rôles notés : {name}.",
+  "@scriptKnightSuggested": {
+    "description": "The wolf the app expects to be the first to the Knight's left.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptKnightQuestion": "Quel Loup est malade ?",
+  "@scriptKnightQuestion": {
+    "description": "Question on the Knight's panel."
+  },
+  "scriptKnightWounds": "{name} est malade",
+  "@scriptKnightWounds": {
+    "description": "Button that confirms the diseased wolf.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptKnightNone": "Aucun Loup à atteindre",
+  "@scriptKnightNone": {
+    "description": "Button: no wolf is left diseased."
+  },
+  "scriptPiperQuestion": "Qui le Joueur de Flûte charme-t-il ?",
+  "@scriptPiperQuestion": {
+    "description": "Question on the Piper's turn."
+  },
+  "scriptPiperCharm": "Le Joueur de Flûte charme {first} et {second}",
+  "@scriptPiperCharm": {
+    "description": "Button that confirms the two players the Piper charms.",
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "second": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptPiperCharmOne": "Le Joueur de Flûte charme {name}",
+  "@scriptPiperCharmOne": {
+    "description": "Button that confirms the one player left for the Piper to charm.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptCharmedDone": "Ils se sont reconnus",
+  "@scriptCharmedDone": {
+    "description": "Button once the charmed players have met."
+  },
+  "scriptElderAskTitle": "Est-ce l'Ancien ?",
+  "@scriptElderAskTitle": {
+    "description": "Title of the question asked when the wolves pick a player who may be the Elder."
+  },
+  "scriptElderAskBody": "{name} est visé par les Loups. Si c'est l'Ancien, il survit à cette première morsure, sans que personne le sache.",
+  "@scriptElderAskBody": {
+    "description": "Explains why the MJ is asked whether the victim is the Elder.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptElderYes": "Oui, c'est l'Ancien",
+  "@scriptElderYes": {
+    "description": "The victim is the Elder."
+  },
+  "scriptElderNo": "Non",
+  "@scriptElderNo": {
+    "description": "The victim is not the Elder."
+  },
+  "scriptPowerless": "Les villageois ont perdu leurs pouvoirs : le script ne les appelle plus.",
+  "@scriptPowerless": {
+    "description": "Banner shown once the Elder's elimination cost the villagers their powers."
+  },
+  "scriptAngelDebate": "L'Ange est en jeu : débattez, puis votez avant la première nuit. Éliminé ici ou pendant la nuit 1, il gagne.",
+  "@scriptAngelDebate": {
+    "description": "Banner of the day before night 1, when the Angel is in play."
+  },
+  "scriptDefenderQuestion": "Qui le Salvateur protège-t-il ?",
+  "@scriptDefenderQuestion": {
+    "description": "Question on the Defender's turn."
+  },
+  "scriptDefenderProtects": "Le Salvateur protège {name}",
+  "@scriptDefenderProtects": {
+    "description": "Button that confirms the player the Defender protects.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptIdiotAskTitle": "Est-ce l'Idiot du Village ?",
+  "@scriptIdiotAskTitle": {
+    "description": "Title of the question asked when the village votes against a player who may be the Village Idiot."
+  },
+  "scriptIdiotAskBody": "{name} est désigné par le village. Si c'est l'Idiot du Village, il révèle sa carte, est gracié et ne vote plus.",
+  "@scriptIdiotAskBody": {
+    "description": "Explains why the MJ is asked whether the player voted against is the Village Idiot.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptIdiotYes": "Oui, c'est l'Idiot",
+  "@scriptIdiotYes": {
+    "description": "The player is the Village Idiot."
+  },
+  "scriptIdiotPardoned": "{name} est l'Idiot du Village : le village le gracie. Personne n'est éliminé, et il ne votera plus.",
+  "@scriptIdiotPardoned": {
+    "description": "Said at the end of a day when the village pardoned the Village Idiot.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptSuccessionNone": "Pas de successeur (Idiot du Village)",
+  "@scriptSuccessionNone": {
+    "description": "Button: the dead Capitaine, the Village Idiot, passes his honor to nobody."
+  },
+  "journalVillageDivided": "Le village est divisé : {first} contre {second}",
+  "@journalVillageDivided": {
+    "description": "Journal: the village was divided in two groups for the Abominable Sectaire.",
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "second": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptDivideQuestion": "Qui est dans le premier groupe ? Tous les autres forment le second.",
+  "@scriptDivideQuestion": {
+    "description": "Question to divide the village in two groups."
+  },
+  "scriptDivideConfirm": "{first, plural, =1{Premier groupe : 1 joueur} other{Premier groupe : {first} joueurs}}",
+  "@scriptDivideConfirm": {
+    "description": "Button to record the first group.",
+    "placeholders": {
+      "first": {
+        "type": "int"
+      }
+    }
+  },
+  "scriptDividePick": "Choisissez le premier groupe",
+  "@scriptDividePick": {
+    "description": "Inert button while no player is picked for the first group."
+  },
+  "villageGroup": "groupe {n}",
+  "@villageGroup": {
+    "description": "Village tab: the group the player belongs to.",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "journalServantTakes": "{player}, la Servante Dévouée, prend la place de {other} : elle devient {role}",
+  "@journalServantTakes": {
+    "description": "Journal: the Devoted Servant took the role of the eliminated player.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      },
+      "other": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptServantAskTitle": "La Servante Dévouée se révèle-t-elle ?",
+  "@scriptServantAskTitle": {
+    "description": "Question after a vote: does the Devoted Servant reveal herself."
+  },
+  "scriptServantAskKnown": "{name}, la Servante Dévouée, peut se révéler maintenant, avant que la carte de {dead} soit retournée, pour prendre son rôle.",
+  "@scriptServantAskKnown": {
+    "description": "Body of the question when the Servant is known.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "dead": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptServantAskUnknown": "Une Servante Dévouée en vie peut se révéler maintenant, avant que la carte de {dead} soit retournée, pour prendre son rôle.",
+  "@scriptServantAskUnknown": {
+    "description": "Body of the question when the Servant is not known.",
+    "placeholders": {
+      "dead": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptServantYes": "Oui, elle se révèle",
+  "@scriptServantYes": {
+    "description": "She reveals herself."
+  },
+  "scriptServantNo": "Non",
+  "@scriptServantNo": {
+    "description": "She does not."
+  },
+  "scriptServantWho": "Qui est la Servante Dévouée ?",
+  "@scriptServantWho": {
+    "description": "Title of the player choice for the Servant."
+  },
+  "scriptServantHeader": "prend la place de {dead}",
+  "@scriptServantHeader": {
+    "description": "Subtitle of the Servant panel.",
+    "placeholders": {
+      "dead": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptServantTitle": "Elle devient {role}",
+  "@scriptServantTitle": {
+    "description": "Title of the Servant panel banner.",
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptServantNote": "Les états du mort (amoureux, infecté, charmé, Capitaine) ne passent pas à la Servante ; les siens restent. Son nouveau rôle est appelé dès la nuit suivante.",
+  "@scriptServantNote": {
+    "description": "What carries over when the Servant takes a role."
+  },
+  "scriptServantCaptain": "Elle perd la charge de Capitaine : elle désigne tout de suite son successeur.",
+  "@scriptServantCaptain": {
+    "description": "The Servant was the Capitaine."
+  },
+  "scriptServantTakes": "Elle prend le rôle",
+  "@scriptServantTakes": {
+    "description": "Button: apply the takeover."
+  },
+  "scriptServantCancel": "Finalement non",
+  "@scriptServantCancel": {
+    "description": "Button: cancel the takeover."
+  },
+  "journalActorChooses": "Le Comédien joue {role}",
+  "@journalActorChooses": {
+    "description": "Journal: the Actor took the power of a card for the night.",
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptActorCardsQuestion": "Quelles sont les 3 cartes posées face visible pour le Comédien ?",
+  "@scriptActorCardsQuestion": {
+    "description": "Question to enter the Actor's three cards."
+  },
+  "scriptActorCardsConfirm": "Poser ces 3 cartes",
+  "@scriptActorCardsConfirm": {
+    "description": "Button to record the Actor's three cards."
+  },
+  "scriptActorCardsPick": "Choisissez 3 cartes",
+  "@scriptActorCardsPick": {
+    "description": "Inert button while the three cards are not picked."
+  },
+  "scriptActorQuestion": "Quel pouvoir le Comédien prend-il cette nuit ?",
+  "@scriptActorQuestion": {
+    "description": "Question: which of the remaining cards the Actor uses tonight."
+  },
+  "scriptActorUses": "Il joue {role}",
+  "@scriptActorUses": {
+    "description": "Button: the Actor plays this card tonight.",
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "journalJudgeSign": "Le Juge Bègue demande un deuxième vote",
+  "@journalJudgeSign": {
+    "description": "Journal: the Wandering Judge gave his sign."
+  },
+  "scriptJudgeSign": "Le Juge Bègue fait son signe",
+  "@scriptJudgeSign": {
+    "description": "Button on the vote: the Wandering Judge calls for a second vote."
+  },
+  "scriptJudgeSignDone": "Le Juge Bègue a fait son signe : un deuxième vote suivra aussitôt, sans débat.",
+  "@scriptJudgeSignDone": {
+    "description": "Vote note once the Wandering Judge gave his sign."
+  },
+  "scriptSecondVoteEyebrow": "Jour {index} · 2e vote",
+  "@scriptSecondVoteEyebrow": {
+    "description": "Eyebrow of the second vote.",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "scriptSecondVoteTitle": "Deuxième vote",
+  "@scriptSecondVoteTitle": {
+    "description": "Title of the second vote banner."
+  },
+  "scriptSecondVoteBody": "Demandé par le Juge Bègue : on vote à nouveau, tout de suite, sans débat.",
+  "@scriptSecondVoteBody": {
+    "description": "Second vote banner text."
+  },
+  "villagePublic": "identité publique",
+  "@villagePublic": {
+    "description": "Village tab: the Trusted Villager's card was shown to everybody."
+  },
+  "villagePardoned": "gracié · ne vote plus",
+  "@villagePardoned": {
+    "description": "Village tab: the pardoned Village Idiot no longer votes."
+  },
+  "scriptScapegoatAsk": "Y a-t-il un Bouc Émissaire en vie ? Désignez-le.",
+  "@scriptScapegoatAsk": {
+    "description": "Question on a tied vote when a Scapegoat may be alive."
+  },
+  "scriptScapegoatIs": "{name} est le Bouc Émissaire",
+  "@scriptScapegoatIs": {
+    "description": "Button that confirms the Scapegoat.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptScapegoatNone": "Pas de Bouc Émissaire en vie",
+  "@scriptScapegoatNone": {
+    "description": "Button: no Scapegoat is alive."
+  },
+  "scriptTieCaptain": "Le Capitaine départage : qui est éliminé ?",
+  "@scriptTieCaptain": {
+    "description": "Question when the Capitaine decides a tied vote."
+  },
+  "scriptTieRevote": "Second vote entre les ex æquo : qui est éliminé ?",
+  "@scriptTieRevote": {
+    "description": "Question when a tied vote is voted again."
+  },
+  "scriptTieNobody": "Finalement personne n'est éliminé",
+  "@scriptTieNobody": {
+    "description": "Button: the tie stays a tie, nobody is eliminated."
+  },
+  "scriptVoteNobodyVotes": "Personne ne peut voter : pas d'élimination",
+  "@scriptVoteNobodyVotes": {
+    "description": "Button when the Scapegoat left nobody allowed to vote."
+  },
+  "scriptVotersOnly": "Seuls peuvent voter : {names}.",
+  "@scriptVotersOnly": {
+    "description": "Who may vote today, after the Scapegoat's choice.",
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptVotersNobody": "Plus aucun joueur ne peut voter : pas de vote aujourd'hui.",
+  "@scriptVotersNobody": {
+    "description": "Nobody may vote today, after the Scapegoat's choice."
+  },
+  "scriptVotersPardoned": "Ne votent pas : {names} (graciés).",
+  "@scriptVotersPardoned": {
+    "description": "The pardoned Village Idiots do not vote.",
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptScapegoatDead": "Le Bouc Émissaire est éliminé",
+  "@scriptScapegoatDead": {
+    "description": "Subtitle of the Scapegoat's panel."
+  },
+  "scriptScapegoatTitle": "Sa dernière volonté",
+  "@scriptScapegoatTitle": {
+    "description": "Title of the Scapegoat's panel."
+  },
+  "scriptScapegoatBody": "Avant de partir, le Bouc Émissaire désigne les joueurs qui pourront voter au jour suivant. Les autres n'auront pas le droit de vote.",
+  "@scriptScapegoatBody": {
+    "description": "Explains the Scapegoat's last act."
+  },
+  "scriptScapegoatQuestion": "Qui peut voter ?",
+  "@scriptScapegoatQuestion": {
+    "description": "Question on the Scapegoat's panel."
+  },
+  "scriptScapegoatVoters": "{count, plural, =1{Seul 1 joueur vote} other{Seuls {count} joueurs votent}}",
+  "@scriptScapegoatVoters": {
+    "description": "Button that confirms how many players may vote.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "scriptScapegoatNobody": "Personne ne vote",
+  "@scriptScapegoatNobody": {
+    "description": "Button: nobody may vote."
+  },
+  "scriptScapegoatEveryone": "Tout le monde peut voter",
+  "@scriptScapegoatEveryone": {
+    "description": "Button: everybody may vote."
+  },
   "scriptThiefExtra": "Le Voleur a volé une carte de {role} : il compte en plus.",
   "@scriptThiefExtra": {
     "description": "Note on the identify step when the Thief holds a stolen card of this role.",
@@ -1149,6 +2038,50 @@
   "@scriptAliveUnit": {
     "description": "Unit under the number of living players of a side."
   },
+  "scriptOpenGrowl": "Le grognement du Montreur d'Ours",
+  "@scriptOpenGrowl": {
+    "description": "Day recap button that goes to the Bear Tamer's growl."
+  },
+  "scriptGrowlTitle": "Le Montreur d'Ours",
+  "@scriptGrowlTitle": {
+    "description": "Title of the Bear Tamer's growl screen."
+  },
+  "scriptGrowlWho": "{name} est le Montreur d'Ours. Ses voisins vivants : {neighbours}.",
+  "@scriptGrowlWho": {
+    "description": "Who the Bear Tamer is and who sits next to him.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "neighbours": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptGrowlExpected": "D'après les rôles notés, un de ses voisins est un Loup : il grogne.",
+  "@scriptGrowlExpected": {
+    "description": "The app expects the Bear Tamer to growl."
+  },
+  "scriptGrowlNotExpected": "D'après les rôles notés, aucun de ses voisins n'est un Loup : pas de grognement.",
+  "@scriptGrowlNotExpected": {
+    "description": "The app expects no growl."
+  },
+  "scriptGrowlDo": "Je grogne",
+  "@scriptGrowlDo": {
+    "description": "The MJ growls."
+  },
+  "scriptGrowlNone": "Pas de grognement",
+  "@scriptGrowlNone": {
+    "description": "The MJ does not growl."
+  },
+  "narrGrowlHead": "Le Montreur d'Ours tend l'oreille.",
+  "@narrGrowlHead": {
+    "description": "Said before the Bear Tamer's growl."
+  },
+  "narrGrowlBody": "Si l'un de ses voisins est un Loup-Garou, grognez ; sinon, restez silencieux.",
+  "@narrGrowlBody": {
+    "description": "What the MJ does for the growl."
+  },
   "scriptElectCaptain": "Élire le Capitaine",
   "@scriptElectCaptain": {
     "description": "Day recap button that goes to the Captain election."
@@ -1195,7 +2128,7 @@
   "@scriptNoCaptain": {
     "description": "Button that skips the Captain election."
   },
-  "scriptVoteEyebrow": "Jour {index} · vote",
+  "scriptVoteEyebrow": "{index, plural, =0{Avant la nuit 1 · vote} other{Jour {index} · vote}}",
   "@scriptVoteEyebrow": {
     "description": "Eyebrow of the vote.",
     "placeholders": {
@@ -1420,7 +2353,7 @@
   "@narrNightStart": {
     "description": "Said when the night begins."
   },
-  "narrCallHead": "{roleId, select, voleur{Voleur, ouvre les yeux.} cupidon{Cupidon, ouvre les yeux.} voyante{Voyante, ouvre les yeux.} loup_garou{Loups-Garous, ouvrez les yeux.} sorciere{Sorcière, ouvre les yeux.} other{}}",
+  "narrCallHead": "{roleId, select, voleur{Voleur, ouvre les yeux.} cupidon{Cupidon, ouvre les yeux.} voyante{Voyante, ouvre les yeux.} loup_garou{Loups-Garous, ouvrez les yeux.} sorciere{Sorcière, ouvre les yeux.} renard{Renard, ouvre les yeux.} deux_soeurs{Sœurs, ouvrez les yeux.} montreur_d_ours{Montreur d'Ours, ouvre les yeux.} enfant_sauvage{Enfant Sauvage, ouvre les yeux.} chien_loup{Chien-Loup, ouvre les yeux.} loup_garou_blanc{Loup-Garou Blanc, ouvre les yeux.} infect_pere_des_loups{Infect Père des Loups, ouvre les yeux.} grand_mechant_loup{Grand-Méchant-Loup, ouvre les yeux.} joueur_de_flute{Joueur de Flûte, ouvre les yeux.} joueurs_charmes{Joueurs charmés, ouvrez les yeux.} salvateur{Salvateur, ouvre les yeux.} trois_freres{Frères, ouvrez les yeux.} villageois_villageois{Villageois-Villageois, montrez votre carte à tout le monde.} juge_begue{Juge Bègue, ouvre les yeux.} abominable_sectaire{Divisons le village en deux groupes, visibles de tous : le côté de la table, une couleur de vêtement…} comedien{Comédien, ouvre les yeux.} other{}}",
   "@narrCallHead": {
     "description": "Said to wake a role; roleId is the role.",
     "placeholders": {
@@ -1429,7 +2362,7 @@
       }
     }
   },
-  "narrCallBody": "{roleId, select, voleur{Deux cartes sont posées au centre : échange la tienne contre l'une d'elles, ou garde-la.} cupidon{Désigne les deux joueurs qui tomberont amoureux.} voyante{Désigne le joueur dont tu veux connaître le rôle.} loup_garou{Désignez ensemble votre victime.} sorciere{Voici la victime des Loups. Veux-tu la sauver ? Veux-tu empoisonner quelqu'un ?} other{}}",
+  "narrCallBody": "{roleId, select, voleur{Deux cartes sont posées au centre : échange la tienne contre l'une d'elles, ou garde-la.} cupidon{Désigne les deux joueurs qui tomberont amoureux.} voyante{Désigne le joueur dont tu veux connaître le rôle.} loup_garou{Désignez ensemble votre victime.} sorciere{Voici la victime des Loups. Veux-tu la sauver ? Veux-tu empoisonner quelqu'un ?} renard{Désigne un joueur : tu sauras si un Loup se trouve parmi lui et ses deux voisins.} deux_soeurs{Reconnaissez-vous en silence.} montreur_d_ours{Je sais maintenant qui tu es : chaque matin, je grognerai si l'un de tes voisins est un Loup.} enfant_sauvage{Désigne ton modèle.} chien_loup{Choisis : villageois ou Loup-Garou. Ce choix est définitif.} loup_garou_blanc{Si c'est ta nuit, désigne un Loup à éliminer.} infect_pere_des_loups{Lève la main si tu veux infecter la victime des Loups.} grand_mechant_loup{Désigne une seconde victime, qui ne soit pas un Loup.} joueur_de_flute{Désigne les deux joueurs que tu veux charmer.} joueurs_charmes{Reconnaissez-vous en silence.} salvateur{Désigne le joueur que tu protèges cette nuit. Pas le même que la nuit dernière.} trois_freres{Reconnaissez-vous en silence.} villageois_villageois{Votre identité est connue de tous jusqu'à la fin de la partie.} juge_begue{Montre-moi le signe secret par lequel tu demanderas un deuxième vote. Tu ne pourras le faire qu'une fois.} abominable_sectaire{Les groupes peuvent être inégaux. Chacun retient le sien.} comedien{Choisis l'une des cartes face visible : tu en utiliseras le pouvoir quand j'appellerai ce rôle, cette nuit.} other{}}",
   "@narrCallBody": {
     "description": "Said to tell the awake role what to do.",
     "placeholders": {
@@ -1438,7 +2371,7 @@
       }
     }
   },
-  "narrClose": "{roleId, select, voleur{Voleur, rendors-toi.} cupidon{Cupidon, rendors-toi. Amoureux, ouvrez les yeux, reconnaissez-vous, puis rendormez-vous.} voyante{Voyante, rendors-toi.} loup_garou{Loups-Garous, rendormez-vous.} sorciere{Sorcière, rendors-toi.} other{}}",
+  "narrClose": "{roleId, select, voleur{Voleur, rendors-toi.} cupidon{Cupidon, rendors-toi. Amoureux, ouvrez les yeux, reconnaissez-vous, puis rendormez-vous.} voyante{Voyante, rendors-toi.} loup_garou{Loups-Garous, rendormez-vous.} sorciere{Sorcière, rendors-toi.} renard{Renard, rendors-toi.} deux_soeurs{Sœurs, rendormez-vous.} montreur_d_ours{Montreur d'Ours, rendors-toi.} enfant_sauvage{Enfant Sauvage, rendors-toi.} chien_loup{Chien-Loup, rendors-toi.} loup_garou_blanc{Loup-Garou Blanc, rendors-toi.} infect_pere_des_loups{Infect Père des Loups, rendors-toi.} grand_mechant_loup{Grand-Méchant-Loup, rendors-toi.} joueur_de_flute{Joueur de Flûte, rendors-toi.} joueurs_charmes{Joueurs charmés, rendormez-vous.} salvateur{Salvateur, rendors-toi.} trois_freres{Frères, rendormez-vous.} juge_begue{Juge Bègue, rendors-toi.} comedien{Comédien, rendors-toi : j'appellerai ton rôle à son tour.} other{}}",
   "@narrClose": {
     "description": "Said to put a role back to sleep.",
     "placeholders": {

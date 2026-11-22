@@ -46,7 +46,7 @@ void main() {
     expect(find.text('Camille'), findsOneWidget);
     expect(find.text('Awa'), findsOneWidget);
     expect(find.text('Distribuez les 6 cartes'), findsOneWidget);
-    expect(find.text('2 Loups-Garous · Voyante · 3 Villageois'), findsOneWidget);
+    expect(find.text('2 Loups-Garous · Voyante · 3 Simples Villageois'), findsOneWidget);
     expect(find.text('Réserve du Voleur'), findsNothing);
   });
 
@@ -73,6 +73,49 @@ void main() {
       find.textContaining('le Chasseur · le Cupidon'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('a Voleur with a drawn reserve adds two Simples Villageois to the pack', (
+    tester,
+  ) async {
+    final repository = FakeGameRepository();
+    final id = await _readyToDeal(
+      repository,
+      composition: const {'voleur': 1, 'loup_garou': 2, 'villageois': 3},
+      names: const ['Camille', 'Julien', 'Noa', 'Lina', 'Théo', 'Awa'],
+    );
+
+    await pumpScreen(
+      tester,
+      BeforeNightScreen(gameId: id),
+      overrides: [gameRepositoryProvider.overrideWithValue(repository)],
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Réserve du Voleur'), findsOneWidget);
+    expect(find.textContaining('Ajoutez 2 Simples Villageois au paquet (8 cartes)'), findsOneWidget);
+    // The deck line counts them: 3 + 2 villagers in the pack.
+    expect(find.text('2 Loups-Garous · Voleur · 5 Simples Villageois'), findsOneWidget);
+  });
+
+  testWidgets('with the Angel the game starts with a debate, and says so', (tester) async {
+    final repository = FakeGameRepository();
+    final id = await _readyToDeal(
+      repository,
+      composition: const {'ange': 1, 'loup_garou': 2, 'villageois': 3},
+      names: const ['Camille', 'Julien', 'Noa', 'Lina', 'Théo', 'Awa'],
+    );
+
+    await pumpScreen(
+      tester,
+      BeforeNightScreen(gameId: id),
+      overrides: [gameRepositoryProvider.overrideWithValue(repository)],
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining("L'Ange est en jeu : la partie commence par un débat"), findsOneWidget);
+    expect(find.text('Commencer par le débat'), findsOneWidget);
+    expect(find.text('Commencer la nuit 1'), findsNothing);
   });
 
   testWidgets('Commencer la nuit 1 starts the game and opens the Script tab', (tester) async {
