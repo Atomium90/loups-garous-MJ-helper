@@ -41,14 +41,15 @@ class SessionCursor {
 
 /// Which day-phase screen the MJ is on. Night vs day and the night index come
 /// from the engine `GameState`; this only tracks progress *within* a day.
-/// `recap` -> `growl` (a living Bear Tamer) -> `captain` (day 1 only) -> `vote` -> `done`
+/// `recap` -> `growl` (a living Bear Tamer) -> `captain` (day 1 only) -> `vote` -> `secondVote`
+/// (when the Wandering Judge called for one) -> `done`
 /// (ready for the next night). Interrupts (a card to reveal, a chain effect, a lover's grief) are
 /// driven by engine/session state and shown on top of whatever stage is set.
 ///
 /// The declaration order is the order of the day and the values are stored by name: a stage a
 /// role adds goes in its place here, and in `dayStagesFor` (day_plan.dart), which decides which
 /// of them today has.
-enum DayStage { recap, growl, captain, vote, done }
+enum DayStage { recap, growl, captain, vote, secondVote, done }
 
 /// The app-side day state, persisted next to the engine snapshot and the night
 /// cursor. Only meaningful once `engine.phase == GamePhase.day`; reset to

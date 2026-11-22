@@ -324,6 +324,13 @@ class _NightBody extends ConsumerWidget {
           onSecondary: notifier.skipStep,
         );
 
+      case 'juge_begue':
+        // He only shows the MJ his secret sign; the second vote it calls for plays in the day.
+        return SimpleAct(
+          primaryLabel: context.l10n.commonContinue,
+          onPrimary: notifier.skipStep,
+        );
+
       case 'villageois_villageois':
         // His card is public: the MJ only notes who shows it.
         return SimpleAct(
@@ -1147,6 +1154,7 @@ IconData _roleIcon(String roleId) => switch (roleId) {
   'deux_soeurs' => AppIcons.sisters,
   'trois_freres' => AppIcons.brothers,
   'villageois_villageois' => AppIcons.trustedVillager,
+  'juge_begue' => AppIcons.judge,
   'montreur_d_ours' => AppIcons.bearTamer,
   'enfant_sauvage' => AppIcons.wildChild,
   'chien_loup' => AppIcons.chienLoup,
@@ -1185,7 +1193,11 @@ class _DayBody extends ConsumerWidget {
       DayStage.recap => _DayRecapBody(session: session, onAdvance: n.advanceFromRecap),
       DayStage.growl => _BearGrowlBody(session: session, notifier: n),
       DayStage.captain => _CaptainElectionBody(session: session, notifier: n),
-      DayStage.vote => _VoteBody(session: session, notifier: n),
+      DayStage.vote || DayStage.secondVote => _VoteBody(
+        key: ValueKey(session.day.stage),
+        session: session,
+        notifier: n,
+      ),
       DayStage.done => _NextNightPrompt(
         nextNight: session.engine.nightIndex + 1,
         onStart: n.startNextNight,
@@ -1638,7 +1650,7 @@ class _CaptainElectionBody extends StatelessWidget {
 enum _VoteMode { vote, askScapegoat, tieBreak }
 
 class _VoteBody extends ConsumerStatefulWidget {
-  const _VoteBody({required this.session, required this.notifier});
+  const _VoteBody({super.key, required this.session, required this.notifier});
 
   final GameSessionState session;
   final GameSession notifier;
@@ -1695,6 +1707,7 @@ class _VoteBodyState extends ConsumerState<_VoteBody> {
     final captainId = engine.captainPlayerId;
     final captainName = captainId == null ? null : engine.playerById(captainId).name;
     final voters = engine.votersToday;
+    final second = _session.day.stage == DayStage.secondVote;
     final pardoned = [
       for (final p in engine.alivePlayers)
         if (p.hasStatus(PlayerStatus.pardoned)) p.name,
@@ -1757,17 +1770,41 @@ class _VoteBodyState extends ConsumerState<_VoteBody> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _DayEyebrow(label: context.l10n.scriptVoteEyebrow(engine.nightIndex)),
+        _DayEyebrow(
+          label: second
+              ? context.l10n.scriptSecondVoteEyebrow(engine.nightIndex)
+              : context.l10n.scriptVoteEyebrow(engine.nightIndex),
+        ),
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 12),
           child: _RoleBanner(
             icon: AppIcons.vote,
-            title: context.l10n.scriptVoteTitle,
-            body: captainName == null
+            title: second ? context.l10n.scriptSecondVoteTitle : context.l10n.scriptVoteTitle,
+            body: second
+                ? context.l10n.scriptSecondVoteBody
+                : captainName == null
                 ? context.l10n.scriptVoteBody
                 : context.l10n.scriptVoteBodyCaptain(captainName),
           ),
         ),
+        if (_session.judgeCanSign)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 8),
+            child: AppButton(
+              label: context.l10n.scriptJudgeSign,
+              variant: AppButtonVariant.secondary,
+              leadingIcon: AppIcons.judge,
+              onPressed: _notifier.judgeSign,
+            ),
+          )
+        else if (!second && engine.secondVoteToday)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 8),
+            child: Text(
+              context.l10n.scriptJudgeSignDone,
+              style: context.typography.meta.copyWith(color: colors.warnText, height: 1.5),
+            ),
+          ),
         if (voters != null)
           Padding(
             padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 8),

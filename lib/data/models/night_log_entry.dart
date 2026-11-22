@@ -42,7 +42,8 @@ enum JournalKind {
   defenderSaves('defender'),
   idiotPardoned('vote'),
   scapegoatBlamed('scale'),
-  scapegoatVoters('vote');
+  scapegoatVoters('vote'),
+  judgeSign('vote');
 
   const JournalKind(this.iconName);
 

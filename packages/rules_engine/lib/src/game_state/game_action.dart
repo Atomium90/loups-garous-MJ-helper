@@ -80,6 +80,12 @@ class DefenderProtect implements GameAction {
   const DefenderProtect({required this.targetPlayerId});
 }
 
+/// The Wandering Judge gives his secret sign during the village vote: a second vote follows right
+/// away. Once per game.
+class JudgeSign implements GameAction {
+  const JudgeSign();
+}
+
 class CupidonPair implements GameAction {
   final String playerAId;
   final String playerBId;

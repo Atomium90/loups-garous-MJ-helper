@@ -449,6 +449,76 @@ void main() {
     });
   });
 
+  group('the Wandering Judge', () {
+    const comp = {'juge_begue': 1, 'loup_garou': 2, 'villageois': 3};
+
+    Future<({int gameId, List<int> ids, GameSession n})> toVote() async {
+      final game = await _startedGame(repo, composition: comp);
+      final n = await notifierFor(game.gameId);
+      await n.identifyRole('juge_begue', [game.seatRowIds[0]]);
+      await n.identifyRole('loup_garou', [game.seatRowIds[1], game.seatRowIds[2]]);
+      await n.applyAction(WolvesTarget(targetPlayerId: '${game.seatRowIds[5]}'));
+      await n.applyAction(const FinalizeNight());
+      await n.revealRole(game.seatRowIds[5], 'villageois');
+      await n.advanceFromRecap();
+      await n.electCaptain(null);
+      return (gameId: game.gameId, ids: game.seatRowIds, n: n);
+    }
+
+    test('can give his sign during the first vote only, once', () async {
+      final g = await toVote();
+      expect(stateOf(g.gameId).day.stage, DayStage.vote);
+      expect(stateOf(g.gameId).judgeCanSign, isTrue);
+
+      await g.n.judgeSign();
+
+      expect(stateOf(g.gameId).judgeCanSign, isFalse);
+      expect(stateOf(g.gameId).engine.secondVoteToday, isTrue);
+    });
+
+    test('the first vote leads to a second, then to the end of the day', () async {
+      final g = await toVote();
+      await g.n.judgeSign();
+
+      await g.n.eliminateByVote('${g.ids[3]}');
+      expect(stateOf(g.gameId).day.stage, DayStage.secondVote);
+      expect(stateOf(g.gameId).judgeCanSign, isFalse);
+
+      await g.n.eliminateByVote('${g.ids[4]}');
+      expect(stateOf(g.gameId).day.stage, DayStage.done);
+      expect(stateOf(g.gameId).engine.alivePlayers.where((p) => !p.alive), isEmpty);
+    });
+
+    test('a first vote tied on nobody still leads to the second', () async {
+      final g = await toVote();
+      await g.n.judgeSign();
+
+      await g.n.eliminateByVote(null);
+
+      expect(stateOf(g.gameId).day.stage, DayStage.secondVote);
+    });
+
+    test('the sign is journalled, and the second vote survives a force-quit', () async {
+      final g = await toVote();
+      await g.n.judgeSign();
+      await g.n.eliminateByVote('${g.ids[3]}');
+
+      final log = frenchJournal(await repo.watchNightLog(g.gameId).first);
+      expect(log, contains('Le Juge Bègue demande un deuxième vote'));
+
+      final resumed = ProviderContainer(overrides: [gameRepositoryProvider.overrideWithValue(repo)]);
+      addTearDown(resumed.dispose);
+      final s = await resumed.read(gameSessionProvider(g.gameId).future);
+      expect(s.day.stage, DayStage.secondVote);
+    });
+
+    test('without a Judge in the game there is nothing to give', () async {
+      final game = await _startedGame(repo, composition: composition);
+      final s = await container.read(gameSessionProvider(game.gameId).future);
+      expect(s.judgeCanSign, isFalse);
+    });
+  });
+
   group('the Scapegoat', () {
     const comp = {'bouc_emissaire': 1, 'loup_garou': 2, 'villageois': 3};
 

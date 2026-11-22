@@ -133,6 +133,7 @@ String _describeEvent(GameEvent event) => switch (event) {
   IdiotPardoned(:final playerId) => '$playerId est gracié par le village',
   ScapegoatBlamed(:final playerId) => '$playerId porte la faute de l\'égalité',
   VotersChosen(:final allowedPlayerIds) => 'votent demain : ${allowedPlayerIds.join(', ')}',
+  JudgeSignGiven() => 'le Juge Bègue demande un deuxième vote',
   DefenderSaved(:final playerId) => '$playerId est protégé du Loup',
   KnightContaminated(:final wolfPlayerId) => '$wolfPlayerId attrape la maladie du Chevalier',
   PlayersCharmed(:final playerIds) => '${playerIds.join(' et ')} sont charmés',

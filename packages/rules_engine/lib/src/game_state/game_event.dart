@@ -138,6 +138,11 @@ class VotersChosen implements GameEvent {
   const VotersChosen({required this.allowedPlayerIds});
 }
 
+/// The Wandering Judge called for a second vote.
+class JudgeSignGiven implements GameEvent {
+  const JudgeSignGiven();
+}
+
 class LoversPaired implements GameEvent {
   final String playerAId;
   final String playerBId;

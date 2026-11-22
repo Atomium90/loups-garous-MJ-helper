@@ -81,7 +81,7 @@ SessionSummary _summarize(Game game, String blob) {
             DayStage.recap => SummaryStep.recap,
             DayStage.growl => SummaryStep.bearGrowl,
             DayStage.captain => SummaryStep.captainElection,
-            DayStage.vote => SummaryStep.villageVote,
+            DayStage.vote || DayStage.secondVote => SummaryStep.villageVote,
             DayStage.done => SummaryStep.dayDone,
           };
     return SessionSummary(phase: JournalPhase.day, nightIndex: engine.nightIndex, step: step);

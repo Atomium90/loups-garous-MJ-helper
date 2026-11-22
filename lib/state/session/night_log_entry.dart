@@ -69,6 +69,9 @@ List<NightLogEntry> nightLogEntriesFor(GameAction action, GameState before) {
     case WhiteWolfEat(:final targetPlayerId):
       return [entry(JournalKind.whiteWolfEats, {'player': name(targetPlayerId)})];
 
+    case JudgeSign():
+      return [entry(JournalKind.judgeSign)];
+
     case DefenderProtect(:final targetPlayerId):
       return [entry(JournalKind.defenderProtects, {'player': name(targetPlayerId)})];
 

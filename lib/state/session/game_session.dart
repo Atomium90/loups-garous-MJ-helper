@@ -77,6 +77,18 @@ class GameSessionState {
     return kind == null ? null : winnerFor(kind);
   }
 
+  /// The living Wandering Judge the app knows, while the villagers keep their powers.
+  Player? get knownJudge => engine.villagersPowerless
+      ? null
+      : engine.players.where((p) => p.alive && p.roleId == 'juge_begue').firstOrNull;
+
+  /// Whether the Wandering Judge may give his sign now: the first vote of a day, his sign unused.
+  bool get judgeCanSign =>
+      engine.phase == GamePhase.day &&
+      day.stage == DayStage.vote &&
+      knownJudge != null &&
+      !engine.spentPowers.containsKey('juge_begue');
+
   /// The living Bear Tamer, once the MJ has noted who he is.
   Player? get bearTamer =>
       engine.players.where((p) => p.alive && p.roleId == 'montreur_d_ours').firstOrNull;
@@ -522,6 +534,11 @@ class GameSession extends _$GameSession {
   Future<void> piperCharm(List<String> engineIds) =>
       applyAction(PiperCharm(playerIds: engineIds));
 
+  // --- day: Juge Bègue ---
+
+  /// The Wandering Judge gives his sign: a second vote follows this one.
+  Future<void> judgeSign() => applyAction(const JudgeSign());
+
   // --- night: Salvateur ---
 
   Future<void> defenderProtect(String engineId) =>
@@ -622,7 +639,7 @@ class GameSession extends _$GameSession {
         ),
       ],
     );
-    final next = nextDayStage(DayStage.vote, s.engine);
+    final next = nextDayStage(_voteStageOf(s), s.engine);
     await _updateDay((d) => d.copyWith(stage: next));
   }
 
@@ -756,10 +773,10 @@ class GameSession extends _$GameSession {
       day = day.copyWith(stage: nextDayStage(DayStage.captain, result.state));
     }
     if (action is DayVoteTie) {
-      day = day.copyWith(stage: nextDayStage(DayStage.vote, result.state));
+      day = day.copyWith(stage: nextDayStage(_voteStageOf(s), result.state));
     }
     if (action is DayVoteElimination) {
-      day = day.copyWith(stage: nextDayStage(DayStage.vote, result.state));
+      day = day.copyWith(stage: nextDayStage(_voteStageOf(s), result.state));
       for (final e in result.events) {
         if (e is IdiotPardoned) {
           day = day.copyWith(pardonedName: result.state.playerById(e.playerId).name);
@@ -769,6 +786,11 @@ class GameSession extends _$GameSession {
 
     return day;
   }
+
+  /// The vote the day is at - the second one when the Wandering Judge called for it, the first
+  /// otherwise - whatever stage the day was left on.
+  DayStage _voteStageOf(GameSessionState s) =>
+      s.day.stage == DayStage.secondVote ? DayStage.secondVote : DayStage.vote;
 
   SessionCursor _cursorAfter(GameAction action, SessionCursor c) => switch (action) {
     // These complete a night role's turn -> advance to the next step.

@@ -177,6 +177,9 @@ class GameState {
     };
   }
 
+  /// Whether the Wandering Judge called for a second vote today.
+  bool get secondVoteToday => phase == GamePhase.day && spentPowers['juge_begue'] == nightIndex;
+
   List<Player> get alivePlayers => players.where((p) => p.alive).toList(growable: false);
 
   /// Marks [playerId] as dead and stamps how and when (the current

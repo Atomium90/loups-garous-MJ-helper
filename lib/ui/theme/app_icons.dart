@@ -114,6 +114,7 @@ abstract final class AppIcons {
   static const sisters = TablerIcons.heartHandshake;
   static const brothers = TablerIcons.usersGroup;
   static const trustedVillager = TablerIcons.idBadge2;
+  static const judge = TablerIcons.gavel;
   static const bearTamer = TablerIcons.pawFilled;
   static const wildChild = TablerIcons.leaf;
   static const chienLoup = TablerIcons.dog;

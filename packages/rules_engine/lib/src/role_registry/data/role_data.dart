@@ -59,6 +59,15 @@ const allRoles = <Role>[
     orderConstraints: [OrderConstraint.after('voyante')],
     actionType: ActionType.selectOne,
   ),
+  // He only shows the MJ his secret sign on the first night; the once-a-game second vote it calls
+  // for plays during the day.
+  Role(
+    id: 'juge_begue',
+    team: Team.village,
+    suggestionTier: 3,
+    hasNightCall: true,
+    wakeCondition: WakeCondition.firstNightOnly,
+  ),
   // A group of two: they wake together to know each other, on the first night and then every
   // other night if the MJ wants.
   Role(

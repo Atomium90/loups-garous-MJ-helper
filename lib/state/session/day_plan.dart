@@ -19,6 +19,8 @@ List<DayStage> dayStagesFor(GameState engine) => engine.nightIndex == 0
   // The first morning, the village elects its Capitaine if it has none yet.
   if (engine.nightIndex == 1 && engine.captainPlayerId == null) DayStage.captain,
   DayStage.vote,
+  // The Wandering Judge's sign, given during the vote, brings a second one straight after it.
+  if (engine.secondVoteToday) DayStage.secondVote,
   DayStage.done,
 ];
 

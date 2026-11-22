@@ -34,6 +34,7 @@ class GameStateMachine {
 
   static const _foxRoleId = 'renard';
   static const _infectRoleId = 'infect_pere_des_loups';
+  static const _judgeRoleId = 'juge_begue';
 
   ActionResult apply({
     required GameState state,
@@ -98,6 +99,8 @@ class GameStateMachine {
         return _applyPiperCharm(state, action);
       case DefenderProtect():
         return _applyDefenderProtect(state, action);
+      case JudgeSign():
+        return _applyJudgeSign(state);
       case CaptainNoSuccessor():
         return _applyCaptainNoSuccessor(state, roleRegistry);
       case DayVoteTie():
@@ -555,6 +558,25 @@ class GameStateMachine {
               ),
       ),
       events: [PlayerDied(playerId: wound.wolfId, cause: cause), ...drained.events],
+    );
+  }
+
+  ActionResult _applyJudgeSign(GameState state) {
+    if (state.phase != GamePhase.day) {
+      throw InvalidActionError('The Wandering Judge gives his sign during a village vote');
+    }
+    if (state.villagersPowerless) {
+      throw InvalidActionError('The villagers have lost their powers');
+    }
+    if (state.spentPowers.containsKey(_judgeRoleId)) {
+      throw InvalidActionError('The Wandering Judge already used his sign');
+    }
+    if (!state.players.any((p) => p.alive && p.roleId == _judgeRoleId)) {
+      throw InvalidActionError('There is no living Wandering Judge');
+    }
+    return ActionResult(
+      state: state.copyWith(spentPowers: {...state.spentPowers, _judgeRoleId: state.nightIndex}),
+      events: const [JudgeSignGiven()],
     );
   }
 

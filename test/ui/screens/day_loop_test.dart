@@ -219,6 +219,67 @@ void main() {
     });
   });
 
+  group('the Wandering Judge', () {
+    const comp = {'juge_begue': 1, 'loup_garou': 2, 'villageois': 3};
+
+    /// Night 1: the Judge is Ana, the wolves Bo and Cy eat Fi; on to the vote of day 1.
+    Future<void> toVote(WidgetTester tester) async {
+      await identify(tester, ['Ana']);
+      await tap(tester, 'Continuer');
+      await identify(tester, ['Bo', 'Cy']);
+      await tester.tap(find.text('Fi'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Les Loups désignent Fi');
+      await tap(tester, 'Résoudre la nuit');
+      await tap(tester, 'Simple Villageois');
+      await tap(tester, 'Fi était le Simple Villageois');
+      await tap(tester, 'Élire le Capitaine');
+      await tap(tester, 'Pas de Capitaine cette partie');
+    }
+
+    testWidgets('his sign brings a second vote right after the first, and only once', (
+      tester,
+    ) async {
+      final id = await _startedGame(repo, comp);
+      await pump(tester, id);
+      await toVote(tester);
+
+      await tap(tester, 'Le Juge Bègue fait son signe');
+      expect(find.textContaining('un deuxième vote suivra'), findsOneWidget);
+      expect(find.text('Le Juge Bègue fait son signe'), findsNothing);
+
+      await tester.tap(find.text('Di'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Le village élimine Di');
+      await tap(tester, 'Je ne note pas');
+
+      expect(find.text('Deuxième vote'), findsOneWidget);
+      expect(find.text('Le Juge Bègue fait son signe'), findsNothing);
+      await tester.tap(find.text('Ed'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Le village élimine Ed');
+      await tap(tester, 'Je ne note pas');
+
+      expect(find.text('Commencer la nuit 2'), findsOneWidget);
+      await tap(tester, 'Journal');
+      expect(find.text('Le Juge Bègue demande un deuxième vote'), findsOneWidget);
+    });
+
+    testWidgets('without his sign the day ends after one vote', (tester) async {
+      final id = await _startedGame(repo, comp);
+      await pump(tester, id);
+      await toVote(tester);
+
+      expect(find.text('Le Juge Bègue fait son signe'), findsOneWidget);
+      await tester.tap(find.text('Di'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Le village élimine Di');
+      await tap(tester, 'Je ne note pas');
+
+      expect(find.text('Commencer la nuit 2'), findsOneWidget);
+    });
+  });
+
   group('the Village Idiot', () {
     const comp = {'idiot_du_village': 1, 'loup_garou': 2, 'villageois': 3};
 
