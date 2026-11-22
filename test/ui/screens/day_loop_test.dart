@@ -5,6 +5,7 @@ import 'package:loup_garou_mj/data/database/app_database.dart';
 import 'package:loup_garou_mj/data/repositories/drift_game_repository.dart';
 import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
 import 'package:loup_garou_mj/ui/theme/app_icons.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../support/pump_app.dart';
 
@@ -21,6 +22,8 @@ void main() {
   late DriftGameRepository repo;
 
   setUp(() {
+    // Settings start from the defaults in every test: a rule set by an earlier one must not leak.
+    SharedPreferences.setMockInitialValues({});
     db = AppDatabase.forTesting(NativeDatabase.memory());
     repo = DriftGameRepository(db);
     addTearDown(db.close);
@@ -146,6 +149,62 @@ void main() {
       await tap(tester, 'Journal');
       expect(find.text('Égalité au vote : le Bouc Émissaire Ana est éliminé'), findsOneWidget);
       expect(find.text('Le Bouc Émissaire désigne qui peut voter : Bo'), findsOneWidget);
+    });
+
+    Future<int> gameWithoutScapegoatAtTheVote(WidgetTester tester) async {
+      final id = await _startedGame(repo, const {'loup_garou': 2, 'villageois': 4});
+      await pump(tester, id);
+      await identify(tester, ['Bo', 'Cy']);
+      await tester.tap(find.text('Fi'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Les Loups désignent Fi');
+      await tap(tester, 'Résoudre la nuit');
+      await tap(tester, 'Je ne note pas');
+      await tap(tester, 'Élire le Capitaine');
+      return id;
+    }
+
+    testWidgets('with the rule "the Capitaine decides", the tie asks who he eliminates', (tester) async {
+      SharedPreferences.setMockInitialValues({'vote_tie_rule': 'captainDecides'});
+      await gameWithoutScapegoatAtTheVote(tester);
+      await tester.tap(find.text('Ed'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Ed est Capitaine');
+
+      await tap(tester, "Égalité, personne n'est éliminé");
+      expect(find.text('Le Capitaine départage : qui est éliminé ?'), findsOneWidget);
+      await tester.tap(find.text('Di'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Le village élimine Di');
+      await tap(tester, 'Je ne note pas'); // Di's card is turned over, nobody notes it
+
+      expect(find.text('Commencer la nuit 2'), findsOneWidget);
+      await tap(tester, 'Village');
+      expect(find.text('Jour 1 · vote du village'), findsOneWidget);
+    });
+
+    testWidgets('with the rule "the Capitaine decides" but nobody is Capitaine, nobody is eliminated', (
+      tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({'vote_tie_rule': 'captainDecides'});
+      await gameWithoutScapegoatAtTheVote(tester);
+      await tap(tester, 'Pas de Capitaine cette partie');
+
+      await tap(tester, "Égalité, personne n'est éliminé");
+
+      expect(find.text('Commencer la nuit 2'), findsOneWidget);
+    });
+
+    testWidgets('with the rule "second vote", the tie asks for a second vote', (tester) async {
+      SharedPreferences.setMockInitialValues({'vote_tie_rule': 'revote'});
+      await gameWithoutScapegoatAtTheVote(tester);
+      await tap(tester, 'Pas de Capitaine cette partie');
+
+      await tap(tester, "Égalité, personne n'est éliminé");
+      expect(find.text('Second vote entre les ex æquo : qui est éliminé ?'), findsOneWidget);
+      await tap(tester, "Finalement personne n'est éliminé");
+
+      expect(find.text('Commencer la nuit 2'), findsOneWidget);
     });
 
     testWidgets('"no Scapegoat alive" goes back to the usual tie', (tester) async {
