@@ -92,6 +92,74 @@ void main() {
     );
   });
 
+  group('the Village Idiot', () {
+    const comp = {'idiot_du_village': 1, 'loup_garou': 2, 'villageois': 3};
+
+    Future<void> toVote(WidgetTester tester) async {
+      await identify(tester, ['Bo', 'Cy']); // the wolves
+      await tester.tap(find.text('Fi'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Les Loups désignent Fi');
+      await tap(tester, 'Résoudre la nuit');
+      await tap(tester, 'Simple Villageois');
+      await tap(tester, 'Fi était le Simple Villageois');
+      await tap(tester, 'Élire le Capitaine');
+      await tap(tester, 'Pas de Capitaine cette partie');
+    }
+
+    testWidgets('a vote against the Idiot pardons him: nobody is eliminated and he no longer votes', (
+      tester,
+    ) async {
+      final id = await _startedGame(repo, comp);
+      await pump(tester, id);
+      await toVote(tester);
+
+      await tester.tap(find.text('Ana'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Le village élimine Ana');
+      expect(find.text("Est-ce l'Idiot du Village ?"), findsOneWidget);
+      await tap(tester, "Oui, c'est l'Idiot");
+
+      expect(
+        find.textContaining("Ana est l'Idiot du Village : le village le gracie"),
+        findsOneWidget,
+      );
+      await tap(tester, 'Village');
+      expect(find.text('gracié · ne vote plus'), findsOneWidget);
+    });
+
+    testWidgets('a "no" eliminates the player as usual', (tester) async {
+      final id = await _startedGame(repo, comp);
+      await pump(tester, id);
+      await toVote(tester);
+
+      await tester.tap(find.text('Ana'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Le village élimine Ana');
+      await tap(tester, 'Non');
+
+      expect(find.textContaining('le village le gracie'), findsNothing);
+    });
+
+    testWidgets('is not asked about when there is no Idiot in the game', (tester) async {
+      final id = await _startedGame(repo, const {'loup_garou': 2, 'villageois': 4});
+      await pump(tester, id);
+      await identify(tester, ['Bo', 'Cy']);
+      await tester.tap(find.text('Fi'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Les Loups désignent Fi');
+      await tap(tester, 'Résoudre la nuit');
+      await tap(tester, 'Je ne note pas');
+      await tap(tester, 'Élire le Capitaine');
+      await tap(tester, 'Pas de Capitaine cette partie');
+      await tester.tap(find.text('Ana'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Le village élimine Ana');
+
+      expect(find.text("Est-ce l'Idiot du Village ?"), findsNothing);
+    });
+  });
+
   group('the Angel', () {
     const comp = {'ange': 1, 'loup_garou': 2, 'villageois': 3};
 

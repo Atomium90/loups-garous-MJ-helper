@@ -117,6 +117,13 @@ class DefenderSaved implements GameEvent {
   const DefenderSaved({required this.playerId});
 }
 
+/// The village voted against the Village Idiot: he shows his card and is pardoned.
+class IdiotPardoned implements GameEvent {
+  final String playerId;
+
+  const IdiotPardoned({required this.playerId});
+}
+
 class LoversPaired implements GameEvent {
   final String playerAId;
   final String playerBId;

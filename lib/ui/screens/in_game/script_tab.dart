@@ -1115,6 +1115,7 @@ IconData _roleIcon(String roleId) => switch (roleId) {
   'voleur' => AppIcons.thief,
   'chasseur' => AppIcons.hunter,
   'ancien' => AppIcons.elder,
+  'idiot_du_village' => AppIcons.idiot,
   'salvateur' => AppIcons.defender,
   'ange' => AppIcons.angel,
   'chevalier' => AppIcons.knight,
@@ -1164,6 +1165,9 @@ class _DayBody extends ConsumerWidget {
       DayStage.done => _NextNightPrompt(
         nextNight: session.engine.nightIndex + 1,
         onStart: n.startNextNight,
+        note: session.day.pardonedName == null
+            ? null
+            : context.l10n.scriptIdiotPardoned(session.day.pardonedName!),
       ),
     };
     final proposed = session.proposedWinner;
@@ -1643,7 +1647,16 @@ class _VoteBody extends StatelessWidget {
             avatarSize: AppSizes.avatarVoteGrid,
             crossAxisCount: AppSizes.gridColumnsSmallPool,
             confirmLabel: context.l10n.scriptVoteEliminates,
-            onConfirm: (id) => notifier.eliminateByVote(id),
+            onConfirm: (id) async {
+              if (session.mayBeIdiot(id)) {
+                final name = session.engine.playerById(id).name;
+                final isIdiot = await showIdiotQuestion(context, name: name);
+                if (isIdiot == true) {
+                  await notifier.identifyRole('idiot_du_village', [int.parse(id)]);
+                }
+              }
+              await notifier.eliminateByVote(id);
+            },
             badgeFor: (c) => c.id == captainId
                 ? Container(
                     padding: const EdgeInsets.all(2),
@@ -1661,10 +1674,13 @@ class _VoteBody extends StatelessWidget {
 }
 
 class _NextNightPrompt extends StatelessWidget {
-  const _NextNightPrompt({required this.nextNight, required this.onStart});
+  const _NextNightPrompt({required this.nextNight, required this.onStart, this.note});
 
   final int nextNight;
   final VoidCallback onStart;
+
+  /// What happened to close the day when it was not an elimination (the Idiot's pardon).
+  final String? note;
 
   @override
   Widget build(BuildContext context) {
@@ -1672,6 +1688,14 @@ class _NextNightPrompt extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.end,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (note != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 10),
+            child: Text(
+              note!,
+              style: context.typography.body.copyWith(color: context.colors.warnText),
+            ),
+          ),
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 10),
           child: Text(
@@ -2012,6 +2036,8 @@ class _SuccessionPanel extends StatelessWidget {
             confirmIcon: AppIcons.captain,
             confirmLabel: context.l10n.scriptCaptainBecomes,
             onConfirm: (id) => notifier.nameCaptainSuccessor(id),
+            secondaryLabel: context.l10n.scriptSuccessionNone,
+            onSecondary: notifier.captainHasNoSuccessor,
           ),
         ),
       ],

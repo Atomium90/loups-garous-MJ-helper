@@ -38,7 +38,8 @@ enum JournalKind {
   diseaseDeath('skull'),
   piperCharms('piper'),
   defenderProtects('defender'),
-  defenderSaves('defender');
+  defenderSaves('defender'),
+  idiotPardoned('vote');
 
   const JournalKind(this.iconName);
 

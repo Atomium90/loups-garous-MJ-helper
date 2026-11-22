@@ -97,6 +97,15 @@ class GameSessionState {
     return engine.players.where((p) => p.roleId == 'ancien').length < elders;
   }
 
+  /// Whether the player [playerId], about to be voted against, may be the Village Idiot: same
+  /// logic as the Elder's, since he has no call to be known by.
+  bool mayBeIdiot(String playerId) {
+    final idiots = dealtComposition['idiot_du_village'] ?? 0;
+    if (idiots == 0) return false;
+    if (engine.playerById(playerId).roleId != kPlaceholderRoleId) return false;
+    return engine.players.where((p) => p.roleId == 'idiot_du_village').length < idiots;
+  }
+
   /// A drawn reserve the MJ has yet to note: asked for at the Voleur's step.
   bool get reserveToEnter => reserveDrawn && reserveRoleIds.isEmpty;
 
@@ -627,6 +636,9 @@ class GameSession extends _$GameSession {
   Future<void> hunterShoot(String? engineId) =>
       applyAction(HunterShoot(targetPlayerId: engineId));
 
+  /// The Village Idiot's honor is lost with him: no successor.
+  Future<void> captainHasNoSuccessor() => applyAction(const CaptainNoSuccessor());
+
   Future<void> nameCaptainSuccessor(String engineId) =>
       applyAction(CaptainNameSuccessor(successorPlayerId: engineId));
 
@@ -718,6 +730,11 @@ class GameSession extends _$GameSession {
     }
     if (action is DayVoteElimination) {
       day = day.copyWith(stage: nextDayStage(DayStage.vote, result.state));
+      for (final e in result.events) {
+        if (e is IdiotPardoned) {
+          day = day.copyWith(pardonedName: result.state.playerById(e.playerId).name);
+        }
+      }
     }
 
     return day;

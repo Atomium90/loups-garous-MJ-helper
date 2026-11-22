@@ -449,6 +449,63 @@ void main() {
     });
   });
 
+  group('the Village Idiot', () {
+    const comp = {'idiot_du_village': 1, 'loup_garou': 2, 'villageois': 3};
+
+    Future<({int gameId, List<int> ids, GameSession n})> toDay() async {
+      final game = await _startedGame(repo, composition: comp);
+      final n = await notifierFor(game.gameId);
+      await n.identifyRole('loup_garou', [game.seatRowIds[1], game.seatRowIds[2]]);
+      await n.applyAction(WolvesTarget(targetPlayerId: '${game.seatRowIds[5]}'));
+      await n.applyAction(const FinalizeNight());
+      await n.revealRole(game.seatRowIds[5], 'villageois');
+      return (gameId: game.gameId, ids: game.seatRowIds, n: n);
+    }
+
+    test('voted against, he is pardoned, the day ends without a death, and it is journalled', () async {
+      final g = await toDay();
+      await g.n.identifyRole('idiot_du_village', [g.ids[0]]);
+
+      await g.n.eliminateByVote('${g.ids[0]}');
+
+      final s = stateOf(g.gameId);
+      expect(s.engine.playerById('${g.ids[0]}').alive, isTrue);
+      expect(s.engine.playerById('${g.ids[0]}').hasStatus(PlayerStatus.pardoned), isTrue);
+      expect(s.day.stage, DayStage.done);
+      expect(s.day.pardonedName, 'Ana');
+      final log = frenchJournal(await repo.watchNightLog(g.gameId).first);
+      expect(log, contains("Ana, l'Idiot du Village, est gracié par le village"));
+    });
+
+    test('the pardon note survives a force-quit', () async {
+      final g = await toDay();
+      await g.n.identifyRole('idiot_du_village', [g.ids[0]]);
+      await g.n.eliminateByVote('${g.ids[0]}');
+
+      final resumed = ProviderContainer(overrides: [gameRepositoryProvider.overrideWithValue(repo)]);
+      addTearDown(resumed.dispose);
+      final s = await resumed.read(gameSessionProvider(g.gameId).future);
+
+      expect(s.day.pardonedName, 'Ana');
+    });
+
+    test('is asked about while his card is unknown, and not once noted', () async {
+      final g = await toDay();
+      final before = stateOf(g.gameId);
+      expect(before.mayBeIdiot('${g.ids[0]}'), isTrue);
+
+      await g.n.identifyRole('idiot_du_village', [g.ids[0]]);
+
+      expect(stateOf(g.gameId).mayBeIdiot('${g.ids[3]}'), isFalse); // the only Idiot is known
+    });
+
+    test('is never asked about when no Idiot is in the game', () async {
+      final game = await _startedGame(repo, composition: composition);
+      final s = await container.read(gameSessionProvider(game.gameId).future);
+      expect(s.mayBeIdiot('${game.seatRowIds[0]}'), isFalse);
+    });
+  });
+
   group('the Defender', () {
     const comp = {'salvateur': 1, 'loup_garou': 2, 'villageois': 3};
 

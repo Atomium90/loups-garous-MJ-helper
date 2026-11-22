@@ -99,6 +99,7 @@ class _VillageBody extends StatelessWidget {
               roleId: _confirmedRole(p.id),
               isCaptain: p.id == captainId,
               dead: false,
+              pardoned: p.hasStatus(PlayerStatus.pardoned),
             ),
         ],
         if (dead.isNotEmpty) ...[
@@ -182,6 +183,7 @@ class _PlayerRow extends StatelessWidget {
     required this.isCaptain,
     required this.dead,
     this.deathLine,
+    this.pardoned = false,
   });
 
   final String name;
@@ -189,6 +191,9 @@ class _PlayerRow extends StatelessWidget {
   final bool isCaptain;
   final bool dead;
   final String? deathLine;
+
+  /// The Village Idiot the village pardoned: he no longer votes.
+  final bool pardoned;
 
   @override
   Widget build(BuildContext context) {
@@ -242,6 +247,11 @@ class _PlayerRow extends StatelessWidget {
                     Text(
                       deathLine!,
                       style: typography.micro.copyWith(color: colors.textTertiary),
+                    ),
+                  if (pardoned)
+                    Text(
+                      context.l10n.villagePardoned,
+                      style: typography.micro.copyWith(color: colors.warnText),
                     ),
                 ],
               ),

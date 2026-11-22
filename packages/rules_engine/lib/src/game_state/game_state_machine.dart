@@ -59,10 +59,11 @@ class GameStateMachine {
     if (state.cascade != null &&
         action is! HunterShoot &&
         action is! CaptainNameSuccessor &&
-        action is! KnightContaminate) {
+        action is! KnightContaminate &&
+        action is! CaptainNoSuccessor) {
       throw InvalidActionError(
         'A death cascade is pending a decision (${state.cascade.runtimeType}); '
-        'only HunterShoot, CaptainNameSuccessor or KnightContaminate can be applied until it resolves',
+        'only HunterShoot, CaptainNameSuccessor, CaptainNoSuccessor or KnightContaminate can be applied until it resolves',
       );
     }
     switch (action) {
@@ -96,6 +97,8 @@ class GameStateMachine {
         return _applyPiperCharm(state, action);
       case DefenderProtect():
         return _applyDefenderProtect(state, action);
+      case CaptainNoSuccessor():
+        return _applyCaptainNoSuccessor(state, roleRegistry);
       case KnightContaminate():
         return _applyKnightContaminate(state, action, roleRegistry);
       case FinalizeNight():
@@ -422,7 +425,24 @@ class GameStateMachine {
     if (state.phase != GamePhase.day) {
       throw InvalidActionError('Day vote elimination can only happen during the day');
     }
-    _requireAlive(state.playerById(action.targetPlayerId), 'day vote target');
+    final target = state.playerById(action.targetPlayerId);
+    _requireAlive(target, 'day vote target');
+
+    // The Village Idiot shows his card and is pardoned, once: nobody is eliminated.
+    if (target.roleId == 'idiot_du_village' && !target.hasStatus(PlayerStatus.pardoned)) {
+      return ActionResult(
+        state: state.copyWith(
+          players: [
+            for (final p in state.players)
+              if (p.id == target.id)
+                p.copyWith(statuses: {...p.statuses, PlayerStatus.pardoned})
+              else
+                p,
+          ],
+        ),
+        events: [IdiotPardoned(playerId: target.id)],
+      );
+    }
 
     final killed = state.killPlayer(action.targetPlayerId, cause: const DayVoteKill());
     final events = <GameEvent>[
@@ -670,6 +690,30 @@ class GameStateMachine {
       );
     }
     throw InvalidActionError('No pending Hunter shot to resolve');
+  }
+
+  ActionResult _applyCaptainNoSuccessor(GameState state, RoleRegistry roleRegistry) {
+    final cascade = state.cascade;
+    if (cascade == null || cascade.decision is! PendingCaptainSuccession) {
+      throw InvalidActionError('No pending Captain succession to resolve');
+    }
+    final dead = (cascade.decision as PendingCaptainSuccession).deadCaptainId;
+    final drained = drainCascade(
+      state: state.copyWith(captainPlayerId: null, cascade: null),
+      queue: cascade.remainingQueue,
+      roleRegistry: roleRegistry,
+    );
+    return ActionResult(
+      state: drained.state.copyWith(
+        cascade: drained.pendingDecision == null
+            ? null
+            : CascadeState(
+                decision: drained.pendingDecision!,
+                remainingQueue: drained.remainingQueue,
+              ),
+      ),
+      events: [CaptainSuccessionSkipped(deadCaptainId: dead), ...drained.events],
+    );
   }
 
   ActionResult _applyCaptainNameSuccessor(

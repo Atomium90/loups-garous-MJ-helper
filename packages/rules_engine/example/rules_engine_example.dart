@@ -130,6 +130,7 @@ String _describeEvent(GameEvent event) => switch (event) {
   VictimInfected(:final playerId) => '$playerId est infecté',
   ElderSurvived(:final playerId) => '$playerId survit à une première morsure',
   VillagersLostPowers() => 'les villageois perdent leurs pouvoirs',
+  IdiotPardoned(:final playerId) => '$playerId est gracié par le village',
   DefenderSaved(:final playerId) => '$playerId est protégé du Loup',
   KnightContaminated(:final wolfPlayerId) => '$wolfPlayerId attrape la maladie du Chevalier',
   PlayersCharmed(:final playerIds) => '${playerIds.join(' et ')} sont charmés',

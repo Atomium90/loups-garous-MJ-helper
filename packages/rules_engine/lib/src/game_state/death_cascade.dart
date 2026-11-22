@@ -90,7 +90,11 @@ CascadeResult drainCascade({
         }
 
       case ResolveCaptainStatus():
-        if (currentState.captainPlayerId == player.id) {
+        if (currentState.captainPlayerId == player.id && player.roleId == 'idiot_du_village') {
+          // The Village Idiot's honor is lost with him, not passed on.
+          currentState = currentState.copyWith(captainPlayerId: null);
+          events.add(CaptainSuccessionSkipped(deadCaptainId: player.id));
+        } else if (currentState.captainPlayerId == player.id) {
           final candidates = currentState.alivePlayers.where((p) => p.id != player.id);
           if (candidates.isEmpty) {
             currentState = currentState.copyWith(captainPlayerId: null);

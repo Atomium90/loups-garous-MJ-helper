@@ -10,6 +10,9 @@ enum PlayerStatus {
 
   /// Charmed by the Joueur de Flûte.
   charmed,
+
+  /// Voted out by the village but pardoned (the Village Idiot): he no longer votes.
+  pardoned,
 }
 
 const _unset = Object();

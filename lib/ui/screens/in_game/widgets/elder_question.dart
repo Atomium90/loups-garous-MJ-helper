@@ -9,7 +9,33 @@ import '../../../widgets/app_sheet.dart';
 
 /// Asks the MJ whether the player the wolves just picked is the Elder. True when it is, false
 /// when it is not (or null when the sheet is dismissed, which counts as "not").
-Future<bool?> showElderQuestion(BuildContext context, {required String name}) {
+Future<bool?> showElderQuestion(BuildContext context, {required String name}) =>
+    showCardQuestion(
+      context,
+      title: context.l10n.scriptElderAskTitle,
+      body: context.l10n.scriptElderAskBody(name),
+      yes: context.l10n.scriptElderYes,
+      no: context.l10n.scriptElderNo,
+    );
+
+/// Asks the MJ whether the player the village is about to eliminate is the Village Idiot.
+Future<bool?> showIdiotQuestion(BuildContext context, {required String name}) =>
+    showCardQuestion(
+      context,
+      title: context.l10n.scriptIdiotAskTitle,
+      body: context.l10n.scriptIdiotAskBody(name),
+      yes: context.l10n.scriptIdiotYes,
+      no: context.l10n.scriptElderNo,
+    );
+
+/// A yes/no question about a player's hidden card, as a bottom sheet.
+Future<bool?> showCardQuestion(
+  BuildContext context, {
+  required String title,
+  required String body,
+  required String yes,
+  required String no,
+}) {
   return showAppSheet<bool>(
     context,
     builder: (sheetContext) {
@@ -25,20 +51,20 @@ Future<bool?> showElderQuestion(BuildContext context, {required String name}) {
             spacing: 8,
             children: [
               Text(
-                sheetContext.l10n.scriptElderAskTitle,
+                title,
                 style: typography.rowLabel.copyWith(color: colors.textPrimary),
               ),
               Text(
-                sheetContext.l10n.scriptElderAskBody(name),
+                body,
                 style: typography.meta.copyWith(color: colors.textSecondary, height: 1.5),
               ),
               const SizedBox(height: 4),
               AppButton(
-                label: sheetContext.l10n.scriptElderYes,
+                label: yes,
                 onPressed: () => Navigator.of(sheetContext).pop(true),
               ),
               AppButton(
-                label: sheetContext.l10n.scriptElderNo,
+                label: no,
                 variant: AppButtonVariant.secondary,
                 onPressed: () => Navigator.of(sheetContext).pop(false),
               ),

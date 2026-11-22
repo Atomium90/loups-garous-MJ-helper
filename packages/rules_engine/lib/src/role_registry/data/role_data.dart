@@ -198,4 +198,12 @@ const allRoles = <Role>[
     team: Team.solo,
     hasNightCall: false,
   ),
+  // Voted out, he is pardoned once and no longer votes; devoured or shot he dies, and the honor of
+  // Capitaine, if he held it, is lost with him.
+  Role(
+    id: 'idiot_du_village',
+    team: Team.village,
+    suggestionTier: 3,
+    hasNightCall: false,
+  ),
 ];

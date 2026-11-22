@@ -146,6 +146,12 @@ class HunterShoot implements GameAction {
   const HunterShoot({this.targetPlayerId});
 }
 
+/// Resolves a pending PendingCaptainSuccession decision with nobody: the Village Idiot's honor is
+/// lost with him, not passed on.
+class CaptainNoSuccessor implements GameAction {
+  const CaptainNoSuccessor();
+}
+
 /// Resolves a pending PendingCaptainSuccession decision.
 class CaptainNameSuccessor implements GameAction {
   final String successorPlayerId;

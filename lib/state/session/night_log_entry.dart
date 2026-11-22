@@ -132,6 +132,8 @@ List<NightLogEntry> nightLogEntriesForEvents(
         entry(JournalKind.elderSurvives, e.playerId)
       else if (e is VillagersLostPowers)
         entry(JournalKind.villagersLosePowers, e.elderPlayerId)
+      else if (e is IdiotPardoned)
+        entry(JournalKind.idiotPardoned, e.playerId)
       else if (e is DefenderSaved)
         entry(JournalKind.defenderSaves, e.playerId)
       else if (e is PlayerDied && e.cause is DiseaseKill)

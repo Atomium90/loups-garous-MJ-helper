@@ -108,10 +108,10 @@ void main() {
     expect(find.text('Base box · 8 roles supported'), findsOneWidget);
     // The compilations and Characters already hold base roles the app runs (Characters:
     // extra Werewolves); the sticker boxes hold none yet.
-    expect(find.text('Compilation · 21 roles supported'), findsOneWidget);
+    expect(find.text('Compilation · 22 roles supported'), findsOneWidget);
     expect(find.text('Compilation · 19 roles supported'), findsOneWidget);
     expect(find.text('Expansion · 11 roles supported'), findsOneWidget);
-    expect(find.text('Stickers · 3 roles supported'), findsOneWidget); // New Moon: Elder, Piper, Defender
+    expect(find.text('Stickers · 4 roles supported'), findsOneWidget); // New Moon: Elder, Piper, Defender, Idiot
     expect(find.text('Stickers · roles coming soon'), findsOneWidget); // The Village
   });
 }
