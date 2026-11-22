@@ -7,6 +7,8 @@ import '../../../data/database/app_database.dart';
 import '../../../state/providers/game_provider.dart';
 import '../../../state/providers/game_repository_provider.dart';
 import '../../../state/providers/roster_provider.dart';
+import '../../../state/session/night_script.dart';
+import '../../../state/settings/settings_providers.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_dimensions.dart';
 import '../../theme/app_icons.dart';
@@ -15,11 +17,15 @@ import '../../widgets/setup_header.dart';
 import '../../utils/l10n.dart';
 import '../../utils/labels.dart';
 import '../../widgets/app_button.dart';
+import '../../widgets/app_sheet.dart';
 import '../../widgets/player_avatar.dart';
+import 'deal_role_sheet.dart';
 
-/// "Avant la nuit 1". The blind deal: the MJ shuffles and deals the physical cards,
-/// nobody knows who has what. The roster already exists (names, no roles); nothing to enter
-/// here. "Commencer la nuit 1" is what finally moves the game to GameStatus.inProgress.
+/// "Avant la nuit 1". The MJ shuffles and deals the physical cards. The roster already exists
+/// (names, no roles). Blind by default: the app learns the roles as each one wakes. When the
+/// settings and the composition call for it, the MJ can note each player's card here instead,
+/// fully or in part. "Commencer la nuit 1" is what finally moves the game to
+/// GameStatus.inProgress.
 class BeforeNightScreen extends ConsumerWidget {
   const BeforeNightScreen({required this.gameId, super.key});
 
@@ -73,12 +79,47 @@ class _Body extends ConsumerWidget {
     router.go('/games/$gameId/game');
   }
 
+  /// Asks which card [player] was dealt and writes it onto the roster.
+  Future<void> _pick(
+    BuildContext context,
+    WidgetRef ref,
+    PlayerRow player,
+    String name,
+    List<({String roleId, int count})> pack,
+  ) async {
+    // The player's own card counts as free, so it can be changed.
+    final options = cardsLeftIn(pack, [
+      for (final other in roster)
+        if (other.id != player.id) other.roleId,
+    ]);
+    final choice = await showAppSheet<DealRoleChoice>(
+      context,
+      builder: (_) => DealRoleSheet(playerName: name, options: options, current: player.roleId),
+    );
+    if (choice == null || !context.mounted) return;
+    await ref.read(gameRepositoryProvider).assignRoles(
+      playerRowIds: [player.id],
+      roleId: choice.roleId,
+    );
+    ref.invalidate(rosterProvider(gameId));
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final composition = game.compositionJson ?? const <String, int>{};
     final reserve = game.reserveRolesJson ?? const <String>[];
     // A Voleur with no reserve picked: the reserve is drawn, from a pack of two more cards.
     final drawnReserve = composition.containsKey('voleur') && reserve.isEmpty;
+    // The MJ may note every card at the deal, unless they asked to be spared when the composition
+    // does not need it.
+    final onlyIfNeeded = ref.watch(settingsProvider).value?.dealNotesOnlyIfNeeded ?? false;
+    final noting =
+        !onlyIfNeeded ||
+        RoleRegistry.all.anyNeedsDealNotes([
+          for (final entry in composition.entries)
+            if (entry.value > 0) entry.key,
+        ]);
+    final pack = dealPackOf(composition, reserveDrawn: drawnReserve);
     final deck = deckLine(context.l10n, {
       ...composition,
       if (drawnReserve) 'villageois': (composition['villageois'] ?? 0) + 2,
@@ -93,7 +134,10 @@ class _Body extends ConsumerWidget {
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 14, AppSpacing.screen, 0),
-          child: _DealCallout(cardCount: game.playerCount),
+          child: _DealCallout(
+            cardCount: game.playerCount,
+            hint: noting ? context.l10n.beforeNightNotesHint : context.l10n.beforeNightDealHint,
+          ),
         ),
         Expanded(
           child: SingleChildScrollView(
@@ -103,10 +147,18 @@ class _Body extends ConsumerWidget {
               children: [
                 _LabelRow(
                   left: context.l10n.beforeNightVillage,
-                  right: context.l10n.beforeNightRolesToDiscover,
+                  right: noting
+                      ? context.l10n.beforeNightNoted(
+                          roster.where((p) => p.roleId != null).length,
+                          roster.length,
+                        )
+                      : context.l10n.beforeNightRolesToDiscover,
                 ),
                 const SizedBox(height: 8),
-                _RosterGrid(roster: roster),
+                _RosterGrid(
+                  roster: roster,
+                  onPick: noting ? (player, name) => _pick(context, ref, player, name, pack) : null,
+                ),
                 const SizedBox(height: 16),
                 Text(
                   context.l10n.beforeNightDeal,
@@ -157,9 +209,10 @@ class _Body extends ConsumerWidget {
 
 
 class _DealCallout extends StatelessWidget {
-  const _DealCallout({required this.cardCount});
+  const _DealCallout({required this.cardCount, required this.hint});
 
   final int cardCount;
+  final String hint;
 
   @override
   Widget build(BuildContext context) {
@@ -189,7 +242,7 @@ class _DealCallout extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  context.l10n.beforeNightDealHint,
+                  hint,
                   style: typography.meta.copyWith(color: colors.textSecondary, height: 1.55),
                 ),
               ],
@@ -297,14 +350,68 @@ class _LabelRow extends StatelessWidget {
   }
 }
 
-class _RosterGrid extends StatelessWidget {
-  const _RosterGrid({required this.roster});
+/// One player of the village; tappable, with their card shown under the name, when the cards are
+/// noted at the deal.
+class _PlayerTile extends StatelessWidget {
+  const _PlayerTile({required this.name, required this.roleId, this.onTap});
 
-  final List<PlayerRow> roster;
+  final String name;
+  final String? roleId;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final typography = context.typography;
+    return Material(
+      color: roleId == null ? colors.bgInset : colors.accentBg,
+      borderRadius: BorderRadius.circular(AppRadii.button),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadii.button),
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Row(
+            children: [
+              PlayerAvatar(name: name, fillColor: colors.bgScreen),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      overflow: TextOverflow.ellipsis,
+                      style: typography.body.copyWith(color: colors.textPrimary),
+                    ),
+                    if (roleId != null)
+                      Text(
+                        context.l10n.roleName(roleId!),
+                        overflow: TextOverflow.ellipsis,
+                        style: typography.meta.copyWith(color: colors.accentText),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RosterGrid extends StatelessWidget {
+  const _RosterGrid({required this.roster, this.onPick});
+
+  final List<PlayerRow> roster;
+
+  /// Called with a player and the name shown for them when the MJ taps them to note their card;
+  /// null when the cards are not noted at the deal.
+  final void Function(PlayerRow player, String name)? onPick;
+
+  @override
+  Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         const gap = 6.0;
@@ -316,28 +423,15 @@ class _RosterGrid extends StatelessWidget {
             for (final (i, player) in roster.indexed)
               SizedBox(
                 width: tileWidth,
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: colors.bgInset,
-                    borderRadius: BorderRadius.circular(AppRadii.button),
-                  ),
-                  child: Row(
-                    children: [
-                      PlayerAvatar(
-                        name: player.name.isEmpty ? context.l10n.playerHint(i + 1) : player.name,
-                        fillColor: colors.bgScreen,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
+                child: _PlayerTile(
+                  name: player.name.isEmpty ? context.l10n.playerHint(i + 1) : player.name,
+                  roleId: player.roleId,
+                  onTap: onPick == null
+                      ? null
+                      : () => onPick!(
+                          player,
                           player.name.isEmpty ? context.l10n.playerHint(i + 1) : player.name,
-                          overflow: TextOverflow.ellipsis,
-                          style: context.typography.body.copyWith(color: colors.textPrimary),
                         ),
-                      ),
-                    ],
-                  ),
                 ),
               ),
           ],

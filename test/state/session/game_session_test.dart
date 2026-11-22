@@ -1480,6 +1480,77 @@ void main() {
     expect(s.dealtHoldersKnown('loup_garou'), 0); // still just the bonus card
   });
 
+  group('roles noted at the deal', () {
+    /// A started game whose cards were all noted before night 1, in seat order.
+    Future<({int gameId, List<int> ids})> dealtGame(
+      Map<String, int> comp,
+      List<String> cards,
+    ) async {
+      final id = await repo.createGame(initialPlayerCount: cards.length);
+      await repo.saveComposition(gameId: id, playerCount: cards.length, roleCounts: comp);
+      await repo.savePlayerNames(
+        gameId: id,
+        names: const ['Ana', 'Bo', 'Cy', 'Di', 'Ed', 'Fi'].sublist(0, cards.length),
+      );
+      final roster = await repo.getRoster(id);
+      for (final (i, card) in cards.indexed) {
+        await repo.assignRoles(playerRowIds: [roster[i].id], roleId: card);
+      }
+      await repo.startGame(id);
+      return (gameId: id, ids: roster.map((r) => r.id).toList());
+    }
+
+    const cards = ['loup_garou', 'loup_garou', 'voyante', 'sorciere', 'villageois', 'villageois'];
+
+    test('the engine starts with the cards noted, and no call asks who holds its role', () async {
+      final game = await dealtGame(composition, cards);
+      final s = await container.read(gameSessionProvider(game.gameId).future);
+
+      expect(s.engine.players.map((p) => p.roleId), cards);
+      expect(s.tonight.steps.map((st) => st.role.id), ['voyante', 'loup_garou', 'sorciere']);
+      expect(s.currentStepNeedsIdentify, isFalse);
+    });
+
+    test('a night plays straight through the acts, and the dead card needs no reveal', () async {
+      final game = await dealtGame(composition, cards);
+      final ids = game.ids;
+      final n = await notifierFor(game.gameId);
+
+      await n.skipStep(); // Voyante, nothing to look at
+      expect(stateOf(game.gameId).currentStepNeedsIdentify, isFalse);
+      await n.applyAction(WolvesTarget(targetPlayerId: '${ids[4]}')); // Ed
+      await n.skipStep(); // Sorcière
+      await n.applyAction(const FinalizeNight());
+
+      final s = stateOf(game.gameId);
+      expect(s.engine.playerById('${ids[4]}').alive, isFalse);
+      expect(s.unrevealedDead, isEmpty);
+      expect(s.dayInterrupt, isNull);
+    });
+
+    test('a Chasseur noted at the deal shoots as soon as he is devoured', () async {
+      final hunters = ['loup_garou', 'loup_garou', 'voyante', 'sorciere', 'chasseur', 'villageois'];
+      final game = await dealtGame({
+        'loup_garou': 2,
+        'voyante': 1,
+        'sorciere': 1,
+        'chasseur': 1,
+        'villageois': 1,
+      }, hunters);
+      final ids = game.ids;
+      final n = await notifierFor(game.gameId);
+
+      await n.skipStep();
+      await n.applyAction(WolvesTarget(targetPlayerId: '${ids[4]}'));
+      await n.skipStep();
+      await n.applyAction(const FinalizeNight());
+
+      final s = stateOf(game.gameId);
+      expect(s.engine.cascade?.decision, isA<PendingHunterShot>());
+      expect(s.dayInterrupt, DayInterrupt.chain);
+    });
+  });
+
   test('startGame does not itself seed the session (build does, lazily)', () async {
     final id = await repo.createGame(initialPlayerCount: 6);
     await repo.saveComposition(gameId: id, playerCount: 6, roleCounts: composition);

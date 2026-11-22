@@ -836,6 +836,44 @@
   "@beforeNightDealHint": {
     "description": "How the cards are dealt."
   },
+  "beforeNightNotesHint": "Distribuez, puis notez la carte de chaque joueur en le touchant. Ceux que vous laissez vides, l'app vous les demandera au fil de la partie.",
+  "@beforeNightNotesHint": {
+    "description": "How the cards are dealt when the MJ notes each player's role at the deal."
+  },
+  "beforeNightNoted": "{noted}/{total} notés",
+  "@beforeNightNoted": {
+    "description": "How many players have their role noted at the deal.",
+    "placeholders": {
+      "noted": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "dealRoleTitle": "Carte de {name}",
+  "@dealRoleTitle": {
+    "description": "Title of the sheet where the MJ picks the card a player was dealt.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealRoleLeft": "×{count}",
+  "@dealRoleLeft": {
+    "description": "How many cards of a role are left to deal, shown when there are several.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dealRoleClear": "Retirer la carte notée",
+  "@dealRoleClear": {
+    "description": "Forgets the card noted for a player at the deal."
+  },
   "beforeNightPackHint": "Ajoutez 2 Simples Villageois au paquet ({count} cartes), mélangez et distribuez. Posez les 2 cartes restantes au centre, face cachée : vous les noterez pendant la nuit 1.",
   "@beforeNightPackHint": {
     "description": "How to deal when the Thief's reserve is drawn; count is the pack size.",
