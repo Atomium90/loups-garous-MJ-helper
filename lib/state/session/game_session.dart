@@ -499,6 +499,11 @@ class GameSession extends _$GameSession {
   Future<void> piperCharm(List<String> engineIds) =>
       applyAction(PiperCharm(playerIds: engineIds));
 
+  // --- night: Salvateur ---
+
+  Future<void> defenderProtect(String engineId) =>
+      applyAction(DefenderProtect(targetPlayerId: engineId));
+
   // --- night: Deux Sœurs ---
 
   /// The Two Sisters woke and met: a journal line, then on to the next call.
@@ -729,7 +734,8 @@ class GameSession extends _$GameSession {
     InfectVictim() ||
     BigBadWolfTarget() ||
     WhiteWolfEat() ||
-    PiperCharm() => SessionCursor(
+    PiperCharm() ||
+    DefenderProtect() => SessionCursor(
       stepIndex: c.stepIndex + 1,
       subStep: NightSubStep.identify,
     ),

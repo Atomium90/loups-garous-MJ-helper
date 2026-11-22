@@ -40,6 +40,8 @@ abstract final class GameStateJson {
       'pendingBigBadWolfVictimId': ?state.pendingBigBadWolfVictimId,
       'pendingWhiteWolfVictimId': ?state.pendingWhiteWolfVictimId,
       if (state.wildChild case final w?) 'wildChild': {'child': w.childId, 'model': w.modelId},
+      'defenderProtectedId': ?state.defenderProtectedId,
+      'defenderLastProtectedId': ?state.defenderLastProtectedId,
       if (state.woundedElders.isNotEmpty) 'woundedElders': [...state.woundedElders],
       if (state.villagersPowerless) 'villagersPowerless': true,
       if (state.knightWound case final k?)
@@ -94,6 +96,8 @@ abstract final class GameStateJson {
         null => null,
         final w => WildChildState(childId: w['child'] as String, modelId: w['model'] as String),
       },
+      defenderProtectedId: json['defenderProtectedId'] as String?,
+      defenderLastProtectedId: json['defenderLastProtectedId'] as String?,
       woundedElders: {
         for (final id in (json['woundedElders'] as List<dynamic>?) ?? const []) id as String,
       },

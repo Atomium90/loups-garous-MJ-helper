@@ -120,6 +120,7 @@ abstract final class AppIcons {
   static const elder = TablerIcons.hourglass;
   static const knight = TablerIcons.sword;
   static const piperRole = TablerIcons.music;
+  static const defender = TablerIcons.shield;
 
   /// The Witch's "Elle sauve X" button.
   static const witchSave = TablerIcons.heartPlus;
@@ -177,6 +178,7 @@ abstract final class AppIcons {
     'elder' => elder,
     'sword' => knight,
     'piper' => piperRole,
+    'defender' => defender,
     'crown' => captain,
     'vote' => vote,
     'scale' => scale,

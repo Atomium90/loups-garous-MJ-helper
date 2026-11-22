@@ -36,7 +36,9 @@ enum JournalKind {
   villagersLosePowers('elder'),
   knightContaminates('sword'),
   diseaseDeath('skull'),
-  piperCharms('piper');
+  piperCharms('piper'),
+  defenderProtects('defender'),
+  defenderSaves('defender');
 
   const JournalKind(this.iconName);
 

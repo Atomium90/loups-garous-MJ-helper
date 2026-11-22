@@ -69,6 +69,9 @@ List<NightLogEntry> nightLogEntriesFor(GameAction action, GameState before) {
     case WhiteWolfEat(:final targetPlayerId):
       return [entry(JournalKind.whiteWolfEats, {'player': name(targetPlayerId)})];
 
+    case DefenderProtect(:final targetPlayerId):
+      return [entry(JournalKind.defenderProtects, {'player': name(targetPlayerId)})];
+
     case KnightContaminate(:final wolfPlayerId):
       if (wolfPlayerId == null) return const [];
       return [entry(JournalKind.knightContaminates, {'player': name(wolfPlayerId)})];
@@ -129,6 +132,8 @@ List<NightLogEntry> nightLogEntriesForEvents(
         entry(JournalKind.elderSurvives, e.playerId)
       else if (e is VillagersLostPowers)
         entry(JournalKind.villagersLosePowers, e.elderPlayerId)
+      else if (e is DefenderSaved)
+        entry(JournalKind.defenderSaves, e.playerId)
       else if (e is PlayerDied && e.cause is DiseaseKill)
         entry(JournalKind.diseaseDeath, e.playerId),
   ];

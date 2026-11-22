@@ -86,6 +86,12 @@ class GameState {
   /// Null until the Wild Child picks his role model.
   final WildChildState? wildChild;
 
+  /// The player the Defender protects tonight, set by DefenderProtect and cleared by FinalizeNight.
+  final String? defenderProtectedId;
+
+  /// Who the Defender protected last night: he may not protect them again.
+  final String? defenderLastProtectedId;
+
   /// Elders who already survived a first bite (a wolf attack or the Cursed Wolf-Father's).
   final Set<String> woundedElders;
 
@@ -117,6 +123,8 @@ class GameState {
     this.pendingBigBadWolfVictimId,
     this.pendingWhiteWolfVictimId,
     this.wildChild,
+    this.defenderProtectedId,
+    this.defenderLastProtectedId,
     this.woundedElders = const {},
     this.villagersPowerless = false,
     this.knightWound,
@@ -135,6 +143,13 @@ class GameState {
 
   Player playerById(String id) =>
       players.firstWhereOrNull((p) => p.id == id) ?? (throw PlayerNotFoundException(id));
+
+  /// The wolves' victim as the Witch is shown it: nobody when the Defender protects the player the
+  /// wolves picked (the protection does not stop an infection, which acts on [pendingWolfVictimId]).
+  String? get wolfVictimForWitch =>
+      pendingWolfVictimId != null && pendingWolfVictimId == defenderProtectedId
+      ? null
+      : pendingWolfVictimId;
 
   List<Player> get alivePlayers => players.where((p) => p.alive).toList(growable: false);
 
@@ -181,6 +196,8 @@ class GameState {
     Object? pendingBigBadWolfVictimId = _unset,
     Object? pendingWhiteWolfVictimId = _unset,
     Object? wildChild = _unset,
+    Object? defenderProtectedId = _unset,
+    Object? defenderLastProtectedId = _unset,
     Set<String>? woundedElders,
     bool? villagersPowerless,
     Object? knightWound = _unset,
@@ -208,6 +225,12 @@ class GameState {
         ? this.pendingWhiteWolfVictimId
         : pendingWhiteWolfVictimId as String?,
     wildChild: identical(wildChild, _unset) ? this.wildChild : wildChild as WildChildState?,
+    defenderProtectedId: identical(defenderProtectedId, _unset)
+        ? this.defenderProtectedId
+        : defenderProtectedId as String?,
+    defenderLastProtectedId: identical(defenderLastProtectedId, _unset)
+        ? this.defenderLastProtectedId
+        : defenderLastProtectedId as String?,
     woundedElders: woundedElders ?? this.woundedElders,
     villagersPowerless: villagersPowerless ?? this.villagersPowerless,
     knightWound: identical(knightWound, _unset) ? this.knightWound : knightWound as KnightWound?,

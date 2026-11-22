@@ -449,6 +449,34 @@ void main() {
     });
   });
 
+  group('the Defender', () {
+    const comp = {'salvateur': 1, 'loup_garou': 2, 'villageois': 3};
+
+    test('protects the wolves\' pick, and the journal says what happened', () async {
+      final game = await _startedGame(repo, composition: comp);
+      final ids = game.seatRowIds;
+      final n = await notifierFor(game.gameId);
+      await n.identifyRole('salvateur', [ids[0]]);
+      await n.defenderProtect('${ids[3]}');
+      await n.identifyRole('loup_garou', [ids[1], ids[2]]);
+      await n.applyAction(WolvesTarget(targetPlayerId: '${ids[3]}'));
+      await n.applyAction(const FinalizeNight());
+
+      final s = stateOf(game.gameId);
+      expect(s.engine.playerById('${ids[3]}').alive, isTrue);
+      expect(s.recapDeaths, isEmpty);
+      final log = frenchJournal(await repo.watchNightLog(game.gameId).first);
+      expect(log, contains('Le Salvateur protège Di'));
+      expect(log, contains('Di est choisi par les Loups mais protégé : personne ne meurt'));
+    });
+
+    test('is called before the wolves', () async {
+      final game = await _startedGame(repo, composition: comp);
+      final s = await container.read(gameSessionProvider(game.gameId).future);
+      expect(s.tonight.steps.map((st) => st.role.id), ['salvateur', 'loup_garou']);
+    });
+  });
+
   group('the Angel', () {
     const comp = {'ange': 1, 'loup_garou': 2, 'villageois': 3};
 

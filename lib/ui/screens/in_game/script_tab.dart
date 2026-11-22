@@ -368,8 +368,21 @@ class _NightBody extends ConsumerWidget {
           onSecondary: notifier.skipStep,
         );
 
+      case 'salvateur':
+        return TargetPick(
+          question: context.l10n.scriptDefenderQuestion,
+          candidates: [
+            for (final p in alive)
+              if (p.id != session.engine.defenderLastProtectedId) cand(p),
+          ],
+          confirmLabel: context.l10n.scriptDefenderProtects,
+          onConfirm: notifier.defenderProtect,
+          secondaryLabel: context.l10n.scriptSkipRole,
+          onSecondary: notifier.skipStep,
+        );
+
       case 'sorciere':
-        final victimId = session.engine.pendingWolfVictimId;
+        final victimId = session.engine.wolfVictimForWitch;
         return WitchAct(
           witch: session.engine.witch,
           wolfVictim: victimId == null ? null : cand(session.engine.playerById(victimId)),
@@ -1102,6 +1115,7 @@ IconData _roleIcon(String roleId) => switch (roleId) {
   'voleur' => AppIcons.thief,
   'chasseur' => AppIcons.hunter,
   'ancien' => AppIcons.elder,
+  'salvateur' => AppIcons.defender,
   'ange' => AppIcons.angel,
   'chevalier' => AppIcons.knight,
   'joueur_de_flute' => AppIcons.piperRole,

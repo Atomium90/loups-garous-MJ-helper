@@ -254,6 +254,43 @@ void main() {
     expect(find.text('Le Voleur échange sa carte contre Voyante'), findsOneWidget);
   });
 
+  group('the Defender', () {
+    const comp = {'salvateur': 1, 'loup_garou': 2, 'villageois': 3};
+
+    testWidgets('protects someone, and the Witch no longer sees them as the victim', (tester) async {
+      final id = await _startedGame(
+        repo,
+        composition: const {'salvateur': 1, 'loup_garou': 2, 'sorciere': 1, 'villageois': 2},
+      );
+      await pump(tester, id);
+
+      await identify(tester, ['Ana']); // the Defender
+      expect(find.text('Qui le Salvateur protège-t-il ?'), findsOneWidget);
+      await tapName(tester, 'Di');
+      await tester.tap(find.text('Le Salvateur protège Di'));
+      await tester.pumpAndSettle();
+
+      await identify(tester, ['Bo', 'Cy']); // the wolves
+      await tapName(tester, 'Di');
+      await tester.tap(find.text('Les Loups désignent Di'));
+      await tester.pumpAndSettle();
+      await identify(tester, ['Ed']); // the Witch
+
+      expect(find.text('Victime des Loups cette nuit'), findsNothing);
+    });
+
+    testWidgets('the call can be passed', (tester) async {
+      final id = await _startedGame(repo, composition: comp);
+      await pump(tester, id);
+
+      await identify(tester, ['Ana']);
+      await tester.tap(find.text('Passer ce rôle'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Qui sont les Loups-Garous ?'), findsOneWidget);
+    });
+  });
+
   group('the Piper', () {
     const comp = {'joueur_de_flute': 1, 'loup_garou': 2, 'villageois': 3};
 

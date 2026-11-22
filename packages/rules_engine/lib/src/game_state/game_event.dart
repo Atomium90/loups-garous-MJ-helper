@@ -110,6 +110,13 @@ class PlayersCharmed implements GameEvent {
   const PlayersCharmed({required this.playerIds});
 }
 
+/// The wolves picked a player the Defender protected: nobody died of it.
+class DefenderSaved implements GameEvent {
+  final String playerId;
+
+  const DefenderSaved({required this.playerId});
+}
+
 class LoversPaired implements GameEvent {
   final String playerAId;
   final String playerBId;

@@ -76,6 +76,15 @@ const allRoles = <Role>[
     hasNightCall: true,
     wakeCondition: WakeCondition.firstNightOnly,
   ),
+  // He protects a player from the wolves each night, right before the wolf pack.
+  Role(
+    id: 'salvateur',
+    team: Team.village,
+    suggestionTier: 3,
+    hasNightCall: true,
+    wakeCondition: WakeCondition.everyNight,
+    actionType: ActionType.selectOne,
+  ),
   // No call of his own in the booklets: on the first night, just before the wolves, the MJ asks
   // him whether he is a villager or a wolf, for good.
   Role(

@@ -94,6 +94,8 @@ class GameStateMachine {
         return _applyStartNextNight(state, roleRegistry);
       case PiperCharm():
         return _applyPiperCharm(state, action);
+      case DefenderProtect():
+        return _applyDefenderProtect(state, action);
       case KnightContaminate():
         return _applyKnightContaminate(state, action, roleRegistry);
       case FinalizeNight():
@@ -353,8 +355,17 @@ class GameStateMachine {
       return victimId;
     }
 
-    final wolfVictim = spareElder(state.pendingWolfVictimId);
-    final bigBadVictim = spareElder(state.pendingBigBadWolfVictimId);
+    // What the Defender protects tonight is not eaten by the wolves (nor by the Big Bad Wolf).
+    String? shield(String? victimId) {
+      if (victimId != null && victimId == state.defenderProtectedId) {
+        events.add(DefenderSaved(playerId: victimId));
+        return null;
+      }
+      return victimId;
+    }
+
+    final wolfVictim = spareElder(shield(state.pendingWolfVictimId));
+    final bigBadVictim = spareElder(shield(state.pendingBigBadWolfVictimId));
 
     // The wolf the Knight's sword wounded, when the disease strikes at the end of the night.
     final wound = state.knightWound;
@@ -392,6 +403,8 @@ class GameStateMachine {
         pendingWitchDeathTargetId: null,
         pendingBigBadWolfVictimId: null,
         pendingWhiteWolfVictimId: null,
+        defenderProtectedId: null,
+        defenderLastProtectedId: state.defenderProtectedId,
         knightWound: diseased != null ? null : drained.state.knightWound,
         cascade: drained.pendingDecision == null
             ? null
@@ -517,6 +530,18 @@ class GameStateMachine {
               ),
       ),
       events: [PlayerDied(playerId: wound.wolfId, cause: cause), ...drained.events],
+    );
+  }
+
+  ActionResult _applyDefenderProtect(GameState state, DefenderProtect action) {
+    _requireNightPhase(state, 'The Defender protects at night');
+    _requireAlive(state.playerById(action.targetPlayerId), 'the protected player');
+    if (action.targetPlayerId == state.defenderLastProtectedId) {
+      throw InvalidActionError('The Defender cannot protect the same player two nights in a row');
+    }
+    return ActionResult(
+      state: state.copyWith(defenderProtectedId: action.targetPlayerId),
+      events: const [],
     );
   }
 

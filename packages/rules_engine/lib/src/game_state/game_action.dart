@@ -72,6 +72,14 @@ class KnightContaminate implements GameAction {
   const KnightContaminate({this.wolfPlayerId, this.atNightEnd = false});
 }
 
+/// The Defender protects a player from the wolves tonight (himself included, not the one he
+/// protected last night).
+class DefenderProtect implements GameAction {
+  final String targetPlayerId;
+
+  const DefenderProtect({required this.targetPlayerId});
+}
+
 class CupidonPair implements GameAction {
   final String playerAId;
   final String playerBId;
