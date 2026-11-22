@@ -156,6 +156,8 @@
   "settingsVoteTieHint": "What a tie does (the Scapegoat always comes first). By default nobody is eliminated (Base, Pact); the Sheriff may decide, or the tied players vote again (Best Of).",
   "settingsKeepScreenOn": "Keep the screen on",
   "settingsAideMemoire": "Quick reference in the script",
+  "settingsCrashReports": "Send crash reports",
+  "settingsCrashReportsHint": "If the app crashes, an anonymous technical report helps fix the problem. Never player names, roles or game content. Off by default.",
   "settingsData": "Data",
   "settingsFooter": "Loup Garou MJ · V1 · offline",
   "settingsOnDevice": "Your games stay on this device: uninstalling the app deletes them.",

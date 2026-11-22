@@ -66,6 +66,12 @@ not implemented yet, so ticking a box adds nothing beyond the base roles it alre
 
 Also not built: the regulars address book and the extension roles.
 
+Crash reports are strictly opt-in. A build only knows where to send them when it is given the DSN
+of a Sentry project (`flutter build apk --dart-define=SENTRY_DSN=...`; the release workflow reads
+it from the optional `SENTRY_DSN` repository secret). Without a DSN the app never reports anything
+and the setting is not shown; with one, the setting in Réglages is off until the MJ turns it on,
+and nothing about the games (names, roles, journal) is attached to a report.
+
 The script also tells the MJ what to say out loud: waking and putting each role back to sleep,
 the morning and who died, the Sheriff election, the vote, and the Hunter's, the Sheriff's and
 a lover's death. A "Phrases du MJ" setting in Réglages chooses between none, the essential line

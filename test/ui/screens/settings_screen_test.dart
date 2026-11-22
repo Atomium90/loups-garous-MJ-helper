@@ -5,6 +5,7 @@ import 'package:loup_garou_mj/data/models/game_status.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:loup_garou_mj/main.dart';
 import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
+import 'package:loup_garou_mj/state/settings/settings_providers.dart';
 import 'package:loup_garou_mj/ui/screens/home/home_screen.dart';
 import 'package:loup_garou_mj/ui/screens/settings/boxes_screen.dart';
 import 'package:loup_garou_mj/ui/screens/settings/settings_screen.dart';
@@ -200,6 +201,42 @@ void main() {
     await tester.pumpAndSettle();
 
     expect((await SharedPreferences.getInstance()).getString('vote_tie_rule'), 'revote');
+  });
+
+  testWidgets('the crash reports are not offered by a build with nowhere to send them', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
+      initialLocation: '/settings',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Envoyer les rapports de plantage'), findsNothing);
+  });
+
+  testWidgets('the crash reports are off until flipped, and the choice persists', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpAppRouter(
+      tester,
+      overrides: [
+        gameRepositoryProvider.overrideWithValue(FakeGameRepository()),
+        crashReportingAvailableProvider.overrideWithValue(true),
+      ],
+      initialLocation: '/settings',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Jamais de noms de joueurs'), findsOneWidget);
+    expect((await SharedPreferences.getInstance()).getBool('crash_reports'), isNull);
+    await tester.tap(find.text('Envoyer les rapports de plantage'));
+    await tester.pumpAndSettle();
+
+    expect((await SharedPreferences.getInstance()).getBool('crash_reports'), isTrue);
   });
 
   testWidgets('the Knight disease toggle persists once flipped', (tester) async {

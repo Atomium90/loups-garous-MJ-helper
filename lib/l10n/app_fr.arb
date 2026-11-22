@@ -974,6 +974,14 @@
   "@settingsAideMemoire": {
     "description": "Toggle: show the quick-reference button in the script."
   },
+  "settingsCrashReports": "Envoyer les rapports de plantage",
+  "@settingsCrashReports": {
+    "description": "Toggle: anonymous crash reports."
+  },
+  "settingsCrashReportsHint": "Si l'app plante, un rapport technique anonyme aide à corriger le problème. Jamais de noms de joueurs, de rôles ni de contenu de partie. Désactivé par défaut.",
+  "@settingsCrashReportsHint": {
+    "description": "What the crash reports contain."
+  },
   "settingsData": "Données",
   "@settingsData": {
     "description": "Settings section: stored games."

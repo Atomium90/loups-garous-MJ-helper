@@ -91,6 +91,9 @@ class AppSettings {
   /// What a tied village vote does.
   final VoteTieRule voteTieRule;
 
+  /// The MJ lets the app send anonymous crash reports. Off until they say so.
+  final bool crashReports;
+
   const AppSettings({
     required this.themeMode,
     required this.keepScreenOn,
@@ -104,6 +107,7 @@ class AppSettings {
     required this.whiteWolfOddNights,
     required this.knightDiseaseAtNightEnd,
     required this.voteTieRule,
+    required this.crashReports,
   });
 
   static const defaults = AppSettings(
@@ -119,6 +123,7 @@ class AppSettings {
     whiteWolfOddNights: false,
     knightDiseaseAtNightEnd: false,
     voteTieRule: VoteTieRule.nobody,
+    crashReports: false,
   );
 
   AppSettings copyWith({
@@ -134,6 +139,7 @@ class AppSettings {
     bool? whiteWolfOddNights,
     bool? knightDiseaseAtNightEnd,
     VoteTieRule? voteTieRule,
+    bool? crashReports,
   }) => AppSettings(
     themeMode: themeMode ?? this.themeMode,
     keepScreenOn: keepScreenOn ?? this.keepScreenOn,
@@ -147,5 +153,6 @@ class AppSettings {
     whiteWolfOddNights: whiteWolfOddNights ?? this.whiteWolfOddNights,
     knightDiseaseAtNightEnd: knightDiseaseAtNightEnd ?? this.knightDiseaseAtNightEnd,
     voteTieRule: voteTieRule ?? this.voteTieRule,
+    crashReports: crashReports ?? this.crashReports,
   );
 }

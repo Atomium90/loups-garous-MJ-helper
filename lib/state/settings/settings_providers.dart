@@ -1,8 +1,10 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart' show Provider;
 import 'package:material_ui/material_ui.dart' show ThemeMode;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:rules_engine/rules_engine.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../crash_reporting/crash_reporting.dart';
 import 'settings.dart';
 
 part 'settings_providers.g.dart';
@@ -19,6 +21,10 @@ const _kFoxAfterWitch = 'fox_after_witch';
 const _kWhiteWolfOdd = 'white_wolf_odd_nights';
 const _kKnightAtNightEnd = 'knight_disease_night_end';
 const _kVoteTieRule = 'vote_tie_rule';
+
+/// Whether this build can send crash reports at all (it was given a Sentry DSN). The setting is
+/// only shown when it can. Overridden in tests.
+final crashReportingAvailableProvider = Provider<bool>((ref) => CrashReporting.available);
 
 /// The one `SharedPreferences` handle. Override in tests with an instance from
 /// `SharedPreferences.setMockInitialValues({})`.
@@ -50,7 +56,16 @@ class Settings extends _$Settings {
       whiteWolfOddNights: prefs.getBool(_kWhiteWolfOdd) ?? false,
       knightDiseaseAtNightEnd: prefs.getBool(_kKnightAtNightEnd) ?? false,
       voteTieRule: VoteTieRule.fromName(prefs.getString(_kVoteTieRule)),
+      crashReports: prefs.getBool(kCrashReportsPref) ?? false,
     );
+  }
+
+  /// The MJ allows (or stops) the anonymous crash reports; Sentry follows at once.
+  Future<void> setCrashReports(bool value) async {
+    final prefs = await ref.read(sharedPreferencesProvider.future);
+    await prefs.setBool(kCrashReportsPref, value);
+    state = AsyncData((state.value ?? AppSettings.defaults).copyWith(crashReports: value));
+    await CrashReporting.allow(value);
   }
 
   Future<void> setVoteTieRule(VoteTieRule rule) async {

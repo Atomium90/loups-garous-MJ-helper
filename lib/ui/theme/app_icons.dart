@@ -117,6 +117,7 @@ abstract final class AppIcons {
   static const judge = TablerIcons.gavel;
   static const servant = TablerIcons.userHeart;
   static const actor = TablerIcons.masksTheater;
+  static const crashReports = TablerIcons.bug;
   static const bearTamer = TablerIcons.pawFilled;
   static const wildChild = TablerIcons.leaf;
   static const chienLoup = TablerIcons.dog;

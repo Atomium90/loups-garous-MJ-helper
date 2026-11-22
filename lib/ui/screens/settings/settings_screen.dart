@@ -26,13 +26,22 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settingsAsync = ref.watch(settingsProvider);
     final notifier = ref.read(settingsProvider.notifier);
+    final crashReports = ref.watch(crashReportingAvailableProvider);
 
     return Scaffold(
       body: SafeArea(
         child: settingsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, _) => const _SettingsBody(settings: AppSettings.defaults, notifier: null),
-          data: (settings) => _SettingsBody(settings: settings, notifier: notifier),
+          error: (_, _) => _SettingsBody(
+            settings: AppSettings.defaults,
+            notifier: null,
+            crashReportsAvailable: crashReports,
+          ),
+          data: (settings) => _SettingsBody(
+            settings: settings,
+            notifier: notifier,
+            crashReportsAvailable: crashReports,
+          ),
         ),
       ),
     );
@@ -40,10 +49,17 @@ class SettingsScreen extends ConsumerWidget {
 }
 
 class _SettingsBody extends StatelessWidget {
-  const _SettingsBody({required this.settings, required this.notifier});
+  const _SettingsBody({
+    required this.settings,
+    required this.notifier,
+    required this.crashReportsAvailable,
+  });
 
   final AppSettings settings;
   final Settings? notifier;
+
+  /// This build can send crash reports (it has a Sentry DSN), so the setting is offered.
+  final bool crashReportsAvailable;
 
   @override
   Widget build(BuildContext context) {
@@ -206,6 +222,21 @@ class _SettingsBody extends StatelessWidget {
               ),
               const SizedBox(height: 22),
               SectionLabel(context.l10n.settingsData),
+              if (crashReportsAvailable) ...[
+                _ToggleRow(
+                  icon: AppIcons.crashReports,
+                  label: context.l10n.settingsCrashReports,
+                  value: settings.crashReports,
+                  onChanged: (v) => notifier?.setCrashReports(v),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    context.l10n.settingsCrashReportsHint,
+                    style: typography.counter.copyWith(color: colors.textTertiary, height: 1.55),
+                  ),
+                ),
+              ],
               const _DeleteAllGamesRow(),
             ],
           ),

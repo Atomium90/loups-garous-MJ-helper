@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart' show ThemeMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:loup_garou_mj/state/crash_reporting/crash_reporting.dart';
 import 'package:loup_garou_mj/state/settings/settings.dart';
 import 'package:loup_garou_mj/state/settings/settings_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -123,6 +124,27 @@ void main() {
       expect(settings.narrationHintSeen, isTrue);
       expect(prefs.getString('narration_level'), 'off');
       expect(prefs.getBool('narration_hint_seen'), isTrue);
+    });
+  });
+
+  group('the crash reports', () {
+    test('are off by default, and the choice persists', () async {
+      final container = await containerWith({});
+      expect((await container.read(settingsProvider.future)).crashReports, isFalse);
+
+      await container.read(settingsProvider.notifier).setCrashReports(true);
+
+      expect(container.read(settingsProvider).value!.crashReports, isTrue);
+      expect((await SharedPreferences.getInstance()).getBool('crash_reports'), isTrue);
+    });
+
+    test('a stored choice is read back', () async {
+      final container = await containerWith({'crash_reports': true});
+      expect((await container.read(settingsProvider.future)).crashReports, isTrue);
+    });
+
+    test('this build has nowhere to send them without a DSN', () {
+      expect(CrashReporting.available, isFalse);
     });
   });
 
