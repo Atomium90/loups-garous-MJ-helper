@@ -1027,6 +1027,25 @@ void main() {
     expect(log, contains('Les Deux Sœurs se reconnaissent'));
   });
 
+  test('the Three Brothers meeting is journalled and moves on', () async {
+    final game = await _startedGame(
+      repo,
+      composition: const {'trois_freres': 3, 'loup_garou': 2, 'villageois': 1},
+    );
+    final n = await notifierFor(game.gameId);
+    await n.identifyRole('trois_freres', [
+      game.seatRowIds[0],
+      game.seatRowIds[1],
+      game.seatRowIds[2],
+    ]);
+
+    await n.brothersMet();
+
+    expect(stateOf(game.gameId).currentStep!.role.id, 'loup_garou');
+    final log = frenchJournal(await repo.watchNightLog(game.gameId).first);
+    expect(log, contains('Les Trois Frères se reconnaissent'));
+  });
+
   group('a drawn Voleur reserve', () {
     // 6 players; the pack holds 2 more Simples Villageois than that.
     const comp = {'voleur': 1, 'loup_garou': 2, 'sorciere': 1, 'villageois': 2};

@@ -623,6 +623,25 @@ void main() {
       expect(find.text('Qui sont les Loups-Garous ?'), findsOneWidget);
     });
 
+    testWidgets('the Brothers are identified together, meet, and the call can be passed', (
+      tester,
+    ) async {
+      final id = await _startedGame(
+        repo,
+        composition: const {'trois_freres': 3, 'loup_garou': 2, 'villageois': 1},
+      );
+      await pump(tester, id);
+
+      expect(find.text('Qui sont les Trois Frères ?'), findsOneWidget);
+      await identify(tester, ['Ana', 'Bo', 'Cy']);
+      expect(find.text('Ils se sont reconnus'), findsOneWidget);
+      expect(find.text('Passer ce rôle'), findsOneWidget);
+
+      await tester.tap(find.text('Ils se sont reconnus'));
+      await tester.pumpAndSettle();
+      expect(find.text('Qui sont les Loups-Garous ?'), findsOneWidget);
+    });
+
     testWidgets('the Bear Tamer is only made known', (tester) async {
       final id = await _startedGame(
         repo,

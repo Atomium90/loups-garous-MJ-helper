@@ -527,10 +527,15 @@ class GameSession extends _$GameSession {
   Future<void> defenderProtect(String engineId) =>
       applyAction(DefenderProtect(targetPlayerId: engineId));
 
-  // --- night: Deux Sœurs ---
+  // --- night: Deux Sœurs, Trois Frères ---
 
   /// The Two Sisters woke and met: a journal line, then on to the next call.
-  Future<void> sistersMet() async {
+  Future<void> sistersMet() => _groupMet(JournalKind.sistersMeet);
+
+  /// The Three Brothers woke and met.
+  Future<void> brothersMet() => _groupMet(JournalKind.brothersMeet);
+
+  Future<void> _groupMet(JournalKind kind) async {
     final s = state.value;
     if (s == null) return;
     await ref.read(gameRepositoryProvider).appendNightLog(
@@ -539,7 +544,7 @@ class GameSession extends _$GameSession {
         NightLogEntry(
           phase: _journalPhase(s.engine),
           phaseIndex: s.engine.nightIndex,
-          kind: JournalKind.sistersMeet,
+          kind: kind,
         ),
       ],
     );

@@ -311,6 +311,14 @@ class _NightBody extends ConsumerWidget {
           onSecondary: notifier.skipStep,
         );
 
+      case 'trois_freres':
+        return SimpleAct(
+          primaryLabel: context.l10n.scriptBrothersDone,
+          onPrimary: notifier.brothersMet,
+          secondaryLabel: context.l10n.scriptSkipRole,
+          onSecondary: notifier.skipStep,
+        );
+
       case 'montreur_d_ours':
         // He only makes himself known tonight; his power plays in the morning.
         return SimpleAct(
@@ -1125,6 +1133,7 @@ IconData _roleIcon(String roleId) => switch (roleId) {
   'joueurs_charmes' => AppIcons.piperRole,
   'renard' => AppIcons.fox,
   'deux_soeurs' => AppIcons.sisters,
+  'trois_freres' => AppIcons.brothers,
   'montreur_d_ours' => AppIcons.bearTamer,
   'enfant_sauvage' => AppIcons.wildChild,
   'chien_loup' => AppIcons.chienLoup,

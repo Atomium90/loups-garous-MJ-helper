@@ -112,6 +112,7 @@ abstract final class AppIcons {
   static const sectarian = TablerIcons.flame;
   static const fox = TablerIcons.eyeSearch;
   static const sisters = TablerIcons.heartHandshake;
+  static const brothers = TablerIcons.usersGroup;
   static const bearTamer = TablerIcons.pawFilled;
   static const wildChild = TablerIcons.leaf;
   static const chienLoup = TablerIcons.dog;

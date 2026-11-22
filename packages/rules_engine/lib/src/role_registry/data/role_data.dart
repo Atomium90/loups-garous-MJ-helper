@@ -60,6 +60,15 @@ const allRoles = <Role>[
     wakeCondition: WakeCondition.everyOtherNight,
     optionalCall: true,
   ),
+  // A group of three, like the sisters: they wake together to know each other.
+  Role(
+    id: 'trois_freres',
+    team: Team.village,
+    groupSize: 3,
+    hasNightCall: true,
+    wakeCondition: WakeCondition.everyOtherNight,
+    optionalCall: true,
+  ),
   // He picks a role model on the first night; if the model is eliminated he turns into a wolf.
   Role(
     id: 'enfant_sauvage',

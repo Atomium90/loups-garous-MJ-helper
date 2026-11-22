@@ -36,6 +36,7 @@ String journalLine(AppLocalizations l10n, NightLogRow row) {
     JournalKind.foxFindsWolf => l10n.journalFoxFindsWolf(player),
     JournalKind.foxFindsNone => l10n.journalFoxFindsNone(player),
     JournalKind.sistersMeet => l10n.journalSistersMeet,
+    JournalKind.brothersMeet => l10n.journalBrothersMeet,
     JournalKind.bearGrowls => l10n.journalBearGrowls,
     JournalKind.wildChildModel => l10n.journalWildChildModel(player, args['other'] ?? ''),
     JournalKind.chienLoupWolf => l10n.journalChienLoupWolf(player),

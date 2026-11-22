@@ -25,6 +25,7 @@ enum JournalKind {
   foxFindsWolf('fox'),
   foxFindsNone('fox'),
   sistersMeet('sisters'),
+  brothersMeet('sisters'),
   bearGrowls('bear'),
   wildChildModel('wildChild'),
   chienLoupWolf('dog'),
