@@ -53,6 +53,11 @@ class Role {
   /// The call may be skipped by the MJ without any consequence: the role has no obligation to
   /// act (the Fox, the Sisters, the Brothers). The script offers it as a step to pass.
   final bool optionalCall;
+
+  /// Settled before the village goes to sleep, not at a night call: the MJ notes a card shown at
+  /// the deal, or a division of the village. Nobody wakes. Such a role comes first in the first
+  /// night's script, and the narration of the night starts after it.
+  final bool preparation;
   final List<OrderConstraint> orderConstraints;
   final ActionType actionType;
 
@@ -72,6 +77,7 @@ class Role {
     this.wakeGuard = WakeGuard.none,
     this.optionalCall = false,
     this.knownOnFirstNight = false,
+    this.preparation = false,
     this.orderConstraints = const [],
     this.actionType = ActionType.none,
     this.onDeath = DeathEffect.none,

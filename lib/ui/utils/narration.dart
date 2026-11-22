@@ -23,13 +23,15 @@ List<NarrationLine> nightStartNarration(AppLocalizations l10n) => [
 ];
 
 /// Waking a role, telling it what to do, and putting it back to sleep. Empty for a role that
-/// has no lines (it has no night call).
+/// has no lines (it has no night call); a role settled before the night (a card shown at the
+/// deal) has no one to put back to sleep.
 List<NarrationLine> roleCallNarration(AppLocalizations l10n, String roleId) {
   final head = l10n.narrCallHead(roleId);
   if (head.isEmpty) return const [];
+  final close = l10n.narrClose(roleId);
   return [
     NarrationLine(head, _orNull(l10n.narrCallBody(roleId))),
-    NarrationLine(l10n.narrClose(roleId)),
+    if (close.isNotEmpty) NarrationLine(close),
   ];
 }
 

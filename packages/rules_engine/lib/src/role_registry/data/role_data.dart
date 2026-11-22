@@ -12,6 +12,15 @@ import '../../models/wake_condition.dart';
 /// player can hold on top of their real role (see GameState.captainPlayerId), not a role card
 /// dealt at setup.
 const allRoles = <Role>[
+  // His card is public from the deal on: the MJ only notes who shows it, before the night.
+  Role(
+    id: 'villageois_villageois',
+    team: Team.village,
+    multiple: true,
+    hasNightCall: true,
+    wakeCondition: WakeCondition.firstNightOnly,
+    preparation: true,
+  ),
   Role(
     id: 'voleur',
     team: Team.ambiguous, // settled only once he steals a card

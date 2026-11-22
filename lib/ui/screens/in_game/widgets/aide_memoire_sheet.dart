@@ -40,7 +40,7 @@ class _AideMemoire extends StatelessWidget {
 
     // Waking roles are numbered in call order; the rest get a dash.
     var wakeNo = 0;
-    String indexFor(Role r) => r.hasNightCall ? '${++wakeNo}' : '—';
+    String indexFor(Role r) => r.hasNightCall && !r.preparation ? '${++wakeNo}' : '—';
 
     return SafeArea(
       top: false,

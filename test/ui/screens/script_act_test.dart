@@ -603,6 +603,45 @@ void main() {
     });
   });
 
+  group('the Trusted Villager', () {
+    testWidgets('is noted before the village goes to sleep, whose narration then starts', (
+      tester,
+    ) async {
+      final id = await _startedGame(
+        repo,
+        composition: const {'villageois_villageois': 1, 'loup_garou': 2, 'villageois': 3},
+      );
+      await pump(tester, id);
+
+      expect(find.text('Qui est Villageois-Villageois ?'), findsOneWidget);
+      expect(find.textContaining('montrez votre carte à tout le monde'), findsOneWidget);
+      expect(find.textContaining("Le village s'endort"), findsNothing);
+
+      await identify(tester, ['Ana']);
+      await tester.tap(find.text('Continuer'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Qui sont les Loups-Garous ?'), findsOneWidget);
+      expect(find.textContaining("Le village s'endort"), findsOneWidget);
+    });
+
+    testWidgets('is tagged as a public identity in the Village tab', (tester) async {
+      final id = await _startedGame(
+        repo,
+        composition: const {'villageois_villageois': 1, 'loup_garou': 2, 'villageois': 3},
+      );
+      await pump(tester, id);
+      await identify(tester, ['Ana']);
+      await tester.tap(find.text('Continuer'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Village'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('identité publique'), findsOneWidget);
+    });
+  });
+
   group('the Two Sisters and the Bear Tamer', () {
     testWidgets('the Sisters are identified together, meet, and the call can be passed', (
       tester,

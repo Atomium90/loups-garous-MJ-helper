@@ -69,6 +69,10 @@ class _NightBody extends ConsumerWidget {
         p.name,
   ];
 
+  /// Where tonight's first real call is: the steps before it are settled before the village
+  /// sleeps.
+  int get _firstCallIndex => session.tonight.steps.indexWhere((s) => !s.role.preparation);
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifier = ref.read(gameSessionProvider(gameId).notifier);
@@ -97,8 +101,9 @@ class _NightBody extends ConsumerWidget {
                 ),
                 NarrationBlock(
                   lines: [
-                    // the first role of the night is preceded by "the village goes to sleep"
-                    if (session.cursor.stepIndex == 0) ...nightStartNarration(context.l10n),
+                    // the first call of the night is preceded by "the village goes to sleep"; what is
+                    // settled before that (a card shown at the deal) comes ahead of it
+                    if (session.cursor.stepIndex == _firstCallIndex) ...nightStartNarration(context.l10n),
                     ...roleCallNarration(context.l10n, step.role.id),
                   ],
                 ),
@@ -319,6 +324,13 @@ class _NightBody extends ConsumerWidget {
           onSecondary: notifier.skipStep,
         );
 
+      case 'villageois_villageois':
+        // His card is public: the MJ only notes who shows it.
+        return SimpleAct(
+          primaryLabel: context.l10n.commonContinue,
+          onPrimary: notifier.skipStep,
+        );
+
       case 'montreur_d_ours':
         // He only makes himself known tonight; his power plays in the morning.
         return SimpleAct(
@@ -456,7 +468,7 @@ class _VoleurActState extends State<_VoleurAct> {
     final keeps = _choice == '';
     final stolen = keeps ? null : _choice;
     final stolenRole = stolen == null ? null : RoleRegistry.all.byId(stolen);
-    final stealsNightRole = stolenRole?.hasNightCall ?? false;
+    final stealsNightRole = (stolenRole?.hasNightCall ?? false) && !stolenRole!.preparation;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1134,6 +1146,7 @@ IconData _roleIcon(String roleId) => switch (roleId) {
   'renard' => AppIcons.fox,
   'deux_soeurs' => AppIcons.sisters,
   'trois_freres' => AppIcons.brothers,
+  'villageois_villageois' => AppIcons.trustedVillager,
   'montreur_d_ours' => AppIcons.bearTamer,
   'enfant_sauvage' => AppIcons.wildChild,
   'chien_loup' => AppIcons.chienLoup,
