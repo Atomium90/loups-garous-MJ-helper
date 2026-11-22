@@ -21,6 +21,7 @@ dependencies:
   riverpod_annotation: ^4.0.6
   rules_engine:
     path: packages/rules_engine
+  share_plus: ^13.3.1
   shared_preferences: ^2.3.2
   tabler_icons_plus: ^3.44.0
   wakelock_plus: ^1.2.8

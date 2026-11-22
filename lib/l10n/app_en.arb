@@ -183,6 +183,8 @@
   "tabVillage": "Village",
   "tabJournal": "Journal",
   "journalTitle": "Journal",
+  "journalShare": "Share the journal",
+  "journalShareWinner": "Winner: {winner}",
   "journalLoadError": "Couldn't load the journal.",
   "journalEmpty": "Nothing to note yet.",
   "villageLoadError": "Couldn't load the village.",

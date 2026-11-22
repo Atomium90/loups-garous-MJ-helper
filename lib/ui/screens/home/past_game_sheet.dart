@@ -18,6 +18,7 @@ import '../../utils/labels.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/app_sheet.dart';
 import '../../widgets/player_avatar.dart';
+import '../in_game/journal_share.dart';
 import 'delete_game_sheet.dart';
 
 /// Reopening a finished game: the winner, the run's length, and who was still
@@ -210,7 +211,7 @@ class _PastGameSheet extends ConsumerWidget {
                     label: '',
                     leadingIcon: AppIcons.share,
                     variant: AppButtonVariant.secondary,
-                    onPressed: null,
+                    onPressed: () => shareJournal(context, ref, game),
                   ),
                 ),
                 SizedBox(

@@ -225,6 +225,10 @@ class FakeGameRepository implements GameRepository {
   }
 
   @override
+  Future<List<NightLogRow>> getNightLog(int gameId) async =>
+      [...(_nightLogs[gameId] ?? const <NightLogRow>[])].reversed.toList();
+
+  @override
   Stream<List<NightLogRow>> watchNightLog(int gameId) async* {
     List<NightLogRow> snapshot() =>
         [...(_nightLogs[gameId] ?? const <NightLogRow>[])].reversed.toList();

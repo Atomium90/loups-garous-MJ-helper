@@ -1108,6 +1108,19 @@
   "@journalTitle": {
     "description": "Title of the journal."
   },
+  "journalShare": "Partager le journal",
+  "@journalShare": {
+    "description": "Tooltip of the button that shares the journal as text."
+  },
+  "journalShareWinner": "Vainqueur : {winner}",
+  "@journalShareWinner": {
+    "description": "Line of the shared journal naming the winner.",
+    "placeholders": {
+      "winner": {
+        "type": "String"
+      }
+    }
+  },
   "journalLoadError": "Impossible de charger le journal.",
   "@journalLoadError": {
     "description": "The journal failed to load."
