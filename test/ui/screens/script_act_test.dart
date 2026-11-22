@@ -642,6 +642,47 @@ void main() {
     });
   });
 
+  group('the Actor', () {
+    const comp = {'comedien': 1, 'loup_garou': 2, 'villageois': 3};
+
+    testWidgets('lays down three cards, then plays one, whose role is then called', (tester) async {
+      final id = await _startedGame(repo, composition: comp);
+      await pump(tester, id);
+
+      await identify(tester, ['Ana']);
+      expect(find.text('Quelles sont les 3 cartes posées face visible pour le Comédien ?'), findsOneWidget);
+      expect(find.text('Choisissez 3 cartes'), findsOneWidget);
+      for (final card in ['Voyante', 'Sorcière', 'Salvateur']) {
+        await tester.tap(find.text(card));
+        await tester.pumpAndSettle();
+      }
+      await tester.tap(find.text('Poser ces 3 cartes'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Quel pouvoir le Comédien prend-il cette nuit ?'), findsOneWidget);
+      expect(find.text('Cupidon'), findsNothing);
+      await tester.tap(find.text('Voyante'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Il joue la Voyante'));
+      await tester.pumpAndSettle();
+
+      // the Seer's turn, with nobody to identify
+      expect(find.text('Qui est Voyante ?'), findsNothing);
+      expect(find.textContaining('Voyante, ouvre les yeux'), findsOneWidget);
+    });
+
+    testWidgets('the Actor can be passed, with or without his cards laid', (tester) async {
+      final id = await _startedGame(repo, composition: comp);
+      await pump(tester, id);
+      await identify(tester, ['Ana']);
+
+      await tester.tap(find.text('Passer ce rôle'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Qui sont les Loups-Garous ?'), findsOneWidget);
+    });
+  });
+
   group('the Abominable Sectaire', () {
     const comp = {'abominable_sectaire': 1, 'loup_garou': 2, 'villageois': 3};
 

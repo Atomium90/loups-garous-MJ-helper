@@ -72,6 +72,9 @@ List<NightLogEntry> nightLogEntriesFor(GameAction action, GameState before) {
     case JudgeSign():
       return [entry(JournalKind.judgeSign)];
 
+    case ActorChooseCard(:final roleId):
+      return [entry(JournalKind.actorChooses, {'role': roleId})];
+
     case ServantTakesRole(:final servantPlayerId, :final deadPlayerId):
       return [
         entry(JournalKind.servantTakes, {

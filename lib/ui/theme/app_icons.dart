@@ -116,6 +116,7 @@ abstract final class AppIcons {
   static const trustedVillager = TablerIcons.idBadge2;
   static const judge = TablerIcons.gavel;
   static const servant = TablerIcons.userHeart;
+  static const actor = TablerIcons.masksTheater;
   static const bearTamer = TablerIcons.pawFilled;
   static const wildChild = TablerIcons.leaf;
   static const chienLoup = TablerIcons.dog;
@@ -187,6 +188,7 @@ abstract final class AppIcons {
     'defender' => defender,
     'sectarian' => sectarian,
     'servant' => servant,
+    'actor' => actor,
     'crown' => captain,
     'vote' => vote,
     'scale' => scale,

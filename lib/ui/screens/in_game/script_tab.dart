@@ -186,6 +186,7 @@ class _NightBody extends ConsumerWidget {
         session.reserveRoleIds.isNotEmpty &&
         !alive.any((p) => p.roleId == role.id) &&
         session.expectedHolders(role.id) == 0 &&
+        role.id != session.engine.actor?.current &&
         role.id != 'voleur') {
       return SimpleAct(primaryLabel: context.l10n.scriptSkipRole, onPrimary: notifier.skipStep);
     }
@@ -322,6 +323,33 @@ class _NightBody extends ConsumerWidget {
           onPrimary: notifier.brothersMet,
           secondaryLabel: context.l10n.scriptSkipRole,
           onSecondary: notifier.skipStep,
+        );
+
+      case 'comedien':
+        final actor = session.engine.actor;
+        if (actor == null) {
+          return _ActorCards(
+            key: const ValueKey('actorCardsLaid'),
+            title: context.l10n.scriptActorCardsQuestion,
+            cards: actorCardRoleIds,
+            count: actorCardCount,
+            onConfirm: notifier.actorSetCards,
+            onSkip: notifier.skipStep,
+          );
+        }
+        return _ActorCards(
+          key: const ValueKey('actorCardChosen'),
+          title: context.l10n.scriptActorQuestion,
+          cards: [
+            for (final c in actor.available)
+              // Cupidon pairs lovers on the first night only, and only once.
+              if (c != 'cupidon' ||
+                  (session.engine.nightIndex == 1 && session.engine.lovers == null))
+                c,
+          ],
+          count: 1,
+          onConfirm: (cards) => notifier.actorChoose(cards.single),
+          onSkip: notifier.skipStep,
         );
 
       case 'abominable_sectaire':
@@ -1165,6 +1193,7 @@ IconData _roleIcon(String roleId) => switch (roleId) {
   'juge_begue' => AppIcons.judge,
   'abominable_sectaire' => AppIcons.sectarian,
   'servante_devouee' => AppIcons.servant,
+  'comedien' => AppIcons.actor,
   'montreur_d_ours' => AppIcons.bearTamer,
   'enfant_sauvage' => AppIcons.wildChild,
   'chien_loup' => AppIcons.chienLoup,
@@ -1367,6 +1396,103 @@ List<({String roleId, int remaining})> unassignedRoles(GameSessionState session)
       if (e.value - (assigned[e.key] ?? 0) > 0)
         (roleId: e.key, remaining: e.value - (assigned[e.key] ?? 0)),
   ];
+}
+
+/// Picks [count] of [cards] (a role list): the three cards laid face up for the Actor, then the
+/// one whose power he takes tonight.
+class _ActorCards extends StatefulWidget {
+  const _ActorCards({
+    super.key,
+    required this.title,
+    required this.cards,
+    required this.count,
+    required this.onConfirm,
+    required this.onSkip,
+  });
+
+  final String title;
+  final List<String> cards;
+  final int count;
+  final ValueChanged<List<String>> onConfirm;
+  final VoidCallback onSkip;
+
+  @override
+  State<_ActorCards> createState() => _ActorCardsState();
+}
+
+class _ActorCardsState extends State<_ActorCards> {
+  final _picked = <String>[];
+
+  void _toggle(String id) => setState(() {
+    if (_picked.contains(id)) {
+      _picked.remove(id);
+    } else if (widget.count == 1) {
+      _picked
+        ..clear()
+        ..add(id);
+    } else if (_picked.length < widget.count) {
+      _picked.add(id);
+    }
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final complete = _picked.length == widget.count;
+    final label = widget.count == 1
+        ? (complete
+              ? context.l10n.scriptActorUses(context.l10n.roleWithArticle(_picked.single))
+              : context.l10n.scriptPickCard)
+        : (complete ? context.l10n.scriptActorCardsConfirm : context.l10n.scriptActorCardsPick);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 18, AppSpacing.screen, 10),
+          child: Text(
+            widget.title,
+            style: context.typography.rowLabel.copyWith(color: context.colors.textPrimary),
+          ),
+        ),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screen),
+            children: [
+              for (final id in widget.cards)
+                _RoleOption(
+                  roleId: id,
+                  remaining: 1,
+                  selected: _picked.contains(id),
+                  onTap: () => _toggle(id),
+                ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screen,
+            12,
+            AppSpacing.screen,
+            AppSpacing.screen,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: 8,
+            children: [
+              AppButton(
+                label: label,
+                onPressed: complete ? () => widget.onConfirm([..._picked]) : null,
+              ),
+              AppButton(
+                label: context.l10n.scriptSkipRole,
+                variant: AppButtonVariant.secondary,
+                onPressed: widget.onSkip,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 /// Divides the village in two groups, for the Abominable Sectaire: the MJ picks the first, and

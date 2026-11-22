@@ -10,6 +10,7 @@ class NightContext {
     this.spentPowers = const {},
     this.wolfSideLost = false,
     this.villagersPowerless = false,
+    this.actorCard,
   });
 
   /// 1-based.
@@ -28,6 +29,10 @@ class NightContext {
 
   /// The villagers have lost their powers (the Ancien died).
   final bool villagersPowerless;
+
+  /// The role whose power the Comedien took for tonight: called whatever its own wake condition,
+  /// and with no holder of its own.
+  final String? actorCard;
 
   /// The night [role] is first woken, for its current holder.
   int firstNightFor(Role role) => firstNightOf[role.id] ?? role.firstWakeNight;

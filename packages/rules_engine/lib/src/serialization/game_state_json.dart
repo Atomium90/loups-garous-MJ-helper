@@ -47,6 +47,8 @@ abstract final class GameStateJson {
       if (state.voteRestriction case final r?)
         'voteRestriction': {'allowed': [...r.allowed], 'day': r.day},
       if (state.division case final d?) 'division': [...d.groupA],
+      if (state.actor case final a?)
+        'actor': {'cards': a.cards, 'used': a.used, if (a.current != null) 'current': a.current},
       if (state.servantTakeover case final t?)
         'servantTakeover': {'player': t.playerId, 'role': t.roleId, 'day': t.day},
       if (state.knightWound case final k?)
@@ -112,6 +114,14 @@ abstract final class GameStateJson {
         final r => VoteRestriction(
           allowed: {for (final id in r['allowed'] as List<dynamic>) id as String},
           day: r['day'] as int,
+        ),
+      },
+      actor: switch (json['actor'] as Map<String, dynamic>?) {
+        null => null,
+        final a => ActorState(
+          cards: [for (final id in a['cards'] as List<dynamic>) id as String],
+          used: [for (final id in a['used'] as List<dynamic>) id as String],
+          current: a['current'] as String?,
         ),
       },
       servantTakeover: switch (json['servantTakeover'] as Map<String, dynamic>?) {

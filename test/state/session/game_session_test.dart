@@ -449,6 +449,54 @@ void main() {
     });
   });
 
+  group('the Actor', () {
+    const comp = {'comedien': 1, 'loup_garou': 2, 'villageois': 3};
+    const cards = ['voyante', 'sorciere', 'salvateur'];
+
+    test('lays down his cards, then takes one: its role is called, with nobody to identify', () async {
+      final game = await _startedGame(repo, composition: comp);
+      final n = await notifierFor(game.gameId);
+      await n.identifyRole('comedien', [game.seatRowIds[0]]);
+      expect(stateOf(game.gameId).engine.actor, isNull);
+
+      await n.actorSetCards(cards);
+      await n.actorChoose('voyante');
+
+      final s = stateOf(game.gameId);
+      expect(s.tonight.steps.map((st) => st.role.id), ['comedien', 'voyante', 'loup_garou']);
+      expect(s.currentStep!.role.id, 'voyante');
+      expect(s.currentStepNeedsIdentify, isFalse);
+      final log = frenchJournal(await repo.watchNightLog(game.gameId).first);
+      expect(log, contains('Le Comédien joue la Voyante'));
+    });
+
+    test('the card used is out the next night, and he is called until the last one', () async {
+      final game = await _startedGame(repo, composition: comp);
+      final n = await notifierFor(game.gameId);
+      final ids = game.seatRowIds;
+      await n.identifyRole('comedien', [ids[0]]);
+      await n.actorSetCards(cards);
+      await n.actorChoose('voyante');
+      await n.skipStep(); // the Seer's look, which the Actor passes
+      await n.identifyRole('loup_garou', [ids[1], ids[2]]);
+      await n.applyAction(WolvesTarget(targetPlayerId: '${ids[5]}'));
+      await n.applyAction(const FinalizeNight());
+      await n.revealRole(ids[5], 'villageois');
+
+      await n.startNextNight();
+
+      var s = stateOf(game.gameId);
+      expect(s.engine.actor?.available, ['sorciere', 'salvateur']);
+      expect(s.tonight.steps.map((st) => st.role.id), ['comedien', 'loup_garou']);
+      expect(s.currentStepNeedsIdentify, isFalse);
+
+      await n.actorChoose('salvateur');
+      s = stateOf(game.gameId);
+      expect(s.tonight.steps.map((st) => st.role.id), ['comedien', 'salvateur', 'loup_garou']);
+      expect(s.currentStep!.role.id, 'salvateur');
+    });
+  });
+
   group('the Devoted Servant', () {
     const comp = {'servante_devouee': 1, 'juge_begue': 1, 'loup_garou': 2, 'villageois': 2};
 

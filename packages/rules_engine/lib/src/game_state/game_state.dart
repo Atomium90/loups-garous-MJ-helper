@@ -69,6 +69,28 @@ class ServantTakeover {
   const ServantTakeover({required this.playerId, required this.roleId, required this.day});
 }
 
+/// The Comedien's three cards: those laid face up for him, the ones already used, and the one
+/// whose power he has tonight.
+class ActorState {
+  final List<String> cards;
+  final List<String> used;
+  final String? current;
+
+  const ActorState({required this.cards, this.used = const [], this.current});
+
+  /// The cards he can still choose from.
+  List<String> get available => [
+    for (final c in cards)
+      if (!used.contains(c)) c,
+  ];
+
+  ActorState copyWith({List<String>? used, Object? current = _unset}) => ActorState(
+    cards: cards,
+    used: used ?? this.used,
+    current: identical(current, _unset) ? this.current : current as String?,
+  );
+}
+
 class LoversPair {
   final String playerAId;
   final String playerBId;
@@ -141,6 +163,9 @@ class GameState {
   /// The role the Servante Devouee took over, once she did.
   final ServantTakeover? servantTakeover;
 
+  /// The Comedien's cards, once the MJ laid them down.
+  final ActorState? actor;
+
   /// Non-null exactly while a death cascade is paused on a Hunter/Captain
   /// choice only the MJ can make.
   final CascadeState? cascade;
@@ -170,6 +195,7 @@ class GameState {
     this.voteRestriction,
     this.division,
     this.servantTakeover,
+    this.actor,
     this.cascade,
     this.spentPowers = const {},
   });
@@ -262,6 +288,7 @@ class GameState {
     Object? voteRestriction = _unset,
     Object? division = _unset,
     Object? servantTakeover = _unset,
+    Object? actor = _unset,
     Object? cascade = _unset,
     Map<String, int>? spentPowers,
   }) => GameState(
@@ -302,6 +329,7 @@ class GameState {
     servantTakeover: identical(servantTakeover, _unset)
         ? this.servantTakeover
         : servantTakeover as ServantTakeover?,
+    actor: identical(actor, _unset) ? this.actor : actor as ActorState?,
     cascade: identical(cascade, _unset) ? this.cascade : cascade as CascadeState?,
     spentPowers: spentPowers ?? this.spentPowers,
   );

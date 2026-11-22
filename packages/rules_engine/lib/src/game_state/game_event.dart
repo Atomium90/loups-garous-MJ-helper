@@ -163,6 +163,20 @@ class ServantTookRole implements GameEvent {
   });
 }
 
+/// The Comedien's cards were laid face up.
+class ActorCardsSet implements GameEvent {
+  final List<String> roleIds;
+
+  const ActorCardsSet({required this.roleIds});
+}
+
+/// The Comedien took a card's power for the night.
+class ActorChoseCard implements GameEvent {
+  final String roleId;
+
+  const ActorChoseCard({required this.roleId});
+}
+
 class LoversPaired implements GameEvent {
   final String playerAId;
   final String playerBId;

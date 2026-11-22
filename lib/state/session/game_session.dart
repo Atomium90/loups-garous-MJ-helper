@@ -216,6 +216,10 @@ class GameSessionState {
     if (step == null || cursor.subStep == NightSubStep.act) return false;
     // The charmed players' call is made of whoever was charmed: nobody to identify.
     if (step.role.id == kCharmedStepRole.id) return false;
+    // The card the Actor plays has no holder of its own: it is him.
+    if (step.role.id == engine.actor?.current && (composition[step.role.id] ?? 0) == 0) {
+      return false;
+    }
     return dealtHoldersKnown(step.role.id) < expectedHolders(step.role.id);
   }
 
@@ -570,6 +574,14 @@ class GameSession extends _$GameSession {
   Future<void> piperCharm(List<String> engineIds) =>
       applyAction(PiperCharm(playerIds: engineIds));
 
+  // --- night: Comédien ---
+
+  /// The three cards laid face up for the Actor.
+  Future<void> actorSetCards(List<String> roleIds) => applyAction(ActorSetCards(roleIds: roleIds));
+
+  /// The Actor takes the power of [roleId] for tonight.
+  Future<void> actorChoose(String roleId) => applyAction(ActorChooseCard(roleId: roleId));
+
   // --- day: Servante Dévouée ---
 
   /// The Devoted Servant ([servantId]) reveals herself right after the vote that eliminated
@@ -881,6 +893,7 @@ class GameSession extends _$GameSession {
     WhiteWolfEat() ||
     PiperCharm() ||
     DivideVillage() ||
+    ActorChooseCard() ||
     DefenderProtect() => SessionCursor(
       stepIndex: c.stepIndex + 1,
       subStep: NightSubStep.identify,

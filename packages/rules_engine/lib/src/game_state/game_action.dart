@@ -103,6 +103,21 @@ class ServantTakesRole implements GameAction {
   const ServantTakesRole({required this.servantPlayerId, required this.deadPlayerId});
 }
 
+/// The MJ lays the Comedien's cards face up: [roleIds] are [actorCardCount] distinct roles among
+/// [actorCardRoleIds].
+class ActorSetCards implements GameAction {
+  final List<String> roleIds;
+
+  const ActorSetCards({required this.roleIds});
+}
+
+/// The Comedien uses the power of [roleId] tonight, a card still on the table.
+class ActorChooseCard implements GameAction {
+  final String roleId;
+
+  const ActorChooseCard({required this.roleId});
+}
+
 class CupidonPair implements GameAction {
   final String playerAId;
   final String playerBId;

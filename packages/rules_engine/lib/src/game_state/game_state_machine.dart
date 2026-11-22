@@ -1,6 +1,7 @@
 import '../models/death_effect.dart';
 import '../models/team.dart';
 import '../role_registry/role_registry.dart';
+import 'actor_cards.dart';
 import 'death_cascade.dart';
 import 'death_cause.dart';
 import 'game_action.dart';
@@ -105,6 +106,10 @@ class GameStateMachine {
         return _applyDivideVillage(state, action);
       case ServantTakesRole():
         return _applyServantTakesRole(state, action, roleRegistry);
+      case ActorSetCards():
+        return _applyActorSetCards(state, action);
+      case ActorChooseCard():
+        return _applyActorChooseCard(state, action);
       case CaptainNoSuccessor():
         return _applyCaptainNoSuccessor(state, roleRegistry);
       case DayVoteTie():
@@ -411,6 +416,16 @@ class GameStateMachine {
       ..addAll(drained.events)
       ..add(NightFinalized(nightIndex: state.nightIndex));
 
+    // The card the Comedien used leaves the game; with the last one gone he is not called again.
+    var actor = drained.state.actor;
+    var spentPowers = drained.state.spentPowers;
+    if (actor != null && actor.current != null) {
+      actor = actor.copyWith(used: [...actor.used, actor.current!], current: null);
+      if (actor.available.isEmpty) {
+        spentPowers = {...spentPowers, 'comedien': state.nightIndex};
+      }
+    }
+
     return ActionResult(
       state: drained.state.copyWith(
         phase: GamePhase.day,
@@ -420,6 +435,8 @@ class GameStateMachine {
         pendingWhiteWolfVictimId: null,
         defenderProtectedId: null,
         defenderLastProtectedId: state.defenderProtectedId,
+        actor: actor,
+        spentPowers: spentPowers,
         knightWound: diseased != null ? null : drained.state.knightWound,
         cascade: drained.pendingDecision == null
             ? null
@@ -562,6 +579,46 @@ class GameStateMachine {
               ),
       ),
       events: [PlayerDied(playerId: wound.wolfId, cause: cause), ...drained.events],
+    );
+  }
+
+  ActionResult _applyActorSetCards(GameState state, ActorSetCards action) {
+    _requireNightPhase(state, 'The Comedien\'s cards are laid down at night');
+    final ids = action.roleIds;
+    if (state.actor != null && state.actor!.used.isNotEmpty) {
+      throw InvalidActionError('The Comedien already used one of his cards');
+    }
+    if (ids.length != actorCardCount || ids.toSet().length != ids.length) {
+      throw InvalidActionError('The Comedien has $actorCardCount different cards');
+    }
+    for (final id in ids) {
+      if (!actorCardRoleIds.contains(id)) {
+        throw InvalidActionError('$id cannot be a card of the Comedien');
+      }
+    }
+    return ActionResult(
+      state: state.copyWith(actor: ActorState(cards: [...ids])),
+      events: [ActorCardsSet(roleIds: [...ids])],
+    );
+  }
+
+  ActionResult _applyActorChooseCard(GameState state, ActorChooseCard action) {
+    _requireNightPhase(state, 'The Comedien chooses his card at night');
+    final actor = state.actor;
+    if (actor == null) throw InvalidActionError('The Comedien\'s cards are not laid down');
+    if (actor.current != null) {
+      throw InvalidActionError('The Comedien already chose a card tonight');
+    }
+    if (!actor.available.contains(action.roleId)) {
+      throw InvalidActionError('${action.roleId} is not a card left to the Comedien');
+    }
+    // Cupidon only ever pairs lovers on the first night, and once.
+    if (action.roleId == 'cupidon' && (state.nightIndex != 1 || state.lovers != null)) {
+      throw InvalidActionError('Cupidon cannot be played any more');
+    }
+    return ActionResult(
+      state: state.copyWith(actor: actor.copyWith(current: action.roleId)),
+      events: [ActorChoseCard(roleId: action.roleId)],
     );
   }
 

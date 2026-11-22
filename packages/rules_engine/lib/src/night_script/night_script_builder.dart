@@ -57,6 +57,7 @@ class NightScriptBuilder {
         );
       }
       if (losesNightCall(role, night)) return false;
+      if (role.id == night.actorCard) return true;
       if (wakeCondition.isActiveFor(role, night)) return true;
       // Not its night of power, but it wakes with the wolves tonight and must be identified.
       if (nightIndex == 1 && role.knownOnFirstNight) {

@@ -37,6 +37,17 @@ const allRoles = <Role>[
     wakeCondition: WakeCondition.firstNightOnly,
     actionType: ActionType.selectOne,
   ),
+  // Each night he uses the power of one of three cards laid face up for him, until the next night;
+  // the card then leaves the game. Once all three are used he is no longer called.
+  Role(
+    id: 'comedien',
+    team: Team.ambiguous,
+    hasNightCall: true,
+    wakeCondition: WakeCondition.conditional,
+    wakeGuard: WakeGuard.powerUnspent,
+    optionalCall: true,
+    orderConstraints: [OrderConstraint.after('voleur')],
+  ),
   Role(
     id: 'cupidon',
     team: Team.village,

@@ -82,6 +82,8 @@ NightScript buildNightScript({
       for (final entry in composition.entries)
         if (entry.value > 0) entry.key,
       ...heldRoleIds,
+      // The card the Actor took for tonight is a role of its own to call, with no holder.
+      ?engine.actor?.current,
     };
     final roles = _inCallOrder(
       [for (final id in ids) registry.byId(id)],
@@ -130,6 +132,8 @@ NightScript buildNightScript({
   for (final id in heldRoleIds) {
     consider(registry.byId(id));
   }
+  final actorCard = engine.actor?.current;
+  if (actorCard != null && seen.add(actorCard)) callable.add(registry.byId(actorCard));
 
   final inOrder = _inCallOrder(callable, registry, foxAfterWitch: foxAfterWitch);
   return _withCharmedStep(
@@ -164,6 +168,7 @@ NightContext _contextFor(
   spentPowers: engine.spentPowersBeforeTonight,
   wolfSideLost: engine.wolfSideLost(RoleRegistry.all),
   villagersPowerless: engine.villagersPowerless,
+  actorCard: engine.actor?.current,
   );
 }
 
