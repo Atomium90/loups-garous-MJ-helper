@@ -149,6 +149,8 @@
   "settingsWhiteWolfOddHint": "The booklets do not say which night to start on. By default he is alone on nights 2, 4, 6…; on, nights 1, 3, 5… Applies to each new game.",
   "settingsKnightNightEnd": "Knight's disease at the end of the night",
   "settingsKnightNightEndHint": "The booklets differ: the Best Of kills the wolf as the next night begins (the default), Characters as it ends. Same effect for the players.",
+  "settingsDealNotes": "Only note the roles when needed",
+  "settingsDealNotesHint": "At the deal, the app offers to note each player's role. When on, it only does so if the composition requires it (Fox, Bear Tamer, Angel, Elder...); otherwise the deal stays blind.",
   "settingsVoteTieTitle": "Tied vote",
   "voteTieNobody": "Nobody",
   "voteTieCaptain": "Sheriff",

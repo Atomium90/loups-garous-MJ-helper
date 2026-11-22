@@ -186,6 +186,19 @@ class _SettingsBody extends StatelessWidget {
                 value: settings.aideMemoireInScript,
                 onChanged: (v) => notifier?.setAideMemoireInScript(v),
               ),
+              _ToggleRow(
+                icon: AppIcons.deal,
+                label: context.l10n.settingsDealNotes,
+                value: settings.dealNotesOnlyIfNeeded,
+                onChanged: (v) => notifier?.setDealNotesOnlyIfNeeded(v),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  context.l10n.settingsDealNotesHint,
+                  style: typography.counter.copyWith(color: colors.textTertiary, height: 1.55),
+                ),
+              ),
               const SizedBox(height: 22),
               SectionLabel(context.l10n.settingsVoteTieTitle),
               const SizedBox(height: 10),

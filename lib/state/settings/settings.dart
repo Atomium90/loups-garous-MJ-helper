@@ -94,6 +94,10 @@ class AppSettings {
   /// The MJ lets the app send anonymous crash reports. Off until they say so.
   final bool crashReports;
 
+  /// The app only asks the MJ to note each player's role at the deal when the composition holds a
+  /// role that needs it (the Fox, the Elder...). Off: it always offers to.
+  final bool dealNotesOnlyIfNeeded;
+
   const AppSettings({
     required this.themeMode,
     required this.keepScreenOn,
@@ -108,6 +112,7 @@ class AppSettings {
     required this.knightDiseaseAtNightEnd,
     required this.voteTieRule,
     required this.crashReports,
+    required this.dealNotesOnlyIfNeeded,
   });
 
   static const defaults = AppSettings(
@@ -124,6 +129,7 @@ class AppSettings {
     knightDiseaseAtNightEnd: false,
     voteTieRule: VoteTieRule.nobody,
     crashReports: false,
+    dealNotesOnlyIfNeeded: false,
   );
 
   AppSettings copyWith({
@@ -140,6 +146,7 @@ class AppSettings {
     bool? knightDiseaseAtNightEnd,
     VoteTieRule? voteTieRule,
     bool? crashReports,
+    bool? dealNotesOnlyIfNeeded,
   }) => AppSettings(
     themeMode: themeMode ?? this.themeMode,
     keepScreenOn: keepScreenOn ?? this.keepScreenOn,
@@ -154,5 +161,6 @@ class AppSettings {
     knightDiseaseAtNightEnd: knightDiseaseAtNightEnd ?? this.knightDiseaseAtNightEnd,
     voteTieRule: voteTieRule ?? this.voteTieRule,
     crashReports: crashReports ?? this.crashReports,
+    dealNotesOnlyIfNeeded: dealNotesOnlyIfNeeded ?? this.dealNotesOnlyIfNeeded,
   );
 }

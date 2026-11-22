@@ -25,7 +25,7 @@ Future<void> _openSettingsInApp(
 }) async {
   SharedPreferences.setMockInitialValues({'language': ?stored});
   // Réglages is long: tall enough to see the language section without scrolling.
-  await tester.binding.setSurfaceSize(const Size(400, 2000));
+  await tester.binding.setSurfaceSize(const Size(400, 2400));
   addTearDown(() => tester.binding.setSurfaceSize(null));
   tester.platformDispatcher.localesTestValue = [device];
   addTearDown(tester.platformDispatcher.clearLocalesTestValue);
@@ -73,7 +73,7 @@ void main() {
   });
 
   testWidgets('switching the theme segment persists the choice', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    await tester.binding.setSurfaceSize(const Size(400, 2400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAppRouter(
       tester,
@@ -90,7 +90,7 @@ void main() {
   });
 
   testWidgets('the narration level can be changed and is remembered', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    await tester.binding.setSurfaceSize(const Size(400, 2400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAppRouter(
       tester,
@@ -109,7 +109,7 @@ void main() {
 
   group('the language', () {
     testWidgets('can be forced from Réglages and is remembered', (tester) async {
-      await tester.binding.setSurfaceSize(const Size(400, 2000));
+      await tester.binding.setSurfaceSize(const Size(400, 2400));
       addTearDown(() => tester.binding.setSurfaceSize(null));
       await pumpAppRouter(
         tester,
@@ -151,7 +151,7 @@ void main() {
 
   testWidgets('the aide-mémoire toggle flips and persists', (tester) async {
     // Réglages is longer than the default test screen since the language section was added.
-    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    await tester.binding.setSurfaceSize(const Size(400, 2400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAppRouter(
       tester,
@@ -170,7 +170,7 @@ void main() {
   testWidgets('the Thief reserve toggle is off by default and persists once flipped', (
     tester,
   ) async {
-    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    await tester.binding.setSurfaceSize(const Size(400, 2400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAppRouter(
       tester,
@@ -187,7 +187,7 @@ void main() {
   });
 
   testWidgets('the tie rule can be chosen and is remembered', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    await tester.binding.setSurfaceSize(const Size(400, 2400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAppRouter(
       tester,
@@ -206,7 +206,7 @@ void main() {
   testWidgets('the crash reports are not offered by a build with nowhere to send them', (
     tester,
   ) async {
-    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    await tester.binding.setSurfaceSize(const Size(400, 2400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAppRouter(
       tester,
@@ -219,7 +219,7 @@ void main() {
   });
 
   testWidgets('the crash reports are off until flipped, and the choice persists', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    await tester.binding.setSurfaceSize(const Size(400, 2400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAppRouter(
       tester,
@@ -239,8 +239,26 @@ void main() {
     expect((await SharedPreferences.getInstance()).getBool('crash_reports'), isTrue);
   });
 
+  testWidgets('the deal notes toggle is off by default and persists once flipped', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 2400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
+      initialLocation: '/settings',
+    );
+    await tester.pumpAndSettle();
+
+    expect((await SharedPreferences.getInstance()).getBool('deal_notes_only_if_needed'), isNull);
+
+    await tester.tap(find.text("Ne noter les rôles qu'au besoin"));
+    await tester.pumpAndSettle();
+
+    expect((await SharedPreferences.getInstance()).getBool('deal_notes_only_if_needed'), isTrue);
+  });
+
   testWidgets('the Knight disease toggle persists once flipped', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    await tester.binding.setSurfaceSize(const Size(400, 2400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAppRouter(
       tester,
@@ -256,7 +274,7 @@ void main() {
   });
 
   testWidgets('the White Werewolf parity toggle persists once flipped', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    await tester.binding.setSurfaceSize(const Size(400, 2400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAppRouter(
       tester,
@@ -272,7 +290,7 @@ void main() {
   });
 
   testWidgets('the Fox position toggle persists once flipped', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    await tester.binding.setSurfaceSize(const Size(400, 2400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAppRouter(
       tester,
@@ -309,7 +327,7 @@ void main() {
     }
 
     Future<void> openSettings(WidgetTester tester, FakeGameRepository repository) async {
-      await tester.binding.setSurfaceSize(const Size(400, 2000));
+      await tester.binding.setSurfaceSize(const Size(400, 2400));
       addTearDown(() => tester.binding.setSurfaceSize(null));
       await pumpAppRouter(
         tester,

@@ -946,6 +946,14 @@
   "@settingsKnightNightEndHint": {
     "description": "Explains the Knight disease timing setting."
   },
+  "settingsDealNotes": "Ne noter les rôles qu'au besoin",
+  "@settingsDealNotes": {
+    "description": "Toggle: only ask to note each player's role at the deal when the composition needs it."
+  },
+  "settingsDealNotesHint": "À la distribution, l'app propose de noter le rôle de chaque joueur. Activé, elle ne le propose que si la composition l'exige (Renard, Montreur d'Ours, Ange, Ancien...) ; sinon la distribution reste à l'aveugle.",
+  "@settingsDealNotesHint": {
+    "description": "Explains the setting about noting the roles at the deal."
+  },
   "settingsVoteTieTitle": "Égalité au vote",
   "@settingsVoteTieTitle": {
     "description": "Settings section: what a tied village vote does."
