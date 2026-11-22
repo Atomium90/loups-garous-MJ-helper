@@ -852,6 +852,23 @@
       }
     }
   },
+  "beforeNightMissingTitle": "Des cartes ne sont pas notées",
+  "@beforeNightMissingTitle": {
+    "description": "Title of the question asked when starting the game while some players have no card noted."
+  },
+  "beforeNightMissingMessage": "{count, plural, =1{1 joueur n'a pas de carte notée} other{{count} joueurs n'ont pas de carte notée}}. L'app vous les demandera au fil de la partie, mais certains effets (voisins du Renard ou du Montreur d'Ours, vote de l'Ange...) seront moins fiables.",
+  "@beforeNightMissingMessage": {
+    "description": "Explains what going on without noting every card means.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "beforeNightMissingConfirm": "Commencer quand même",
+  "@beforeNightMissingConfirm": {
+    "description": "Starts the game although some cards are not noted."
+  },
   "dealRoleTitle": "Carte de {name}",
   "@dealRoleTitle": {
     "description": "Title of the sheet where the MJ picks the card a player was dealt.",

@@ -28,6 +28,9 @@ Future<int> _readyToDeal(
 }
 
 void main() {
+  // The settings live in SharedPreferences, which outlives a test: start each one on the defaults.
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   testWidgets('shows the roster names and the deck line derived from the composition', (
     tester,
   ) async {
@@ -123,8 +126,6 @@ void main() {
   group('noting the cards at the deal', () {
     const names = ['Camille', 'Julien', 'Noa', 'Lina', 'Théo', 'Awa'];
     const plain = {'loup_garou': 2, 'voyante': 1, 'villageois': 3};
-
-    setUp(() => SharedPreferences.setMockInitialValues({}));
 
     Future<void> open(WidgetTester tester, FakeGameRepository repository, int id) async {
       await pumpScreen(
@@ -262,9 +263,89 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Commencer la nuit 1'));
       await tester.pumpAndSettle();
+      await tester.tap(find.text('Commencer quand même'));
+      await tester.pumpAndSettle();
 
       expect((await repository.getGame(id))!.status, GameStatus.inProgress);
       expect((await repository.getRoster(id))[0].roleId, 'voyante');
+    });
+
+    testWidgets('starting with cards not noted asks first, and cancelling keeps the deal open', (
+      tester,
+    ) async {
+      final repository = FakeGameRepository();
+      final id = await _readyToDeal(repository, composition: plain, names: names);
+      await pumpAppRouter(
+        tester,
+        overrides: [gameRepositoryProvider.overrideWithValue(repository)],
+        initialLocation: '/games/$id/before-night',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Camille'));
+      await tester.pumpAndSettle();
+      await tester.tap(inSheet('Voyante'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Commencer la nuit 1'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Des cartes ne sont pas notées'), findsOneWidget);
+      expect(find.textContaining('5 joueurs n'), findsOneWidget);
+
+      await tester.tap(find.text('Annuler'));
+      await tester.pumpAndSettle();
+
+      expect((await repository.getGame(id))!.status, GameStatus.setup);
+      expect(find.byType(BeforeNightScreen), findsOneWidget);
+    });
+
+    testWidgets('with every card noted the game starts without asking', (tester) async {
+      final repository = FakeGameRepository();
+      final id = await _readyToDeal(
+        repository,
+        composition: const {'loup_garou': 1, 'voyante': 1, 'villageois': 1},
+        names: const ['Lina', 'Théo', 'Awa'],
+      );
+      await pumpAppRouter(
+        tester,
+        overrides: [gameRepositoryProvider.overrideWithValue(repository)],
+        initialLocation: '/games/$id/before-night',
+      );
+      await tester.pumpAndSettle();
+      for (final (name, card) in [
+        ('Lina', 'Loup-Garou'),
+        ('Théo', 'Voyante'),
+        ('Awa', 'Simple Villageois'),
+      ]) {
+        await tester.tap(find.text(name));
+        await tester.pumpAndSettle();
+        await tester.tap(inSheet(card));
+        await tester.pumpAndSettle();
+      }
+
+      await tester.tap(find.text('Commencer la nuit 1'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Des cartes ne sont pas notées'), findsNothing);
+      expect((await repository.getGame(id))!.status, GameStatus.inProgress);
+    });
+
+    testWidgets('a deal that is not noted at all starts without asking', (tester) async {
+      SharedPreferences.setMockInitialValues({'deal_notes_only_if_needed': true});
+      final repository = FakeGameRepository();
+      final id = await _readyToDeal(repository, composition: plain, names: names);
+      await pumpAppRouter(
+        tester,
+        overrides: [gameRepositoryProvider.overrideWithValue(repository)],
+        initialLocation: '/games/$id/before-night',
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Commencer la nuit 1'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Des cartes ne sont pas notées'), findsNothing);
+      expect((await repository.getGame(id))!.status, GameStatus.inProgress);
     });
   });
 
@@ -285,6 +366,9 @@ void main() {
     expect(find.byType(BeforeNightScreen), findsOneWidget);
 
     await tester.tap(find.text('Commencer la nuit 1'));
+    await tester.pumpAndSettle();
+    // Nothing is noted at the deal: the MJ is asked whether to go on blind.
+    await tester.tap(find.text('Commencer quand même'));
     await tester.pumpAndSettle();
 
     expect((await repository.getGame(id))!.status, GameStatus.inProgress);

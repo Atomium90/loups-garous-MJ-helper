@@ -18,6 +18,7 @@ import '../../utils/l10n.dart';
 import '../../utils/labels.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/app_sheet.dart';
+import '../../widgets/confirm_sheet.dart';
 import '../../widgets/player_avatar.dart';
 import 'deal_role_sheet.dart';
 
@@ -72,7 +73,19 @@ class _Body extends ConsumerWidget {
   final Game game;
   final List<PlayerRow> roster;
 
-  Future<void> _onStart(BuildContext context, WidgetRef ref) async {
+  /// Starts the game. When the cards are noted at the deal but some players have none, asks first
+  /// whether to go on without: the app will then have to ask about them during the game.
+  Future<void> _onStart(BuildContext context, WidgetRef ref, {required int missing}) async {
+    if (missing > 0) {
+      final goOn = await showConfirmSheet(
+        context,
+        title: context.l10n.beforeNightMissingTitle,
+        message: context.l10n.beforeNightMissingMessage(missing),
+        confirmLabel: context.l10n.beforeNightMissingConfirm,
+        onConfirm: () async {},
+      );
+      if (goOn != true || !context.mounted) return;
+    }
     final router = GoRouter.of(context);
     await ref.read(gameRepositoryProvider).startGame(gameId);
     // Into the running-game shell; GameSession seeds the night-1 snapshot lazily on first read.
@@ -199,7 +212,11 @@ class _Body extends ConsumerWidget {
                 ? context.l10n.beforeNightStartAngel
                 : context.l10n.beforeNightStart,
             leadingIcon: AppIcons.nightStart,
-            onPressed: () => _onStart(context, ref),
+            onPressed: () => _onStart(
+              context,
+              ref,
+              missing: noting ? roster.where((p) => p.roleId == null).length : 0,
+            ),
           ),
         ),
       ],
