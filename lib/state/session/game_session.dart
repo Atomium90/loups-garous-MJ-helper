@@ -105,7 +105,8 @@ class GameSessionState {
   bool mayBeElder(String playerId) {
     final elders = dealtComposition['ancien'] ?? 0;
     if (elders == 0) return false;
-    if (engine.playerById(playerId).roleId != kPlaceholderRoleId) return false;
+    // A card noted as a Simple Villageois is known too: only an unnoted one may be the Elder.
+    if (rosterRoleId(playerId) != null) return false;
     return engine.players.where((p) => p.roleId == 'ancien').length < elders;
   }
 
@@ -128,7 +129,7 @@ class GameSessionState {
   bool mayBeIdiot(String playerId) {
     final idiots = dealtComposition['idiot_du_village'] ?? 0;
     if (idiots == 0) return false;
-    if (engine.playerById(playerId).roleId != kPlaceholderRoleId) return false;
+    if (rosterRoleId(playerId) != null) return false;
     return engine.players.where((p) => p.roleId == 'idiot_du_village').length < idiots;
   }
 

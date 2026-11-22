@@ -1528,6 +1528,20 @@ void main() {
       expect(s.dayInterrupt, isNull);
     });
 
+    test('a player noted as a Simple Villageois is not asked about as the Elder or the Idiot', () async {
+      final game = await _startedGame(
+        repo,
+        composition: {'ancien': 1, 'idiot_du_village': 1, 'loup_garou': 2, 'villageois': 2},
+      );
+      await repo.assignRoles(playerRowIds: [game.seatRowIds[1]], roleId: 'villageois');
+      final s = await container.read(gameSessionProvider(game.gameId).future);
+
+      expect(s.mayBeElder('${game.seatRowIds[0]}'), isTrue); // nothing noted: could be him
+      expect(s.mayBeElder('${game.seatRowIds[1]}'), isFalse);
+      expect(s.mayBeIdiot('${game.seatRowIds[0]}'), isTrue);
+      expect(s.mayBeIdiot('${game.seatRowIds[1]}'), isFalse);
+    });
+
     test('a Chasseur noted at the deal shoots as soon as he is devoured', () async {
       final hunters = ['loup_garou', 'loup_garou', 'voyante', 'sorciere', 'chasseur', 'villageois'];
       final game = await dealtGame({
