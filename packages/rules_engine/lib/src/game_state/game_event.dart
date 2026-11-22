@@ -143,6 +143,13 @@ class JudgeSignGiven implements GameEvent {
   const JudgeSignGiven();
 }
 
+/// The village was divided in two groups.
+class VillageDivided implements GameEvent {
+  final Set<String> groupAPlayerIds;
+
+  const VillageDivided({required this.groupAPlayerIds});
+}
+
 class LoversPaired implements GameEvent {
   final String playerAId;
   final String playerBId;

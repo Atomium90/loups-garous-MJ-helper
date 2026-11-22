@@ -449,6 +449,49 @@ void main() {
     });
   });
 
+  group('the Abominable Sectaire', () {
+    const comp = {'abominable_sectaire': 1, 'loup_garou': 2, 'villageois': 3};
+
+    test('the division is journalled, kept, and moves on to the next step', () async {
+      final game = await _startedGame(repo, composition: comp);
+      final n = await notifierFor(game.gameId);
+      await n.identifyRole('abominable_sectaire', [game.seatRowIds[0]]);
+
+      await n.divideVillage({'${game.seatRowIds[0]}', '${game.seatRowIds[1]}'});
+
+      final s = stateOf(game.gameId);
+      expect(s.engine.division?.groupA, {'${game.seatRowIds[0]}', '${game.seatRowIds[1]}'});
+      expect(s.currentStep!.role.id, 'loup_garou');
+      final log = frenchJournal(await repo.watchNightLog(game.gameId).first);
+      expect(log, contains('Le village est divisé : Ana, Bo contre Cy, Di, Ed, Fi'));
+    });
+
+    test('his victory is proposed once the other group is eliminated', () async {
+      final game = await _startedGame(repo, composition: comp);
+      final n = await notifierFor(game.gameId);
+      final ids = game.seatRowIds;
+      await n.identifyRole('abominable_sectaire', [ids[0]]);
+      // Ana the Sectaire shares her group with the wolf Bo and the villager Di; the other group
+      // is the wolf Cy, Ed and Fi.
+      await n.divideVillage({'${ids[0]}', '${ids[1]}', '${ids[3]}'});
+      await n.identifyRole('loup_garou', [ids[1], ids[2]]);
+      await n.applyAction(WolvesTarget(targetPlayerId: '${ids[4]}'));
+      await n.applyAction(const FinalizeNight());
+      await n.revealRole(ids[4], 'villageois');
+      expect(stateOf(game.gameId).proposedWinner, isNull);
+
+      await n.applyAction(DayVoteElimination(targetPlayerId: '${ids[2]}'));
+      await n.applyAction(DayVoteElimination(targetPlayerId: '${ids[5]}'));
+
+      expect(stateOf(game.gameId).engine.alivePlayers.map((p) => p.id), [
+        '${ids[0]}',
+        '${ids[1]}',
+        '${ids[3]}',
+      ]);
+      expect(stateOf(game.gameId).proposedWinner, GameWinner.sectarian);
+    });
+  });
+
   group('the Wandering Judge', () {
     const comp = {'juge_begue': 1, 'loup_garou': 2, 'villageois': 3};
 

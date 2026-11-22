@@ -324,6 +324,14 @@ class _NightBody extends ConsumerWidget {
           onSecondary: notifier.skipStep,
         );
 
+      case 'abominable_sectaire':
+        // The village is divided before the night; he has no call of his own.
+        return _DivideAct(
+          candidates: [for (final p in session.engine.players) cand(p)],
+          onConfirm: notifier.divideVillage,
+          onSkip: notifier.skipStep,
+        );
+
       case 'juge_begue':
         // He only shows the MJ his secret sign; the second vote it calls for plays in the day.
         return SimpleAct(
@@ -1155,6 +1163,7 @@ IconData _roleIcon(String roleId) => switch (roleId) {
   'trois_freres' => AppIcons.brothers,
   'villageois_villageois' => AppIcons.trustedVillager,
   'juge_begue' => AppIcons.judge,
+  'abominable_sectaire' => AppIcons.sectarian,
   'montreur_d_ours' => AppIcons.bearTamer,
   'enfant_sauvage' => AppIcons.wildChild,
   'chien_loup' => AppIcons.chienLoup,
@@ -1355,6 +1364,85 @@ List<({String roleId, int remaining})> unassignedRoles(GameSessionState session)
       if (e.value - (assigned[e.key] ?? 0) > 0)
         (roleId: e.key, remaining: e.value - (assigned[e.key] ?? 0)),
   ];
+}
+
+/// Divides the village in two groups, for the Abominable Sectaire: the MJ picks the first, and
+/// everybody else is the second. Optional: it can be passed.
+class _DivideAct extends StatefulWidget {
+  const _DivideAct({required this.candidates, required this.onConfirm, required this.onSkip});
+
+  final List<Candidate> candidates;
+  final ValueChanged<Set<String>> onConfirm;
+  final VoidCallback onSkip;
+
+  @override
+  State<_DivideAct> createState() => _DivideActState();
+}
+
+class _DivideActState extends State<_DivideAct> {
+  final _first = <String>{};
+
+  @override
+  Widget build(BuildContext context) {
+    // Both groups need someone.
+    final valid = _first.isNotEmpty && _first.length < widget.candidates.length;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 18, AppSpacing.screen, 10),
+          child: Text(
+            context.l10n.scriptDivideQuestion,
+            style: context.typography.rowLabel.copyWith(color: context.colors.textPrimary),
+          ),
+        ),
+        Expanded(
+          child: GridView.count(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.screen),
+            crossAxisCount: AppSizes.gridColumnsDefault,
+            mainAxisSpacing: AppSpacing.gridGapRow,
+            crossAxisSpacing: AppSpacing.gridGapColumn,
+            childAspectRatio: 1.0,
+            children: [
+              for (final c in widget.candidates)
+                AvatarPickCell(
+                  name: c.name,
+                  selected: _first.contains(c.id),
+                  onTap: () => setState(() {
+                    if (!_first.remove(c.id)) _first.add(c.id);
+                  }),
+                ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screen,
+            12,
+            AppSpacing.screen,
+            AppSpacing.screen,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: 8,
+            children: [
+              AppButton(
+                label: valid
+                    ? context.l10n.scriptDivideConfirm(_first.length)
+                    : context.l10n.scriptDividePick,
+                onPressed: valid ? () => widget.onConfirm({..._first}) : null,
+              ),
+              AppButton(
+                label: context.l10n.scriptSkipRole,
+                variant: AppButtonVariant.secondary,
+                onPressed: widget.onSkip,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 /// The Bear Tamer's growl, right after the victims are named. The app says whether it expects

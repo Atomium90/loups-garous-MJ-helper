@@ -86,6 +86,14 @@ class JudgeSign implements GameAction {
   const JudgeSign();
 }
 
+/// The MJ divides the village in two groups for the Abominable Sectaire: [groupAPlayerIds] are the
+/// first group, everyone else the second.
+class DivideVillage implements GameAction {
+  final Set<String> groupAPlayerIds;
+
+  const DivideVillage({required this.groupAPlayerIds});
+}
+
 class CupidonPair implements GameAction {
   final String playerAId;
   final String playerBId;

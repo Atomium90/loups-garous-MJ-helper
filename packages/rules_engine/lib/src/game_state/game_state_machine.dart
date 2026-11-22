@@ -101,6 +101,8 @@ class GameStateMachine {
         return _applyDefenderProtect(state, action);
       case JudgeSign():
         return _applyJudgeSign(state);
+      case DivideVillage():
+        return _applyDivideVillage(state, action);
       case CaptainNoSuccessor():
         return _applyCaptainNoSuccessor(state, roleRegistry);
       case DayVoteTie():
@@ -558,6 +560,21 @@ class GameStateMachine {
               ),
       ),
       events: [PlayerDied(playerId: wound.wolfId, cause: cause), ...drained.events],
+    );
+  }
+
+  ActionResult _applyDivideVillage(GameState state, DivideVillage action) {
+    _requireNight(state, 1, 'The village is divided before the first night');
+    final ids = action.groupAPlayerIds;
+    for (final id in ids) {
+      state.playerById(id); // validates existence
+    }
+    if (ids.isEmpty || ids.length >= state.players.length) {
+      throw InvalidActionError('Both groups need at least one player');
+    }
+    return ActionResult(
+      state: state.copyWith(division: VillageDivision(groupA: {...ids})),
+      events: [VillageDivided(groupAPlayerIds: {...ids})],
     );
   }
 

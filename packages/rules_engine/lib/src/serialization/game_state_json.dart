@@ -46,6 +46,7 @@ abstract final class GameStateJson {
       if (state.villagersPowerless) 'villagersPowerless': true,
       if (state.voteRestriction case final r?)
         'voteRestriction': {'allowed': [...r.allowed], 'day': r.day},
+      if (state.division case final d?) 'division': [...d.groupA],
       if (state.knightWound case final k?)
         'knightWound': {'wolf': k.wolfId, 'dueNight': k.dueNight, 'atNightEnd': k.atNightEnd},
       'cascade': ?_encodeCascade(state.cascade),
@@ -110,6 +111,10 @@ abstract final class GameStateJson {
           allowed: {for (final id in r['allowed'] as List<dynamic>) id as String},
           day: r['day'] as int,
         ),
+      },
+      division: switch (json['division'] as List<dynamic>?) {
+        null => null,
+        final ids => VillageDivision(groupA: {for (final id in ids) id as String}),
       },
       knightWound: switch (json['knightWound'] as Map<String, dynamic>?) {
         null => null,

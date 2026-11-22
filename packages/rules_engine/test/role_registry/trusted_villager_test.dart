@@ -33,8 +33,9 @@ void main() {
     expect(script(2), ['voyante', 'loup_garou']);
   });
 
-  test('no other role is settled before the night yet', () {
-    final before = registry.roles.where((r) => r.preparation).map((r) => r.id);
-    expect(before, ['villageois_villageois']);
+  test('the roles settled before the night come first, ahead of every real call', () {
+    final before = registry.roles.where((r) => r.preparation).map((r) => r.id).toList();
+    expect(before, ['villageois_villageois', 'abominable_sectaire']);
+    expect(registry.roles.take(before.length).every((r) => r.preparation), isTrue);
   });
 }

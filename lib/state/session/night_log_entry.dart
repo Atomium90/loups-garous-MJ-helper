@@ -72,6 +72,20 @@ List<NightLogEntry> nightLogEntriesFor(GameAction action, GameState before) {
     case JudgeSign():
       return [entry(JournalKind.judgeSign)];
 
+    case DivideVillage(:final groupAPlayerIds):
+      return [
+        entry(JournalKind.villageDivided, {
+          'player': [
+            for (final p in before.players)
+              if (groupAPlayerIds.contains(p.id)) p.name,
+          ].join(', '),
+          'other': [
+            for (final p in before.players)
+              if (!groupAPlayerIds.contains(p.id)) p.name,
+          ].join(', '),
+        }),
+      ];
+
     case DefenderProtect(:final targetPlayerId):
       return [entry(JournalKind.defenderProtects, {'player': name(targetPlayerId)})];
 

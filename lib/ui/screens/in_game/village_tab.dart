@@ -101,6 +101,9 @@ class _VillageBody extends StatelessWidget {
               dead: false,
               pardoned: p.hasStatus(PlayerStatus.pardoned),
               publicIdentity: p.roleId == 'villageois_villageois',
+              group: session.engine.division == null
+                  ? null
+                  : session.engine.division!.groupOf(p.id) + 1,
             ),
         ],
         if (dead.isNotEmpty) ...[
@@ -186,6 +189,7 @@ class _PlayerRow extends StatelessWidget {
     this.deathLine,
     this.pardoned = false,
     this.publicIdentity = false,
+    this.group,
   });
 
   final String name;
@@ -199,6 +203,9 @@ class _PlayerRow extends StatelessWidget {
 
   /// The Trusted Villager showed his card to everyone at the deal.
   final bool publicIdentity;
+
+  /// 1 or 2 once the village was divided in two groups, null otherwise.
+  final int? group;
 
   @override
   Widget build(BuildContext context) {
@@ -251,6 +258,11 @@ class _PlayerRow extends StatelessWidget {
                   if (deathLine != null)
                     Text(
                       deathLine!,
+                      style: typography.micro.copyWith(color: colors.textTertiary),
+                    ),
+                  if (group != null)
+                    Text(
+                      context.l10n.villageGroup(group!),
                       style: typography.micro.copyWith(color: colors.textTertiary),
                     ),
                   if (publicIdentity)

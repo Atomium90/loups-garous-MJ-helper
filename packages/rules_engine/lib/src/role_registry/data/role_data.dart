@@ -21,6 +21,15 @@ const allRoles = <Role>[
     wakeCondition: WakeCondition.firstNightOnly,
     preparation: true,
   ),
+  // The village is split in two groups before the night; he wins alone once the group he is not
+  // in is gone. The MJ notes who he is and how the village was divided.
+  Role(
+    id: 'abominable_sectaire',
+    team: Team.solo,
+    hasNightCall: true,
+    wakeCondition: WakeCondition.firstNightOnly,
+    preparation: true,
+  ),
   Role(
     id: 'voleur',
     team: Team.ambiguous, // settled only once he steals a card

@@ -534,6 +534,12 @@ class GameSession extends _$GameSession {
   Future<void> piperCharm(List<String> engineIds) =>
       applyAction(PiperCharm(playerIds: engineIds));
 
+  // --- night: Abominable Sectaire ---
+
+  /// The village is divided: [groupAEngineIds] are the first group, everyone else the second.
+  Future<void> divideVillage(Set<String> groupAEngineIds) =>
+      applyAction(DivideVillage(groupAPlayerIds: groupAEngineIds));
+
   // --- day: Juge Bègue ---
 
   /// The Wandering Judge gives his sign: a second vote follows this one.
@@ -804,6 +810,7 @@ class GameSession extends _$GameSession {
     BigBadWolfTarget() ||
     WhiteWolfEat() ||
     PiperCharm() ||
+    DivideVillage() ||
     DefenderProtect() => SessionCursor(
       stepIndex: c.stepIndex + 1,
       subStep: NightSubStep.identify,

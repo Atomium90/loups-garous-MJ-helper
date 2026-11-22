@@ -184,6 +184,7 @@ abstract final class AppIcons {
     'sword' => knight,
     'piper' => piperRole,
     'defender' => defender,
+    'sectarian' => sectarian,
     'crown' => captain,
     'vote' => vote,
     'scale' => scale,

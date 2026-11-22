@@ -48,6 +48,17 @@ class VoteRestriction {
   const VoteRestriction({required this.allowed, required this.day});
 }
 
+/// How the village was divided in two groups at the deal, for the Abominable Sectaire: [groupA] is
+/// the first group, every other player is in the second.
+class VillageDivision {
+  final Set<String> groupA;
+
+  const VillageDivision({required this.groupA});
+
+  /// 0 for the first group, 1 for the second.
+  int groupOf(String playerId) => groupA.contains(playerId) ? 0 : 1;
+}
+
 class LoversPair {
   final String playerAId;
   final String playerBId;
@@ -114,6 +125,9 @@ class GameState {
   /// Who the dead Scapegoat let vote on a coming day, until that day is over.
   final VoteRestriction? voteRestriction;
 
+  /// The two groups of the village, once the MJ divided it for the Abominable Sectaire.
+  final VillageDivision? division;
+
   /// Non-null exactly while a death cascade is paused on a Hunter/Captain
   /// choice only the MJ can make.
   final CascadeState? cascade;
@@ -141,6 +155,7 @@ class GameState {
     this.villagersPowerless = false,
     this.knightWound,
     this.voteRestriction,
+    this.division,
     this.cascade,
     this.spentPowers = const {},
   });
@@ -231,6 +246,7 @@ class GameState {
     bool? villagersPowerless,
     Object? knightWound = _unset,
     Object? voteRestriction = _unset,
+    Object? division = _unset,
     Object? cascade = _unset,
     Map<String, int>? spentPowers,
   }) => GameState(
@@ -267,6 +283,7 @@ class GameState {
     voteRestriction: identical(voteRestriction, _unset)
         ? this.voteRestriction
         : voteRestriction as VoteRestriction?,
+    division: identical(division, _unset) ? this.division : division as VillageDivision?,
     cascade: identical(cascade, _unset) ? this.cascade : cascade as CascadeState?,
     spentPowers: spentPowers ?? this.spentPowers,
   );

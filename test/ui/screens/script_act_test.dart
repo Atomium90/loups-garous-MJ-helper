@@ -642,6 +642,45 @@ void main() {
     });
   });
 
+  group('the Abominable Sectaire', () {
+    const comp = {'abominable_sectaire': 1, 'loup_garou': 2, 'villageois': 3};
+
+    testWidgets('is noted, then the village is divided in two groups, before the night', (
+      tester,
+    ) async {
+      final id = await _startedGame(repo, composition: comp);
+      await pump(tester, id);
+
+      expect(find.text('Qui est Abominable Sectaire ?'), findsOneWidget);
+      await identify(tester, ['Ana']);
+      expect(find.text('Qui est dans le premier groupe ? Tous les autres forment le second.'), findsOneWidget);
+      expect(find.text('Choisissez le premier groupe'), findsOneWidget);
+
+      await tester.tap(find.text('Ana').last); // the grid cell, under the role card's holder
+      await tester.tap(find.text('Bo'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Premier groupe : 2 joueurs'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Qui sont les Loups-Garous ?'), findsOneWidget);
+      await tester.tap(find.text('Village'));
+      await tester.pumpAndSettle();
+      expect(find.text('groupe 1'), findsNWidgets(2));
+      expect(find.text('groupe 2'), findsNWidgets(4));
+    });
+
+    testWidgets('the division can be passed', (tester) async {
+      final id = await _startedGame(repo, composition: comp);
+      await pump(tester, id);
+      await identify(tester, ['Ana']);
+
+      await tester.tap(find.text('Passer ce rôle'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Qui sont les Loups-Garous ?'), findsOneWidget);
+    });
+  });
+
   group('the Two Sisters and the Bear Tamer', () {
     testWidgets('the Sisters are identified together, meet, and the call can be passed', (
       tester,
