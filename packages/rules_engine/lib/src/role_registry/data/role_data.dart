@@ -72,6 +72,7 @@ const allRoles = <Role>[
     id: 'renard',
     team: Team.village,
     suggestionTier: 3,
+    needsDealNotes: true,
     hasNightCall: true,
     wakeCondition: WakeCondition.conditional,
     wakeGuard: WakeGuard.powerUnspent,
@@ -120,6 +121,7 @@ const allRoles = <Role>[
     id: 'montreur_d_ours',
     team: Team.village,
     suggestionTier: 3,
+    needsDealNotes: true,
     hasNightCall: true,
     wakeCondition: WakeCondition.firstNightOnly,
   ),
@@ -227,6 +229,7 @@ const allRoles = <Role>[
     id: 'ancien',
     team: Team.village,
     suggestionTier: 3,
+    needsDealNotes: true,
     hasNightCall: false,
   ),
   // Devoured by the wolves, he leaves the first wolf to his left diseased.
@@ -234,6 +237,7 @@ const allRoles = <Role>[
     id: 'chevalier',
     team: Team.village,
     suggestionTier: 3,
+    needsDealNotes: true,
     hasNightCall: false,
     onDeath: DeathEffect.knightDisease,
   ),
@@ -243,6 +247,7 @@ const allRoles = <Role>[
   Role(
     id: 'ange',
     team: Team.solo,
+    needsDealNotes: true,
     hasNightCall: false,
   ),
   // Voted out, he is pardoned once and no longer votes; devoured or shot he dies, and the honor of
@@ -251,6 +256,7 @@ const allRoles = <Role>[
     id: 'idiot_du_village',
     team: Team.village,
     suggestionTier: 3,
+    needsDealNotes: true,
     hasNightCall: false,
   ),
   // A tie in the village vote falls on him instead; eliminated, he names who votes next.
@@ -258,6 +264,7 @@ const allRoles = <Role>[
     id: 'bouc_emissaire',
     team: Team.village,
     suggestionTier: 3,
+    needsDealNotes: true,
     hasNightCall: false,
     onDeath: DeathEffect.scapegoatVoters,
   ),
@@ -267,6 +274,7 @@ const allRoles = <Role>[
   Role(
     id: 'servante_devouee',
     team: Team.ambiguous,
+    needsDealNotes: true,
     hasNightCall: false,
   ),
 ];

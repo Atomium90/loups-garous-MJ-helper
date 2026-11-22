@@ -106,6 +106,38 @@ void main() {
     });
   });
 
+  group('deal notes', () {
+    test('only the roles that hang on a neighbour, a first vote or a missing call ask for them', () {
+      final asking = registry.roles.where((r) => r.needsDealNotes).map((r) => r.id).toSet();
+      expect(asking, {
+        'renard',
+        'montreur_d_ours',
+        'ancien',
+        'chevalier',
+        'ange',
+        'idiot_du_village',
+        'bouc_emissaire',
+        'servante_devouee',
+      });
+    });
+
+    test('a composition of plain roles does not need them', () {
+      expect(
+        registry.anyNeedsDealNotes(['loup_garou', 'voyante', 'sorciere', 'chasseur', 'villageois']),
+        isFalse,
+      );
+    });
+
+    test('one asking role in the composition is enough', () {
+      expect(registry.anyNeedsDealNotes(['loup_garou', 'renard', 'villageois']), isTrue);
+    });
+
+    test('an unknown id is ignored, and an empty composition needs nothing', () {
+      expect(registry.anyNeedsDealNotes(['inconnu']), isFalse);
+      expect(registry.anyNeedsDealNotes(const []), isFalse);
+    });
+  });
+
   group('RoleRegistry lookups', () {
     test('byId returns the expected role', () {
       final voyante = registry.byId('voyante');
