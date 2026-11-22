@@ -103,6 +103,8 @@ class GameStateMachine {
         return _applyJudgeSign(state);
       case DivideVillage():
         return _applyDivideVillage(state, action);
+      case ServantTakesRole():
+        return _applyServantTakesRole(state, action, roleRegistry);
       case CaptainNoSuccessor():
         return _applyCaptainNoSuccessor(state, roleRegistry);
       case DayVoteTie():
@@ -560,6 +562,78 @@ class GameStateMachine {
               ),
       ),
       events: [PlayerDied(playerId: wound.wolfId, cause: cause), ...drained.events],
+    );
+  }
+
+  ActionResult _applyServantTakesRole(
+    GameState state,
+    ServantTakesRole action,
+    RoleRegistry roleRegistry,
+  ) {
+    if (state.phase != GamePhase.day) {
+      throw InvalidActionError('The Servante Devouee acts right after a village vote');
+    }
+    if (state.servantTakeover != null) {
+      throw InvalidActionError('The Servante Devouee already took a role');
+    }
+    final servant = state.playerById(action.servantPlayerId);
+    final dead = state.playerById(action.deadPlayerId);
+    _requireAlive(servant, 'the Servante Devouee');
+    if (servant.roleId != 'servante_devouee') {
+      throw InvalidActionError('${servant.id} is not the Servante Devouee');
+    }
+    if (dead.alive) {
+      throw InvalidActionError('The Servante Devouee takes the role of an eliminated player');
+    }
+    if (state.lovers?.partnerOf(servant.id) != null) {
+      throw InvalidActionError('A lover cannot use the Servante Devouee\'s power');
+    }
+    final newRoleId = dead.roleId;
+    roleRegistry.byId(newRoleId); // throws RoleNotFoundException if unknown
+
+    // Her own statuses (infected, charmed) stay with her; the dead player's do not come along. The
+    // new role starts afresh for her, as on a first night.
+    var next = state.copyWith(
+      players: [
+        for (final p in state.players)
+          if (p.id == servant.id) p.copyWith(roleId: newRoleId) else p,
+      ],
+      servantTakeover: ServantTakeover(
+        playerId: servant.id,
+        roleId: newRoleId,
+        day: state.nightIndex,
+      ),
+    );
+    switch (newRoleId) {
+      case 'sorciere':
+        next = next.copyWith(witch: const WitchState());
+      case 'renard' || 'juge_begue':
+        next = next.copyWith(
+          spentPowers: {...next.spentPowers}..remove(newRoleId),
+        );
+      case 'salvateur':
+        next = next.copyWith(defenderLastProtectedId: null);
+      case 'enfant_sauvage':
+        next = next.copyWith(wildChild: null);
+    }
+    // She does not keep the honor of Capitaine: he names a successor right away.
+    if (state.captainPlayerId == servant.id) {
+      next = next.copyWith(
+        cascade: CascadeState(
+          decision: PendingCaptainSuccession(deadCaptainId: servant.id),
+          remainingQueue: const [],
+        ),
+      );
+    }
+    return ActionResult(
+      state: next,
+      events: [
+        ServantTookRole(
+          servantPlayerId: servant.id,
+          deadPlayerId: dead.id,
+          roleId: newRoleId,
+        ),
+      ],
     );
   }
 

@@ -28,6 +28,52 @@ Future<bool?> showIdiotQuestion(BuildContext context, {required String name}) =>
       no: context.l10n.scriptElderNo,
     );
 
+/// Asks which of [players] is the one meant (the Devoted Servant, who has no call to be known
+/// by): the id of the one picked, or null when the sheet is dismissed.
+Future<String?> showPlayerChoice(
+  BuildContext context, {
+  required String title,
+  required List<({String id, String name})> players,
+}) {
+  return showAppSheet<String>(
+    context,
+    builder: (sheetContext) {
+      final colors = sheetContext.colors;
+      final typography = sheetContext.typography;
+      return SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 12, AppSpacing.screen, 18),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: 8,
+            children: [
+              Text(title, style: typography.rowLabel.copyWith(color: colors.textPrimary)),
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: [
+                    for (final p in players)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: AppButton(
+                          label: p.name,
+                          variant: AppButtonVariant.secondary,
+                          onPressed: () => Navigator.of(sheetContext).pop(p.id),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
 /// A yes/no question about a player's hidden card, as a bottom sheet.
 Future<bool?> showCardQuestion(
   BuildContext context, {

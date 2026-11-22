@@ -94,6 +94,15 @@ class DivideVillage implements GameAction {
   const DivideVillage({required this.groupAPlayerIds});
 }
 
+/// The Servante Devouee reveals herself right after a village vote and takes the role of the
+/// eliminated player. Refused if she is one of the lovers, or already did.
+class ServantTakesRole implements GameAction {
+  final String servantPlayerId;
+  final String deadPlayerId;
+
+  const ServantTakesRole({required this.servantPlayerId, required this.deadPlayerId});
+}
+
 class CupidonPair implements GameAction {
   final String playerAId;
   final String playerBId;

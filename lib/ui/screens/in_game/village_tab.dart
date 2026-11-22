@@ -100,7 +100,9 @@ class _VillageBody extends StatelessWidget {
               isCaptain: p.id == captainId,
               dead: false,
               pardoned: p.hasStatus(PlayerStatus.pardoned),
-              publicIdentity: p.roleId == 'villageois_villageois',
+              publicIdentity:
+                  p.roleId == 'villageois_villageois' &&
+                  session.engine.servantTakeover?.playerId != p.id,
               group: session.engine.division == null
                   ? null
                   : session.engine.division!.groupOf(p.id) + 1,

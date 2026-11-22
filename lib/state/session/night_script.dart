@@ -150,13 +150,22 @@ NightContext _contextFor(
   GameState engine,
   int nightIndex, {
   required bool whiteWolfOddNights,
-}) => NightContext(
+}) {
+  // A role the Servante took over starts again for her the night after, as on a first night. (The
+  // Cupidon cannot pair a second couple: his call is not offered.)
+  final firstNightOf = <String, int>{if (whiteWolfOddNights) 'loup_garou_blanc': 1};
+  final takeover = engine.servantTakeover;
+  if (takeover != null && takeover.roleId != 'cupidon') {
+    firstNightOf[takeover.roleId] = takeover.day + 1;
+  }
+  return NightContext(
   nightIndex: nightIndex,
-  firstNightOf: {if (whiteWolfOddNights) 'loup_garou_blanc': 1},
+  firstNightOf: firstNightOf,
   spentPowers: engine.spentPowersBeforeTonight,
   wolfSideLost: engine.wolfSideLost(RoleRegistry.all),
   villagersPowerless: engine.villagersPowerless,
-);
+  );
+}
 
 /// [roles] in the registry's declaration order, which is the official wake order.
 ///

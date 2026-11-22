@@ -1164,6 +1164,7 @@ IconData _roleIcon(String roleId) => switch (roleId) {
   'villageois_villageois' => AppIcons.trustedVillager,
   'juge_begue' => AppIcons.judge,
   'abominable_sectaire' => AppIcons.sectarian,
+  'servante_devouee' => AppIcons.servant,
   'montreur_d_ours' => AppIcons.bearTamer,
   'enfant_sauvage' => AppIcons.wildChild,
   'chien_loup' => AppIcons.chienLoup,
@@ -1192,6 +1193,8 @@ class _DayBody extends ConsumerWidget {
         return _RevealPanel(session: session, notifier: n);
       case DayInterrupt.chain:
         return _ChainPanel(session: session, notifier: n);
+      case DayInterrupt.servant:
+        return _ServantPanel(session: session, notifier: n);
       case DayInterrupt.loversAck:
         return _LoversAckPanel(session: session, notifier: n);
       case null:
@@ -1755,16 +1758,50 @@ class _VoteBodyState extends ConsumerState<_VoteBody> {
 
   VoteTieRule get _rule => ref.read(settingsProvider).value?.voteTieRule ?? VoteTieRule.nobody;
 
-  /// The village votes against [id]: the Village Idiot, when it is one, is pardoned.
+  /// The village votes against [id]: the Village Idiot, when it is one, is pardoned; otherwise the
+  /// Devoted Servant may reveal herself before the card is turned over.
   Future<void> _eliminate(String id) async {
+    var idiot = false;
     if (_session.mayBeIdiot(id)) {
       final name = _session.engine.playerById(id).name;
       final isIdiot = await showIdiotQuestion(context, name: name);
       if (isIdiot == true) {
+        idiot = true;
         await _notifier.identifyRole('idiot_du_village', [int.parse(id)]);
       }
     }
+    if (!idiot && mounted && _session.servantMayAct(id)) {
+      final servantId = await _askServant(id);
+      if (servantId != null) await _notifier.servantReveals(servantId: servantId, deadId: id);
+    }
     await _notifier.eliminateByVote(id);
+  }
+
+  /// Asks whether the Devoted Servant reveals herself, and who she is when the app does not know:
+  /// her id, or null when she does not.
+  Future<String?> _askServant(String eliminatedId) async {
+    final dead = _session.engine.playerById(eliminatedId).name;
+    final known = _session.knownServant;
+    final l10n = context.l10n;
+    final yes = await showCardQuestion(
+      context,
+      title: l10n.scriptServantAskTitle,
+      body: known == null
+          ? l10n.scriptServantAskUnknown(dead)
+          : l10n.scriptServantAskKnown(known.name, dead),
+      yes: l10n.scriptServantYes,
+      no: l10n.scriptServantNo,
+    );
+    if (yes != true) return null;
+    if (known != null) return known.id;
+    if (!mounted) return null;
+    return showPlayerChoice(
+      context,
+      title: l10n.scriptServantWho,
+      players: [
+        for (final p in _session.servantCandidates(eliminatedId)) (id: p.id, name: p.name),
+      ],
+    );
   }
 
   /// The vote is tied: the Scapegoat first, then what the table decided for a tie.
@@ -2060,11 +2097,13 @@ class _RevealPanelState extends State<_RevealPanel> {
                     ? null
                     : () => widget.notifier.revealRole(int.parse(dead.id), _roleId!),
               ),
-              AppButton(
-                label: context.l10n.scriptDontNote,
-                variant: AppButtonVariant.secondary,
-                onPressed: () => widget.notifier.skipReveal(dead.id),
-              ),
+              // The Devoted Servant needs this card to take the role: it cannot be left out.
+              if (widget.session.day.servantDeadId != dead.id)
+                AppButton(
+                  label: context.l10n.scriptDontNote,
+                  variant: AppButtonVariant.secondary,
+                  onPressed: () => widget.notifier.skipReveal(dead.id),
+                ),
             ],
           ),
         ),
@@ -2358,6 +2397,83 @@ class _KnightWoundPanel extends ConsumerWidget {
 }
 
 /// The Scapegoat was eliminated: who may vote on the next day? The ones not chosen sit it out.
+/// The Devoted Servant takes the eliminated player's role, once the card is known: says what she
+/// becomes and what carries over, and the MJ confirms.
+class _ServantPanel extends StatelessWidget {
+  const _ServantPanel({required this.session, required this.notifier});
+
+  final GameSessionState session;
+  final GameSession notifier;
+
+  @override
+  Widget build(BuildContext context) {
+    final engine = session.engine;
+    final servant = engine.playerById(session.day.servantId!);
+    final dead = engine.playerById(session.day.servantDeadId!);
+    final newRole = dead.roleId;
+    final wasCaptain = engine.captainPlayerId == servant.id;
+    final typography = context.typography;
+    final colors = context.colors;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _SheetHandle(),
+        _DeadHeader(
+          name: servant.name,
+          subtitle: context.l10n.scriptServantHeader(dead.name),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 16, AppSpacing.screen, 12),
+          child: _RoleBanner(
+            icon: AppIcons.servant,
+            title: context.l10n.scriptServantTitle(context.l10n.roleWithArticle(newRole)),
+            body: context.l10n.roleRuleText(newRole),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 8),
+          child: Text(
+            context.l10n.scriptServantNote,
+            style: typography.meta.copyWith(color: colors.textSecondary, height: 1.5),
+          ),
+        ),
+        if (wasCaptain)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 8),
+            child: Text(
+              context.l10n.scriptServantCaptain,
+              style: typography.meta.copyWith(color: colors.warnText, height: 1.5),
+            ),
+          ),
+        const Spacer(),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.screen,
+            12,
+            AppSpacing.screen,
+            AppSpacing.screen,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: 8,
+            children: [
+              AppButton(
+                label: context.l10n.scriptServantTakes,
+                onPressed: notifier.servantTakes,
+              ),
+              AppButton(
+                label: context.l10n.scriptServantCancel,
+                variant: AppButtonVariant.secondary,
+                onPressed: notifier.cancelServant,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _ScapegoatVotersPanel extends StatefulWidget {
   const _ScapegoatVotersPanel({
     required this.session,

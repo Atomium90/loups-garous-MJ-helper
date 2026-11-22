@@ -135,6 +135,8 @@ String _describeEvent(GameEvent event) => switch (event) {
   VotersChosen(:final allowedPlayerIds) => 'votent demain : ${allowedPlayerIds.join(', ')}',
   VillageDivided(:final groupAPlayerIds) =>
     'le village est divisé : ${groupAPlayerIds.join(', ')} d\'un côté',
+  ServantTookRole(:final servantPlayerId, :final roleId) =>
+    '$servantPlayerId prend le rôle $roleId',
   JudgeSignGiven() => 'le Juge Bègue demande un deuxième vote',
   DefenderSaved(:final playerId) => '$playerId est protégé du Loup',
   KnightContaminated(:final wolfPlayerId) => '$wolfPlayerId attrape la maladie du Chevalier',

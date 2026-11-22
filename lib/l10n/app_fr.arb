@@ -12,7 +12,7 @@
   "@languageSystem": {
     "description": "Language choice that follows the phone's language."
   },
-  "roleName": "{roleId, select, voleur{Voleur} cupidon{Cupidon} voyante{Voyante} loup_garou{Loup-Garou} sorciere{Sorcière} villageois{Simple Villageois} petite_fille{Petite Fille} chasseur{Chasseur} renard{Renard} deux_soeurs{Deux Sœurs} montreur_d_ours{Montreur d'Ours} enfant_sauvage{Enfant Sauvage} chien_loup{Chien-Loup} loup_garou_blanc{Loup-Garou Blanc} infect_pere_des_loups{Infect Père des Loups} grand_mechant_loup{Grand-Méchant-Loup} ancien{L'Ancien} chevalier{Chevalier à l'Épée Rouillée} joueur_de_flute{Joueur de Flûte} joueurs_charmes{Joueurs charmés} ange{Ange} salvateur{Salvateur} idiot_du_village{Idiot du Village} bouc_emissaire{Bouc Émissaire} trois_freres{Trois Frères} villageois_villageois{Villageois-Villageois} juge_begue{Juge Bègue} abominable_sectaire{Abominable Sectaire} other{Rôle inconnu}}",
+  "roleName": "{roleId, select, voleur{Voleur} cupidon{Cupidon} voyante{Voyante} loup_garou{Loup-Garou} sorciere{Sorcière} villageois{Simple Villageois} petite_fille{Petite Fille} chasseur{Chasseur} renard{Renard} deux_soeurs{Deux Sœurs} montreur_d_ours{Montreur d'Ours} enfant_sauvage{Enfant Sauvage} chien_loup{Chien-Loup} loup_garou_blanc{Loup-Garou Blanc} infect_pere_des_loups{Infect Père des Loups} grand_mechant_loup{Grand-Méchant-Loup} ancien{L'Ancien} chevalier{Chevalier à l'Épée Rouillée} joueur_de_flute{Joueur de Flûte} joueurs_charmes{Joueurs charmés} ange{Ange} salvateur{Salvateur} idiot_du_village{Idiot du Village} bouc_emissaire{Bouc Émissaire} trois_freres{Trois Frères} villageois_villageois{Villageois-Villageois} juge_begue{Juge Bègue} abominable_sectaire{Abominable Sectaire} servante_devouee{Servante Dévouée} other{Rôle inconnu}}",
   "@roleName": {
     "description": "The name of a role card, from its id (singular, no article).",
     "placeholders": {
@@ -21,7 +21,7 @@
       }
     }
   },
-  "rolePlural": "{roleId, select, voleur{Voleurs} cupidon{Cupidons} voyante{Voyantes} loup_garou{Loups-Garous} sorciere{Sorcières} villageois{Simples Villageois} petite_fille{Petites Filles} chasseur{Chasseurs} renard{Renards} deux_soeurs{Deux Sœurs} montreur_d_ours{Montreurs d'Ours} enfant_sauvage{Enfants Sauvages} chien_loup{Chiens-Loups} loup_garou_blanc{Loups-Garous Blancs} infect_pere_des_loups{Infects Pères des Loups} grand_mechant_loup{Grands-Méchants-Loups} ancien{Les Anciens} chevalier{Chevaliers à l'Épée Rouillée} joueur_de_flute{Joueurs de Flûte} joueurs_charmes{Joueurs charmés} ange{Anges} salvateur{Salvateurs} idiot_du_village{Idiots du Village} bouc_emissaire{Boucs Émissaires} trois_freres{Trois Frères} villageois_villageois{Villageois-Villageois} juge_begue{Juges Bègues} abominable_sectaire{Abominables Sectaires} other{Rôles inconnus}}",
+  "rolePlural": "{roleId, select, voleur{Voleurs} cupidon{Cupidons} voyante{Voyantes} loup_garou{Loups-Garous} sorciere{Sorcières} villageois{Simples Villageois} petite_fille{Petites Filles} chasseur{Chasseurs} renard{Renards} deux_soeurs{Deux Sœurs} montreur_d_ours{Montreurs d'Ours} enfant_sauvage{Enfants Sauvages} chien_loup{Chiens-Loups} loup_garou_blanc{Loups-Garous Blancs} infect_pere_des_loups{Infects Pères des Loups} grand_mechant_loup{Grands-Méchants-Loups} ancien{Les Anciens} chevalier{Chevaliers à l'Épée Rouillée} joueur_de_flute{Joueurs de Flûte} joueurs_charmes{Joueurs charmés} ange{Anges} salvateur{Salvateurs} idiot_du_village{Idiots du Village} bouc_emissaire{Boucs Émissaires} trois_freres{Trois Frères} villageois_villageois{Villageois-Villageois} juge_begue{Juges Bègues} abominable_sectaire{Abominables Sectaires} servante_devouee{Servantes Dévouées} other{Rôles inconnus}}",
   "@rolePlural": {
     "description": "The plural name of a role card, from its id.",
     "placeholders": {
@@ -30,7 +30,7 @@
       }
     }
   },
-  "roleWithArticle": "{roleId, select, voleur{le Voleur} cupidon{le Cupidon} voyante{la Voyante} loup_garou{le Loup-Garou} sorciere{la Sorcière} villageois{le Simple Villageois} petite_fille{la Petite Fille} chasseur{le Chasseur} renard{le Renard} deux_soeurs{les Deux Sœurs} montreur_d_ours{le Montreur d'Ours} enfant_sauvage{l'Enfant Sauvage} chien_loup{le Chien-Loup} loup_garou_blanc{le Loup-Garou Blanc} infect_pere_des_loups{l'Infect Père des Loups} grand_mechant_loup{le Grand-Méchant-Loup} ancien{l'Ancien} chevalier{le Chevalier à l'Épée Rouillée} joueur_de_flute{le Joueur de Flûte} joueurs_charmes{les joueurs charmés} ange{l'Ange} salvateur{le Salvateur} idiot_du_village{l'Idiot du Village} bouc_emissaire{le Bouc Émissaire} trois_freres{les Trois Frères} villageois_villageois{le Villageois-Villageois} juge_begue{le Juge Bègue} abominable_sectaire{l'Abominable Sectaire} other{Rôle inconnu}}",
+  "roleWithArticle": "{roleId, select, voleur{le Voleur} cupidon{le Cupidon} voyante{la Voyante} loup_garou{le Loup-Garou} sorciere{la Sorcière} villageois{le Simple Villageois} petite_fille{la Petite Fille} chasseur{le Chasseur} renard{le Renard} deux_soeurs{les Deux Sœurs} montreur_d_ours{le Montreur d'Ours} enfant_sauvage{l'Enfant Sauvage} chien_loup{le Chien-Loup} loup_garou_blanc{le Loup-Garou Blanc} infect_pere_des_loups{l'Infect Père des Loups} grand_mechant_loup{le Grand-Méchant-Loup} ancien{l'Ancien} chevalier{le Chevalier à l'Épée Rouillée} joueur_de_flute{le Joueur de Flûte} joueurs_charmes{les joueurs charmés} ange{l'Ange} salvateur{le Salvateur} idiot_du_village{l'Idiot du Village} bouc_emissaire{le Bouc Émissaire} trois_freres{les Trois Frères} villageois_villageois{le Villageois-Villageois} juge_begue{le Juge Bègue} abominable_sectaire{l'Abominable Sectaire} servante_devouee{la Servante Dévouée} other{Rôle inconnu}}",
   "@roleWithArticle": {
     "description": "A role with its article, e.g. \"le Chasseur\", \"la Voyante\", \"the Hunter\".",
     "placeholders": {
@@ -39,7 +39,7 @@
       }
     }
   },
-  "roleRuleText": "{roleId, select, voleur{Réveillez le Voleur. Il peut échanger sa carte avec l'une des deux cartes non distribuées, ou garder la sienne.} cupidon{Réveillez Cupidon. Il désigne deux joueurs qui tombent amoureux, puis les deux amoureux ouvrent les yeux pour se reconnaître avant de se rendormir.} voyante{Réveillez la Voyante. Elle désigne un joueur dont vous lui révélez le rôle.} loup_garou{Réveillez les Loups-Garous. Ils désignent ensemble leur victime.} sorciere{Réveillez la Sorcière. Montrez-lui la victime des Loups. Elle peut utiliser sa potion de vie et/ou sa potion de mort.} villageois{Aucune action de nuit.} petite_fille{Aucun appel : elle peut risquer un œil pendant l'appel des Loups-Garous, à ses risques.} chasseur{Aucune action de nuit : à sa mort (jour ou nuit), il élimine immédiatement un joueur de son choix.} renard{Réveillez le Renard (facultatif). Il désigne un joueur : vous lui dites si un Loup se trouve parmi ce joueur et ses deux voisins vivants. S'il n'y en a aucun, il perd son pouvoir pour de bon.} deux_soeurs{Réveillez les Deux Sœurs : elles se reconnaissent, puis se rendorment. Appel facultatif après la nuit 1, une nuit sur deux.} montreur_d_ours{Réveillez le Montreur d'Ours la nuit 1 pour savoir qui il est. Chaque matin, après les victimes, vous grognez si l'un de ses deux voisins vivants est un Loup.} enfant_sauvage{Réveillez l'Enfant Sauvage la nuit 1 : il désigne son modèle. Il reste villageois tant que son modèle vit ; à la mort du modèle, il devient Loup-Garou et se réveille avec les Loups.} chien_loup{Juste avant les Loups, la nuit 1, demandez discrètement au Chien-Loup son choix : villageois ou Loup-Garou, pour de bon. S'il choisit les Loups, il se réveille avec eux chaque nuit.} loup_garou_blanc{Il se réveille avec les Loups chaque nuit. Une nuit sur deux, appelez-le seul : il peut éliminer un Loup. Il gagne seul s'il est le dernier en vie.} infect_pere_des_loups{Il se réveille avec les Loups. Une fois par partie, après eux, il peut infecter leur victime au lieu de la laisser mourir : elle devient Loup-Garou en secret et garde son pouvoir.} grand_mechant_loup{Il se réveille avec les Loups, puis seul une 2e fois tant qu'aucun Loup, Enfant Sauvage ni Chien-Loup n'est mort : il dévore une 2e victime, jamais un Loup.} ancien{Aucun appel. Il survit à la 1re attaque des Loups (sans l'annoncer) et meurt à la 2e. Le vote, le poison ou le tir du Chasseur le tuent d'un coup : les villageois perdent alors leurs pouvoirs pour le reste de la partie.} chevalier{Aucun appel. S'il est dévoré par les Loups, le premier Loup à sa gauche attrape la maladie : il meurt au début de la nuit suivante (ou à sa fin, selon le réglage), annoncé comme mort de maladie.} joueur_de_flute{Réveillez le Joueur de Flûte chaque nuit, après la Sorcière : il charme 2 joueurs. Réveillez ensuite les joueurs charmés pour qu'ils se reconnaissent. Il gagne dès que tous les autres joueurs vivants sont charmés.} joueurs_charmes{Réveillez tous les joueurs déjà charmés pour qu'ils se reconnaissent, puis rendormez-les.} ange{Aucun appel. La partie commence par un débat et un vote avant la nuit 1. Éliminé à ce vote ou pendant la nuit 1, il gagne seul ; vivant au 2e jour, il devient Simple Villageois (et il renonce à son objectif s'il est amoureux).} salvateur{Réveillez le Salvateur avant les Loups : il désigne un joueur, protégé des Loups cette nuit (lui-même inclus, mais jamais le même joueur deux nuits de suite). Il ne protège pas du charme ni de l'infection.} idiot_du_village{Aucun appel. Voté par le village, il révèle sa carte et est gracié : personne n'est éliminé ce jour-là, et il ne vote plus de la partie. Dévoré par les Loups ou abattu par le Chasseur, il meurt ; s'il était Capitaine, la charge est perdue.} bouc_emissaire{Aucun appel. En cas d'égalité au vote, c'est lui qui est éliminé, même s'il n'était pas parmi les ex æquo. Éliminé, il désigne qui pourra voter au jour suivant : les autres n'ont pas le droit de vote.} trois_freres{Réveillez les Trois Frères : ils se reconnaissent, puis se rendorment. Appel facultatif après la nuit 1, une nuit sur deux.} villageois_villageois{Pas d'appel de nuit. À la distribution, il montre sa carte à tout le monde : notez qui c'est avant de faire dormir le village. Il n'a aucun pouvoir.} juge_begue{Réveillez le Juge Bègue : il vous montre en silence le signe secret par lequel il demandera un deuxième vote. Une seule fois dans la partie, pendant un vote.} abominable_sectaire{Pas d'appel de nuit. Avant la nuit 1, divisez le village en deux groupes selon un critère visible de tous (côté de la table, vêtement…), puis notez-les. Le Sectaire gagne seul quand tout le groupe dont il ne fait pas partie est éliminé : il quitte alors la partie.} other{}}",
+  "roleRuleText": "{roleId, select, voleur{Réveillez le Voleur. Il peut échanger sa carte avec l'une des deux cartes non distribuées, ou garder la sienne.} cupidon{Réveillez Cupidon. Il désigne deux joueurs qui tombent amoureux, puis les deux amoureux ouvrent les yeux pour se reconnaître avant de se rendormir.} voyante{Réveillez la Voyante. Elle désigne un joueur dont vous lui révélez le rôle.} loup_garou{Réveillez les Loups-Garous. Ils désignent ensemble leur victime.} sorciere{Réveillez la Sorcière. Montrez-lui la victime des Loups. Elle peut utiliser sa potion de vie et/ou sa potion de mort.} villageois{Aucune action de nuit.} petite_fille{Aucun appel : elle peut risquer un œil pendant l'appel des Loups-Garous, à ses risques.} chasseur{Aucune action de nuit : à sa mort (jour ou nuit), il élimine immédiatement un joueur de son choix.} renard{Réveillez le Renard (facultatif). Il désigne un joueur : vous lui dites si un Loup se trouve parmi ce joueur et ses deux voisins vivants. S'il n'y en a aucun, il perd son pouvoir pour de bon.} deux_soeurs{Réveillez les Deux Sœurs : elles se reconnaissent, puis se rendorment. Appel facultatif après la nuit 1, une nuit sur deux.} montreur_d_ours{Réveillez le Montreur d'Ours la nuit 1 pour savoir qui il est. Chaque matin, après les victimes, vous grognez si l'un de ses deux voisins vivants est un Loup.} enfant_sauvage{Réveillez l'Enfant Sauvage la nuit 1 : il désigne son modèle. Il reste villageois tant que son modèle vit ; à la mort du modèle, il devient Loup-Garou et se réveille avec les Loups.} chien_loup{Juste avant les Loups, la nuit 1, demandez discrètement au Chien-Loup son choix : villageois ou Loup-Garou, pour de bon. S'il choisit les Loups, il se réveille avec eux chaque nuit.} loup_garou_blanc{Il se réveille avec les Loups chaque nuit. Une nuit sur deux, appelez-le seul : il peut éliminer un Loup. Il gagne seul s'il est le dernier en vie.} infect_pere_des_loups{Il se réveille avec les Loups. Une fois par partie, après eux, il peut infecter leur victime au lieu de la laisser mourir : elle devient Loup-Garou en secret et garde son pouvoir.} grand_mechant_loup{Il se réveille avec les Loups, puis seul une 2e fois tant qu'aucun Loup, Enfant Sauvage ni Chien-Loup n'est mort : il dévore une 2e victime, jamais un Loup.} ancien{Aucun appel. Il survit à la 1re attaque des Loups (sans l'annoncer) et meurt à la 2e. Le vote, le poison ou le tir du Chasseur le tuent d'un coup : les villageois perdent alors leurs pouvoirs pour le reste de la partie.} chevalier{Aucun appel. S'il est dévoré par les Loups, le premier Loup à sa gauche attrape la maladie : il meurt au début de la nuit suivante (ou à sa fin, selon le réglage), annoncé comme mort de maladie.} joueur_de_flute{Réveillez le Joueur de Flûte chaque nuit, après la Sorcière : il charme 2 joueurs. Réveillez ensuite les joueurs charmés pour qu'ils se reconnaissent. Il gagne dès que tous les autres joueurs vivants sont charmés.} joueurs_charmes{Réveillez tous les joueurs déjà charmés pour qu'ils se reconnaissent, puis rendormez-les.} ange{Aucun appel. La partie commence par un débat et un vote avant la nuit 1. Éliminé à ce vote ou pendant la nuit 1, il gagne seul ; vivant au 2e jour, il devient Simple Villageois (et il renonce à son objectif s'il est amoureux).} salvateur{Réveillez le Salvateur avant les Loups : il désigne un joueur, protégé des Loups cette nuit (lui-même inclus, mais jamais le même joueur deux nuits de suite). Il ne protège pas du charme ni de l'infection.} idiot_du_village{Aucun appel. Voté par le village, il révèle sa carte et est gracié : personne n'est éliminé ce jour-là, et il ne vote plus de la partie. Dévoré par les Loups ou abattu par le Chasseur, il meurt ; s'il était Capitaine, la charge est perdue.} bouc_emissaire{Aucun appel. En cas d'égalité au vote, c'est lui qui est éliminé, même s'il n'était pas parmi les ex æquo. Éliminé, il désigne qui pourra voter au jour suivant : les autres n'ont pas le droit de vote.} trois_freres{Réveillez les Trois Frères : ils se reconnaissent, puis se rendorment. Appel facultatif après la nuit 1, une nuit sur deux.} villageois_villageois{Pas d'appel de nuit. À la distribution, il montre sa carte à tout le monde : notez qui c'est avant de faire dormir le village. Il n'a aucun pouvoir.} juge_begue{Réveillez le Juge Bègue : il vous montre en silence le signe secret par lequel il demandera un deuxième vote. Une seule fois dans la partie, pendant un vote.} abominable_sectaire{Pas d'appel de nuit. Avant la nuit 1, divisez le village en deux groupes selon un critère visible de tous (côté de la table, vêtement…), puis notez-les. Le Sectaire gagne seul quand tout le groupe dont il ne fait pas partie est éliminé : il quitte alors la partie.} servante_devouee{Aucun appel de nuit. Juste après un vote, avant que la carte de l'éliminé soit retournée, elle peut se révéler et prendre son rôle : son nouveau rôle joue dès la nuit suivante, comme une première nuit. Une seule fois, et pas si elle est amoureuse.} other{}}",
   "@roleRuleText": {
     "description": "The instruction the game master follows when this role is called, from the role id.",
     "placeholders": {
@@ -1607,6 +1607,92 @@
         "type": "int"
       }
     }
+  },
+  "journalServantTakes": "{player}, la Servante Dévouée, prend la place de {other} : elle devient {role}",
+  "@journalServantTakes": {
+    "description": "Journal: the Devoted Servant took the role of the eliminated player.",
+    "placeholders": {
+      "player": {
+        "type": "String"
+      },
+      "other": {
+        "type": "String"
+      },
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptServantAskTitle": "La Servante Dévouée se révèle-t-elle ?",
+  "@scriptServantAskTitle": {
+    "description": "Question after a vote: does the Devoted Servant reveal herself."
+  },
+  "scriptServantAskKnown": "{name}, la Servante Dévouée, peut se révéler maintenant, avant que la carte de {dead} soit retournée, pour prendre son rôle.",
+  "@scriptServantAskKnown": {
+    "description": "Body of the question when the Servant is known.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "dead": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptServantAskUnknown": "Une Servante Dévouée en vie peut se révéler maintenant, avant que la carte de {dead} soit retournée, pour prendre son rôle.",
+  "@scriptServantAskUnknown": {
+    "description": "Body of the question when the Servant is not known.",
+    "placeholders": {
+      "dead": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptServantYes": "Oui, elle se révèle",
+  "@scriptServantYes": {
+    "description": "She reveals herself."
+  },
+  "scriptServantNo": "Non",
+  "@scriptServantNo": {
+    "description": "She does not."
+  },
+  "scriptServantWho": "Qui est la Servante Dévouée ?",
+  "@scriptServantWho": {
+    "description": "Title of the player choice for the Servant."
+  },
+  "scriptServantHeader": "prend la place de {dead}",
+  "@scriptServantHeader": {
+    "description": "Subtitle of the Servant panel.",
+    "placeholders": {
+      "dead": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptServantTitle": "Elle devient {role}",
+  "@scriptServantTitle": {
+    "description": "Title of the Servant panel banner.",
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptServantNote": "Les états du mort (amoureux, infecté, charmé, Capitaine) ne passent pas à la Servante ; les siens restent. Son nouveau rôle est appelé dès la nuit suivante.",
+  "@scriptServantNote": {
+    "description": "What carries over when the Servant takes a role."
+  },
+  "scriptServantCaptain": "Elle perd la charge de Capitaine : elle désigne tout de suite son successeur.",
+  "@scriptServantCaptain": {
+    "description": "The Servant was the Capitaine."
+  },
+  "scriptServantTakes": "Elle prend le rôle",
+  "@scriptServantTakes": {
+    "description": "Button: apply the takeover."
+  },
+  "scriptServantCancel": "Finalement non",
+  "@scriptServantCancel": {
+    "description": "Button: cancel the takeover."
   },
   "journalJudgeSign": "Le Juge Bègue demande un deuxième vote",
   "@journalJudgeSign": {

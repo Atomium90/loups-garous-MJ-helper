@@ -150,6 +150,19 @@ class VillageDivided implements GameEvent {
   const VillageDivided({required this.groupAPlayerIds});
 }
 
+/// The Servante Devouee took the role of an eliminated player.
+class ServantTookRole implements GameEvent {
+  final String servantPlayerId;
+  final String deadPlayerId;
+  final String roleId;
+
+  const ServantTookRole({
+    required this.servantPlayerId,
+    required this.deadPlayerId,
+    required this.roleId,
+  });
+}
+
 class LoversPaired implements GameEvent {
   final String playerAId;
   final String playerBId;

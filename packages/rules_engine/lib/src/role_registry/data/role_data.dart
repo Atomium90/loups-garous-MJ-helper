@@ -250,4 +250,12 @@ const allRoles = <Role>[
     hasNightCall: false,
     onDeath: DeathEffect.scapegoatVoters,
   ),
+  // No call: right after a village vote, before the card is shown, she may reveal herself and take
+  // the eliminated player's role (see ServantTakesRole). Her side is whatever the role she takes
+  // says.
+  Role(
+    id: 'servante_devouee',
+    team: Team.ambiguous,
+    hasNightCall: false,
+  ),
 ];

@@ -47,6 +47,8 @@ abstract final class GameStateJson {
       if (state.voteRestriction case final r?)
         'voteRestriction': {'allowed': [...r.allowed], 'day': r.day},
       if (state.division case final d?) 'division': [...d.groupA],
+      if (state.servantTakeover case final t?)
+        'servantTakeover': {'player': t.playerId, 'role': t.roleId, 'day': t.day},
       if (state.knightWound case final k?)
         'knightWound': {'wolf': k.wolfId, 'dueNight': k.dueNight, 'atNightEnd': k.atNightEnd},
       'cascade': ?_encodeCascade(state.cascade),
@@ -110,6 +112,14 @@ abstract final class GameStateJson {
         final r => VoteRestriction(
           allowed: {for (final id in r['allowed'] as List<dynamic>) id as String},
           day: r['day'] as int,
+        ),
+      },
+      servantTakeover: switch (json['servantTakeover'] as Map<String, dynamic>?) {
+        null => null,
+        final t => ServantTakeover(
+          playerId: t['player'] as String,
+          roleId: t['role'] as String,
+          day: t['day'] as int,
         ),
       },
       division: switch (json['division'] as List<dynamic>?) {

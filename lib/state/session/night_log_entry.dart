@@ -72,6 +72,15 @@ List<NightLogEntry> nightLogEntriesFor(GameAction action, GameState before) {
     case JudgeSign():
       return [entry(JournalKind.judgeSign)];
 
+    case ServantTakesRole(:final servantPlayerId, :final deadPlayerId):
+      return [
+        entry(JournalKind.servantTakes, {
+          'player': name(servantPlayerId),
+          'other': name(deadPlayerId),
+          'role': before.playerById(deadPlayerId).roleId,
+        }),
+      ];
+
     case DivideVillage(:final groupAPlayerIds):
       return [
         entry(JournalKind.villageDivided, {

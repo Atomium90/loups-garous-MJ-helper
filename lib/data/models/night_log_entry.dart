@@ -44,7 +44,8 @@ enum JournalKind {
   scapegoatBlamed('scale'),
   scapegoatVoters('vote'),
   judgeSign('vote'),
-  villageDivided('sectarian');
+  villageDivided('sectarian'),
+  servantTakes('servant');
 
   const JournalKind(this.iconName);
 

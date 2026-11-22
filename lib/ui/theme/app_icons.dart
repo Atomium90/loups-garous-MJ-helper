@@ -115,6 +115,7 @@ abstract final class AppIcons {
   static const brothers = TablerIcons.usersGroup;
   static const trustedVillager = TablerIcons.idBadge2;
   static const judge = TablerIcons.gavel;
+  static const servant = TablerIcons.userHeart;
   static const bearTamer = TablerIcons.pawFilled;
   static const wildChild = TablerIcons.leaf;
   static const chienLoup = TablerIcons.dog;
@@ -185,6 +186,7 @@ abstract final class AppIcons {
     'piper' => piperRole,
     'defender' => defender,
     'sectarian' => sectarian,
+    'servant' => servant,
     'crown' => captain,
     'vote' => vote,
     'scale' => scale,

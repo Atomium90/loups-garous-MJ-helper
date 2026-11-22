@@ -449,6 +449,108 @@ void main() {
     });
   });
 
+  group('the Devoted Servant', () {
+    const comp = {'servante_devouee': 1, 'juge_begue': 1, 'loup_garou': 2, 'villageois': 2};
+
+    /// Day 1 at the vote: the Judge Ana, the wolves Bo and Cy, Fi eaten.
+    Future<({int gameId, List<int> ids, GameSession n})> toVote() async {
+      final game = await _startedGame(repo, composition: comp);
+      final n = await notifierFor(game.gameId);
+      final ids = game.seatRowIds;
+      await n.identifyRole('juge_begue', [ids[0]]);
+      await n.skipStep();
+      await n.identifyRole('loup_garou', [ids[1], ids[2]]);
+      await n.applyAction(WolvesTarget(targetPlayerId: '${ids[5]}'));
+      await n.applyAction(const FinalizeNight());
+      await n.revealRole(ids[5], 'villageois');
+      await n.advanceFromRecap();
+      await n.electCaptain(null);
+      return (gameId: game.gameId, ids: ids, n: n);
+    }
+
+    test('is asked about while a Servante may be alive, not once she acted', () async {
+      final g = await toVote();
+      expect(stateOf(g.gameId).servantMayAct('${g.ids[0]}'), isTrue);
+      expect(stateOf(g.gameId).servantCandidates('${g.ids[0]}').map((p) => p.id), [
+        '${g.ids[3]}',
+        '${g.ids[4]}',
+      ]);
+
+      await g.n.servantReveals(servantId: '${g.ids[4]}', deadId: '${g.ids[0]}');
+      await g.n.eliminateByVote('${g.ids[0]}');
+      expect(stateOf(g.gameId).dayInterrupt, DayInterrupt.servant);
+      await g.n.servantTakes();
+
+      expect(stateOf(g.gameId).servantMayAct('${g.ids[3]}'), isFalse);
+    });
+
+    test('is never asked about without a Servante in the game', () async {
+      final game = await _startedGame(repo, composition: composition);
+      final s = await container.read(gameSessionProvider(game.gameId).future);
+      expect(s.servantMayAct('${game.seatRowIds[0]}'), isFalse);
+    });
+
+    test('takes the role of the eliminated player: engine, roster and journal', () async {
+      final g = await toVote();
+
+      await g.n.servantReveals(servantId: '${g.ids[4]}', deadId: '${g.ids[0]}');
+      await g.n.eliminateByVote('${g.ids[0]}');
+      await g.n.servantTakes();
+
+      final s = stateOf(g.gameId);
+      expect(s.engine.playerById('${g.ids[4]}').roleId, 'juge_begue');
+      expect(s.rosterRoleId('${g.ids[4]}'), 'juge_begue');
+      expect(s.engine.servantTakeover?.roleId, 'juge_begue');
+      expect(s.day.servantId, isNull);
+      expect(s.dayInterrupt, isNull);
+      final log = frenchJournal(await repo.watchNightLog(g.gameId).first);
+      expect(
+        log,
+        contains('Ed, la Servante Dévouée, prend la place de Ana : elle devient le Juge Bègue'),
+      );
+    });
+
+    test('the role plays again the night after, even a first-night-only one', () async {
+      final g = await toVote();
+      await g.n.servantReveals(servantId: '${g.ids[4]}', deadId: '${g.ids[0]}');
+      await g.n.eliminateByVote('${g.ids[0]}');
+      await g.n.servantTakes();
+
+      await g.n.startNextNight();
+
+      final steps = stateOf(g.gameId).tonight.steps.map((s) => s.role.id).toList();
+      expect(steps, ['juge_begue', 'loup_garou']);
+      // she is the holder: nobody is to be identified again
+      expect(stateOf(g.gameId).currentStepNeedsIdentify, isFalse);
+    });
+
+    test('can be called off, and the question was only a question', () async {
+      final g = await toVote();
+      await g.n.servantReveals(servantId: '${g.ids[4]}', deadId: '${g.ids[0]}');
+      await g.n.eliminateByVote('${g.ids[0]}');
+
+      await g.n.cancelServant();
+
+      final s = stateOf(g.gameId);
+      expect(s.engine.servantTakeover, isNull);
+      expect(s.engine.playerById('${g.ids[4]}').roleId, 'servante_devouee');
+      expect(s.dayInterrupt, isNull);
+    });
+
+    test('the takeover waiting for a card survives a force-quit', () async {
+      final g = await toVote();
+      await g.n.servantReveals(servantId: '${g.ids[4]}', deadId: '${g.ids[0]}');
+      await g.n.eliminateByVote('${g.ids[0]}');
+
+      final resumed = ProviderContainer(overrides: [gameRepositoryProvider.overrideWithValue(repo)]);
+      addTearDown(resumed.dispose);
+      final s = await resumed.read(gameSessionProvider(g.gameId).future);
+
+      expect(s.dayInterrupt, DayInterrupt.servant);
+      expect(s.day.servantId, '${g.ids[4]}');
+    });
+  });
+
   group('the Abominable Sectaire', () {
     const comp = {'abominable_sectaire': 1, 'loup_garou': 2, 'villageois': 3};
 

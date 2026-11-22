@@ -20,7 +20,7 @@ part 'game_session.g.dart';
 /// The interrupt that must be cleared before the current [DayStage] body shows:
 /// a dead player's card to reveal, a chain effect to resolve, or a lover's
 /// grief death to acknowledge. Priority order, highest first.
-enum DayInterrupt { reveal, chain, loversAck }
+enum DayInterrupt { reveal, servant, chain, loversAck }
 
 /// Everything a running game's screens read: the engine truth, where we are in
 /// tonight's script and in the day, that script, the composition it was built
@@ -131,6 +131,40 @@ class GameSessionState {
     if (engine.playerById(playerId).roleId != kPlaceholderRoleId) return false;
     return engine.players.where((p) => p.roleId == 'idiot_du_village').length < idiots;
   }
+
+  /// The living Devoted Servant the app knows.
+  Player? get knownServant =>
+      engine.players.where((p) => p.alive && p.roleId == 'servante_devouee').firstOrNull;
+
+  /// Whether the Devoted Servant may reveal herself after the village eliminated [eliminatedId]: the
+  /// composition has one who has not acted yet, and she is not known to be dead or in love. She has
+  /// no call, so the MJ is asked, right after the vote and before the card is turned over.
+  bool servantMayAct(String eliminatedId) {
+    if (engine.servantTakeover != null) return false;
+    if ((dealtComposition['servante_devouee'] ?? 0) == 0) return false;
+    final target = engine.playerById(eliminatedId);
+    // A Village Idiot not yet pardoned is spared, not eliminated.
+    if (target.roleId == 'idiot_du_village' && !target.hasStatus(PlayerStatus.pardoned)) {
+      return false;
+    }
+    if (target.roleId == 'servante_devouee') return false;
+    final known = engine.players.where((p) => p.roleId == 'servante_devouee');
+    if (known.isNotEmpty) {
+      final servant = known.first;
+      return servant.alive && engine.lovers?.partnerOf(servant.id) == null;
+    }
+    return servantCandidates(eliminatedId).isNotEmpty;
+  }
+
+  /// Who could be the Servant when she is not known: the living players whose card is not noted
+  /// and who are not in love.
+  List<Player> servantCandidates(String eliminatedId) => [
+    for (final p in engine.alivePlayers)
+      if (p.id != eliminatedId &&
+          rosterRoleId(p.id) == null &&
+          engine.lovers?.partnerOf(p.id) == null)
+        p,
+  ];
 
   /// A drawn reserve the MJ has yet to note: asked for at the Voleur's step.
   bool get reserveToEnter => reserveDrawn && reserveRoleIds.isEmpty;
@@ -244,6 +278,8 @@ class GameSessionState {
     // player still waiting to be revealed.
     if (engine.cascade != null) return DayInterrupt.chain;
     if (unrevealedDead.isNotEmpty) return DayInterrupt.reveal;
+    // Once the eliminated player's card is known, the Servante takes it.
+    if (day.servantId != null && day.servantDeadId != null) return DayInterrupt.servant;
     if (day.loversAck.isNotEmpty) return DayInterrupt.loversAck;
     return null;
   }
@@ -534,6 +570,39 @@ class GameSession extends _$GameSession {
   Future<void> piperCharm(List<String> engineIds) =>
       applyAction(PiperCharm(playerIds: engineIds));
 
+  // --- day: Servante Dévouée ---
+
+  /// The Devoted Servant ([servantId]) reveals herself right after the vote that eliminated
+  /// [deadId]: her takeover waits for the card to be known, then the MJ confirms it.
+  Future<void> servantReveals({required String servantId, required String deadId}) async {
+    final s = state.value;
+    if (s == null) return;
+    if (s.engine.playerById(servantId).roleId != 'servante_devouee') {
+      await identifyRole('servante_devouee', [int.parse(servantId)]);
+    }
+    await _updateDay((d) => d.copyWith(servantId: servantId, servantDeadId: deadId));
+  }
+
+  Future<void> cancelServant() => _updateDay((d) => d.copyWith(clearServant: true));
+
+  /// The Servant takes the eliminated player's role: on the roster too, where the MJ reads who
+  /// holds what.
+  Future<void> servantTakes() async {
+    final s = state.value;
+    final servantId = s?.day.servantId;
+    final deadId = s?.day.servantDeadId;
+    if (s == null || servantId == null || deadId == null) return;
+    if (s.engine.lovers?.partnerOf(servantId) != null) {
+      await cancelServant();
+      return;
+    }
+    await ref.read(gameRepositoryProvider).assignRoles(
+      playerRowIds: [int.parse(servantId)],
+      roleId: s.engine.playerById(deadId).roleId,
+    );
+    await applyAction(ServantTakesRole(servantPlayerId: servantId, deadPlayerId: deadId));
+  }
+
   // --- night: Abominable Sectaire ---
 
   /// The village is divided: [groupAEngineIds] are the first group, everyone else the second.
@@ -751,7 +820,7 @@ class GameSession extends _$GameSession {
     final cursor = _cursorAfter(action, s.cursor);
     final day = _dayAfter(action, result, s);
     // RevealRole and a Voleur swap both write a role onto the roster first.
-    final roster = action is RevealRole || action is VoleurSwap
+    final roster = action is RevealRole || action is VoleurSwap || action is ServantTakesRole
         ? await _loadRoster()
         : s.roster;
 
@@ -775,6 +844,7 @@ class GameSession extends _$GameSession {
       day = day.copyWith(loversAck: [...day.loversAck, ...griefDeaths]);
     }
 
+    if (action is ServantTakesRole) day = day.copyWith(clearServant: true);
     if (action is ElectCaptain) {
       day = day.copyWith(stage: nextDayStage(DayStage.captain, result.state));
     }

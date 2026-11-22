@@ -219,6 +219,85 @@ void main() {
     });
   });
 
+  group('the Devoted Servant', () {
+    const comp = {'servante_devouee': 1, 'voyante': 1, 'loup_garou': 2, 'villageois': 2};
+
+    /// Night 1: the Seer Ana, the wolves Bo and Cy eating Fi; to the vote of day 1.
+    Future<void> toVote(WidgetTester tester) async {
+      await identify(tester, ['Ana']);
+      await tap(tester, 'Passer ce rôle');
+      await identify(tester, ['Bo', 'Cy']);
+      await tester.tap(find.text('Fi'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Les Loups désignent Fi');
+      await tap(tester, 'Résoudre la nuit');
+      await tap(tester, 'Simple Villageois');
+      await tap(tester, 'Fi était le Simple Villageois');
+      await tap(tester, 'Élire le Capitaine');
+      await tap(tester, 'Pas de Capitaine cette partie');
+    }
+
+    testWidgets('reveals herself after the vote and takes the eliminated Seer\'s role', (
+      tester,
+    ) async {
+      final id = await _startedGame(repo, comp);
+      await pump(tester, id);
+      await toVote(tester);
+
+      await tester.tap(find.text('Ana'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Le village élimine Ana');
+      expect(find.text('La Servante Dévouée se révèle-t-elle ?'), findsOneWidget);
+      await tap(tester, 'Oui, elle se révèle');
+      expect(find.text('Qui est la Servante Dévouée ?'), findsOneWidget);
+      await tester.tap(find.text('Ed').last);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Elle devient la Voyante'), findsOneWidget);
+      await tap(tester, 'Elle prend le rôle');
+
+      expect(find.text('Commencer la nuit 2'), findsOneWidget);
+      await tap(tester, 'Commencer la nuit 2');
+      expect(find.textContaining('Voyante, ouvre les yeux'), findsOneWidget);
+      await tap(tester, 'Village');
+      expect(find.text('Voyante'), findsNWidgets(2)); // Ana, who was one, and Ed, now the Seer
+    });
+
+    testWidgets('"no" lets the vote go through as usual', (tester) async {
+      final id = await _startedGame(repo, comp);
+      await pump(tester, id);
+      await toVote(tester);
+
+      await tester.tap(find.text('Ana'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Le village élimine Ana');
+      await tap(tester, 'Non');
+
+      expect(find.text('Elle prend le rôle'), findsNothing);
+      expect(find.text('Commencer la nuit 2'), findsOneWidget);
+    });
+
+    testWidgets('is not asked about when there is no Servante in the game', (tester) async {
+      final id = await _startedGame(repo, const {'voyante': 1, 'loup_garou': 2, 'villageois': 3});
+      await pump(tester, id);
+      await identify(tester, ['Ana']);
+      await tap(tester, 'Passer ce rôle');
+      await identify(tester, ['Bo', 'Cy']);
+      await tester.tap(find.text('Fi'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Les Loups désignent Fi');
+      await tap(tester, 'Résoudre la nuit');
+      await tap(tester, 'Je ne note pas');
+      await tap(tester, 'Élire le Capitaine');
+      await tap(tester, 'Pas de Capitaine cette partie');
+      await tester.tap(find.text('Ana'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Le village élimine Ana');
+
+      expect(find.text('La Servante Dévouée se révèle-t-elle ?'), findsNothing);
+    });
+  });
+
   group('the Wandering Judge', () {
     const comp = {'juge_begue': 1, 'loup_garou': 2, 'villageois': 3};
 

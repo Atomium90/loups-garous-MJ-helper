@@ -59,6 +59,16 @@ class VillageDivision {
   int groupOf(String playerId) => groupA.contains(playerId) ? 0 : 1;
 }
 
+/// The Servante Devouee took over a role: who she is, the role, and the day it happened (the night
+/// index of that day). She can do it once.
+class ServantTakeover {
+  final String playerId;
+  final String roleId;
+  final int day;
+
+  const ServantTakeover({required this.playerId, required this.roleId, required this.day});
+}
+
 class LoversPair {
   final String playerAId;
   final String playerBId;
@@ -128,6 +138,9 @@ class GameState {
   /// The two groups of the village, once the MJ divided it for the Abominable Sectaire.
   final VillageDivision? division;
 
+  /// The role the Servante Devouee took over, once she did.
+  final ServantTakeover? servantTakeover;
+
   /// Non-null exactly while a death cascade is paused on a Hunter/Captain
   /// choice only the MJ can make.
   final CascadeState? cascade;
@@ -156,6 +169,7 @@ class GameState {
     this.knightWound,
     this.voteRestriction,
     this.division,
+    this.servantTakeover,
     this.cascade,
     this.spentPowers = const {},
   });
@@ -247,6 +261,7 @@ class GameState {
     Object? knightWound = _unset,
     Object? voteRestriction = _unset,
     Object? division = _unset,
+    Object? servantTakeover = _unset,
     Object? cascade = _unset,
     Map<String, int>? spentPowers,
   }) => GameState(
@@ -284,6 +299,9 @@ class GameState {
         ? this.voteRestriction
         : voteRestriction as VoteRestriction?,
     division: identical(division, _unset) ? this.division : division as VillageDivision?,
+    servantTakeover: identical(servantTakeover, _unset)
+        ? this.servantTakeover
+        : servantTakeover as ServantTakeover?,
     cascade: identical(cascade, _unset) ? this.cascade : cascade as CascadeState?,
     spentPowers: spentPowers ?? this.spentPowers,
   );

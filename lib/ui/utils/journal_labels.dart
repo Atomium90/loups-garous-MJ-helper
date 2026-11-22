@@ -49,6 +49,11 @@ String journalLine(AppLocalizations l10n, NightLogRow row) {
     JournalKind.knightContaminates => l10n.journalKnightContaminates(player),
     JournalKind.diseaseDeath => l10n.journalDiseaseDeath(player),
     JournalKind.judgeSign => l10n.journalJudgeSign,
+    JournalKind.servantTakes => l10n.journalServantTakes(
+      player,
+      args['other'] ?? '',
+      l10n.roleWithArticle(args['role'] ?? ''),
+    ),
     JournalKind.villageDivided => l10n.journalVillageDivided(player, args['other'] ?? ''),
     JournalKind.defenderProtects => l10n.journalDefenderProtects(player),
     JournalKind.defenderSaves => l10n.journalDefenderSaves(player),

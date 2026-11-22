@@ -64,6 +64,11 @@ class DaySnapshot {
   /// The Village Idiot the village voted against today: pardoned, nobody is eliminated.
   final String? pardonedName;
 
+  /// The Devoted Servant who revealed herself after a vote, and the player eliminated: the
+  /// takeover waits for the card to be known.
+  final String? servantId;
+  final String? servantDeadId;
+
   /// Ids of players the lovers cascade killed that the MJ has not yet
   /// acknowledged (the grief panel). The engine already applied the death;
   /// this only gates the announcement.
@@ -77,6 +82,8 @@ class DaySnapshot {
     this.stage = DayStage.recap,
     this.savedFromWolvesName,
     this.pardonedName,
+    this.servantId,
+    this.servantDeadId,
     this.loversAck = const [],
     this.revealSkipped = const [],
   });
@@ -87,12 +94,17 @@ class DaySnapshot {
     DayStage? stage,
     String? savedFromWolvesName,
     String? pardonedName,
+    String? servantId,
+    String? servantDeadId,
+    bool clearServant = false,
     List<String>? loversAck,
     List<String>? revealSkipped,
   }) => DaySnapshot(
     stage: stage ?? this.stage,
     savedFromWolvesName: savedFromWolvesName ?? this.savedFromWolvesName,
     pardonedName: pardonedName ?? this.pardonedName,
+    servantId: clearServant ? null : servantId ?? this.servantId,
+    servantDeadId: clearServant ? null : servantDeadId ?? this.servantDeadId,
     loversAck: loversAck ?? this.loversAck,
     revealSkipped: revealSkipped ?? this.revealSkipped,
   );
@@ -101,6 +113,8 @@ class DaySnapshot {
     'stage': stage.name,
     if (savedFromWolvesName != null) 'savedFromWolvesName': savedFromWolvesName,
     if (pardonedName != null) 'pardonedName': pardonedName,
+    if (servantId != null) 'servantId': servantId,
+    if (servantDeadId != null) 'servantDeadId': servantDeadId,
     if (loversAck.isNotEmpty) 'loversAck': loversAck,
     if (revealSkipped.isNotEmpty) 'revealSkipped': revealSkipped,
   };
@@ -109,6 +123,8 @@ class DaySnapshot {
     stage: DayStage.values.byName(json['stage'] as String? ?? 'recap'),
     savedFromWolvesName: json['savedFromWolvesName'] as String?,
     pardonedName: json['pardonedName'] as String?,
+    servantId: json['servantId'] as String?,
+    servantDeadId: json['servantDeadId'] as String?,
     loversAck: (json['loversAck'] as List?)?.cast<String>() ?? const [],
     revealSkipped: (json['revealSkipped'] as List?)?.cast<String>() ?? const [],
   );
