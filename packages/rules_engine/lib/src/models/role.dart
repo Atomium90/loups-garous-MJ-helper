@@ -58,6 +58,12 @@ class Role {
   /// the deal, or a division of the village. Nobody wakes. Such a role comes first in the first
   /// night's script, and the narration of the night starts after it.
   final bool preparation;
+
+  /// The app plays this role wrongly, or only by asking the MJ at the last moment, unless it knows
+  /// who holds it from the deal: its power hangs on the neighbours (the Fox, the Bear Tamer), on a
+  /// vote before the first night (the Angel), or the role has no call to be recognised by (the
+  /// Elder, the Knight, the Village Idiot, the Scapegoat, the Devoted Servant).
+  final bool needsDealNotes;
   final List<OrderConstraint> orderConstraints;
   final ActionType actionType;
 
@@ -78,6 +84,7 @@ class Role {
     this.optionalCall = false,
     this.knownOnFirstNight = false,
     this.preparation = false,
+    this.needsDealNotes = false,
     this.orderConstraints = const [],
     this.actionType = ActionType.none,
     this.onDeath = DeathEffect.none,

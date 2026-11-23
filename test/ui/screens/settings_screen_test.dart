@@ -25,7 +25,7 @@ Future<void> _openSettingsInApp(
 }) async {
   SharedPreferences.setMockInitialValues({'language': ?stored});
   // Réglages is long: tall enough to see the language section without scrolling.
-  await tester.binding.setSurfaceSize(const Size(400, 2000));
+  await tester.binding.setSurfaceSize(const Size(400, 2400));
   addTearDown(() => tester.binding.setSurfaceSize(null));
   tester.platformDispatcher.localesTestValue = [device];
   addTearDown(tester.platformDispatcher.clearLocalesTestValue);
@@ -73,7 +73,7 @@ void main() {
   });
 
   testWidgets('switching the theme segment persists the choice', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    await tester.binding.setSurfaceSize(const Size(400, 2400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAppRouter(
       tester,
@@ -90,7 +90,7 @@ void main() {
   });
 
   testWidgets('the narration level can be changed and is remembered', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    await tester.binding.setSurfaceSize(const Size(400, 2400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAppRouter(
       tester,
@@ -98,7 +98,7 @@ void main() {
       initialLocation: '/settings',
     );
     await tester.pumpAndSettle();
-    expect(find.text('PHRASES DU MJ'), findsOneWidget);
+    expect(find.text('Phrases du MJ'), findsOneWidget);
 
     await tester.tap(find.text('Courtes'));
     await tester.pumpAndSettle();
@@ -109,7 +109,7 @@ void main() {
 
   group('the language', () {
     testWidgets('can be forced from Réglages and is remembered', (tester) async {
-      await tester.binding.setSurfaceSize(const Size(400, 2000));
+      await tester.binding.setSurfaceSize(const Size(400, 2400));
       addTearDown(() => tester.binding.setSurfaceSize(null));
       await pumpAppRouter(
         tester,
@@ -117,7 +117,7 @@ void main() {
         initialLocation: '/settings',
       );
       await tester.pumpAndSettle();
-      expect(find.text('LANGUE'), findsOneWidget);
+      expect(find.text('Langue'), findsOneWidget);
 
       await tester.tap(find.text('English'));
       await tester.pumpAndSettle();
@@ -129,29 +129,29 @@ void main() {
     testWidgets('a stored English choice shows the whole app in English', (tester) async {
       await _openSettingsInApp(tester, stored: 'en');
 
-      expect(find.text('LANGUAGE'), findsOneWidget);
+      expect(find.text('Language'), findsOneWidget);
       expect(find.text('Light'), findsOneWidget);
       // The language control and the theme control both have a "System" option.
       expect(find.text('System'), findsNWidgets(2));
-      expect(find.text('LANGUE'), findsNothing);
+      expect(find.text('Langue'), findsNothing);
     });
 
     testWidgets('a stored French choice shows French even on an English device', (tester) async {
       await _openSettingsInApp(tester, stored: 'fr', device: const Locale('en', 'US'));
 
-      expect(find.text('LANGUE'), findsOneWidget);
+      expect(find.text('Langue'), findsOneWidget);
     });
 
     testWidgets('following the device gives English on a non-French phone', (tester) async {
       await _openSettingsInApp(tester, device: const Locale('de', 'DE'));
 
-      expect(find.text('LANGUAGE'), findsOneWidget);
+      expect(find.text('Language'), findsOneWidget);
     });
   });
 
   testWidgets('the aide-mémoire toggle flips and persists', (tester) async {
     // Réglages is longer than the default test screen since the language section was added.
-    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    await tester.binding.setSurfaceSize(const Size(400, 2400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAppRouter(
       tester,
@@ -170,7 +170,7 @@ void main() {
   testWidgets('the Thief reserve toggle is off by default and persists once flipped', (
     tester,
   ) async {
-    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    await tester.binding.setSurfaceSize(const Size(400, 2400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAppRouter(
       tester,
@@ -187,7 +187,7 @@ void main() {
   });
 
   testWidgets('the tie rule can be chosen and is remembered', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    await tester.binding.setSurfaceSize(const Size(400, 2400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAppRouter(
       tester,
@@ -196,7 +196,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('ÉGALITÉ AU VOTE'), findsOneWidget);
+    expect(find.text('Égalité au vote'), findsOneWidget);
     await tester.tap(find.text('2e vote'));
     await tester.pumpAndSettle();
 
@@ -206,7 +206,7 @@ void main() {
   testWidgets('the crash reports are not offered by a build with nowhere to send them', (
     tester,
   ) async {
-    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    await tester.binding.setSurfaceSize(const Size(400, 2400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAppRouter(
       tester,
@@ -219,7 +219,7 @@ void main() {
   });
 
   testWidgets('the crash reports are off until flipped, and the choice persists', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    await tester.binding.setSurfaceSize(const Size(400, 2400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAppRouter(
       tester,
@@ -239,8 +239,79 @@ void main() {
     expect((await SharedPreferences.getInstance()).getBool('crash_reports'), isTrue);
   });
 
+  testWidgets('the settings are grouped in five sections, each option under its own', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(400, 2400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
+      initialLocation: '/settings',
+    );
+    await tester.pumpAndSettle();
+
+    double top(String text) => tester.getTopLeft(find.text(text)).dy;
+    final sections = ['CONTENU', 'RÈGLES', 'PENDANT LA PARTIE', 'AFFICHAGE', 'DONNÉES'];
+    final tops = [for (final s in sections) top(s)];
+    expect(tops, [...tops]..sort(), reason: 'sections follow the planned order');
+
+    void under(String option, String section, String next) {
+      expect(top(option), greaterThan(top(section)), reason: '$option after $section');
+      expect(top(option), lessThan(top(next)), reason: '$option before $next');
+    }
+
+    under('Mes boîtes', 'CONTENU', 'RÈGLES');
+    under('Égalité au vote', 'RÈGLES', 'PENDANT LA PARTIE');
+    under('Réserve du Voleur choisie par le MJ', 'RÈGLES', 'PENDANT LA PARTIE');
+    under('Renard appelé après la Sorcière', 'RÈGLES', 'PENDANT LA PARTIE');
+    under('Loup-Garou Blanc seul les nuits impaires', 'RÈGLES', 'PENDANT LA PARTIE');
+    under('Maladie du Chevalier en fin de nuit', 'RÈGLES', 'PENDANT LA PARTIE');
+    under('Phrases du MJ', 'PENDANT LA PARTIE', 'AFFICHAGE');
+    under('Aide-mémoire dans le script', 'PENDANT LA PARTIE', 'AFFICHAGE');
+    under('Retourner la carte des morts', 'PENDANT LA PARTIE', 'AFFICHAGE');
+    under("Ne noter les rôles qu'au besoin", 'PENDANT LA PARTIE', 'AFFICHAGE');
+    under("Garder l'écran allumé", 'PENDANT LA PARTIE', 'AFFICHAGE');
+    under('Thème', 'AFFICHAGE', 'DONNÉES');
+    under('Langue', 'AFFICHAGE', 'DONNÉES');
+  });
+
+  testWidgets('the dead cards toggle persists once flipped', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 2400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
+      initialLocation: '/settings',
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Retourner la carte des morts'));
+    await tester.pumpAndSettle();
+
+    expect((await SharedPreferences.getInstance()).getBool('reveal_dead_cards'), isFalse);
+  });
+
+  testWidgets('the deal notes toggle is off by default and persists once flipped', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(400, 2400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
+      initialLocation: '/settings',
+    );
+    await tester.pumpAndSettle();
+
+    expect((await SharedPreferences.getInstance()).getBool('deal_notes_only_if_needed'), isNull);
+
+    await tester.tap(find.text("Ne noter les rôles qu'au besoin"));
+    await tester.pumpAndSettle();
+
+    expect((await SharedPreferences.getInstance()).getBool('deal_notes_only_if_needed'), isTrue);
+  });
+
   testWidgets('the Knight disease toggle persists once flipped', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    await tester.binding.setSurfaceSize(const Size(400, 2400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAppRouter(
       tester,
@@ -256,7 +327,7 @@ void main() {
   });
 
   testWidgets('the White Werewolf parity toggle persists once flipped', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    await tester.binding.setSurfaceSize(const Size(400, 2400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAppRouter(
       tester,
@@ -272,7 +343,7 @@ void main() {
   });
 
   testWidgets('the Fox position toggle persists once flipped', (tester) async {
-    await tester.binding.setSurfaceSize(const Size(400, 2000));
+    await tester.binding.setSurfaceSize(const Size(400, 2400));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await pumpAppRouter(
       tester,
@@ -309,7 +380,7 @@ void main() {
     }
 
     Future<void> openSettings(WidgetTester tester, FakeGameRepository repository) async {
-      await tester.binding.setSurfaceSize(const Size(400, 2000));
+      await tester.binding.setSurfaceSize(const Size(400, 2400));
       addTearDown(() => tester.binding.setSurfaceSize(null));
       await pumpAppRouter(
         tester,

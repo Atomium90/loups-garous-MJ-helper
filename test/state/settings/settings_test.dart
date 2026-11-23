@@ -165,6 +165,37 @@ void main() {
     });
   });
 
+  group('the dead players cards', () {
+    test('are turned over by default, and the choice persists', () async {
+      final container = await containerWith({});
+      expect((await container.read(settingsProvider.future)).revealDeadCards, isTrue);
+      expect(container.read(deadCardsShownProvider), isTrue);
+
+      await container.read(settingsProvider.notifier).setRevealDeadCards(false);
+
+      expect(container.read(settingsProvider).value!.revealDeadCards, isFalse);
+      expect(container.read(deadCardsShownProvider), isFalse);
+      expect((await SharedPreferences.getInstance()).getBool('reveal_dead_cards'), isFalse);
+    });
+  });
+
+  group('the deal notes', () {
+    test('are always offered by default, and the choice persists', () async {
+      final container = await containerWith({});
+      expect((await container.read(settingsProvider.future)).dealNotesOnlyIfNeeded, isFalse);
+
+      await container.read(settingsProvider.notifier).setDealNotesOnlyIfNeeded(true);
+
+      expect(container.read(settingsProvider).value!.dealNotesOnlyIfNeeded, isTrue);
+      expect((await SharedPreferences.getInstance()).getBool('deal_notes_only_if_needed'), isTrue);
+    });
+
+    test('a stored choice is read back', () async {
+      final container = await containerWith({'deal_notes_only_if_needed': true});
+      expect((await container.read(settingsProvider.future)).dealNotesOnlyIfNeeded, isTrue);
+    });
+  });
+
   group('the Knight disease timing', () {
     test('is the start of the next night by default, and the choice persists', () async {
       final container = await containerWith({});

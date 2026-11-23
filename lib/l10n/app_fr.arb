@@ -836,6 +836,61 @@
   "@beforeNightDealHint": {
     "description": "How the cards are dealt."
   },
+  "beforeNightNotesHint": "Distribuez, puis notez la carte de chaque joueur en le touchant. Ceux que vous laissez vides, l'app vous les demandera au fil de la partie.",
+  "@beforeNightNotesHint": {
+    "description": "How the cards are dealt when the MJ notes each player's role at the deal."
+  },
+  "beforeNightNoted": "{noted}/{total} notés",
+  "@beforeNightNoted": {
+    "description": "How many players have their role noted at the deal.",
+    "placeholders": {
+      "noted": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "beforeNightMissingTitle": "Des cartes ne sont pas notées",
+  "@beforeNightMissingTitle": {
+    "description": "Title of the question asked when starting the game while some players have no card noted."
+  },
+  "beforeNightMissingMessage": "{count, plural, =1{1 joueur n'a pas de carte notée} other{{count} joueurs n'ont pas de carte notée}}. L'app vous les demandera au fil de la partie, mais certains effets (voisins du Renard ou du Montreur d'Ours, vote de l'Ange...) seront moins fiables.",
+  "@beforeNightMissingMessage": {
+    "description": "Explains what going on without noting every card means.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "beforeNightMissingConfirm": "Commencer quand même",
+  "@beforeNightMissingConfirm": {
+    "description": "Starts the game although some cards are not noted."
+  },
+  "dealRoleTitle": "Carte de {name}",
+  "@dealRoleTitle": {
+    "description": "Title of the sheet where the MJ picks the card a player was dealt.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "dealRoleLeft": "×{count}",
+  "@dealRoleLeft": {
+    "description": "How many cards of a role are left to deal, shown when there are several.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dealRoleClear": "Retirer la carte notée",
+  "@dealRoleClear": {
+    "description": "Forgets the card noted for a player at the deal."
+  },
   "beforeNightPackHint": "Ajoutez 2 Simples Villageois au paquet ({count} cartes), mélangez et distribuez. Posez les 2 cartes restantes au centre, face cachée : vous les noterez pendant la nuit 1.",
   "@beforeNightPackHint": {
     "description": "How to deal when the Thief's reserve is drawn; count is the pack size.",
@@ -890,9 +945,17 @@
       }
     }
   },
-  "settingsAppearance": "Apparence",
-  "@settingsAppearance": {
-    "description": "Settings section: theme."
+  "settingsRules": "Règles",
+  "@settingsRules": {
+    "description": "Settings section: every option that changes what the game applies."
+  },
+  "settingsThemeTitle": "Thème",
+  "@settingsThemeTitle": {
+    "description": "Caption of the theme choice in the display section."
+  },
+  "settingsDisplay": "Affichage",
+  "@settingsDisplay": {
+    "description": "Settings section: theme and language."
   },
   "themeSystem": "Système",
   "@themeSystem": {
@@ -945,6 +1008,22 @@
   "settingsKnightNightEndHint": "Les livrets divergent : le Best Of fait mourir le Loup au début de la nuit suivante (par défaut), Personnages à sa fin. Même effet pour les joueurs.",
   "@settingsKnightNightEndHint": {
     "description": "Explains the Knight disease timing setting."
+  },
+  "settingsDealNotes": "Ne noter les rôles qu'au besoin",
+  "@settingsDealNotes": {
+    "description": "Toggle: only ask to note each player's role at the deal when the composition needs it."
+  },
+  "settingsDealNotesHint": "À la distribution, l'app propose de noter le rôle de chaque joueur. Activé, elle ne le propose que si la composition l'exige (Renard, Montreur d'Ours, Ange, Ancien...) ; sinon la distribution reste à l'aveugle.",
+  "@settingsDealNotesHint": {
+    "description": "Explains the setting about noting the roles at the deal."
+  },
+  "settingsRevealDead": "Retourner la carte des morts",
+  "@settingsRevealDead": {
+    "description": "Toggle: the dead turn their card over in front of the table."
+  },
+  "settingsRevealDeadHint": "Désactivé, les rôles restent secrets : les textes à lire ne demandent plus de retourner les cartes, et vous notez la carte d'un mort en privé.",
+  "@settingsRevealDeadHint": {
+    "description": "Explains the setting about turning the dead players' cards over."
   },
   "settingsVoteTieTitle": "Égalité au vote",
   "@settingsVoteTieTitle": {
@@ -2428,6 +2507,22 @@
         "type": "String"
       }
     }
+  },
+  "narrDeathsBodyHidden": "Leurs cartes restent cachées.",
+  "@narrDeathsBodyHidden": {
+    "description": "Said after the deaths are announced when the dead do not show their card."
+  },
+  "narrRevealBodyHidden": "Ta carte reste cachée.",
+  "@narrRevealBodyHidden": {
+    "description": "Said to a player who just died when the dead do not show their card."
+  },
+  "narrLoversBodyHidden": "Tu meurs de chagrin. Ta carte reste cachée.",
+  "@narrLoversBodyHidden": {
+    "description": "Said to the lover who dies of heartbreak when the dead do not show their card."
+  },
+  "scriptRevealHintHidden": "Sa carte reste cachée à la table. Notez-la en privé : l'app en a besoin pour le Chasseur, l'Idiot, la Servante... Son rôle n'a pas encore été noté.",
+  "@scriptRevealHintHidden": {
+    "description": "Asks the MJ to note a dead player's card in private."
   },
   "narrRevealBody": "Retourne ta carte devant tout le monde.",
   "@narrRevealBody": {

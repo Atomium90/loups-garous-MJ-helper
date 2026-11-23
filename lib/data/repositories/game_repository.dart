@@ -50,8 +50,9 @@ abstract class GameRepository {
   Future<void> savePlayerNames({required int gameId, required List<String> names});
 
   /// Writes [roleId] onto the roster rows for [playerRowIds] - what the night
-  /// identification step records as each role wakes.
-  Future<void> assignRoles({required List<int> playerRowIds, required String roleId});
+  /// identification step records as each role wakes, or what the MJ notes at the deal. A null
+  /// [roleId] forgets the card again.
+  Future<void> assignRoles({required List<int> playerRowIds, required String? roleId});
 
   /// "Commencer la nuit 1": moves the game from setup to inProgress. Kept
   /// generic so it can later also seed the night phase/step.

@@ -193,6 +193,38 @@ List<Role> _inCallOrder(List<Role> roles, RoleRegistry registry, {bool foxAfterW
   return ordered;
 }
 
+/// The cards of the deal's pack, in registry order: the composition, plus the two Simples
+/// Villageois a drawn Voleur reserve adds to it.
+List<({String roleId, int count})> dealPackOf(
+  Map<String, int> composition, {
+  required bool reserveDrawn,
+}) {
+  final counts = {...composition};
+  if (reserveDrawn) counts.update(kPlaceholderRoleId, (n) => n + 2, ifAbsent: () => 2);
+  return [
+    for (final role in RoleRegistry.all.roles)
+      if ((counts[role.id] ?? 0) > 0) (roleId: role.id, count: counts[role.id]!),
+  ];
+}
+
+/// The cards of [pack] the MJ has not put on a player yet, given the [noted] role of every roster
+/// seat (null while not noted), in the pack's order. The seat being edited is left out of
+/// [noted] by the caller, so its own card is offered again.
+List<({String roleId, int left})> cardsLeftIn(
+  List<({String roleId, int count})> pack,
+  Iterable<String?> noted,
+) {
+  final used = <String, int>{};
+  for (final id in noted) {
+    if (id != null) used.update(id, (n) => n + 1, ifAbsent: () => 1);
+  }
+  return [
+    for (final card in pack)
+      if (card.count - (used[card.roleId] ?? 0) > 0)
+        (roleId: card.roleId, left: card.count - (used[card.roleId] ?? 0)),
+  ];
+}
+
 /// The composition less the cards a drawn Voleur reserve left in the middle, plus the two
 /// Simples Villageois it added to the pack. [composition] itself when the reserve is not drawn
 /// or not noted yet.

@@ -6,6 +6,7 @@ import '../models/game_winner.dart';
 import '../models/night_log_entry.dart';
 import 'game_not_found_exception.dart';
 import 'game_repository.dart';
+import 'same_composition.dart';
 
 class DriftGameRepository implements GameRepository {
   final AppDatabase _db;
@@ -38,6 +39,7 @@ class DriftGameRepository implements GameRepository {
     List<String> reserveRoleIds = const [],
   }) {
     return _db.transaction(() async {
+      final before = await getGame(gameId);
       final rowsAffected =
           await (_db.update(_db.games)..where((g) => g.id.equals(gameId))).write(
             GamesCompanion(
@@ -61,6 +63,17 @@ class DriftGameRepository implements GameRepository {
               PlayersCompanion.insert(gameId: gameId, seatIndex: seat),
           ]);
         });
+      } else if (before != null &&
+          !sameComposition(
+            before: before.compositionJson,
+            reserveBefore: before.reserveRolesJson,
+            after: roleCounts,
+            reserveAfter: reserveRoleIds,
+          )) {
+        // The cards noted at the deal were dealt from another composition.
+        await (_db.update(_db.players)..where((p) => p.gameId.equals(gameId))).write(
+          const PlayersCompanion(roleId: Value(null)),
+        );
       }
     });
   }
@@ -123,7 +136,7 @@ class DriftGameRepository implements GameRepository {
   }
 
   @override
-  Future<void> assignRoles({required List<int> playerRowIds, required String roleId}) {
+  Future<void> assignRoles({required List<int> playerRowIds, required String? roleId}) {
     if (playerRowIds.isEmpty) return Future.value();
     return (_db.update(_db.players)..where((p) => p.id.isIn(playerRowIds))).write(
       PlayersCompanion(roleId: Value(roleId)),

@@ -257,6 +257,52 @@ void main() {
       final after = await repository.getRoster(id);
       expect(after.map((p) => p.roleId), [null, 'loup_garou', null, 'loup_garou']);
     });
+
+    test('a null role forgets the card again', () async {
+      final id = await repository.createGame();
+      await repository.saveComposition(gameId: id, playerCount: 3, roleCounts: const {});
+      final roster = await repository.getRoster(id);
+      await repository.assignRoles(
+        playerRowIds: [roster[0].id, roster[1].id],
+        roleId: 'voyante',
+      );
+
+      await repository.assignRoles(playerRowIds: [roster[1].id], roleId: null);
+
+      final after = await repository.getRoster(id);
+      expect(after.map((p) => p.roleId), ['voyante', null, null]);
+    });
+
+    test('the roles noted at the deal survive saving the same composition again', () async {
+      final id = await repository.createGame();
+      const composition = {'loup_garou': 1, 'voyante': 1};
+      await repository.saveComposition(gameId: id, playerCount: 2, roleCounts: composition);
+      final roster = await repository.getRoster(id);
+      await repository.assignRoles(playerRowIds: [roster[0].id], roleId: 'voyante');
+
+      await repository.saveComposition(gameId: id, playerCount: 2, roleCounts: composition);
+
+      expect((await repository.getRoster(id)).map((p) => p.roleId), ['voyante', null]);
+    });
+
+    test('the roles noted at the deal are forgotten when the composition changes', () async {
+      final id = await repository.createGame();
+      await repository.saveComposition(
+        gameId: id,
+        playerCount: 2,
+        roleCounts: const {'loup_garou': 1, 'voyante': 1},
+      );
+      final roster = await repository.getRoster(id);
+      await repository.assignRoles(playerRowIds: [roster[0].id], roleId: 'voyante');
+
+      await repository.saveComposition(
+        gameId: id,
+        playerCount: 2,
+        roleCounts: const {'loup_garou': 1, 'sorciere': 1},
+      );
+
+      expect((await repository.getRoster(id)).map((p) => p.roleId), [null, null]);
+    });
   });
 
   group('saveSession', () {

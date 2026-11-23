@@ -710,6 +710,26 @@ void main() {
     expect(find.text('Sorcière'), findsWidgets);
   });
 
+  testWidgets('with the dead cards kept hidden the reveal panel says to note it in private', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({'reveal_dead_cards': false});
+    final id = await _startedGame(repo, const {
+      'loup_garou': 2,
+      'voyante': 1,
+      'sorciere': 1,
+      'villageois': 1,
+      'chasseur': 1,
+    });
+    await pump(tester, id);
+    await playNight1(tester, victim: 'Fi');
+
+    expect(find.text('Quelle était sa carte ?'), findsOneWidget);
+    expect(find.textContaining('Sa carte reste cachée à la table'), findsOneWidget);
+    expect(find.textContaining('Retournez sa carte'), findsNothing);
+    expect(find.textContaining('Ta carte reste cachée'), findsOneWidget);
+  });
+
   testWidgets('an un-identified victim -> reveal panel -> Chasseur chain', (tester) async {
     final id = await _startedGame(repo, const {
       'loup_garou': 2,

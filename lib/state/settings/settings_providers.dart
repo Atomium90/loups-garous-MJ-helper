@@ -21,6 +21,8 @@ const _kFoxAfterWitch = 'fox_after_witch';
 const _kWhiteWolfOdd = 'white_wolf_odd_nights';
 const _kKnightAtNightEnd = 'knight_disease_night_end';
 const _kVoteTieRule = 'vote_tie_rule';
+const _kDealNotesOnlyIfNeeded = 'deal_notes_only_if_needed';
+const _kRevealDeadCards = 'reveal_dead_cards';
 
 /// Whether this build can send crash reports at all (it was given a Sentry DSN). The setting is
 /// only shown when it can. Overridden in tests.
@@ -30,6 +32,11 @@ final crashReportingAvailableProvider = Provider<bool>((ref) => CrashReporting.a
 /// `SharedPreferences.setMockInitialValues({})`.
 @Riverpod(keepAlive: true)
 Future<SharedPreferences> sharedPreferences(Ref ref) => SharedPreferences.getInstance();
+
+/// Whether the dead turn their card over in front of the table. True until the settings load.
+final deadCardsShownProvider = Provider<bool>(
+  (ref) => ref.watch(settingsProvider).value?.revealDeadCards ?? true,
+);
 
 /// The MJ's persisted preferences. `build` reads them once; each setter writes
 /// its key and updates the state so the UI reacts immediately.
@@ -57,6 +64,22 @@ class Settings extends _$Settings {
       knightDiseaseAtNightEnd: prefs.getBool(_kKnightAtNightEnd) ?? false,
       voteTieRule: VoteTieRule.fromName(prefs.getString(_kVoteTieRule)),
       crashReports: prefs.getBool(kCrashReportsPref) ?? false,
+      dealNotesOnlyIfNeeded: prefs.getBool(_kDealNotesOnlyIfNeeded) ?? false,
+      revealDeadCards: prefs.getBool(_kRevealDeadCards) ?? true,
+    );
+  }
+
+  Future<void> setRevealDeadCards(bool value) async {
+    final prefs = await ref.read(sharedPreferencesProvider.future);
+    await prefs.setBool(_kRevealDeadCards, value);
+    state = AsyncData((state.value ?? AppSettings.defaults).copyWith(revealDeadCards: value));
+  }
+
+  Future<void> setDealNotesOnlyIfNeeded(bool value) async {
+    final prefs = await ref.read(sharedPreferencesProvider.future);
+    await prefs.setBool(_kDealNotesOnlyIfNeeded, value);
+    state = AsyncData(
+      (state.value ?? AppSettings.defaults).copyWith(dealNotesOnlyIfNeeded: value),
     );
   }
 

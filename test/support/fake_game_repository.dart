@@ -7,6 +7,7 @@ import 'package:loup_garou_mj/data/models/game_winner.dart';
 import 'package:loup_garou_mj/data/models/night_log_entry.dart';
 import 'package:loup_garou_mj/data/repositories/game_not_found_exception.dart';
 import 'package:loup_garou_mj/data/repositories/game_repository.dart';
+import 'package:loup_garou_mj/data/repositories/same_composition.dart';
 
 /// In-memory [GameRepository], shared by any test that needs one instead of a real Drift
 /// database. [initialGames] seeds arbitrary rows directly (status, createdAt, name) - useful for
@@ -85,12 +86,25 @@ class FakeGameRepository implements GameRepository {
   }) async {
     final game = _games[gameId];
     if (game == null) throw GameNotFoundException(gameId);
+    final unchanged = sameComposition(
+      before: game.compositionJson,
+      reserveBefore: game.reserveRolesJson,
+      after: roleCounts,
+      reserveAfter: reserveRoleIds,
+    );
     _games[gameId] = game.copyWith(
       playerCount: playerCount,
       compositionJson: Value(roleCounts),
       reserveRolesJson: Value(reserveRoleIds.isEmpty ? null : reserveRoleIds),
       updatedAt: DateTime.now(),
     );
+    if (!unchanged) {
+      // The cards noted at the deal were dealt from another composition.
+      _rosters[gameId] = [
+        for (final p in _rosters[gameId] ?? const <PlayerRow>[])
+          p.copyWith(roleId: const Value(null)),
+      ];
+    }
     // Seed a blank roster once, mirroring DriftGameRepository's transaction.
     if ((_rosters[gameId] ?? const []).isEmpty) {
       _rosters[gameId] = [
@@ -151,7 +165,7 @@ class FakeGameRepository implements GameRepository {
   }
 
   @override
-  Future<void> assignRoles({required List<int> playerRowIds, required String roleId}) async {
+  Future<void> assignRoles({required List<int> playerRowIds, required String? roleId}) async {
     if (playerRowIds.isEmpty) return;
     final ids = playerRowIds.toSet();
     for (final entry in _rosters.entries) {

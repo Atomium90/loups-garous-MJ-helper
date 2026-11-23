@@ -105,7 +105,8 @@ class GameSessionState {
   bool mayBeElder(String playerId) {
     final elders = dealtComposition['ancien'] ?? 0;
     if (elders == 0) return false;
-    if (engine.playerById(playerId).roleId != kPlaceholderRoleId) return false;
+    // A card noted as a Simple Villageois is known too: only an unnoted one may be the Elder.
+    if (rosterRoleId(playerId) != null) return false;
     return engine.players.where((p) => p.roleId == 'ancien').length < elders;
   }
 
@@ -128,7 +129,7 @@ class GameSessionState {
   bool mayBeIdiot(String playerId) {
     final idiots = dealtComposition['idiot_du_village'] ?? 0;
     if (idiots == 0) return false;
-    if (engine.playerById(playerId).roleId != kPlaceholderRoleId) return false;
+    if (rosterRoleId(playerId) != null) return false;
     return engine.players.where((p) => p.roleId == 'idiot_du_village').length < idiots;
   }
 
@@ -178,15 +179,8 @@ class GameSessionState {
 
   /// The cards in the pack: the composition, plus the two Simples Villageois a drawn reserve
   /// adds. Empty unless the reserve is drawn.
-  List<({String roleId, int count})> get pack {
-    if (!reserveDrawn) return const [];
-    final counts = {...composition};
-    counts.update(kPlaceholderRoleId, (n) => n + 2, ifAbsent: () => 2);
-    return [
-      for (final role in RoleRegistry.all.roles)
-        if ((counts[role.id] ?? 0) > 0) (roleId: role.id, count: counts[role.id]!),
-    ];
-  }
+  List<({String roleId, int count})> get pack =>
+      reserveDrawn ? dealPackOf(composition, reserveDrawn: true) : const [];
 
   /// How many holders each role really has among the players: the [composition], less the cards
   /// a drawn reserve took out of the deal.
