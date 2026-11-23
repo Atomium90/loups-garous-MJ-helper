@@ -98,7 +98,7 @@ void main() {
       initialLocation: '/settings',
     );
     await tester.pumpAndSettle();
-    expect(find.text('PHRASES DU MJ'), findsOneWidget);
+    expect(find.text('Phrases du MJ'), findsOneWidget);
 
     await tester.tap(find.text('Courtes'));
     await tester.pumpAndSettle();
@@ -117,7 +117,7 @@ void main() {
         initialLocation: '/settings',
       );
       await tester.pumpAndSettle();
-      expect(find.text('LANGUE'), findsOneWidget);
+      expect(find.text('Langue'), findsOneWidget);
 
       await tester.tap(find.text('English'));
       await tester.pumpAndSettle();
@@ -129,23 +129,23 @@ void main() {
     testWidgets('a stored English choice shows the whole app in English', (tester) async {
       await _openSettingsInApp(tester, stored: 'en');
 
-      expect(find.text('LANGUAGE'), findsOneWidget);
+      expect(find.text('Language'), findsOneWidget);
       expect(find.text('Light'), findsOneWidget);
       // The language control and the theme control both have a "System" option.
       expect(find.text('System'), findsNWidgets(2));
-      expect(find.text('LANGUE'), findsNothing);
+      expect(find.text('Langue'), findsNothing);
     });
 
     testWidgets('a stored French choice shows French even on an English device', (tester) async {
       await _openSettingsInApp(tester, stored: 'fr', device: const Locale('en', 'US'));
 
-      expect(find.text('LANGUE'), findsOneWidget);
+      expect(find.text('Langue'), findsOneWidget);
     });
 
     testWidgets('following the device gives English on a non-French phone', (tester) async {
       await _openSettingsInApp(tester, device: const Locale('de', 'DE'));
 
-      expect(find.text('LANGUAGE'), findsOneWidget);
+      expect(find.text('Language'), findsOneWidget);
     });
   });
 
@@ -196,7 +196,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('ÉGALITÉ AU VOTE'), findsOneWidget);
+    expect(find.text('Égalité au vote'), findsOneWidget);
     await tester.tap(find.text('2e vote'));
     await tester.pumpAndSettle();
 
@@ -237,6 +237,43 @@ void main() {
     await tester.pumpAndSettle();
 
     expect((await SharedPreferences.getInstance()).getBool('crash_reports'), isTrue);
+  });
+
+  testWidgets('the settings are grouped in five sections, each option under its own', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(400, 2400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await pumpAppRouter(
+      tester,
+      overrides: [gameRepositoryProvider.overrideWithValue(FakeGameRepository())],
+      initialLocation: '/settings',
+    );
+    await tester.pumpAndSettle();
+
+    double top(String text) => tester.getTopLeft(find.text(text)).dy;
+    final sections = ['CONTENU', 'RÈGLES', 'PENDANT LA PARTIE', 'AFFICHAGE', 'DONNÉES'];
+    final tops = [for (final s in sections) top(s)];
+    expect(tops, [...tops]..sort(), reason: 'sections follow the planned order');
+
+    void under(String option, String section, String next) {
+      expect(top(option), greaterThan(top(section)), reason: '$option after $section');
+      expect(top(option), lessThan(top(next)), reason: '$option before $next');
+    }
+
+    under('Mes boîtes', 'CONTENU', 'RÈGLES');
+    under('Égalité au vote', 'RÈGLES', 'PENDANT LA PARTIE');
+    under('Réserve du Voleur choisie par le MJ', 'RÈGLES', 'PENDANT LA PARTIE');
+    under('Renard appelé après la Sorcière', 'RÈGLES', 'PENDANT LA PARTIE');
+    under('Loup-Garou Blanc seul les nuits impaires', 'RÈGLES', 'PENDANT LA PARTIE');
+    under('Maladie du Chevalier en fin de nuit', 'RÈGLES', 'PENDANT LA PARTIE');
+    under('Phrases du MJ', 'PENDANT LA PARTIE', 'AFFICHAGE');
+    under('Aide-mémoire dans le script', 'PENDANT LA PARTIE', 'AFFICHAGE');
+    under('Retourner la carte des morts', 'PENDANT LA PARTIE', 'AFFICHAGE');
+    under("Ne noter les rôles qu'au besoin", 'PENDANT LA PARTIE', 'AFFICHAGE');
+    under("Garder l'écran allumé", 'PENDANT LA PARTIE', 'AFFICHAGE');
+    under('Thème', 'AFFICHAGE', 'DONNÉES');
+    under('Langue', 'AFFICHAGE', 'DONNÉES');
   });
 
   testWidgets('the dead cards toggle persists once flipped', (tester) async {

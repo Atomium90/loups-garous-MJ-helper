@@ -81,63 +81,92 @@ class _SettingsBody extends StatelessWidget {
                 sublabel: context.l10n.settingsOwnedBoxes(pool.ownedBoxIds.length, pool.availableRoleCount),
                 onTap: () => context.pushNamed('boxes'),
               ),
-              _ToggleRow(
+              _ComingSoonRow(icon: AppIcons.regulars, label: context.l10n.regularsBook),
+              const SizedBox(height: 22),
+              SectionLabel(context.l10n.settingsRules),
+              _SegmentedSetting<VoteTieRule>(
+                title: context.l10n.settingsVoteTieTitle,
+                hint: context.l10n.settingsVoteTieHint,
+                selected: settings.voteTieRule,
+                onChanged: (r) => notifier?.setVoteTieRule(r),
+                options: [
+                  (value: VoteTieRule.nobody, icon: null, label: context.l10n.voteTieNobody),
+                  (value: VoteTieRule.captainDecides, icon: null, label: context.l10n.voteTieCaptain),
+                  (value: VoteTieRule.revote, icon: null, label: context.l10n.voteTieRevote),
+                ],
+              ),
+              _ToggleSetting(
                 icon: AppIcons.thief,
                 label: context.l10n.settingsThiefReserve,
+                hint: context.l10n.settingsThiefReserveHint,
                 value: settings.thiefReserveChosen,
                 onChanged: (v) => notifier?.setThiefReserveChosen(v),
               ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Text(
-                  context.l10n.settingsThiefReserveHint,
-                  style: typography.counter.copyWith(color: colors.textTertiary, height: 1.55),
-                ),
-              ),
-              _ToggleRow(
+              _ToggleSetting(
                 icon: AppIcons.fox,
                 label: context.l10n.settingsFoxAfterWitch,
+                hint: context.l10n.settingsFoxAfterWitchHint,
                 value: settings.foxAfterWitch,
                 onChanged: (v) => notifier?.setFoxAfterWitch(v),
               ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Text(
-                  context.l10n.settingsFoxAfterWitchHint,
-                  style: typography.counter.copyWith(color: colors.textTertiary, height: 1.55),
-                ),
-              ),
-              _ToggleRow(
+              _ToggleSetting(
                 icon: AppIcons.whiteWolf,
                 label: context.l10n.settingsWhiteWolfOdd,
+                hint: context.l10n.settingsWhiteWolfOddHint,
                 value: settings.whiteWolfOddNights,
                 onChanged: (v) => notifier?.setWhiteWolfOddNights(v),
               ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Text(
-                  context.l10n.settingsWhiteWolfOddHint,
-                  style: typography.counter.copyWith(color: colors.textTertiary, height: 1.55),
-                ),
-              ),
-              _ToggleRow(
+              _ToggleSetting(
                 icon: AppIcons.knight,
                 label: context.l10n.settingsKnightNightEnd,
+                hint: context.l10n.settingsKnightNightEndHint,
                 value: settings.knightDiseaseAtNightEnd,
                 onChanged: (v) => notifier?.setKnightDiseaseAtNightEnd(v),
               ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Text(
-                  context.l10n.settingsKnightNightEndHint,
-                  style: typography.counter.copyWith(color: colors.textTertiary, height: 1.55),
-                ),
-              ),
-              _ComingSoonRow(icon: AppIcons.regulars, label: context.l10n.regularsBook),
               const SizedBox(height: 22),
-              SectionLabel(context.l10n.settingsAppearance),
-              const SizedBox(height: 10),
-              AppSegmentedControl<ThemeMode>(
+              SectionLabel(context.l10n.settingsDuringGame),
+              _SegmentedSetting<NarrationLevel>(
+                title: context.l10n.settingsNarrationTitle,
+                hint: context.l10n.settingsNarrationHint,
+                selected: settings.narrationLevel,
+                onChanged: (l) => notifier?.setNarrationLevel(l),
+                options: [
+                  (value: NarrationLevel.off, icon: null, label: context.l10n.narrationOff),
+                  (value: NarrationLevel.short, icon: null, label: context.l10n.narrationShort),
+                  (value: NarrationLevel.full, icon: null, label: context.l10n.narrationFull),
+                ],
+              ),
+              _ToggleSetting(
+                icon: AppIcons.help,
+                label: context.l10n.settingsAideMemoire,
+                value: settings.aideMemoireInScript,
+                onChanged: (v) => notifier?.setAideMemoireInScript(v),
+              ),
+              _ToggleSetting(
+                icon: AppIcons.help,
+                label: context.l10n.settingsRevealDead,
+                hint: context.l10n.settingsRevealDeadHint,
+                value: settings.revealDeadCards,
+                onChanged: (v) => notifier?.setRevealDeadCards(v),
+              ),
+              _ToggleSetting(
+                icon: AppIcons.deal,
+                label: context.l10n.settingsDealNotes,
+                hint: context.l10n.settingsDealNotesHint,
+                value: settings.dealNotesOnlyIfNeeded,
+                onChanged: (v) => notifier?.setDealNotesOnlyIfNeeded(v),
+              ),
+              _ToggleSetting(
+                icon: AppIcons.screenOn,
+                label: context.l10n.settingsKeepScreenOn,
+                value: settings.keepScreenOn,
+                onChanged: (v) => notifier?.setKeepScreenOn(v),
+              ),
+              const SizedBox(height: 22),
+              SectionLabel(context.l10n.settingsDisplay),
+              _SegmentedSetting<ThemeMode>(
+                title: context.l10n.settingsThemeTitle,
+                hint: context.l10n.settingsThemeHint,
                 selected: settings.themeMode,
                 onChanged: (m) => notifier?.setThemeMode(m),
                 options: [
@@ -150,15 +179,8 @@ class _SettingsBody extends StatelessWidget {
                   (value: ThemeMode.dark, icon: AppIcons.themeDark, label: context.l10n.themeDark),
                 ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                context.l10n.settingsThemeHint,
-                style: typography.counter.copyWith(color: colors.textTertiary, height: 1.55),
-              ),
-              const SizedBox(height: 22),
-              SectionLabel(context.l10n.settingsLanguageTitle),
-              const SizedBox(height: 10),
-              AppSegmentedControl<AppLanguage>(
+              _SegmentedSetting<AppLanguage>(
+                title: context.l10n.settingsLanguageTitle,
                 selected: settings.language,
                 onChanged: (l) => notifier?.setLanguage(l),
                 options: [
@@ -173,96 +195,15 @@ class _SettingsBody extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 22),
-              SectionLabel(context.l10n.settingsDuringGame),
-              _ToggleRow(
-                icon: AppIcons.screenOn,
-                label: context.l10n.settingsKeepScreenOn,
-                value: settings.keepScreenOn,
-                onChanged: (v) => notifier?.setKeepScreenOn(v),
-              ),
-              _ToggleRow(
-                icon: AppIcons.help,
-                label: context.l10n.settingsAideMemoire,
-                value: settings.aideMemoireInScript,
-                onChanged: (v) => notifier?.setAideMemoireInScript(v),
-              ),
-              _ToggleRow(
-                icon: AppIcons.help,
-                label: context.l10n.settingsRevealDead,
-                value: settings.revealDeadCards,
-                onChanged: (v) => notifier?.setRevealDeadCards(v),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Text(
-                  context.l10n.settingsRevealDeadHint,
-                  style: typography.counter.copyWith(color: colors.textTertiary, height: 1.55),
-                ),
-              ),
-              _ToggleRow(
-                icon: AppIcons.deal,
-                label: context.l10n.settingsDealNotes,
-                value: settings.dealNotesOnlyIfNeeded,
-                onChanged: (v) => notifier?.setDealNotesOnlyIfNeeded(v),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Text(
-                  context.l10n.settingsDealNotesHint,
-                  style: typography.counter.copyWith(color: colors.textTertiary, height: 1.55),
-                ),
-              ),
-              const SizedBox(height: 22),
-              SectionLabel(context.l10n.settingsVoteTieTitle),
-              const SizedBox(height: 10),
-              AppSegmentedControl<VoteTieRule>(
-                selected: settings.voteTieRule,
-                onChanged: (r) => notifier?.setVoteTieRule(r),
-                options: [
-                  (value: VoteTieRule.nobody, icon: null, label: context.l10n.voteTieNobody),
-                  (value: VoteTieRule.captainDecides, icon: null, label: context.l10n.voteTieCaptain),
-                  (value: VoteTieRule.revote, icon: null, label: context.l10n.voteTieRevote),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                context.l10n.settingsVoteTieHint,
-                style: typography.counter.copyWith(color: colors.textTertiary, height: 1.55),
-              ),
-              const SizedBox(height: 22),
-              SectionLabel(context.l10n.settingsNarrationTitle),
-              const SizedBox(height: 10),
-              AppSegmentedControl<NarrationLevel>(
-                selected: settings.narrationLevel,
-                onChanged: (l) => notifier?.setNarrationLevel(l),
-                options: [
-                  (value: NarrationLevel.off, icon: null, label: context.l10n.narrationOff),
-                  (value: NarrationLevel.short, icon: null, label: context.l10n.narrationShort),
-                  (value: NarrationLevel.full, icon: null, label: context.l10n.narrationFull),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                context.l10n.settingsNarrationHint,
-                style: typography.counter.copyWith(color: colors.textTertiary, height: 1.55),
-              ),
-              const SizedBox(height: 22),
               SectionLabel(context.l10n.settingsData),
-              if (crashReportsAvailable) ...[
-                _ToggleRow(
+              if (crashReportsAvailable)
+                _ToggleSetting(
                   icon: AppIcons.crashReports,
                   label: context.l10n.settingsCrashReports,
+                  hint: context.l10n.settingsCrashReportsHint,
                   value: settings.crashReports,
                   onChanged: (v) => notifier?.setCrashReports(v),
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Text(
-                    context.l10n.settingsCrashReportsHint,
-                    style: typography.counter.copyWith(color: colors.textTertiary, height: 1.55),
-                  ),
-                ),
-              ],
               const _DeleteAllGamesRow(),
             ],
           ),
@@ -442,24 +383,86 @@ class _ComingSoonRow extends StatelessWidget {
       _SettingsRow(icon: icon, label: label, dimmed: true, trailing: const BientotPill());
 }
 
-class _ToggleRow extends StatelessWidget {
-  const _ToggleRow({
+/// An on/off setting: its row, and the short explanation under it when it has one.
+class _ToggleSetting extends StatelessWidget {
+  const _ToggleSetting({
     required this.icon,
     required this.label,
     required this.value,
     required this.onChanged,
+    this.hint,
   });
 
   final IconData icon;
   final String label;
+  final String? hint;
   final bool value;
   final ValueChanged<bool> onChanged;
 
   @override
-  Widget build(BuildContext context) => _SettingsRow(
-    icon: icon,
-    label: label,
-    onTap: () => onChanged(!value),
-    trailing: AppToggle(value: value, onChanged: onChanged),
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      _SettingsRow(
+        icon: icon,
+        label: label,
+        onTap: () => onChanged(!value),
+        trailing: AppToggle(value: value, onChanged: onChanged),
+      ),
+      if (hint != null) _Hint(hint!, bottom: 4),
+    ],
+  );
+}
+
+/// A setting with a few exclusive choices: a title, the segmented control and, when there is one,
+/// its explanation.
+class _SegmentedSetting<T> extends StatelessWidget {
+  const _SegmentedSetting({
+    required this.title,
+    required this.selected,
+    required this.onChanged,
+    required this.options,
+    this.hint,
+  });
+
+  final String title;
+  final String? hint;
+  final T selected;
+  final ValueChanged<T> onChanged;
+  final List<({T value, IconData? icon, String label})> options;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: 6, bottom: 12),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: context.typography.rowLabel.copyWith(color: context.colors.textPrimary),
+        ),
+        const SizedBox(height: 10),
+        AppSegmentedControl<T>(selected: selected, onChanged: onChanged, options: options),
+        if (hint != null) _Hint(hint!, top: 8),
+      ],
+    ),
+  );
+}
+
+/// The small grey explanation under a setting.
+class _Hint extends StatelessWidget {
+  const _Hint(this.text, {this.top = 0, this.bottom = 0});
+
+  final String text;
+  final double top;
+  final double bottom;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: EdgeInsets.only(top: top, bottom: bottom),
+    child: Text(
+      text,
+      style: context.typography.counter.copyWith(color: context.colors.textTertiary, height: 1.55),
+    ),
   );
 }

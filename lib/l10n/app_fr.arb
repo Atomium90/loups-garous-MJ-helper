@@ -945,9 +945,17 @@
       }
     }
   },
-  "settingsAppearance": "Apparence",
-  "@settingsAppearance": {
-    "description": "Settings section: theme."
+  "settingsRules": "Règles",
+  "@settingsRules": {
+    "description": "Settings section: every option that changes what the game applies."
+  },
+  "settingsThemeTitle": "Thème",
+  "@settingsThemeTitle": {
+    "description": "Caption of the theme choice in the display section."
+  },
+  "settingsDisplay": "Affichage",
+  "@settingsDisplay": {
+    "description": "Settings section: theme and language."
   },
   "themeSystem": "Système",
   "@themeSystem": {
