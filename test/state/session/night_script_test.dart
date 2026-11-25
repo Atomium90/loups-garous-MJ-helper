@@ -345,4 +345,18 @@ void main() {
       );
     });
   });
+
+  group('a blind game', () {
+    // Nobody noted at the deal: a role is only learnt when it is woken, so every role with a
+    // night call must be called on the first night, whatever its wake condition.
+    for (final role in RoleRegistry.all.roles.where((r) => r.hasNightCall)) {
+      test('wakes ${role.id} on the first night', () {
+        final script = buildNightScript(
+          engine: _state(),
+          composition: {role.id: role.groupSize, 'loup_garou': 2, 'villageois': 3},
+        );
+        expect(stepIds(script), contains(role.id));
+      });
+    }
+  });
 }
