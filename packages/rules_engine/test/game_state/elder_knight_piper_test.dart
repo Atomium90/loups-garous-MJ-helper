@@ -70,6 +70,24 @@ void main() {
       expect(state.playerById('elder').alive, isTrue);
     });
 
+    test('gets back the life of the first bite when the Witch heals him the second time', () {
+      final state = applyAll(table.copyWith(woundedElders: {'elder'}), [
+        const WolvesTarget(targetPlayerId: 'elder'),
+        const WitchLifePotion(),
+        const FinalizeNight(),
+      ]);
+      expect(state.playerById('elder').alive, isTrue);
+      expect(state.woundedElders, isEmpty);
+
+      // so the next bites are the first and the second again
+      final bitten = applyAll(state.copyWith(phase: GamePhase.night, nightIndex: 3), [
+        const WolvesTarget(targetPlayerId: 'elder'),
+        const FinalizeNight(),
+      ]);
+      expect(bitten.playerById('elder').alive, isTrue);
+      expect(bitten.woundedElders, {'elder'});
+    });
+
     test('the Big Bad Wolf\'s second victim also gets his first life spared', () {
       final state = applyAll(table, [
         const WolvesTarget(targetPlayerId: 'v'),

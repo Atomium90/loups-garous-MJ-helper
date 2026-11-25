@@ -315,9 +315,14 @@ class GameStateMachine {
     if (state.pendingWolfVictimId == null) {
       throw InvalidActionError('No wolf victim to save');
     }
+    // The Elder she heals gets back the life the first bite took from him.
+    final victimId = state.pendingWolfVictimId!;
+    final healsElder =
+        state.playerById(victimId).roleId == 'ancien' && state.woundedElders.contains(victimId);
     return ActionResult(
       state: state.copyWith(
         pendingWolfVictimId: null,
+        woundedElders: healsElder ? ({...state.woundedElders}..remove(victimId)) : null,
         witch: state.witch.copyWith(lifePotionUsed: true),
       ),
       events: const [WitchLifePotionUsed()],
