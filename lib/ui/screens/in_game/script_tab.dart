@@ -110,7 +110,14 @@ class _NightBody extends ConsumerWidget {
               ],
             ),
           ),
-        Expanded(child: _body(context, notifier, step)),
+        // One state per step: the pick of the step before (the Salvateur's) must not stay ticked on
+        // the next one (the Loups').
+        Expanded(
+          child: KeyedSubtree(
+            key: ValueKey('${session.engine.nightIndex}-${session.cursor.stepIndex}'),
+            child: _body(context, notifier, step),
+          ),
+        ),
       ],
     );
   }

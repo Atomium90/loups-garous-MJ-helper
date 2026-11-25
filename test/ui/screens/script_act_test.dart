@@ -19,6 +19,7 @@ Future<int> _startedGame(
     'villageois': 2,
   },
   List<String> reserveRoleIds = const [],
+  Map<String, String> noted = const {},
 }) async {
   final id = await repo.createGame(initialPlayerCount: 6);
   await repo.saveComposition(
@@ -28,6 +29,12 @@ Future<int> _startedGame(
     reserveRoleIds: reserveRoleIds,
   );
   await repo.savePlayerNames(gameId: id, names: const ['Ana', 'Bo', 'Cy', 'Di', 'Ed', 'Fi']);
+  // Roles noted at the deal: name -> role id.
+  final roster = await repo.getRoster(id);
+  for (final row in roster) {
+    final roleId = noted[row.name];
+    if (roleId != null) await repo.assignRoles(playerRowIds: [row.id], roleId: roleId);
+  }
   await repo.startGame(id);
   return id;
 }
@@ -277,6 +284,31 @@ void main() {
       await identify(tester, ['Ed']); // the Witch
 
       expect(find.text('Victime des Loups cette nuit'), findsNothing);
+    });
+
+    testWidgets('the player it protects is not already picked as the wolves victim', (tester) async {
+      // Every card noted at the deal: the calls follow each other with no identify step between
+      // them, so the pick of one must not carry over to the next.
+      final id = await _startedGame(
+        repo,
+        composition: const {'salvateur': 1, 'loup_garou': 2, 'sorciere': 1, 'villageois': 2},
+        noted: const {
+          'Ana': 'salvateur',
+          'Bo': 'loup_garou',
+          'Cy': 'loup_garou',
+          'Di': 'villageois',
+          'Ed': 'sorciere',
+          'Fi': 'villageois',
+        },
+      );
+      await pump(tester, id);
+
+      await tapName(tester, 'Di');
+      await tester.tap(find.text('Le Salvateur protège Di'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Qui les Loups dévorent-ils ?'), findsOneWidget);
+      expect(find.text('Les Loups désignent Di'), findsNothing);
     });
 
     testWidgets('the call can be passed', (tester) async {
