@@ -9,10 +9,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../support/pump_app.dart';
 
-Future<int> _startedGame(DriftGameRepository repo, Map<String, int> composition) async {
+Future<int> _startedGame(
+  DriftGameRepository repo,
+  Map<String, int> composition, {
+  Map<String, String> noted = const {},
+}) async {
   final id = await repo.createGame(initialPlayerCount: 6);
   await repo.saveComposition(gameId: id, playerCount: 6, roleCounts: composition);
   await repo.savePlayerNames(gameId: id, names: const ['Ana', 'Bo', 'Cy', 'Di', 'Ed', 'Fi']);
+  // Roles noted at the deal: name -> role id.
+  for (final row in await repo.getRoster(id)) {
+    final roleId = noted[row.name];
+    if (roleId != null) await repo.assignRoles(playerRowIds: [row.id], roleId: roleId);
+  }
   await repo.startGame(id);
   return id;
 }
@@ -495,6 +504,18 @@ void main() {
       expect(find.text('Quel Loup est malade ?'), findsNothing);
       await tap(tester, 'Journal');
       expect(find.text('Le Chevalier laisse Ed malade'), findsOneWidget);
+    });
+
+    testWidgets('only offers the wolves and the cards not noted yet', (tester) async {
+      // Bo is noted as a Simple Villageois: his sword cannot leave him diseased.
+      final id = await _startedGame(repo, comp, noted: const {'Bo': 'villageois'});
+      await pump(tester, id);
+      await knightEaten(tester);
+
+      expect(find.text('Le Chevalier est dévoré'), findsOneWidget);
+      expect(find.text('Bo'), findsNothing);
+      expect(find.text('Di'), findsOneWidget); // not noted: may be a wolf
+      expect(find.text('Ed'), findsWidgets); // a wolf
     });
 
     testWidgets('can be told there is no wolf to wound', (tester) async {

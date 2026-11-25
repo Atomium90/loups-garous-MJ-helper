@@ -2562,7 +2562,13 @@ class _KnightWoundPanel extends ConsumerWidget {
         Expanded(
           child: TargetPick(
             question: context.l10n.scriptKnightQuestion,
-            candidates: _alive(session.engine),
+            // The sword leaves a wolf diseased: not someone known to be something else. The MJ
+            // still picks (the seat is theirs to read), among the wolves and the cards not noted.
+            candidates: [
+              for (final p in session.engine.alivePlayers)
+                if (p.wakesWithWolvesIn(RoleRegistry.all) || session.rosterRoleId(p.id) == null)
+                  (id: p.id, name: p.name),
+            ],
             confirmLabel: context.l10n.scriptKnightWounds,
             onConfirm: notifier.knightContaminate,
             secondaryLabel: context.l10n.scriptKnightNone,
