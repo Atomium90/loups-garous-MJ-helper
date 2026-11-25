@@ -177,13 +177,16 @@ class GameStateMachine {
     if (state.phase != GamePhase.night) {
       throw InvalidActionError('The Fox can only sniff during the night');
     }
-    if (state.spentPowers.containsKey(_foxRoleId)) {
+    // The Comedien who took the Fox's card for tonight has a power of his own: the one the real Fox
+    // may have lost is not his, and what he finds out costs the Fox nothing.
+    final viaActor = state.actor?.current == _foxRoleId;
+    if (!viaActor && state.spentPowers.containsKey(_foxRoleId)) {
       throw InvalidActionError('The Fox has lost his power');
     }
     _requireAlive(state.playerById(action.middlePlayerId), 'the Fox\'s middle player');
 
     return ActionResult(
-      state: action.wolfFound
+      state: action.wolfFound || viaActor
           ? state
           : state.copyWith(
               spentPowers: {...state.spentPowers, _foxRoleId: state.nightIndex},

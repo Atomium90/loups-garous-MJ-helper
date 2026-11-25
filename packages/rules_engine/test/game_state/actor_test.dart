@@ -188,4 +188,31 @@ void main() {
       expect(script(4, spent: {'comedien'}).contains('comedien'), isFalse);
     });
   });
+
+  group('playing the Fox card', () {
+    const sniff = FoxSniff(middlePlayerId: 'a', wolfFound: false);
+
+    test('is not stopped by the power the real Fox lost, and costs him nothing', () {
+      final lost = _table(night: 2).copyWith(spentPowers: {'renard': 1});
+      expect(() => apply(lost, sniff), throwsA(isA<InvalidActionError>()));
+
+      final playing = apply(
+        lost.copyWith(actor: const ActorState(cards: ['renard', 'voyante', 'sorciere'])),
+        const ActorChooseCard(roleId: 'renard'),
+      ).state;
+      final result = apply(playing, sniff);
+
+      expect(result.events.single, isA<FoxSniffed>());
+      expect(result.state.spentPowers, {'renard': 1});
+    });
+
+    test('finding no wolf does not take the power of a Fox who still has it', () {
+      final fox = apply(
+        _table().copyWith(actor: const ActorState(cards: ['renard', 'voyante', 'sorciere'])),
+        const ActorChooseCard(roleId: 'renard'),
+      ).state;
+
+      expect(apply(fox, sniff).state.spentPowers, isEmpty);
+    });
+  });
 }

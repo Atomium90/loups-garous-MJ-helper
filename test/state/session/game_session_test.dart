@@ -497,6 +497,33 @@ void main() {
     });
   });
 
+  group('the Actor playing the Fox', () {
+    const comp = {'comedien': 1, 'loup_garou': 2, 'villageois': 3};
+
+    test('the Fox card is played once: a sniff that finds nothing is not offered again', () async {
+      final game = await _startedGame(repo, composition: comp);
+      final n = await notifierFor(game.gameId);
+      final ids = game.seatRowIds;
+      await n.identifyRole('comedien', [ids[0]]);
+      await n.actorSetCards(['renard', 'voyante', 'sorciere']);
+      await n.actorChoose('renard');
+      expect(stateOf(game.gameId).currentStep!.role.id, 'renard');
+
+      await n.foxSniff(middleEngineId: '${ids[3]}', wolfFound: false);
+      await n.identifyRole('loup_garou', [ids[1], ids[2]]);
+      await n.applyAction(WolvesTarget(targetPlayerId: '${ids[5]}'));
+      await n.applyAction(const FinalizeNight());
+      await n.revealRole(ids[5], 'villageois');
+      await n.startNextNight();
+
+      var s = stateOf(game.gameId);
+      expect(s.tonight.steps.map((st) => st.role.id), ['comedien', 'loup_garou']);
+      await n.actorChoose('sorciere');
+      s = stateOf(game.gameId);
+      expect(s.tonight.steps.map((st) => st.role.id), ['comedien', 'loup_garou', 'sorciere']);
+    });
+  });
+
   group('the Devoted Servant', () {
     const comp = {'servante_devouee': 1, 'juge_begue': 1, 'loup_garou': 2, 'villageois': 2};
 
