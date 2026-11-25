@@ -125,13 +125,17 @@ class Settings extends _$Settings {
     );
   }
 
-  /// Ticks or unticks a box. The base box stays owned: the app cannot deal without it.
+  /// Ticks or unticks a box. At least one stays owned: the app cannot deal from nothing, so the
+  /// last box ticked cannot be unticked.
   Future<void> setBoxOwned(String boxId, bool owned) async {
-    if (boxId == baseBoxId || gameBoxById(boxId) == null) return;
+    if (gameBoxById(boxId) == null) return;
     final prefs = await ref.read(sharedPreferencesProvider.future);
     final current = (state.value ?? AppSettings.defaults).ownedBoxes;
     final next = {...current, boxId};
-    if (!owned) next.remove(boxId);
+    if (!owned) {
+      next.remove(boxId);
+      if (next.isEmpty) return;
+    }
     await prefs.setStringList(_kOwnedBoxes, [...next]);
     state = AsyncData((state.value ?? AppSettings.defaults).copyWith(ownedBoxes: next));
   }
@@ -180,13 +184,15 @@ class Settings extends _$Settings {
   }
 }
 
-/// The stored ids, minus the unknown ones, plus the base box. Anything unreadable falls back to
-/// the base box alone.
-Set<String> _readOwnedBoxes(List<String>? stored) => {
-  baseBoxId,
-  for (final id in stored ?? const <String>[])
-    if (gameBoxById(id) != null) id,
-};
+/// The stored ids, minus the unknown ones. Nothing stored (a fresh install) or nothing readable
+/// falls back to the base box alone.
+Set<String> _readOwnedBoxes(List<String>? stored) {
+  final known = {
+    for (final id in stored ?? const <String>[])
+      if (gameBoxById(id) != null) id,
+  };
+  return known.isEmpty ? {baseBoxId} : known;
+}
 
 /// The boxes the MJ owns, as a [CardPool] over every role the app runs: what the composition
 /// and the advisor can offer. Falls back to the base box while the settings load.

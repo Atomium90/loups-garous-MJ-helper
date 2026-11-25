@@ -13,7 +13,8 @@ import '../../widgets/app_toggle.dart';
 import '../../widgets/section_label.dart';
 
 /// Mes boîtes. The MJ ticks what they own; the composition and its suggestions then only offer
-/// the roles those boxes can supply. The base box is always owned.
+/// the roles those boxes can supply. The base box is ticked by default; any box can be unticked
+/// as long as one stays.
 class BoxesScreen extends ConsumerWidget {
   const BoxesScreen({super.key});
 
@@ -23,7 +24,8 @@ class BoxesScreen extends ConsumerWidget {
     final typography = context.typography;
     final pool = ref.watch(cardPoolProvider);
     final notifier = ref.read(settingsProvider.notifier);
-    final extensions = gameBoxes.where((box) => box.id != baseBoxId);
+    // the last box ticked cannot be unticked: nobody plays without one
+    final lastOwned = pool.ownedBoxIds.length == 1 ? pool.ownedBoxIds.single : null;
 
     return Scaffold(
       body: SafeArea(
@@ -75,19 +77,16 @@ class BoxesScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 18),
-                  SectionLabel(context.l10n.boxesBase),
-                  const SizedBox(height: 4),
-                  // You can't own zero boxes, so the base box doesn't toggle.
-                  _BoxRow(boxId: baseBoxId, pool: pool, owned: true, onChanged: null),
-                  const SizedBox(height: 14),
-                  SectionLabel(context.l10n.boxesExpansions),
-                  for (final box in extensions)
+                  SectionLabel(context.l10n.boxesList),
+                  for (final (index, box) in gameBoxes.indexed)
                     _BoxRow(
                       boxId: box.id,
                       pool: pool,
                       owned: pool.ownedBoxIds.contains(box.id),
-                      showDivider: true,
-                      onChanged: (owned) => notifier.setBoxOwned(box.id, owned),
+                      showDivider: index > 0,
+                      onChanged: box.id == lastOwned
+                          ? null
+                          : (owned) => notifier.setBoxOwned(box.id, owned),
                     ),
                 ],
               ),

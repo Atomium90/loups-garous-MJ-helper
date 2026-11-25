@@ -13,14 +13,25 @@ const _registry = RoleRegistry([
   Role(id: 'ange', team: Team.solo, hasNightCall: false),
 ]);
 
+/// The base box plus [owned]: what most tests mean by "owning" a box.
 CardPool _pool([Iterable<String> owned = const []]) =>
-    CardPool(registry: _registry, ownedBoxIds: owned);
+    CardPool(registry: _registry, ownedBoxIds: [baseBoxId, ...owned]);
 
 void main() {
   group('owned boxes', () {
-    test('the base box is always owned, unknown ids are dropped', () {
+    test('unknown ids are dropped, and owning nothing falls back to the base box', () {
       expect(_pool(['nope']).ownedBoxIds, {baseBoxId});
       expect(_pool(['best_of']).ownedBoxIds, {baseBoxId, 'best_of'});
+      expect(CardPool(registry: _registry, ownedBoxIds: const []).ownedBoxIds, {baseBoxId});
+      expect(CardPool(registry: _registry, ownedBoxIds: const ['nope']).ownedBoxIds, {baseBoxId});
+    });
+
+    test('the Best Of alone is enough: the base box is not forced', () {
+      final pool = CardPool(registry: _registry, ownedBoxIds: const ['best_of']);
+      expect(pool.ownedBoxIds, {'best_of'});
+      expect(pool.isAvailable('ange'), isTrue);
+      expect(pool.maxCopies('loup_garou'), 3);
+      expect(pool.maxCopies('villageois'), 7);
     });
   });
 
@@ -165,14 +176,14 @@ void main() {
   });
 
   group('box catalogue', () {
-    test('lists the six boxes, base first', () {
+    test('lists the six boxes, the base box first then the Best Of', () {
       expect(gameBoxes.map((b) => b.id), [
         'base',
+        'best_of',
         'new_moon',
         'village',
         'characters',
         'pact',
-        'best_of',
       ]);
     });
 

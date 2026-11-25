@@ -1,6 +1,6 @@
 import 'game_box.dart';
 
-/// Id of the base box: always owned, nothing can be played without it.
+/// Id of the base box: what a fresh install owns. It can be unticked once another box is.
 const baseBoxId = 'base';
 
 /// The cards the base box and the compilations hold alike: one copy of each power card.
@@ -42,7 +42,8 @@ const _charactersCards = <String, int>{
   'trois_freres': 3,
 };
 
-/// The boxes the app knows, in the order the "Mes boîtes" screen lists them. Counts are the
+/// The boxes the app knows, in the order the "Mes boîtes" screen lists them: the base box, then
+/// the Best Of (most players' first purchase), then the rest. Counts are the
 /// current editions' (the booklets): the Pact is a compilation, not the sum of the others
 /// (4 Loups-Garous and 9 Simples Villageois in all).
 ///
@@ -53,6 +54,31 @@ const gameBoxes = <GameBox>[
     id: baseBoxId,
     maxPlayers: 18,
     cards: {'loup_garou': 4, 'villageois': 13, ..._baseCards},
+  ),
+  GameBox(
+    id: 'best_of',
+    maxPlayers: 28,
+    cards: {
+      'loup_garou': 3,
+      'infect_pere_des_loups': 1,
+      'grand_mechant_loup': 1,
+      'villageois': 7,
+      'cupidon': 1,
+      'voyante': 1,
+      'deux_soeurs': 2,
+      'petite_fille': 1,
+      'renard': 1,
+      'chevalier': 1,
+      'ancien': 1,
+      'sorciere': 1,
+      'montreur_d_ours': 1,
+      'chasseur': 1,
+      'enfant_sauvage': 1,
+      'chien_loup': 1,
+      'loup_garou_blanc': 1,
+      'joueur_de_flute': 1,
+      'ange': 1,
+    },
   ),
   GameBox(
     id: 'new_moon',
@@ -81,31 +107,6 @@ const gameBoxes = <GameBox>[
       ..._baseCards,
       ..._newMoonCards,
       ..._charactersCards,
-    },
-  ),
-  GameBox(
-    id: 'best_of',
-    maxPlayers: 28,
-    cards: {
-      'loup_garou': 3,
-      'infect_pere_des_loups': 1,
-      'grand_mechant_loup': 1,
-      'villageois': 7,
-      'cupidon': 1,
-      'voyante': 1,
-      'deux_soeurs': 2,
-      'petite_fille': 1,
-      'renard': 1,
-      'chevalier': 1,
-      'ancien': 1,
-      'sorciere': 1,
-      'montreur_d_ours': 1,
-      'chasseur': 1,
-      'enfant_sauvage': 1,
-      'chien_loup': 1,
-      'loup_garou_blanc': 1,
-      'joueur_de_flute': 1,
-      'ange': 1,
     },
   ),
 ];

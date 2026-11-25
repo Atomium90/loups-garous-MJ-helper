@@ -25,7 +25,7 @@ CardPool _poolWithSurplusTier() => CardPool(
 );
 
 CardPool _basePool([Iterable<String> boxes = const []]) =>
-    CardPool(registry: RoleRegistry.all, ownedBoxIds: boxes);
+    CardPool(registry: RoleRegistry.all, ownedBoxIds: [baseBoxId, ...boxes]);
 
 void main() {
   scarceVillagersTests();
@@ -116,7 +116,7 @@ CardPool _scarceVillagersPool() => CardPool(
     ),
     GameBox(id: 'stickers', stickers: ['s']),
   ],
-  ownedBoxIds: const ['stickers'],
+  ownedBoxIds: const [baseBoxId, 'stickers'],
 );
 
 void scarceVillagersTests() {

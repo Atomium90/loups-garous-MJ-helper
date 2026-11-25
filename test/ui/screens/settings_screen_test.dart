@@ -441,34 +441,60 @@ void main() {
       expect(find.byType(BoxesScreen), findsOneWidget);
       for (final name in [
         'Loups-Garous de Thiercelieux',
+        'Best Of',
         'Nouvelle Lune',
         'Le Village',
         'Personnages',
         'Le Pacte',
-        'Best Of',
       ]) {
         expect(find.text(name), findsOneWidget, reason: name);
       }
       expect(find.byType(AppToggle), findsNWidgets(6));
     });
 
-    testWidgets('only the base box is owned at first, and it cannot be unticked', (tester) async {
+    testWidgets('lists the base box first, then the Best Of', (tester) async {
+      await openBoxes(tester);
+
+      double top(String name) => tester.getTopLeft(find.text(name)).dy;
+      expect(top('Loups-Garous de Thiercelieux'), lessThan(top('Best Of')));
+      expect(top('Best Of'), lessThan(top('Nouvelle Lune')));
+    });
+
+    testWidgets('only the base box is owned at first, and as the last one it stays ticked', (
+      tester,
+    ) async {
       await openBoxes(tester);
 
       expect(find.text('8 rôles disponibles pour vos parties'), findsOneWidget);
       final toggles = tester.widgetList<AppToggle>(find.byType(AppToggle)).toList();
       expect(toggles.map((t) => t.value), [true, false, false, false, false, false]);
       expect(toggles.first.onChanged, isNull);
+      expect(toggles.skip(1).every((t) => t.onChanged != null), isTrue);
+    });
+
+    testWidgets('the base box can be unticked once the Best Of is owned', (tester) async {
+      await openBoxes(tester);
+
+      await tester.tap(find.byType(AppToggle).at(1)); // Best Of
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(AppToggle).at(0)); // base
+      await tester.pumpAndSettle();
+
+      final toggles = tester.widgetList<AppToggle>(find.byType(AppToggle)).toList();
+      expect(toggles.map((t) => t.value), [false, true, false, false, false, false]);
+      expect(toggles[1].onChanged, isNull); // the last one standing
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getStringList('owned_boxes'), ['best_of']);
     });
 
     testWidgets('ticking a box owns it and remembers it', (tester) async {
       await openBoxes(tester);
 
-      await tester.tap(find.byType(AppToggle).at(5)); // Best Of
+      await tester.tap(find.byType(AppToggle).at(1)); // Best Of
       await tester.pumpAndSettle();
 
       final toggles = tester.widgetList<AppToggle>(find.byType(AppToggle)).toList();
-      expect(toggles.map((t) => t.value), [true, false, false, false, false, true]);
+      expect(toggles.map((t) => t.value), [true, true, false, false, false, false]);
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getStringList('owned_boxes'), unorderedEquals(['base', 'best_of']));
     });
@@ -480,7 +506,7 @@ void main() {
       await openBoxes(tester);
 
       final toggles = tester.widgetList<AppToggle>(find.byType(AppToggle)).toList();
-      expect(toggles.map((t) => t.value), [true, false, false, true, false, false]);
+      expect(toggles.map((t) => t.value), [true, false, false, false, true, false]);
     });
 
     testWidgets('the Réglages row sums up the owned boxes', (tester) async {

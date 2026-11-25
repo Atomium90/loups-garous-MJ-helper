@@ -1106,13 +1106,9 @@
       }
     }
   },
-  "boxesBase": "Jeu de base",
-  "@boxesBase": {
-    "description": "Heading above the base box, which is always owned."
-  },
-  "boxesExpansions": "Extensions et compilations",
-  "@boxesExpansions": {
-    "description": "Heading above the boxes the MJ can tick."
+  "boxesList": "Boîtes de jeu",
+  "@boxesList": {
+    "description": "Heading above the boxes the MJ can tick: the base box, then the compilations and expansions."
   },
   "boxName": "{boxId, select, base{Loups-Garous de Thiercelieux} new_moon{Nouvelle Lune} village{Le Village} characters{Personnages} pact{Le Pacte} best_of{Best Of} other{Boîte inconnue}}",
   "@boxName": {
