@@ -1278,6 +1278,7 @@ class _DayBody extends ConsumerWidget {
         notifier: n,
       ),
       DayStage.done => _NextNightPrompt(
+        session: session,
         nextNight: session.engine.nightIndex + 1,
         onStart: n.startNextNight,
         note: session.day.pardonedName == null
@@ -2136,8 +2137,14 @@ class _VoteBodyState extends ConsumerState<_VoteBody> {
 }
 
 class _NextNightPrompt extends StatelessWidget {
-  const _NextNightPrompt({required this.nextNight, required this.onStart, this.note});
+  const _NextNightPrompt({
+    required this.session,
+    required this.nextNight,
+    required this.onStart,
+    this.note,
+  });
 
+  final GameSessionState session;
   final int nextNight;
   final VoidCallback onStart;
 
@@ -2146,10 +2153,46 @@ class _NextNightPrompt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final deaths = session.dayDeaths;
     return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // What the day cost the village: the vote's victim and whoever it took along (the Hunter's
+        // shot, a lover), as the night's recap does for the morning.
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 16, AppSpacing.screen, 8),
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: colors.bgInset,
+                  borderRadius: BorderRadius.circular(AppRadii.card),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      deaths.isEmpty
+                          ? context.l10n.scriptDayNobodyDied
+                          : context.l10n.scriptDayVillageLost,
+                      style: context.typography.meta.copyWith(color: colors.textTertiary),
+                    ),
+                    for (final death in deaths) ...[
+                      const SizedBox(height: 12),
+                      _RecapDeathRow(
+                        name: death.name,
+                        roleId: session.rosterRoleId(death.id),
+                        cause: deathCauseLabel(context.l10n, death.causeOfDeath!),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
         if (note != null)
           Padding(
             padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 10),

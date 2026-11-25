@@ -188,6 +188,9 @@ void main() {
       await tap(tester, 'Je ne note pas'); // Di's card is turned over, nobody notes it
 
       expect(find.text('Commencer la nuit 2'), findsOneWidget);
+      // the day's recap: who the vote cost the village
+      expect(find.text("Aujourd'hui, le village a perdu"), findsOneWidget);
+      expect(find.text('Di'), findsOneWidget);
       await tap(tester, 'Village');
       expect(find.text('Jour 1 · vote du village'), findsOneWidget);
     });
@@ -214,6 +217,7 @@ void main() {
       await tap(tester, "Finalement personne n'est éliminé");
 
       expect(find.text('Commencer la nuit 2'), findsOneWidget);
+      expect(find.text("Personne n'est mort pendant la journée."), findsOneWidget);
     });
 
     testWidgets('"no Scapegoat alive" goes back to the usual tie', (tester) async {

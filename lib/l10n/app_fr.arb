@@ -2269,6 +2269,14 @@
   "@scriptDayOver": {
     "description": "End of the day."
   },
+  "scriptDayVillageLost": "Aujourd'hui, le village a perdu",
+  "@scriptDayVillageLost": {
+    "description": "Heading of the list of the players who died during the day (the vote and what it set off), before the night."
+  },
+  "scriptDayNobodyDied": "Personne n'est mort pendant la journée.",
+  "@scriptDayNobodyDied": {
+    "description": "Shown at the end of a day nobody died in."
+  },
   "scriptStartNight": "Commencer la nuit {index}",
   "@scriptStartNight": {
     "description": "Button that starts the next night.",

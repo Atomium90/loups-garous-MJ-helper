@@ -254,6 +254,14 @@ class GameSessionState {
       )
       .toList(growable: false);
 
+  /// The deaths of the day in progress: the village's victim and whoever it took along. Read by
+  /// the recap that closes the day, as [recapDeaths] is for the one that opens it.
+  List<Player> get dayDeaths => engine.players
+      .where(
+        (p) => !p.alive && p.diedOnNight == engine.nightIndex && p.diedOnPhase == GamePhase.day,
+      )
+      .toList(growable: false);
+
   /// Dead players whose card was never recorded (roster `roleId` still null and
   /// not explicitly skipped) - each gets the reveal panel before the day can
   /// proceed.

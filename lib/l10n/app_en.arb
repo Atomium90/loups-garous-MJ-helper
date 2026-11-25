@@ -383,6 +383,8 @@
   "scriptVoteEliminates": "The village eliminates {name}",
   "scriptVoteTie": "Tie, nobody is eliminated",
   "scriptDayOver": "The day is over.",
+  "scriptDayVillageLost": "Today, the village lost",
+  "scriptDayNobodyDied": "Nobody died during the day.",
   "scriptStartNight": "Start night {index}",
   "scriptEliminatedNight": "Eliminated night {index}",
   "scriptRevealHint": "Turn their card over in front of the table. Their role hasn't been noted yet.",
