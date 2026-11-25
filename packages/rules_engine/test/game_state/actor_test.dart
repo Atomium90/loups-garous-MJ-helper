@@ -34,12 +34,24 @@ void main() {
   });
 
   group('his cards', () {
-    test('are three different roles among those he can play', () {
+    test('are up to three different roles among those he can play', () {
       final state = apply(_table(), const ActorSetCards(roleIds: _cards)).state;
       expect(state.actor?.cards, _cards);
       expect(state.actor?.available, _cards);
+      // the boxes may hold fewer than three roles that are not dealt
       expect(
-        () => apply(_table(), const ActorSetCards(roleIds: ['voyante', 'sorciere'])),
+        apply(_table(), const ActorSetCards(roleIds: ['voyante', 'sorciere'])).state.actor?.cards,
+        ['voyante', 'sorciere'],
+      );
+      expect(
+        () => apply(_table(), const ActorSetCards(roleIds: [])),
+        throwsA(isA<InvalidActionError>()),
+      );
+      expect(
+        () => apply(
+          _table(),
+          const ActorSetCards(roleIds: ['voyante', 'sorciere', 'cupidon', 'renard']),
+        ),
         throwsA(isA<InvalidActionError>()),
       );
       expect(

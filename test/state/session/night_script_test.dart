@@ -301,4 +301,48 @@ void main() {
       expect(stepIds(script), ['loup_garou', 'sorciere']);
     });
   });
+
+  group('the Comedien\'s cards', () {
+    final everyBox = CardPool(
+      registry: RoleRegistry.all,
+      ownedBoxIds: [for (final b in gameBoxes) b.id],
+    );
+
+    test('are roles of the boxes that are not dealt', () {
+      expect(
+        actorCardOptions(
+          composition: const {'sorciere': 1, 'loup_garou': 2, 'villageois': 3},
+          reserveRoleIds: const [],
+          reserveDrawn: false,
+          pool: everyBox,
+        ),
+        ['voyante', 'cupidon', 'salvateur', 'renard'],
+      );
+    });
+
+    test('leave out the cards of the Voleur\'s reserve too', () {
+      expect(
+        actorCardOptions(
+          composition: const {'voleur': 1, 'loup_garou': 2, 'villageois': 3},
+          reserveRoleIds: const ['voyante', 'renard'],
+          reserveDrawn: false,
+          pool: everyBox,
+        ),
+        ['sorciere', 'cupidon', 'salvateur'],
+      );
+    });
+
+    test('are limited to what the owned boxes hold', () {
+      final baseOnly = CardPool(registry: RoleRegistry.all);
+      expect(
+        actorCardOptions(
+          composition: const {'loup_garou': 2, 'villageois': 3},
+          reserveRoleIds: const [],
+          reserveDrawn: false,
+          pool: baseOnly,
+        ),
+        ['voyante', 'sorciere', 'cupidon'],
+      );
+    });
+  });
 }

@@ -1,3 +1,5 @@
+import 'dart:math' show min;
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,7 +8,8 @@ import 'package:rules_engine/rules_engine.dart';
 import '../../../data/models/game_winner.dart';
 import '../../../state/session/day_plan.dart';
 import '../../../state/session/game_session.dart';
-import '../../../state/session/night_script.dart' show kCharmedStepRole;
+import '../../../state/session/night_script.dart'
+    show actorCardOptions, cardsLeftIn, kCharmedStepRole;
 import '../../../state/session/session_cursor.dart';
 import '../../../state/settings/settings.dart' show VoteTieRule;
 import '../../../state/settings/settings_providers.dart';
@@ -76,6 +79,7 @@ class _NightBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifier = ref.read(gameSessionProvider(gameId).notifier);
+    final pool = ref.watch(cardPoolProvider);
     final step = session.currentStep;
 
     return Column(
@@ -115,7 +119,7 @@ class _NightBody extends ConsumerWidget {
         Expanded(
           child: KeyedSubtree(
             key: ValueKey('${session.engine.nightIndex}-${session.cursor.stepIndex}'),
-            child: _body(context, notifier, step),
+            child: _body(context, notifier, step, pool),
           ),
         ),
       ],
@@ -131,7 +135,7 @@ class _NightBody extends ConsumerWidget {
     if (isElder == true) await notifier.identifyRole('ancien', [int.parse(victimId)]);
   }
 
-  Widget _body(BuildContext context, GameSession notifier, NightScriptStep? step) {
+  Widget _body(BuildContext context, GameSession notifier, NightScriptStep? step, CardPool pool) {
     if (session.engine.cascade != null) {
       return _ChainPanel(session: session, notifier: notifier);
     }
@@ -141,8 +145,16 @@ class _NightBody extends ConsumerWidget {
     if (step.role.id == 'voleur' &&
         session.reserveToEnter &&
         session.cursor.subStep != NightSubStep.act) {
+      // The cards noted at the deal are not in the middle: what is left of the pack is the reserve.
+      final left = cardsLeftIn(session.pack, [for (final r in session.roster) r.roleId]);
+      final cardsInTheMiddle = [
+        for (final card in left)
+          for (var i = 0; i < card.left; i++) card.roleId,
+      ];
       return ReserveEntry(
-        pack: session.pack,
+        pack: [for (final card in left) (roleId: card.roleId, count: card.left)],
+        // With every card of the table noted, the two left are the reserve: no need to ask.
+        initial: cardsInTheMiddle.length == 2 ? cardsInTheMiddle : const [],
         onConfirm: notifier.enterReserve,
         onDefer: notifier.skipStep,
       );
@@ -179,10 +191,15 @@ class _NightBody extends ConsumerWidget {
         onDefer: notifier.skipStep,
       );
     }
-    return _actBody(context, notifier, step);
+    return _actBody(context, notifier, step, pool);
   }
 
-  Widget _actBody(BuildContext context, GameSession notifier, NightScriptStep step) {
+  Widget _actBody(
+    BuildContext context,
+    GameSession notifier,
+    NightScriptStep step,
+    CardPool pool,
+  ) {
     final role = step.role;
     final alive = session.engine.alivePlayers;
     Candidate cand(Player p) => (id: p.id, name: p.name);
@@ -335,11 +352,25 @@ class _NightBody extends ConsumerWidget {
       case 'comedien':
         final actor = session.engine.actor;
         if (actor == null) {
+          // His cards come out of the boxes, not out of the deal: never a role already in play.
+          final options = actorCardOptions(
+            composition: session.composition,
+            reserveRoleIds: session.reserveRoleIds,
+            reserveDrawn: session.reserveDrawn,
+            pool: pool,
+          );
+          if (options.isEmpty) {
+            return SimpleAct(
+              primaryLabel: context.l10n.scriptSkipRole,
+              onPrimary: notifier.skipStep,
+            );
+          }
           return _ActorCards(
             key: const ValueKey('actorCardsLaid'),
-            title: context.l10n.scriptActorCardsQuestion,
-            cards: actorCardRoleIds,
-            count: actorCardCount,
+            title: context.l10n.scriptActorCardsQuestion(min(actorCardCount, options.length)),
+            cards: options,
+            laying: true,
+            count: min(actorCardCount, options.length),
             onConfirm: notifier.actorSetCards,
             onSkip: notifier.skipStep,
           );
@@ -1415,10 +1446,14 @@ class _ActorCards extends StatefulWidget {
     required this.count,
     required this.onConfirm,
     required this.onSkip,
+    this.laying = false,
   });
 
   final String title;
   final List<String> cards;
+
+  /// The cards are being laid face up (as opposed to the one he plays tonight being chosen).
+  final bool laying;
   final int count;
   final ValueChanged<List<String>> onConfirm;
   final VoidCallback onSkip;
@@ -1445,11 +1480,13 @@ class _ActorCardsState extends State<_ActorCards> {
   @override
   Widget build(BuildContext context) {
     final complete = _picked.length == widget.count;
-    final label = widget.count == 1
+    final label = !widget.laying
         ? (complete
               ? context.l10n.scriptActorUses(context.l10n.roleWithArticle(_picked.single))
               : context.l10n.scriptPickCard)
-        : (complete ? context.l10n.scriptActorCardsConfirm : context.l10n.scriptActorCardsPick);
+        : (complete
+              ? context.l10n.scriptActorCardsConfirm(widget.count)
+              : context.l10n.scriptActorCardsPick(widget.count));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

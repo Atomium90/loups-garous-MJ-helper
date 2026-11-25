@@ -1803,17 +1803,32 @@
       }
     }
   },
-  "scriptActorCardsQuestion": "Quelles sont les 3 cartes posées face visible pour le Comédien ?",
+  "scriptActorCardsQuestion": "{count, plural, =1{Quelle est la carte posée face visible pour le Comédien ?} other{Quelles sont les {count} cartes posées face visible pour le Comédien ?}}",
   "@scriptActorCardsQuestion": {
-    "description": "Question to enter the Actor's three cards."
+    "description": "Question to enter the Actor's cards: three, or fewer when the boxes hold no more roles he can play that are not dealt.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
-  "scriptActorCardsConfirm": "Poser ces 3 cartes",
+  "scriptActorCardsConfirm": "{count, plural, =1{Poser cette carte} other{Poser ces {count} cartes}}",
   "@scriptActorCardsConfirm": {
-    "description": "Button to record the Actor's three cards."
+    "description": "Button to record the Actor's cards.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
-  "scriptActorCardsPick": "Choisissez 3 cartes",
+  "scriptActorCardsPick": "{count, plural, =1{Choisissez 1 carte} other{Choisissez {count} cartes}}",
   "@scriptActorCardsPick": {
-    "description": "Inert button while the three cards are not picked."
+    "description": "Inert button while the Actor's cards are not all picked.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "scriptActorQuestion": "Quel pouvoir le Comédien prend-il cette nuit ?",
   "@scriptActorQuestion": {

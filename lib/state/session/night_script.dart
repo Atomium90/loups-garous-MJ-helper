@@ -193,6 +193,29 @@ List<Role> _inCallOrder(List<Role> roles, RoleRegistry registry, {bool foxAfterW
   return ordered;
 }
 
+/// The roles the Comédien's cards can be: those he can play of which the owned boxes still hold a
+/// card. The cards are taken out of the box, not out of the deal, so a role the composition (or
+/// the Voleur's reserve) already uses is not one of them - two Sorcières would be in play.
+List<String> actorCardOptions({
+  required Map<String, int> composition,
+  required List<String> reserveRoleIds,
+  required bool reserveDrawn,
+  required CardPool pool,
+}) {
+  final used = {...composition};
+  if (reserveDrawn) {
+    used.update(kPlaceholderRoleId, (n) => n + 2, ifAbsent: () => 2);
+  } else {
+    for (final id in reserveRoleIds) {
+      used.update(id, (n) => n + 1, ifAbsent: () => 1);
+    }
+  }
+  return [
+    for (final id in actorCardRoleIds)
+      if (pool.cardsLeft(id, used) > 0) id,
+  ];
+}
+
 /// The cards of the deal's pack, in registry order: the composition, plus the two Simples
 /// Villageois a drawn Voleur reserve adds to it.
 List<({String roleId, int count})> dealPackOf(

@@ -15,11 +15,15 @@ class ReserveEntry extends StatefulWidget {
     required this.pack,
     required this.onConfirm,
     required this.onDefer,
+    this.initial = const [],
     super.key,
   });
 
   /// Role id -> how many cards of it are in the pack, in the order the picker lists them.
   final List<({String roleId, int count})> pack;
+
+  /// The two cards already known to be in the middle, offered as the answer to confirm.
+  final List<String> initial;
 
   /// The two role ids the MJ read off the cards.
   final ValueChanged<List<String>> onConfirm;
@@ -30,7 +34,9 @@ class ReserveEntry extends StatefulWidget {
 }
 
 class _ReserveEntryState extends State<ReserveEntry> {
-  final _picked = <String?>[null, null];
+  late final _picked = <String?>[
+    for (var slot = 0; slot < 2; slot++) slot < widget.initial.length ? widget.initial[slot] : null,
+  ];
 
   /// The pack cards still free for [slot]: what is in the pack, minus the other slot's pick.
   List<String> _options(int slot) {

@@ -588,8 +588,9 @@ class GameStateMachine {
     if (state.actor != null && state.actor!.used.isNotEmpty) {
       throw InvalidActionError('The Comedien already used one of his cards');
     }
-    if (ids.length != actorCardCount || ids.toSet().length != ids.length) {
-      throw InvalidActionError('The Comedien has $actorCardCount different cards');
+    // Up to three: the boxes may not hold three roles he can play that are not dealt.
+    if (ids.isEmpty || ids.length > actorCardCount || ids.toSet().length != ids.length) {
+      throw InvalidActionError('The Comedien has 1 to $actorCardCount different cards');
     }
     for (final id in ids) {
       if (!actorCardRoleIds.contains(id)) {
