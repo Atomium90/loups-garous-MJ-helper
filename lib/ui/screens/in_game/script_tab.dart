@@ -2552,7 +2552,10 @@ class _SuccessionPanel extends StatelessWidget {
             confirmLabel: context.l10n.scriptCaptainBecomes,
             onConfirm: (id) => notifier.nameCaptainSuccessor(id),
             secondaryLabel: context.l10n.scriptSuccessionNone,
-            onSecondary: notifier.captainHasNoSuccessor,
+            // Only the Village Idiot leaves nobody his title: inert once the card says otherwise.
+            onSecondary: session.captainMayLeaveNoSuccessor(deadCaptainId)
+                ? notifier.captainHasNoSuccessor
+                : null,
           ),
         ),
       ],

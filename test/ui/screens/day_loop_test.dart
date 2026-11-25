@@ -5,6 +5,7 @@ import 'package:loup_garou_mj/data/database/app_database.dart';
 import 'package:loup_garou_mj/data/repositories/drift_game_repository.dart';
 import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
 import 'package:loup_garou_mj/ui/theme/app_icons.dart';
+import 'package:loup_garou_mj/ui/widgets/app_button.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../support/pump_app.dart';
@@ -473,6 +474,42 @@ void main() {
         find.textContaining("L'Ange a été éliminé au premier vote"),
         findsOneWidget,
       );
+    });
+  });
+
+  group('the Capitaine dies', () {
+    /// Night 1: wolves Cy + Ed eat Fi; Ana is elected Capitaine, then voted out the same day.
+    Future<void> captainVotedOut(WidgetTester tester) async {
+      await identify(tester, ['Cy', 'Ed']); // the wolves
+      await tester.tap(find.text('Fi'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Les Loups désignent Fi');
+      await tap(tester, 'Résoudre la nuit');
+      await tap(tester, 'Je ne note pas');
+      await tap(tester, 'Élire le Capitaine');
+      await tester.tap(find.text('Ana'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Ana est Capitaine');
+      await tester.tap(find.text('Ana'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Le village élimine Ana');
+    }
+
+    bool noSuccessorEnabled(WidgetTester tester) => tester
+        .widget<AppButton>(find.widgetWithText(AppButton, 'Pas de successeur (Idiot du Village)'))
+        .onPressed != null;
+
+    testWidgets('a card known not to be the Idiot must name a successor', (tester) async {
+      final id = await _startedGame(
+        repo,
+        const {'idiot_du_village': 1, 'loup_garou': 2, 'villageois': 3},
+        noted: const {'Ana': 'villageois'},
+      );
+      await pump(tester, id);
+      await captainVotedOut(tester);
+
+      expect(find.text('Qui lui succède ?'), findsOneWidget);
+      expect(noSuccessorEnabled(tester), isFalse);
     });
   });
 

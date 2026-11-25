@@ -133,6 +133,12 @@ class GameSessionState {
     return engine.players.where((p) => p.roleId == 'idiot_du_village').length < idiots;
   }
 
+  /// Whether the dead Capitaine [playerId] may leave nobody his title: only the Village Idiot, who
+  /// lost his vote, cannot name a successor. Known to be something else, or no Idiot in the game
+  /// that is not accounted for, and he must name one.
+  bool captainMayLeaveNoSuccessor(String playerId) =>
+      rosterRoleId(playerId) == 'idiot_du_village' || mayBeIdiot(playerId);
+
   /// The living Devoted Servant the app knows.
   Player? get knownServant =>
       engine.players.where((p) => p.alive && p.roleId == 'servante_devouee').firstOrNull;

@@ -832,6 +832,16 @@ void main() {
       expect(stateOf(g.gameId).mayBeIdiot('${g.ids[3]}'), isFalse); // the only Idiot is known
     });
 
+    test('a dead Capitaine may leave nobody his title only if he can be the Idiot', () async {
+      final g = await toDay();
+      expect(stateOf(g.gameId).captainMayLeaveNoSuccessor('${g.ids[0]}'), isTrue); // may be him
+
+      await g.n.identifyRole('idiot_du_village', [g.ids[0]]);
+      expect(stateOf(g.gameId).captainMayLeaveNoSuccessor('${g.ids[0]}'), isTrue); // is him
+      // the only Idiot is known: the others must name a successor
+      expect(stateOf(g.gameId).captainMayLeaveNoSuccessor('${g.ids[3]}'), isFalse);
+    });
+
     test('is never asked about when no Idiot is in the game', () async {
       final game = await _startedGame(repo, composition: composition);
       final s = await container.read(gameSessionProvider(game.gameId).future);
