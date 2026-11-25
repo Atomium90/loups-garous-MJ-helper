@@ -190,19 +190,13 @@ void main() {
       expect(stepIds(script), ['renard', 'loup_garou']);
     });
 
-    test('night 3 offers the Sisters again while both are alive', () {
+    test('the Sisters are not woken again on a later night, they have no power', () {
       final roles = {0: 'renard', 1: 'deux_soeurs', 2: 'deux_soeurs', 4: 'loup_garou', 5: 'loup_garou'};
-      final both = buildNightScript(
+      final script = buildNightScript(
         engine: _state(count: 8, nightIndex: 3, roles: roles),
         composition: composition,
       );
-      expect(stepIds(both), ['renard', 'deux_soeurs', 'loup_garou']);
-
-      final one = buildNightScript(
-        engine: _state(count: 8, nightIndex: 3, roles: roles, dead: {2}),
-        composition: composition,
-      );
-      expect(stepIds(one), ['renard', 'loup_garou']);
+      expect(stepIds(script), ['renard', 'loup_garou']);
     });
 
     test('a Fox who lost his power is not called any more', () {
@@ -217,12 +211,12 @@ void main() {
       expect(stepIds(script), ['loup_garou']);
     });
 
-    test('Sisters not yet identified on night 3 may still be alive: they are offered', () {
+    test('Sisters not yet identified are not woken after the first night either', () {
       final script = buildNightScript(
         engine: _state(count: 8, nightIndex: 3, roles: {4: 'loup_garou', 5: 'loup_garou'}),
         composition: composition,
       );
-      expect(stepIds(script), contains('deux_soeurs'));
+      expect(stepIds(script), isNot(contains('deux_soeurs')));
     });
   });
 

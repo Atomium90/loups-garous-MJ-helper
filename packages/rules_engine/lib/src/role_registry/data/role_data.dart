@@ -89,23 +89,23 @@ const allRoles = <Role>[
     hasNightCall: true,
     wakeCondition: WakeCondition.firstNightOnly,
   ),
-  // A group of two: they wake together to know each other, on the first night and then every
-  // other night if the MJ wants.
+  // A group of two: they wake together on the first night to know each other. They have no power,
+  // so there is no reason to wake them again.
   Role(
     id: 'deux_soeurs',
     team: Team.village,
     groupSize: 2,
     hasNightCall: true,
-    wakeCondition: WakeCondition.everyOtherNight,
+    wakeCondition: WakeCondition.firstNightOnly,
     optionalCall: true,
   ),
-  // A group of three, like the sisters: they wake together to know each other.
+  // A group of three, like the sisters: they wake together, once, to know each other.
   Role(
     id: 'trois_freres',
     team: Team.village,
     groupSize: 3,
     hasNightCall: true,
-    wakeCondition: WakeCondition.everyOtherNight,
+    wakeCondition: WakeCondition.firstNightOnly,
     optionalCall: true,
   ),
   // He picks a role model on the first night; if the model is eliminated he turns into a wolf.

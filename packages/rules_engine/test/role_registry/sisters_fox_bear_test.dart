@@ -34,12 +34,12 @@ void main() {
       expect(fox.wakeGuard, WakeGuard.powerUnspent);
     });
 
-    test('the Sisters are a group of two, offered every other night', () {
+    test('the Sisters are a group of two, woken on the first night only', () {
       final sisters = registry.byId('deux_soeurs');
       expect(sisters.groupSize, 2);
       expect(sisters.multiple, isFalse);
       expect(sisters.optionalCall, isTrue);
-      expect(sisters.wakeCondition, WakeCondition.everyOtherNight);
+      expect(sisters.wakeCondition, WakeCondition.firstNightOnly);
     });
 
     test('the Bear Tamer is called on the first night only, to be known', () {
@@ -103,8 +103,8 @@ void main() {
       expect(script(2), ['voyante', 'renard', 'loup_garou', 'sorciere']);
     });
 
-    test('night 3 offers the Sisters again', () {
-      expect(script(3), ['voyante', 'renard', 'deux_soeurs', 'loup_garou', 'sorciere']);
+    test('night 3 does not wake the Sisters again', () {
+      expect(script(3), ['voyante', 'renard', 'loup_garou', 'sorciere']);
     });
 
     test('a Fox who lost his power is no longer called', () {
