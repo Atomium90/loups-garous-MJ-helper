@@ -12,73 +12,86 @@ phone).
 
 ## Current status
 
-Early development. The full day/night loop is in — a game runs from setup through repeated
-cycles to a declared winner and its recap, resuming exactly where it left off after a
-force-quit. All 8 base-game roles are now fully assisted, the Seer and the Voleur included:
-the Seer picks a player and the MJ notes the card if it isn't on record yet; the Voleur's two
-reserve cards are chosen at composition time (spelled out before night 1) and offered as his
-swap, with the stolen role folded into that night's script and the following ones. The
-composition screen also suggests a full composition for the chosen player count, one tap to
-apply it.
+Playable end to end: a game runs from setup through repeated nights and days to a declared winner
+and its recap, and resumes exactly where it left off after a force-quit. The app speaks French and
+English.
 
-The rules engine (pure Dart, `packages/rules_engine`) is complete for the base game:
+**Roles.** 29 roles are fully assisted: the eight of the base game (Loup-Garou, Villageois,
+Voyante, Sorcière, Chasseur, Cupidon, Petite Fille, Voleur) and those of the New Moon, Characters,
+Pact and Best Of boxes (Salvateur, Ancien, Bouc Émissaire, Joueur de Flûte, Idiot du Village, Ange,
+Juge Bègue, Chevalier, Comédien, Servante Dévouée, Renard, Montreur d'Ours, Abominable Sectaire,
+Enfant Sauvage, Chien-Loup, Loup-Garou Blanc, Infect Père des Loups, Grand Méchant Loup, Deux Sœurs,
+Trois Frères, Villageois-Villageois). The roles that need buildings or event cards (Pyromane,
+Corbeau, Gitane, Garde Champêtre) and the 25th-anniversary edition are not built yet.
 
-- `RoleRegistry`: catalog of the 8 base-game dealt roles, with their official night-call order
-  (Capitaine is an elected status, not a dealt role, so it's not in this catalog)
+**A game, step by step**
+
+1. *Accueil*: start a game, resume the running one, pick up a draft, or reopen a finished game's
+   recap. A game whose save can no longer be read is flagged and can be deleted.
+2. *Composition*: the number of players and the roles to deal, bounded by the boxes the MJ owns
+   (Réglages > Mes boîtes). A suggestion for the player count is one tap away. With the Voleur, the
+   two reserve cards are either the two left after the deal (the booklet's rule, noted on night 1)
+   or chosen here (a setting).
+3. *Les joueurs*: the names, and optionally each player's role noted at the deal, so the app knows
+   who holds what before the first night and asks less during the game.
+4. *The game*: a three-tab shell, Script / Village / Journal. The Script walks the MJ through each
+   night in the order of the booklets: who to wake, what to ask, what to say out loud (as much as
+   Réglages says), then the morning, the vote, the election of the Capitaine and the chain effects of
+   a death (lovers, the Hunter's shot, the Capitaine's successor). What the app cannot know, the MJ
+   tells it, and a card is noted as it is revealed.
+5. *End of the game*: the winner, a recap, and the journal, which can be shared as text.
+
+**Réglages** has five sections: content (Mes boîtes), the rules where the booklets disagree or
+the tables differ (a tied vote, the Thief's reserve, the Fox's place in the night, the White
+Werewolf's nights, the Knight's disease), during the game (the lines the MJ reads aloud, the
+aide-mémoire, dead players' cards shown or kept hidden, role notes at the deal, screen kept awake),
+display (theme, language) and data (crash reports, delete all games).
+
+Everything stays on the phone: no account, no network during a game. Crash reports are strictly
+opt-in: a build only knows where to send them when it is given the DSN of a Sentry project
+(`flutter build apk --dart-define=SENTRY_DSN=...`; the release workflow reads it from the optional
+`SENTRY_DSN` repository secret). Without a DSN the app never reports anything and the setting is not
+shown; with one, the setting is off until the MJ turns it on, and nothing about the games (names,
+roles, journal) is attached to a report.
+
+Not built yet: the regulars address book, the hidden-composition mode, import/export of a save file,
+the roles listed above, and a real accessibility pass (large text, screen reader, tablets).
+
+## The rules engine
+
+`packages/rules_engine` is pure Dart with no Flutter dependency, so the rules are tested on their own
+(`dart test`):
+
+- `RoleRegistry`: the catalogue of roles, with their official night-call order and the metadata the
+  rest derives from (wake condition, team, group size, suggestion tier). Adding a role means a line
+  there, its actions in the state machine, and its texts in each language in the app.
 - `NightScriptBuilder`: computes the exact order of roles to call on a given night, from the
-  active composition and who's still alive
-- `GameStateMachine`: resolves every role action from explicit MJ-reported facts — the night,
-  the day vote and captain election, `StartNextNight`, and the death cascade (lovers, the
-  Hunter's shot, captain succession). `RevealRole` records a card the app never learned (a
-  player who dies un-identified) and replays that player's on-death effect. Each `Player`
-  carries how and when they died.
-- `GameStateJson`: encode/decode a `GameState` to plain maps — including a paused death
-  cascade — for the app's snapshot persistence
-- `CompositionAdvisor`: suggests a full composition for a player count from role metadata
-  alone (a small wolf-count band table, plus each role's declared "suggestion tier") — no
-  per-player-count table to hand-maintain as roles are added
+  composition, who is still alive, which powers are spent and the settings that move a role.
+- `GameStateMachine`: resolves every role action from explicit MJ-reported facts: the night, the
+  day vote and the Capitaine election, `StartNextNight`, and the death cascade. `RevealRole` records a
+  card the app never learned and replays that player's on-death effect. Each `Player` carries how and
+  when they died.
+- `GameStateJson`: encodes and decodes a `GameState` to plain maps, a paused death cascade included,
+  for the app's snapshots.
+- `CardPool` and `gameBoxes`: what the owned boxes can deal (cards and stickers).
+- `CompositionAdvisor`: suggests a composition for a player count from role metadata alone, with no
+  per-count table to maintain as roles are added.
 
-The Flutter app (`lib/`) drives the loop: Accueil → Composition → Les joueurs → Avant la
-nuit 1 → the in-game Script / Village / Journal shell. The MJ identifies each role as it wakes,
-runs Cupidon / the Seer / the Wolves / the Witch, resolves the night, then works through the
-day — the recap (with any card to reveal and any chain effect), the sheriff election, the
-village vote — and on into the next night, until they end the game and declare a winner. A
-finished game can be reopened from Accueil for its recap.
+## The app
 
-- `lib/data/`: Drift schema (`Games`, `Players`, `NightLog`) and `GameRepository`. A running
-  game's live state is a JSON snapshot of the engine's `GameState` on the `Games` row, rewritten
-  after every action, so a force-quit resumes on the exact step — mid death-cascade included.
-  A finished game keeps its `winner` and its snapshot for the recap.
-- `lib/state/`: Riverpod providers. `GameSession` is the orchestrator — it loads or seeds a
-  game's `GameState`, applies MJ-reported facts through the pure `GameStateMachine`, tracks the
-  day stage, and persists. Plus draft-then-commit editing of the composition and the roster, and
-  `settings/` — the theme override and two in-game toggles, persisted with `shared_preferences`.
-- `lib/ui/`: design-token system (`theme/`, mapped from the design handoff's colour/typography/
-  spacing tables), a reusable component layer (`widgets/`), `go_router` navigation (`router/`),
-  and the screens (`screens/`).
+The Flutter app (`lib/`) is the MJ's side of it:
 
-Réglages (theme, keep-screen-awake, aide-mémoire visibility) is reachable from the Accueil gear
-and from a persistent 46px header inside a game; that header's home button leaves the game
-running and returns to Accueil. Mes boîtes lists the six boxes (base, New Moon, The Village,
-Characters, The Pact, Best Of): the MJ ticks what they own and the composition only offers the
-roles those boxes can supply (`CardPool` in the rules engine). The extensions' roles themselves are
-not implemented yet, so ticking a box adds nothing beyond the base roles it already holds.
-
-Also not built: the regulars address book and the extension roles.
-
-Crash reports are strictly opt-in. A build only knows where to send them when it is given the DSN
-of a Sentry project (`flutter build apk --dart-define=SENTRY_DSN=...`; the release workflow reads
-it from the optional `SENTRY_DSN` repository secret). Without a DSN the app never reports anything
-and the setting is not shown; with one, the setting in Réglages is off until the MJ turns it on,
-and nothing about the games (names, roles, journal) is attached to a report.
-
-The script also tells the MJ what to say out loud: waking and putting each role back to sleep,
-the morning and who died, the Sheriff election, the vote, and the Hunter's, the Sheriff's and
-a lover's death. A "Phrases du MJ" setting in Réglages chooses between none, the essential line
-of each moment, or the full text (the default), and the block can be folded away in the game.
-
-The app speaks French and English. Réglages has a language setting (system, Français,
-English); "system" follows the phone, French for a French phone and English for any other.
+- `lib/data/`: Drift schema (`Games`, `Players`, `NightLog`) and `GameRepository`. A running game's
+  live state is a JSON snapshot of the engine's `GameState` on the `Games` row, rewritten after every
+  action, so a force-quit resumes on the exact step, mid death-cascade included. A finished game
+  keeps its winner and its snapshot for the recap.
+- `lib/state/`: Riverpod providers. `GameSession` is the orchestrator: it loads or seeds a game's
+  `GameState`, applies MJ-reported facts through the pure `GameStateMachine`, tracks the day stage,
+  and persists. Plus draft-then-commit editing of the composition and the roster, `settings/`
+  (persisted with `shared_preferences`) and the opt-in crash reporting.
+- `lib/ui/`: a design-token system (`theme/`), a reusable component layer (`widgets/`), `go_router`
+  navigation (`router/`), and the screens (`screens/`). The in-game header's home button leaves the
+  game running and returns to Accueil.
 
 ## Architecture
 
@@ -107,7 +120,9 @@ panels are ordinary tab bodies, not modal sheets — the only true modals are th
 recap and the aide-mémoire.
 
 Stack: Riverpod (state), Drift (typed SQLite), freezed (immutable models), go_router
-(navigation), tabler_icons_plus (icons). json_serializable isn't wired in yet.
+(navigation), intl and ARB files (texts), shared_preferences (settings), share_plus (sharing the
+journal), wakelock_plus (screen kept awake), sentry_flutter (opt-in crash reports), tabler_icons_plus
+(icons).
 
 ## Development
 
