@@ -19,6 +19,7 @@ Future<int> _startedGame(
     'villageois': 2,
   },
   List<String> reserveRoleIds = const [],
+  Map<String, String> noted = const {},
 }) async {
   final id = await repo.createGame(initialPlayerCount: 6);
   await repo.saveComposition(
@@ -28,6 +29,12 @@ Future<int> _startedGame(
     reserveRoleIds: reserveRoleIds,
   );
   await repo.savePlayerNames(gameId: id, names: const ['Ana', 'Bo', 'Cy', 'Di', 'Ed', 'Fi']);
+  // Roles noted at the deal: name -> role id.
+  final roster = await repo.getRoster(id);
+  for (final row in roster) {
+    final roleId = noted[row.name];
+    if (roleId != null) await repo.assignRoles(playerRowIds: [row.id], roleId: roleId);
+  }
   await repo.startGame(id);
   return id;
 }
@@ -277,6 +284,31 @@ void main() {
       await identify(tester, ['Ed']); // the Witch
 
       expect(find.text('Victime des Loups cette nuit'), findsNothing);
+    });
+
+    testWidgets('the player it protects is not already picked as the wolves victim', (tester) async {
+      // Every card noted at the deal: the calls follow each other with no identify step between
+      // them, so the pick of one must not carry over to the next.
+      final id = await _startedGame(
+        repo,
+        composition: const {'salvateur': 1, 'loup_garou': 2, 'sorciere': 1, 'villageois': 2},
+        noted: const {
+          'Ana': 'salvateur',
+          'Bo': 'loup_garou',
+          'Cy': 'loup_garou',
+          'Di': 'villageois',
+          'Ed': 'sorciere',
+          'Fi': 'villageois',
+        },
+      );
+      await pump(tester, id);
+
+      await tapName(tester, 'Di');
+      await tester.tap(find.text('Le Salvateur protège Di'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Qui les Loups dévorent-ils ?'), findsOneWidget);
+      expect(find.text('Les Loups désignent Di'), findsNothing);
     });
 
     testWidgets('the call can be passed', (tester) async {
@@ -652,7 +684,9 @@ void main() {
       await identify(tester, ['Ana']);
       expect(find.text('Quelles sont les 3 cartes posées face visible pour le Comédien ?'), findsOneWidget);
       expect(find.text('Choisissez 3 cartes'), findsOneWidget);
-      for (final card in ['Voyante', 'Sorcière', 'Salvateur']) {
+      // The boxes the MJ owns (the base one) hold exactly these three roles he can play.
+      expect(find.text('Salvateur'), findsNothing);
+      for (final card in ['Voyante', 'Sorcière', 'Cupidon']) {
         await tester.tap(find.text(card));
         await tester.pumpAndSettle();
       }
@@ -660,7 +694,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Quel pouvoir le Comédien prend-il cette nuit ?'), findsOneWidget);
-      expect(find.text('Cupidon'), findsNothing);
       await tester.tap(find.text('Voyante'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Il joue la Voyante'));
@@ -669,6 +702,34 @@ void main() {
       // the Seer's turn, with nobody to identify
       expect(find.text('Qui est Voyante ?'), findsNothing);
       expect(find.textContaining('Voyante, ouvre les yeux'), findsOneWidget);
+    });
+
+    testWidgets('is never offered a role that is already dealt', (tester) async {
+      // A Sorcière and a Voyante are in the deal: two of them in play would be a mistake, so his
+      // cards come from the roles left in the box.
+      final id = await _startedGame(
+        repo,
+        composition: const {
+          'comedien': 1,
+          'loup_garou': 2,
+          'sorciere': 1,
+          'voyante': 1,
+          'villageois': 1,
+        },
+      );
+      await pump(tester, id);
+      await identify(tester, ['Ana']);
+
+      expect(find.text('Quelle est la carte posée face visible pour le Comédien ?'), findsOneWidget);
+      expect(find.text('Sorcière'), findsNothing);
+      expect(find.text('Voyante'), findsNothing);
+      expect(find.text('Cupidon'), findsOneWidget);
+      await tester.tap(find.text('Cupidon'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Poser cette carte'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Quel pouvoir le Comédien prend-il cette nuit ?'), findsOneWidget);
     });
 
     testWidgets('the Actor can be passed, with or without his cards laid', (tester) async {
@@ -868,6 +929,50 @@ void main() {
       // The Sorcière step is there to be called, but no one is asked who she is.
       expect(find.text('Qui est la Sorcière ?'), findsNothing);
       expect(find.text('Passer ce rôle'), findsOneWidget);
+    });
+
+
+    testWidgets('only offers the cards the deal left, and fills them in once every card is noted', (
+      tester,
+    ) async {
+      // Every seat noted: the two cards left are known (a Sorcière and a Simple Villageois).
+      final id = await _startedGame(
+        repo,
+        composition: comp,
+        noted: const {
+          'Ana': 'voleur',
+          'Bo': 'loup_garou',
+          'Cy': 'loup_garou',
+          'Di': 'villageois',
+          'Ed': 'villageois',
+          'Fi': 'villageois',
+        },
+      );
+      await pump(tester, id);
+
+      expect(find.text('Les 2 cartes restantes'), findsOneWidget);
+      expect(find.text('Sorcière'), findsOneWidget);
+      expect(find.text('Simple Villageois'), findsOneWidget);
+      await tester.tap(find.text('Valider ces 2 cartes'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Les 2 cartes restantes'), findsNothing);
+    });
+
+    testWidgets('does not offer a card a player was noted with', (tester) async {
+      // The two Loups-Garous are noted: they cannot be in the middle.
+      final id = await _startedGame(
+        repo,
+        composition: comp,
+        noted: const {'Bo': 'loup_garou', 'Cy': 'loup_garou'},
+      );
+      await pump(tester, id);
+
+      await tester.tap(find.text('Choisir une carte').first);
+      await tester.pumpAndSettle();
+
+      expect(find.widgetWithText(ListTile, 'Sorcière'), findsOneWidget);
+      expect(find.widgetWithText(ListTile, 'Loup-Garou'), findsNothing);
     });
 
     testWidgets('the reserve can be noted later', (tester) async {

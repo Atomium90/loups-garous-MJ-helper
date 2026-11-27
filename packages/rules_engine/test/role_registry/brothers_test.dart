@@ -5,13 +5,13 @@ void main() {
   final registry = RoleRegistry.all;
   const builder = NightScriptBuilder();
 
-  test('the Brothers are a group of three, offered every other night, like the Sisters', () {
+  test('the Brothers are a group of three, woken on the first night only, like the Sisters', () {
     final brothers = registry.byId('trois_freres');
     expect(brothers.team, Team.village);
     expect(brothers.groupSize, 3);
     expect(brothers.multiple, isFalse);
     expect(brothers.optionalCall, isTrue);
-    expect(brothers.wakeCondition, WakeCondition.everyOtherNight);
+    expect(brothers.wakeCondition, WakeCondition.firstNightOnly);
   });
 
   test('they are called right after the Sisters, before the Wild Child', () {
@@ -37,10 +37,10 @@ void main() {
         .map((s) => s.role.id)
         .toList();
 
-    test('night 1 wakes both groups, night 2 neither, night 3 again', () {
+    test('night 1 wakes both groups so they know each other, and no night after', () {
       expect(script(1), ['voyante', 'deux_soeurs', 'trois_freres', 'loup_garou']);
       expect(script(2), ['voyante', 'loup_garou']);
-      expect(script(3), ['voyante', 'deux_soeurs', 'trois_freres', 'loup_garou']);
+      expect(script(3), ['voyante', 'loup_garou']);
     });
   });
 }

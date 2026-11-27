@@ -177,13 +177,16 @@ class GameStateMachine {
     if (state.phase != GamePhase.night) {
       throw InvalidActionError('The Fox can only sniff during the night');
     }
-    if (state.spentPowers.containsKey(_foxRoleId)) {
+    // The Comedien who took the Fox's card for tonight has a power of his own: the one the real Fox
+    // may have lost is not his, and what he finds out costs the Fox nothing.
+    final viaActor = state.actor?.current == _foxRoleId;
+    if (!viaActor && state.spentPowers.containsKey(_foxRoleId)) {
       throw InvalidActionError('The Fox has lost his power');
     }
     _requireAlive(state.playerById(action.middlePlayerId), 'the Fox\'s middle player');
 
     return ActionResult(
-      state: action.wolfFound
+      state: action.wolfFound || viaActor
           ? state
           : state.copyWith(
               spentPowers: {...state.spentPowers, _foxRoleId: state.nightIndex},
@@ -312,9 +315,14 @@ class GameStateMachine {
     if (state.pendingWolfVictimId == null) {
       throw InvalidActionError('No wolf victim to save');
     }
+    // The Elder she heals gets back the life the first bite took from him.
+    final victimId = state.pendingWolfVictimId!;
+    final healsElder =
+        state.playerById(victimId).roleId == 'ancien' && state.woundedElders.contains(victimId);
     return ActionResult(
       state: state.copyWith(
         pendingWolfVictimId: null,
+        woundedElders: healsElder ? ({...state.woundedElders}..remove(victimId)) : null,
         witch: state.witch.copyWith(lifePotionUsed: true),
       ),
       events: const [WitchLifePotionUsed()],
@@ -588,8 +596,9 @@ class GameStateMachine {
     if (state.actor != null && state.actor!.used.isNotEmpty) {
       throw InvalidActionError('The Comedien already used one of his cards');
     }
-    if (ids.length != actorCardCount || ids.toSet().length != ids.length) {
-      throw InvalidActionError('The Comedien has $actorCardCount different cards');
+    // Up to three: the boxes may not hold three roles he can play that are not dealt.
+    if (ids.isEmpty || ids.length > actorCardCount || ids.toSet().length != ids.length) {
+      throw InvalidActionError('The Comedien has 1 to $actorCardCount different cards');
     }
     for (final id in ids) {
       if (!actorCardRoleIds.contains(id)) {

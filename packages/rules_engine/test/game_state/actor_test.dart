@@ -34,12 +34,24 @@ void main() {
   });
 
   group('his cards', () {
-    test('are three different roles among those he can play', () {
+    test('are up to three different roles among those he can play', () {
       final state = apply(_table(), const ActorSetCards(roleIds: _cards)).state;
       expect(state.actor?.cards, _cards);
       expect(state.actor?.available, _cards);
+      // the boxes may hold fewer than three roles that are not dealt
       expect(
-        () => apply(_table(), const ActorSetCards(roleIds: ['voyante', 'sorciere'])),
+        apply(_table(), const ActorSetCards(roleIds: ['voyante', 'sorciere'])).state.actor?.cards,
+        ['voyante', 'sorciere'],
+      );
+      expect(
+        () => apply(_table(), const ActorSetCards(roleIds: [])),
+        throwsA(isA<InvalidActionError>()),
+      );
+      expect(
+        () => apply(
+          _table(),
+          const ActorSetCards(roleIds: ['voyante', 'sorciere', 'cupidon', 'renard']),
+        ),
         throwsA(isA<InvalidActionError>()),
       );
       expect(
@@ -174,6 +186,33 @@ void main() {
 
     test('once his cards are used he is no longer called', () {
       expect(script(4, spent: {'comedien'}).contains('comedien'), isFalse);
+    });
+  });
+
+  group('playing the Fox card', () {
+    const sniff = FoxSniff(middlePlayerId: 'a', wolfFound: false);
+
+    test('is not stopped by the power the real Fox lost, and costs him nothing', () {
+      final lost = _table(night: 2).copyWith(spentPowers: {'renard': 1});
+      expect(() => apply(lost, sniff), throwsA(isA<InvalidActionError>()));
+
+      final playing = apply(
+        lost.copyWith(actor: const ActorState(cards: ['renard', 'voyante', 'sorciere'])),
+        const ActorChooseCard(roleId: 'renard'),
+      ).state;
+      final result = apply(playing, sniff);
+
+      expect(result.events.single, isA<FoxSniffed>());
+      expect(result.state.spentPowers, {'renard': 1});
+    });
+
+    test('finding no wolf does not take the power of a Fox who still has it', () {
+      final fox = apply(
+        _table().copyWith(actor: const ActorState(cards: ['renard', 'voyante', 'sorciere'])),
+        const ActorChooseCard(roleId: 'renard'),
+      ).state;
+
+      expect(apply(fox, sniff).state.spentPowers, isEmpty);
     });
   });
 }

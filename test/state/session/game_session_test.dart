@@ -497,6 +497,33 @@ void main() {
     });
   });
 
+  group('the Actor playing the Fox', () {
+    const comp = {'comedien': 1, 'loup_garou': 2, 'villageois': 3};
+
+    test('the Fox card is played once: a sniff that finds nothing is not offered again', () async {
+      final game = await _startedGame(repo, composition: comp);
+      final n = await notifierFor(game.gameId);
+      final ids = game.seatRowIds;
+      await n.identifyRole('comedien', [ids[0]]);
+      await n.actorSetCards(['renard', 'voyante', 'sorciere']);
+      await n.actorChoose('renard');
+      expect(stateOf(game.gameId).currentStep!.role.id, 'renard');
+
+      await n.foxSniff(middleEngineId: '${ids[3]}', wolfFound: false);
+      await n.identifyRole('loup_garou', [ids[1], ids[2]]);
+      await n.applyAction(WolvesTarget(targetPlayerId: '${ids[5]}'));
+      await n.applyAction(const FinalizeNight());
+      await n.revealRole(ids[5], 'villageois');
+      await n.startNextNight();
+
+      var s = stateOf(game.gameId);
+      expect(s.tonight.steps.map((st) => st.role.id), ['comedien', 'loup_garou']);
+      await n.actorChoose('sorciere');
+      s = stateOf(game.gameId);
+      expect(s.tonight.steps.map((st) => st.role.id), ['comedien', 'loup_garou', 'sorciere']);
+    });
+  });
+
   group('the Devoted Servant', () {
     const comp = {'servante_devouee': 1, 'juge_begue': 1, 'loup_garou': 2, 'villageois': 2};
 
@@ -830,6 +857,16 @@ void main() {
       await g.n.identifyRole('idiot_du_village', [g.ids[0]]);
 
       expect(stateOf(g.gameId).mayBeIdiot('${g.ids[3]}'), isFalse); // the only Idiot is known
+    });
+
+    test('a dead Capitaine may leave nobody his title only if he can be the Idiot', () async {
+      final g = await toDay();
+      expect(stateOf(g.gameId).captainMayLeaveNoSuccessor('${g.ids[0]}'), isTrue); // may be him
+
+      await g.n.identifyRole('idiot_du_village', [g.ids[0]]);
+      expect(stateOf(g.gameId).captainMayLeaveNoSuccessor('${g.ids[0]}'), isTrue); // is him
+      // the only Idiot is known: the others must name a successor
+      expect(stateOf(g.gameId).captainMayLeaveNoSuccessor('${g.ids[3]}'), isFalse);
     });
 
     test('is never asked about when no Idiot is in the game', () async {

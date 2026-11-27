@@ -1,3 +1,5 @@
+import 'dart:math' show min;
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,7 +8,8 @@ import 'package:rules_engine/rules_engine.dart';
 import '../../../data/models/game_winner.dart';
 import '../../../state/session/day_plan.dart';
 import '../../../state/session/game_session.dart';
-import '../../../state/session/night_script.dart' show kCharmedStepRole;
+import '../../../state/session/night_script.dart'
+    show actorCardOptions, cardsLeftIn, kCharmedStepRole;
 import '../../../state/session/session_cursor.dart';
 import '../../../state/settings/settings.dart' show VoteTieRule;
 import '../../../state/settings/settings_providers.dart';
@@ -76,6 +79,7 @@ class _NightBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifier = ref.read(gameSessionProvider(gameId).notifier);
+    final pool = ref.watch(cardPoolProvider);
     final step = session.currentStep;
 
     return Column(
@@ -110,7 +114,14 @@ class _NightBody extends ConsumerWidget {
               ],
             ),
           ),
-        Expanded(child: _body(context, notifier, step)),
+        // One state per step: the pick of the step before (the Salvateur's) must not stay ticked on
+        // the next one (the Loups').
+        Expanded(
+          child: KeyedSubtree(
+            key: ValueKey('${session.engine.nightIndex}-${session.cursor.stepIndex}'),
+            child: _body(context, notifier, step, pool),
+          ),
+        ),
       ],
     );
   }
@@ -124,7 +135,7 @@ class _NightBody extends ConsumerWidget {
     if (isElder == true) await notifier.identifyRole('ancien', [int.parse(victimId)]);
   }
 
-  Widget _body(BuildContext context, GameSession notifier, NightScriptStep? step) {
+  Widget _body(BuildContext context, GameSession notifier, NightScriptStep? step, CardPool pool) {
     if (session.engine.cascade != null) {
       return _ChainPanel(session: session, notifier: notifier);
     }
@@ -134,8 +145,16 @@ class _NightBody extends ConsumerWidget {
     if (step.role.id == 'voleur' &&
         session.reserveToEnter &&
         session.cursor.subStep != NightSubStep.act) {
+      // The cards noted at the deal are not in the middle: what is left of the pack is the reserve.
+      final left = cardsLeftIn(session.pack, [for (final r in session.roster) r.roleId]);
+      final cardsInTheMiddle = [
+        for (final card in left)
+          for (var i = 0; i < card.left; i++) card.roleId,
+      ];
       return ReserveEntry(
-        pack: session.pack,
+        pack: [for (final card in left) (roleId: card.roleId, count: card.left)],
+        // With every card of the table noted, the two left are the reserve: no need to ask.
+        initial: cardsInTheMiddle.length == 2 ? cardsInTheMiddle : const [],
         onConfirm: notifier.enterReserve,
         onDefer: notifier.skipStep,
       );
@@ -172,10 +191,15 @@ class _NightBody extends ConsumerWidget {
         onDefer: notifier.skipStep,
       );
     }
-    return _actBody(context, notifier, step);
+    return _actBody(context, notifier, step, pool);
   }
 
-  Widget _actBody(BuildContext context, GameSession notifier, NightScriptStep step) {
+  Widget _actBody(
+    BuildContext context,
+    GameSession notifier,
+    NightScriptStep step,
+    CardPool pool,
+  ) {
     final role = step.role;
     final alive = session.engine.alivePlayers;
     Candidate cand(Player p) => (id: p.id, name: p.name);
@@ -328,11 +352,25 @@ class _NightBody extends ConsumerWidget {
       case 'comedien':
         final actor = session.engine.actor;
         if (actor == null) {
+          // His cards come out of the boxes, not out of the deal: never a role already in play.
+          final options = actorCardOptions(
+            composition: session.composition,
+            reserveRoleIds: session.reserveRoleIds,
+            reserveDrawn: session.reserveDrawn,
+            pool: pool,
+          );
+          if (options.isEmpty) {
+            return SimpleAct(
+              primaryLabel: context.l10n.scriptSkipRole,
+              onPrimary: notifier.skipStep,
+            );
+          }
           return _ActorCards(
             key: const ValueKey('actorCardsLaid'),
-            title: context.l10n.scriptActorCardsQuestion,
-            cards: actorCardRoleIds,
-            count: actorCardCount,
+            title: context.l10n.scriptActorCardsQuestion(min(actorCardCount, options.length)),
+            cards: options,
+            laying: true,
+            count: min(actorCardCount, options.length),
             onConfirm: notifier.actorSetCards,
             onSkip: notifier.skipStep,
           );
@@ -1240,6 +1278,7 @@ class _DayBody extends ConsumerWidget {
         notifier: n,
       ),
       DayStage.done => _NextNightPrompt(
+        session: session,
         nextNight: session.engine.nightIndex + 1,
         onStart: n.startNextNight,
         note: session.day.pardonedName == null
@@ -1408,10 +1447,14 @@ class _ActorCards extends StatefulWidget {
     required this.count,
     required this.onConfirm,
     required this.onSkip,
+    this.laying = false,
   });
 
   final String title;
   final List<String> cards;
+
+  /// The cards are being laid face up (as opposed to the one he plays tonight being chosen).
+  final bool laying;
   final int count;
   final ValueChanged<List<String>> onConfirm;
   final VoidCallback onSkip;
@@ -1438,11 +1481,13 @@ class _ActorCardsState extends State<_ActorCards> {
   @override
   Widget build(BuildContext context) {
     final complete = _picked.length == widget.count;
-    final label = widget.count == 1
+    final label = !widget.laying
         ? (complete
               ? context.l10n.scriptActorUses(context.l10n.roleWithArticle(_picked.single))
               : context.l10n.scriptPickCard)
-        : (complete ? context.l10n.scriptActorCardsConfirm : context.l10n.scriptActorCardsPick);
+        : (complete
+              ? context.l10n.scriptActorCardsConfirm(widget.count)
+              : context.l10n.scriptActorCardsPick(widget.count));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -2092,8 +2137,14 @@ class _VoteBodyState extends ConsumerState<_VoteBody> {
 }
 
 class _NextNightPrompt extends StatelessWidget {
-  const _NextNightPrompt({required this.nextNight, required this.onStart, this.note});
+  const _NextNightPrompt({
+    required this.session,
+    required this.nextNight,
+    required this.onStart,
+    this.note,
+  });
 
+  final GameSessionState session;
   final int nextNight;
   final VoidCallback onStart;
 
@@ -2102,10 +2153,46 @@ class _NextNightPrompt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final deaths = session.dayDeaths;
     return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // What the day cost the village: the vote's victim and whoever it took along (the Hunter's
+        // shot, a lover), as the night's recap does for the morning.
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 16, AppSpacing.screen, 8),
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: colors.bgInset,
+                  borderRadius: BorderRadius.circular(AppRadii.card),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      deaths.isEmpty
+                          ? context.l10n.scriptDayNobodyDied
+                          : context.l10n.scriptDayVillageLost,
+                      style: context.typography.meta.copyWith(color: colors.textTertiary),
+                    ),
+                    for (final death in deaths) ...[
+                      const SizedBox(height: 12),
+                      _RecapDeathRow(
+                        name: death.name,
+                        roleId: session.rosterRoleId(death.id),
+                        cause: deathCauseLabel(context.l10n, death.causeOfDeath!),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
         if (note != null)
           Padding(
             padding: const EdgeInsets.fromLTRB(AppSpacing.screen, 0, AppSpacing.screen, 10),
@@ -2465,7 +2552,10 @@ class _SuccessionPanel extends StatelessWidget {
             confirmLabel: context.l10n.scriptCaptainBecomes,
             onConfirm: (id) => notifier.nameCaptainSuccessor(id),
             secondaryLabel: context.l10n.scriptSuccessionNone,
-            onSecondary: notifier.captainHasNoSuccessor,
+            // Only the Village Idiot leaves nobody his title: inert once the card says otherwise.
+            onSecondary: session.captainMayLeaveNoSuccessor(deadCaptainId)
+                ? notifier.captainHasNoSuccessor
+                : null,
           ),
         ),
       ],
@@ -2518,7 +2608,13 @@ class _KnightWoundPanel extends ConsumerWidget {
         Expanded(
           child: TargetPick(
             question: context.l10n.scriptKnightQuestion,
-            candidates: _alive(session.engine),
+            // The sword leaves a wolf diseased: not someone known to be something else. The MJ
+            // still picks (the seat is theirs to read), among the wolves and the cards not noted.
+            candidates: [
+              for (final p in session.engine.alivePlayers)
+                if (p.wakesWithWolvesIn(RoleRegistry.all) || session.rosterRoleId(p.id) == null)
+                  (id: p.id, name: p.name),
+            ],
             confirmLabel: context.l10n.scriptKnightWounds,
             onConfirm: notifier.knightContaminate,
             secondaryLabel: context.l10n.scriptKnightNone,

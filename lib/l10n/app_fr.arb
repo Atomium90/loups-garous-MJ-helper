@@ -39,7 +39,7 @@
       }
     }
   },
-  "roleRuleText": "{roleId, select, voleur{Réveillez le Voleur. Il peut échanger sa carte avec l'une des deux cartes non distribuées, ou garder la sienne.} cupidon{Réveillez Cupidon. Il désigne deux joueurs qui tombent amoureux, puis les deux amoureux ouvrent les yeux pour se reconnaître avant de se rendormir.} voyante{Réveillez la Voyante. Elle désigne un joueur dont vous lui révélez le rôle.} loup_garou{Réveillez les Loups-Garous. Ils désignent ensemble leur victime.} sorciere{Réveillez la Sorcière. Montrez-lui la victime des Loups. Elle peut utiliser sa potion de vie et/ou sa potion de mort.} villageois{Aucune action de nuit.} petite_fille{Aucun appel : elle peut risquer un œil pendant l'appel des Loups-Garous, à ses risques.} chasseur{Aucune action de nuit : à sa mort (jour ou nuit), il élimine immédiatement un joueur de son choix.} renard{Réveillez le Renard (facultatif). Il désigne un joueur : vous lui dites si un Loup se trouve parmi ce joueur et ses deux voisins vivants. S'il n'y en a aucun, il perd son pouvoir pour de bon.} deux_soeurs{Réveillez les Deux Sœurs : elles se reconnaissent, puis se rendorment. Appel facultatif après la nuit 1, une nuit sur deux.} montreur_d_ours{Réveillez le Montreur d'Ours la nuit 1 pour savoir qui il est. Chaque matin, après les victimes, vous grognez si l'un de ses deux voisins vivants est un Loup.} enfant_sauvage{Réveillez l'Enfant Sauvage la nuit 1 : il désigne son modèle. Il reste villageois tant que son modèle vit ; à la mort du modèle, il devient Loup-Garou et se réveille avec les Loups.} chien_loup{Juste avant les Loups, la nuit 1, demandez discrètement au Chien-Loup son choix : villageois ou Loup-Garou, pour de bon. S'il choisit les Loups, il se réveille avec eux chaque nuit.} loup_garou_blanc{Il se réveille avec les Loups chaque nuit. Une nuit sur deux, appelez-le seul : il peut éliminer un Loup. Il gagne seul s'il est le dernier en vie.} infect_pere_des_loups{Il se réveille avec les Loups. Une fois par partie, après eux, il peut infecter leur victime au lieu de la laisser mourir : elle devient Loup-Garou en secret et garde son pouvoir.} grand_mechant_loup{Il se réveille avec les Loups, puis seul une 2e fois tant qu'aucun Loup, Enfant Sauvage ni Chien-Loup n'est mort : il dévore une 2e victime, jamais un Loup.} ancien{Aucun appel. Il survit à la 1re attaque des Loups (sans l'annoncer) et meurt à la 2e. Le vote, le poison ou le tir du Chasseur le tuent d'un coup : les villageois perdent alors leurs pouvoirs pour le reste de la partie.} chevalier{Aucun appel. S'il est dévoré par les Loups, le premier Loup à sa gauche attrape la maladie : il meurt au début de la nuit suivante (ou à sa fin, selon le réglage), annoncé comme mort de maladie.} joueur_de_flute{Réveillez le Joueur de Flûte chaque nuit, après la Sorcière : il charme 2 joueurs. Réveillez ensuite les joueurs charmés pour qu'ils se reconnaissent. Il gagne dès que tous les autres joueurs vivants sont charmés.} joueurs_charmes{Réveillez tous les joueurs déjà charmés pour qu'ils se reconnaissent, puis rendormez-les.} ange{Aucun appel. La partie commence par un débat et un vote avant la nuit 1. Éliminé à ce vote ou pendant la nuit 1, il gagne seul ; vivant au 2e jour, il devient Simple Villageois (et il renonce à son objectif s'il est amoureux).} salvateur{Réveillez le Salvateur avant les Loups : il désigne un joueur, protégé des Loups cette nuit (lui-même inclus, mais jamais le même joueur deux nuits de suite). Il ne protège pas du charme ni de l'infection.} idiot_du_village{Aucun appel. Voté par le village, il révèle sa carte et est gracié : personne n'est éliminé ce jour-là, et il ne vote plus de la partie. Dévoré par les Loups ou abattu par le Chasseur, il meurt ; s'il était Capitaine, la charge est perdue.} bouc_emissaire{Aucun appel. En cas d'égalité au vote, c'est lui qui est éliminé, même s'il n'était pas parmi les ex æquo. Éliminé, il désigne qui pourra voter au jour suivant : les autres n'ont pas le droit de vote.} trois_freres{Réveillez les Trois Frères : ils se reconnaissent, puis se rendorment. Appel facultatif après la nuit 1, une nuit sur deux.} villageois_villageois{Pas d'appel de nuit. À la distribution, il montre sa carte à tout le monde : notez qui c'est avant de faire dormir le village. Il n'a aucun pouvoir.} juge_begue{Réveillez le Juge Bègue : il vous montre en silence le signe secret par lequel il demandera un deuxième vote. Une seule fois dans la partie, pendant un vote.} abominable_sectaire{Pas d'appel de nuit. Avant la nuit 1, divisez le village en deux groupes selon un critère visible de tous (côté de la table, vêtement…), puis notez-les. Le Sectaire gagne seul quand tout le groupe dont il ne fait pas partie est éliminé : il quitte alors la partie.} servante_devouee{Aucun appel de nuit. Juste après un vote, avant que la carte de l'éliminé soit retournée, elle peut se révéler et prendre son rôle : son nouveau rôle joue dès la nuit suivante, comme une première nuit. Une seule fois, et pas si elle est amoureuse.} comedien{Posez trois cartes à pouvoir (sans Loup-Garou) face visible. Chaque nuit, réveillez le Comédien : il choisit l'une d'elles et en utilise le pouvoir cette nuit-là, à l'appel du rôle ; la carte sort ensuite du jeu.} other{}}",
+  "roleRuleText": "{roleId, select, voleur{Réveillez le Voleur. Il peut échanger sa carte avec l'une des deux cartes non distribuées, ou garder la sienne.} cupidon{Réveillez Cupidon. Il désigne deux joueurs qui tombent amoureux, puis les deux amoureux ouvrent les yeux pour se reconnaître avant de se rendormir.} voyante{Réveillez la Voyante. Elle désigne un joueur dont vous lui révélez le rôle.} loup_garou{Réveillez les Loups-Garous. Ils désignent ensemble leur victime.} sorciere{Réveillez la Sorcière. Montrez-lui la victime des Loups. Elle peut utiliser sa potion de vie et/ou sa potion de mort.} villageois{Aucune action de nuit.} petite_fille{Aucun appel : elle peut risquer un œil pendant l'appel des Loups-Garous, à ses risques.} chasseur{Aucune action de nuit : à sa mort (jour ou nuit), il élimine immédiatement un joueur de son choix.} renard{Réveillez le Renard (facultatif). Il désigne un joueur : vous lui dites si un Loup se trouve parmi ce joueur et ses deux voisins vivants. S'il n'y en a aucun, il perd son pouvoir pour de bon.} deux_soeurs{Réveillez les Deux Sœurs la nuit 1 : elles se reconnaissent, puis se rendorment. Sans pouvoir, elles ne sont pas rappelées ensuite.} montreur_d_ours{Réveillez le Montreur d'Ours la nuit 1 pour savoir qui il est. Chaque matin, après les victimes, vous grognez si l'un de ses deux voisins vivants est un Loup.} enfant_sauvage{Réveillez l'Enfant Sauvage la nuit 1 : il désigne son modèle. Il reste villageois tant que son modèle vit ; à la mort du modèle, il devient Loup-Garou et se réveille avec les Loups.} chien_loup{Juste avant les Loups, la nuit 1, demandez discrètement au Chien-Loup son choix : villageois ou Loup-Garou, pour de bon. S'il choisit les Loups, il se réveille avec eux chaque nuit.} loup_garou_blanc{Il se réveille avec les Loups chaque nuit. Une nuit sur deux, appelez-le seul : il peut éliminer un Loup. Il gagne seul s'il est le dernier en vie.} infect_pere_des_loups{Il se réveille avec les Loups. Une fois par partie, après eux, il peut infecter leur victime au lieu de la laisser mourir : elle devient Loup-Garou en secret et garde son pouvoir.} grand_mechant_loup{Il se réveille avec les Loups, puis seul une 2e fois tant qu'aucun Loup, Enfant Sauvage ni Chien-Loup n'est mort : il dévore une 2e victime, jamais un Loup.} ancien{Aucun appel. Il survit à la 1re attaque des Loups (sans l'annoncer) et meurt à la 2e, sauf si la Sorcière le soigne : il retrouve alors sa vie. Le vote, le poison ou le tir du Chasseur le tuent d'un coup : les villageois perdent alors leurs pouvoirs pour le reste de la partie.} chevalier{Aucun appel. S'il est dévoré par les Loups, le premier Loup à sa gauche attrape la maladie : il meurt au début de la nuit suivante (ou à sa fin, selon le réglage), annoncé comme mort de maladie.} joueur_de_flute{Réveillez le Joueur de Flûte chaque nuit, après la Sorcière : il charme 2 joueurs. Réveillez ensuite les joueurs charmés pour qu'ils se reconnaissent. Il gagne dès que tous les autres joueurs vivants sont charmés.} joueurs_charmes{Réveillez tous les joueurs déjà charmés pour qu'ils se reconnaissent, puis rendormez-les.} ange{Aucun appel. La partie commence par un débat et un vote avant la nuit 1. Éliminé à ce vote ou pendant la nuit 1, il gagne seul ; vivant au 2e jour, il devient Simple Villageois (et il renonce à son objectif s'il est amoureux).} salvateur{Réveillez le Salvateur avant les Loups : il désigne un joueur, protégé des Loups cette nuit (lui-même inclus, mais jamais le même joueur deux nuits de suite). Il ne protège pas du charme ni de l'infection.} idiot_du_village{Aucun appel. Voté par le village, il révèle sa carte et est gracié : personne n'est éliminé ce jour-là, et il ne vote plus de la partie. Dévoré par les Loups ou abattu par le Chasseur, il meurt ; s'il était Capitaine, la charge est perdue.} bouc_emissaire{Aucun appel. En cas d'égalité au vote, c'est lui qui est éliminé, même s'il n'était pas parmi les ex æquo. Éliminé, il désigne qui pourra voter au jour suivant : les autres n'ont pas le droit de vote.} trois_freres{Réveillez les Trois Frères la nuit 1 : ils se reconnaissent, puis se rendorment. Sans pouvoir, ils ne sont pas rappelés ensuite.} villageois_villageois{Pas d'appel de nuit. À la distribution, il montre sa carte à tout le monde : notez qui c'est avant de faire dormir le village. Il n'a aucun pouvoir.} juge_begue{Réveillez le Juge Bègue : il vous montre en silence le signe secret par lequel il demandera un deuxième vote. Une seule fois dans la partie, pendant un vote.} abominable_sectaire{Pas d'appel de nuit. Avant la nuit 1, divisez le village en deux groupes selon un critère visible de tous (côté de la table, vêtement…), puis notez-les. Le Sectaire gagne seul quand tout le groupe dont il ne fait pas partie est éliminé : il quitte alors la partie.} servante_devouee{Aucun appel de nuit. Juste après un vote, avant que la carte de l'éliminé soit retournée, elle peut se révéler et prendre son rôle : son nouveau rôle joue dès la nuit suivante, comme une première nuit. Une seule fois, et pas si elle est amoureuse.} comedien{Posez face visible jusqu'à trois cartes à pouvoir (sans Loup-Garou) que personne n'a reçues. Chaque nuit, réveillez le Comédien : il choisit l'une d'elles et en utilise le pouvoir cette nuit-là, à l'appel du rôle ; la carte sort ensuite du jeu.} other{}}",
   "@roleRuleText": {
     "description": "The instruction the game master follows when this role is called, from the role id.",
     "placeholders": {
@@ -1106,13 +1106,9 @@
       }
     }
   },
-  "boxesBase": "Jeu de base",
-  "@boxesBase": {
-    "description": "Heading above the base box, which is always owned."
-  },
-  "boxesExpansions": "Extensions et compilations",
-  "@boxesExpansions": {
-    "description": "Heading above the boxes the MJ can tick."
+  "boxesList": "Boîtes de jeu",
+  "@boxesList": {
+    "description": "Heading above the boxes the MJ can tick: the base box, then the compilations and expansions."
   },
   "boxName": "{boxId, select, base{Loups-Garous de Thiercelieux} new_moon{Nouvelle Lune} village{Le Village} characters{Personnages} pact{Le Pacte} best_of{Best Of} other{Boîte inconnue}}",
   "@boxName": {
@@ -1803,17 +1799,32 @@
       }
     }
   },
-  "scriptActorCardsQuestion": "Quelles sont les 3 cartes posées face visible pour le Comédien ?",
+  "scriptActorCardsQuestion": "{count, plural, =1{Quelle est la carte posée face visible pour le Comédien ?} other{Quelles sont les {count} cartes posées face visible pour le Comédien ?}}",
   "@scriptActorCardsQuestion": {
-    "description": "Question to enter the Actor's three cards."
+    "description": "Question to enter the Actor's cards: three, or fewer when the boxes hold no more roles he can play that are not dealt.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
-  "scriptActorCardsConfirm": "Poser ces 3 cartes",
+  "scriptActorCardsConfirm": "{count, plural, =1{Poser cette carte} other{Poser ces {count} cartes}}",
   "@scriptActorCardsConfirm": {
-    "description": "Button to record the Actor's three cards."
+    "description": "Button to record the Actor's cards.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
-  "scriptActorCardsPick": "Choisissez 3 cartes",
+  "scriptActorCardsPick": "{count, plural, =1{Choisissez 1 carte} other{Choisissez {count} cartes}}",
   "@scriptActorCardsPick": {
-    "description": "Inert button while the three cards are not picked."
+    "description": "Inert button while the Actor's cards are not all picked.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "scriptActorQuestion": "Quel pouvoir le Comédien prend-il cette nuit ?",
   "@scriptActorQuestion": {
@@ -2253,6 +2264,14 @@
   "scriptDayOver": "Le jour est terminé.",
   "@scriptDayOver": {
     "description": "End of the day."
+  },
+  "scriptDayVillageLost": "Aujourd'hui, le village a perdu",
+  "@scriptDayVillageLost": {
+    "description": "Heading of the list of the players who died during the day (the vote and what it set off), before the night."
+  },
+  "scriptDayNobodyDied": "Personne n'est mort pendant la journée.",
+  "@scriptDayNobodyDied": {
+    "description": "Shown at the end of a day nobody died in."
   },
   "scriptStartNight": "Commencer la nuit {index}",
   "@scriptStartNight": {

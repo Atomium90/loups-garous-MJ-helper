@@ -5,14 +5,24 @@ import 'package:loup_garou_mj/data/database/app_database.dart';
 import 'package:loup_garou_mj/data/repositories/drift_game_repository.dart';
 import 'package:loup_garou_mj/state/providers/game_repository_provider.dart';
 import 'package:loup_garou_mj/ui/theme/app_icons.dart';
+import 'package:loup_garou_mj/ui/widgets/app_button.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../support/pump_app.dart';
 
-Future<int> _startedGame(DriftGameRepository repo, Map<String, int> composition) async {
+Future<int> _startedGame(
+  DriftGameRepository repo,
+  Map<String, int> composition, {
+  Map<String, String> noted = const {},
+}) async {
   final id = await repo.createGame(initialPlayerCount: 6);
   await repo.saveComposition(gameId: id, playerCount: 6, roleCounts: composition);
   await repo.savePlayerNames(gameId: id, names: const ['Ana', 'Bo', 'Cy', 'Di', 'Ed', 'Fi']);
+  // Roles noted at the deal: name -> role id.
+  for (final row in await repo.getRoster(id)) {
+    final roleId = noted[row.name];
+    if (roleId != null) await repo.assignRoles(playerRowIds: [row.id], roleId: roleId);
+  }
   await repo.startGame(id);
   return id;
 }
@@ -179,6 +189,9 @@ void main() {
       await tap(tester, 'Je ne note pas'); // Di's card is turned over, nobody notes it
 
       expect(find.text('Commencer la nuit 2'), findsOneWidget);
+      // the day's recap: who the vote cost the village
+      expect(find.text("Aujourd'hui, le village a perdu"), findsOneWidget);
+      expect(find.text('Di'), findsOneWidget);
       await tap(tester, 'Village');
       expect(find.text('Jour 1 · vote du village'), findsOneWidget);
     });
@@ -205,6 +218,7 @@ void main() {
       await tap(tester, "Finalement personne n'est éliminé");
 
       expect(find.text('Commencer la nuit 2'), findsOneWidget);
+      expect(find.text("Personne n'est mort pendant la journée."), findsOneWidget);
     });
 
     testWidgets('"no Scapegoat alive" goes back to the usual tie', (tester) async {
@@ -463,6 +477,42 @@ void main() {
     });
   });
 
+  group('the Capitaine dies', () {
+    /// Night 1: wolves Cy + Ed eat Fi; Ana is elected Capitaine, then voted out the same day.
+    Future<void> captainVotedOut(WidgetTester tester) async {
+      await identify(tester, ['Cy', 'Ed']); // the wolves
+      await tester.tap(find.text('Fi'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Les Loups désignent Fi');
+      await tap(tester, 'Résoudre la nuit');
+      await tap(tester, 'Je ne note pas');
+      await tap(tester, 'Élire le Capitaine');
+      await tester.tap(find.text('Ana'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Ana est Capitaine');
+      await tester.tap(find.text('Ana'));
+      await tester.pumpAndSettle();
+      await tap(tester, 'Le village élimine Ana');
+    }
+
+    bool noSuccessorEnabled(WidgetTester tester) => tester
+        .widget<AppButton>(find.widgetWithText(AppButton, 'Pas de successeur (Idiot du Village)'))
+        .onPressed != null;
+
+    testWidgets('a card known not to be the Idiot must name a successor', (tester) async {
+      final id = await _startedGame(
+        repo,
+        const {'idiot_du_village': 1, 'loup_garou': 2, 'villageois': 3},
+        noted: const {'Ana': 'villageois'},
+      );
+      await pump(tester, id);
+      await captainVotedOut(tester);
+
+      expect(find.text('Qui lui succède ?'), findsOneWidget);
+      expect(noSuccessorEnabled(tester), isFalse);
+    });
+  });
+
   group('the Knight with the Rusty Sword', () {
     const comp = {'chevalier': 1, 'loup_garou': 2, 'villageois': 3};
 
@@ -495,6 +545,18 @@ void main() {
       expect(find.text('Quel Loup est malade ?'), findsNothing);
       await tap(tester, 'Journal');
       expect(find.text('Le Chevalier laisse Ed malade'), findsOneWidget);
+    });
+
+    testWidgets('only offers the wolves and the cards not noted yet', (tester) async {
+      // Bo is noted as a Simple Villageois: his sword cannot leave him diseased.
+      final id = await _startedGame(repo, comp, noted: const {'Bo': 'villageois'});
+      await pump(tester, id);
+      await knightEaten(tester);
+
+      expect(find.text('Le Chevalier est dévoré'), findsOneWidget);
+      expect(find.text('Bo'), findsNothing);
+      expect(find.text('Di'), findsOneWidget); // not noted: may be a wolf
+      expect(find.text('Ed'), findsWidgets); // a wolf
     });
 
     testWidgets('can be told there is no wolf to wound', (tester) async {

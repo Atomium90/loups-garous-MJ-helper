@@ -190,19 +190,13 @@ void main() {
       expect(stepIds(script), ['renard', 'loup_garou']);
     });
 
-    test('night 3 offers the Sisters again while both are alive', () {
+    test('the Sisters are not woken again on a later night, they have no power', () {
       final roles = {0: 'renard', 1: 'deux_soeurs', 2: 'deux_soeurs', 4: 'loup_garou', 5: 'loup_garou'};
-      final both = buildNightScript(
+      final script = buildNightScript(
         engine: _state(count: 8, nightIndex: 3, roles: roles),
         composition: composition,
       );
-      expect(stepIds(both), ['renard', 'deux_soeurs', 'loup_garou']);
-
-      final one = buildNightScript(
-        engine: _state(count: 8, nightIndex: 3, roles: roles, dead: {2}),
-        composition: composition,
-      );
-      expect(stepIds(one), ['renard', 'loup_garou']);
+      expect(stepIds(script), ['renard', 'loup_garou']);
     });
 
     test('a Fox who lost his power is not called any more', () {
@@ -217,12 +211,12 @@ void main() {
       expect(stepIds(script), ['loup_garou']);
     });
 
-    test('Sisters not yet identified on night 3 may still be alive: they are offered', () {
+    test('Sisters not yet identified are not woken after the first night either', () {
       final script = buildNightScript(
         engine: _state(count: 8, nightIndex: 3, roles: {4: 'loup_garou', 5: 'loup_garou'}),
         composition: composition,
       );
-      expect(stepIds(script), contains('deux_soeurs'));
+      expect(stepIds(script), isNot(contains('deux_soeurs')));
     });
   });
 
@@ -300,5 +294,63 @@ void main() {
       );
       expect(stepIds(script), ['loup_garou', 'sorciere']);
     });
+  });
+
+  group('the Comedien\'s cards', () {
+    final everyBox = CardPool(
+      registry: RoleRegistry.all,
+      ownedBoxIds: [for (final b in gameBoxes) b.id],
+    );
+
+    test('are roles of the boxes that are not dealt', () {
+      expect(
+        actorCardOptions(
+          composition: const {'sorciere': 1, 'loup_garou': 2, 'villageois': 3},
+          reserveRoleIds: const [],
+          reserveDrawn: false,
+          pool: everyBox,
+        ),
+        ['voyante', 'cupidon', 'salvateur', 'renard'],
+      );
+    });
+
+    test('leave out the cards of the Voleur\'s reserve too', () {
+      expect(
+        actorCardOptions(
+          composition: const {'voleur': 1, 'loup_garou': 2, 'villageois': 3},
+          reserveRoleIds: const ['voyante', 'renard'],
+          reserveDrawn: false,
+          pool: everyBox,
+        ),
+        ['sorciere', 'cupidon', 'salvateur'],
+      );
+    });
+
+    test('are limited to what the owned boxes hold', () {
+      final baseOnly = CardPool(registry: RoleRegistry.all);
+      expect(
+        actorCardOptions(
+          composition: const {'loup_garou': 2, 'villageois': 3},
+          reserveRoleIds: const [],
+          reserveDrawn: false,
+          pool: baseOnly,
+        ),
+        ['voyante', 'sorciere', 'cupidon'],
+      );
+    });
+  });
+
+  group('a blind game', () {
+    // Nobody noted at the deal: a role is only learnt when it is woken, so every role with a
+    // night call must be called on the first night, whatever its wake condition.
+    for (final role in RoleRegistry.all.roles.where((r) => r.hasNightCall)) {
+      test('wakes ${role.id} on the first night', () {
+        final script = buildNightScript(
+          engine: _state(),
+          composition: {role.id: role.groupSize, 'loup_garou': 2, 'villageois': 3},
+        );
+        expect(stepIds(script), contains(role.id));
+      });
+    }
   });
 }

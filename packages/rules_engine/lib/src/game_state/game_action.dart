@@ -103,8 +103,8 @@ class ServantTakesRole implements GameAction {
   const ServantTakesRole({required this.servantPlayerId, required this.deadPlayerId});
 }
 
-/// The MJ lays the Comedien's cards face up: [roleIds] are [actorCardCount] distinct roles among
-/// [actorCardRoleIds].
+/// The MJ lays the Comedien's cards face up: [roleIds] are up to [actorCardCount] distinct roles
+/// among [actorCardRoleIds] (fewer when the boxes hold no more that are not dealt).
 class ActorSetCards implements GameAction {
   final List<String> roleIds;
 

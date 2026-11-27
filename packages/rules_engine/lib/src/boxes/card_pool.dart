@@ -18,11 +18,17 @@ class CardPool {
     required this.registry,
     Iterable<String> ownedBoxIds = const [baseBoxId],
     this.boxes = gameBoxes,
-  }) : ownedBoxIds = {
-         baseBoxId,
-         for (final id in ownedBoxIds)
-           if (boxes.any((b) => b.id == id)) id,
-       };
+  }) : ownedBoxIds = _known(ownedBoxIds, boxes);
+
+  /// The ids that name a box. Nobody plays without a box: an empty answer falls back to the base
+  /// box, which is also what a fresh install owns.
+  static Set<String> _known(Iterable<String> ids, List<GameBox> boxes) {
+    final known = {
+      for (final id in ids)
+        if (boxes.any((b) => b.id == id)) id,
+    };
+    return known.isEmpty ? {baseBoxId} : known;
+  }
 
   /// Every box that exists, owned or not.
   final List<GameBox> boxes;
@@ -30,7 +36,7 @@ class CardPool {
   /// Every role the app can resolve, owned or not.
   final RoleRegistry registry;
 
-  /// Always contains [baseBoxId]; unknown ids are dropped.
+  /// Never empty (the base box when nothing else is owned); unknown ids are dropped.
   final Set<String> ownedBoxIds;
 
   /// The most players any game seats, whatever the boxes.

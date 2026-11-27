@@ -256,12 +256,20 @@ void main() {
       expect(container.read(cardPoolProvider).ownedBoxIds, {'base'});
     });
 
-    test('read the stored ids, drop unknown ones and always keep the base box', () async {
+    test('read the stored ids and drop unknown ones, the base box is not forced', () async {
       final container = await containerWith({
         'owned_boxes': ['best_of', 'nope'],
       });
       final settings = await container.read(settingsProvider.future);
-      expect(settings.ownedBoxes, {'base', 'best_of'});
+      expect(settings.ownedBoxes, {'best_of'});
+      expect(container.read(cardPoolProvider).ownedBoxIds, {'best_of'});
+    });
+
+    test('nothing readable falls back to the base box', () async {
+      final container = await containerWith({
+        'owned_boxes': ['nope'],
+      });
+      expect((await container.read(settingsProvider.future)).ownedBoxes, {'base'});
     });
 
     test('ticking and unticking a box persists and moves the card pool', () async {
@@ -279,7 +287,19 @@ void main() {
       expect(container.read(settingsProvider).value!.ownedBoxes, {'base'});
     });
 
-    test('the base box cannot be unticked and an unknown box cannot be ticked', () async {
+    test('the base box can be unticked while another box stays', () async {
+      final container = await containerWith({});
+      await container.read(settingsProvider.future);
+      final notifier = container.read(settingsProvider.notifier);
+
+      await notifier.setBoxOwned('best_of', true);
+      await notifier.setBoxOwned('base', false);
+
+      expect(container.read(settingsProvider).value!.ownedBoxes, {'best_of'});
+      expect(container.read(cardPoolProvider).ownedBoxIds, {'best_of'});
+    });
+
+    test('the last box cannot be unticked and an unknown box cannot be ticked', () async {
       final container = await containerWith({});
       await container.read(settingsProvider.future);
       final notifier = container.read(settingsProvider.notifier);
